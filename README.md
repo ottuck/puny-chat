@@ -163,3 +163,7 @@ On an iPhone, open it with a development build. The commands are collected in [C
 - [x] Web Push (the web added to the home screen)
 - [ ] iPhone development build and push notifications
 - [ ] Sign in with Apple
+
+## License
+
+[MIT](LICENSE). Use the code freely; keep the copyright notice and license text with it.
