@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { WebFrame } from '@/components/web-frame';
-import { clipboardSupported, copyText } from '@/lib/clipboard';
+import { copyText } from '@/lib/clipboard';
 import { siteUrl } from '@/lib/site-url';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
@@ -99,22 +99,20 @@ function InviteContent({ onClose }: { onClose: () => void }) {
                 <Text selectable style={[styles.code, { color: colors.text }]}>
                   {invitation.code}
                 </Text>
-                {clipboardSupported ? (
-                  <Pressable
-                    onPress={copy}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('invite.copy')}
-                    hitSlop={8}
-                    style={({ pressed }) => [
-                      styles.copy,
-                      { borderColor: colors.border, opacity: pressed ? 0.6 : 1 },
-                    ]}
-                  >
-                    <Text style={[styles.copyLabel, { color: colors.accent }]}>
-                      {copied ? t('invite.copied') : t('invite.copy')}
-                    </Text>
-                  </Pressable>
-                ) : null}
+                <Pressable
+                  onPress={copy}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('invite.copy')}
+                  hitSlop={8}
+                  style={({ pressed }) => [
+                    styles.copy,
+                    { borderColor: colors.border, opacity: pressed ? 0.6 : 1 },
+                  ]}
+                >
+                  <Text style={[styles.copyLabel, { color: colors.accent }]}>
+                    {copied ? t('invite.copied') : t('invite.copy')}
+                  </Text>
+                </Pressable>
               </View>
               <Text style={[styles.expires, { color: colors.textMuted }]}>
                 {t('invite.expires', { time: expires })}

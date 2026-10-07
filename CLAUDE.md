@@ -62,7 +62,10 @@
   게스트도 모든 기능을 쓴다. 이름이 없으니 먼저 `/name` 화면에서 이름을 받는다(`PATCH /api/me`).
 - 계정은 나중에 설정에서 연결한다. 익명 계정에 Google을 `linkWithPopup`으로 붙이므로 Firebase uid가 그대로라 서버 데이터를
   옮기지 않는다. 이미 다른 사용자인 Google 계정이면 합치지 않고, 확인 후 그 계정으로 전환한다(게스트 데이터는 이 기기에서 못 봄).
-- 연결은 지금 웹 Google만 된다. 아이폰 Google/Apple 연결은 개발용 빌드에서 붙인다.
+- 연결은 웹은 Google, 아이폰은 Apple(`features/auth/apple-sign-in.ios.ts`, `expo-apple-authentication` → Firebase
+  credential, 버튼은 Apple 기본 버튼 `components/apple-button.ios.tsx`). 아이폰 Google은 아직 없다. 이미 다른 사용자인
+  계정이면 Google·Apple 모두 `AccountInUseError`(`account-in-use.ts`)로 전환을 묻는다. Apple 계정을 지울 때는 다시
+  로그인하고 Apple 토큰을 `revokeAccessToken`으로 취소한다(Firebase Apple 제공업체에 Services ID·키 필요).
 - **게스트는 30일.** Firebase 콘솔의 익명 계정 자동 정리(30일 지난 익명 계정 삭제)를 켜서 그대로 제품 정책으로 쓴다. 남은 일수는
   Firebase 계정 생성 시각으로 앱이 계산한다(`features/auth/guest-expiry.ts`). 서버에 남은 만료 게스트의 데이터는 서버가
   주 1회 지운다(`account/GuestCleanup`). 첫 화면과 설정에 안내하고
@@ -123,7 +126,7 @@
   넓은 창(768px~)에서는 폰 크기 틀에 담는다: CSS 미디어 쿼리(`app/+html.tsx`)가 `WebFrame`의 id를 꾸민다. 창 폭을 JS로 재서
   구조를 바꾸면 경계를 넘을 때 앱 전체가 다시 마운트되므로 그렇게 하지 않는다. 모달 시트도 `WebFrame`으로 감싼다.
 - 초대 링크 `join?code=`: 로그인 전이면 `lib/pending-invite`가 코드를 기억했다가 이름을 정한 뒤 참가 화면을 연다.
-  복사는 `lib/clipboard`(웹만. 앱은 expo-clipboard가 필요해서 첫 개발용 빌드 때 사용자 확인 후 추가).
+  복사는 `lib/clipboard`(`expo-clipboard`, 앱·웹 공용).
 - 링크 미리보기(Open Graph, 영어)는 `app/+html.tsx`, 이미지는 `app/public/og.png`(1200×630, 구경하기 화면으로 만듦).
 - iOS-first design ≠ iOS-only code. 플랫폼 분기는 정말 다를 때만 `*.ios.ts` / `*.web.ts`로 나눈다.
 - 라이브러리는 구체적인 문제가 생겼을 때만 추가한다.

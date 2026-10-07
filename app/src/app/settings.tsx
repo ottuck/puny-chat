@@ -14,15 +14,19 @@ import {
 } from 'react-native';
 
 import { PageTitle } from '@/components/page-title';
-import { deleteAccount, isCancelledSignIn, signOut, switchAccount } from '@/features/auth/actions';
+import { AccountInUseError, switchToExisting } from '@/features/auth/account-in-use';
+import {
+  deleteAccount,
+  isCancelledSignIn,
+  linkedProvider,
+  signOut,
+  switchAccount,
+} from '@/features/auth/actions';
+import { appleSignInSupported, linkApple } from '@/features/auth/apple-sign-in';
 import { useAuth } from '@/features/auth/auth-provider';
 import { useGuestDaysLeft } from '@/features/auth/guest-expiry';
-import {
-  GoogleAccountInUseError,
-  googleSignInSupported,
-  linkGoogle,
-  switchToGoogle,
-} from '@/features/auth/google-sign-in';
+import { AppleButton } from '@/features/auth/components/apple-button';
+import { googleSignInSupported, linkGoogle } from '@/features/auth/google-sign-in';
 import {
   registerForPush,
   type PushState,
@@ -119,7 +123,11 @@ export default function SettingsScreen() {
           </Pressable>
         </View>
 
-        <AccountCard guest={guest} daysLeft={daysLeft} email={user?.email ?? null} />
+        <AccountCard
+          provider={user ? linkedProvider(user) : null}
+          daysLeft={daysLeft}
+          email={user?.email ?? null}
+        />
 
         <DisplayCard />
 
@@ -267,11 +275,11 @@ function Choices<T extends string>({
 // Guests can keep everything by linking an account: the Firebase uid stays the same, so nothing
 // moves on the server. Offered here rather than at the start, once there is something to keep.
 function AccountCard({
-  guest,
+  provider,
   daysLeft,
   email,
 }: {
-  guest: boolean;
+  provider: 'google' | 'apple' | null;
   daysLeft: number | null;
   email: string | null;
 }) {
@@ -280,13 +288,13 @@ function AccountCard({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const link = async () => {
+  const link = async (linkAccount: () => Promise<void>) => {
     setBusy(true);
     setError(null);
     try {
-      await linkGoogle();
+      await linkAccount();
     } catch (e) {
-      if (e instanceof GoogleAccountInUseError) {
+      if (e instanceof AccountInUseError) {
         const ok = await confirm({
           title: t('settings.accountInUseTitle'),
           message: t('settings.accountInUseMessage'),
@@ -295,7 +303,7 @@ function AccountCard({
           destructive: true,
         });
         if (ok) {
-          await switchAccount(() => switchToGoogle(e.credential)).catch((err) => {
+          await switchAccount(() => switchToExisting(e.credential)).catch((err) => {
             console.warn(err);
             setError(t('settings.linkFailed'));
           });
@@ -312,7 +320,7 @@ function AccountCard({
   return (
     <View style={[styles.card, { backgroundColor: colors.surface }]}>
       <Text style={[styles.label, { color: colors.textMuted }]}>{t('settings.account')}</Text>
-      {guest ? (
+      {provider === null ? (
         <>
           <Text style={[styles.name, { color: colors.text }]}>
             {t('settings.guestTitle')}
@@ -326,7 +334,7 @@ function AccountCard({
           </Text>
           {googleSignInSupported ? (
             <Pressable
-              onPress={link}
+              onPress={() => link(linkGoogle)}
               disabled={busy}
               accessibilityRole="button"
               style={({ pressed }) => [styles.leave, { opacity: pressed || busy ? 0.6 : 1 }]}
@@ -339,6 +347,10 @@ function AccountCard({
                 </Text>
               )}
             </Pressable>
+          ) : appleSignInSupported ? (
+            <View style={styles.section}>
+              <AppleButton kind="link" onPress={() => link(linkApple)} disabled={busy} />
+            </View>
           ) : (
             <Text style={[styles.email, styles.section, { color: colors.textMuted }]}>
               {t('settings.linkNotReady')}
@@ -348,7 +360,9 @@ function AccountCard({
         </>
       ) : (
         <>
-          <Text style={[styles.name, { color: colors.text }]}>{t('settings.linkedGoogle')}</Text>
+          <Text style={[styles.name, { color: colors.text }]}>
+            {t(provider === 'apple' ? 'settings.linkedApple' : 'settings.linkedGoogle')}
+          </Text>
           {email ? <Text style={[styles.email, { color: colors.textMuted }]}>{email}</Text> : null}
         </>
       )}

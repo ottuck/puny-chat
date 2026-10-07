@@ -9,6 +9,8 @@ import { PageTitle } from '@/components/page-title';
 import { BuddyAvatar } from '@/features/buddy/components/buddy-avatar';
 import { Button } from '@/components/button';
 import { isCancelledSignIn, signInAsGuest } from '@/features/auth/actions';
+import { appleSignInSupported, signInWithApple } from '@/features/auth/apple-sign-in';
+import { AppleButton } from '@/features/auth/components/apple-button';
 import { googleSignInSupported, signInWithGoogle } from '@/features/auth/google-sign-in';
 import { hasPendingInvite } from '@/lib/pending-invite';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
@@ -77,6 +79,10 @@ export default function SignInScreen() {
               disabled={busy}
               variant="secondary"
             />
+          ) : null}
+          {/* Back to an account linked on another iPhone, or a first start with Apple. */}
+          {appleSignInSupported ? (
+            <AppleButton kind="signIn" onPress={() => run(signInWithApple)} disabled={busy} />
           ) : null}
           <Text style={[styles.notice, { color: invited ? colors.accent : colors.textMuted }]}>
             {invited ? t('signIn.invited') : t('signIn.noAccountNeeded')}
