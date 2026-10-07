@@ -13,7 +13,8 @@
         "CFBundleLocalizations": ["ja", "ko", "en"],
         "CFBundleAllowMixedLocalizations": true
       },
-      "bundleIdentifier": "com.ottuck.buddychat"
+      "bundleIdentifier": "com.ottuck.buddychat",
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
@@ -40,7 +41,8 @@
         }
       ],
       "expo-localization",
-      "expo-notifications"
+      "expo-notifications",
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true,
