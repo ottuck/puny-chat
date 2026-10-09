@@ -27,6 +27,14 @@ export async function switchAccount(switchTo: () => Promise<void>): Promise<void
   await switchTo();
 }
 
+// Tells the server right away that the guest has linked an account. The server marks guests as
+// such on their requests, and its weekly clean-up deletes guests it still thinks are guests; a
+// guest who linked and then left the app would otherwise lose their data. Best effort: the next
+// request does the same.
+export async function noteAccountLinked(): Promise<void> {
+  await api('/api/me').catch((e) => console.warn('telling the server about the link failed', e));
+}
+
 export async function signOut(): Promise<void> {
   // While still signed in: the server removes only the user's own tokens.
   await unregisterPush().catch((e) => console.warn('removing the push token failed', e));
@@ -36,7 +44,7 @@ export async function signOut(): Promise<void> {
 // Deletes the account (App Store Guideline 5.1.1(v)): first the user's data on the server, then
 // the Firebase account, which signs out. A linked account confirms with Google or Apple first, since
 // Firebase deletes only after a recent sign-in, and asking later would leave the server data gone
-// but the account still there.
+// but the account still there. A failure is thrown, not hidden: see below.
 export async function deleteAccount(): Promise<void> {
   const user = auth.currentUser;
   if (!user) return;
@@ -44,11 +52,10 @@ export async function deleteAccount(): Promise<void> {
   else if (!user.isAnonymous) await reauthenticateGoogle();
   await unregisterPush().catch((e) => console.warn('removing the push token failed', e));
   await api<void>('/api/me', { method: 'DELETE' });
-  await deleteUser(user).catch(async (e) => {
-    // Nothing is left on the server either way; at least leave this device signed out.
-    console.warn('deleting the Firebase account failed', e);
-    await firebaseSignOut(auth);
-  });
+  // If this fails the account is not deleted, so it is not reported as done: the user stays signed
+  // in and can try again. The server steps run again harmlessly, and a request in between only
+  // creates an empty user that the retry deletes.
+  await deleteUser(user);
 }
 
 // Which account a signed-in user has linked; null for a guest.

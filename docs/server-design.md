@@ -359,9 +359,12 @@ App Store Guideline 5.1.1(v)(앱에서 만든 계정은 앱에서 지울 수 있
   그대로 갖고 `left`를 받는다, 혼자 room이면 기록과 함께 삭제) → 내가 만든 초대 코드 → 내 읽음 위치 → 내 푸시 토큰 →
   사용자 문서 순으로 지운다. 트랜잭션 없이 단계마다 다시 해도 되는 삭제라, 중간에 실패해도 다시 요청하면 끝난다.
 - 상대와 주고받은 메시지는 상대의 대화이기도 해서 room에 남는다(메신저의 일반적인 방식). 삭제 확인 문구에서 알린다.
-- 앱: Google을 연결한 계정은 먼저 Google로 다시 로그인한다(Firebase는 최근 로그인 뒤에만 계정 삭제를 허용한다. 서버를
-  지운 뒤에 물으면 서버 데이터만 사라지고 계정은 남을 수 있다). 그다음 서버 삭제 → Firebase `deleteUser`(로그아웃 된다).
-  Admin SDK를 쓰지 않는 원칙(위 Firebase token 검증)대로 Firebase 계정은 앱이 지운다.
+- 앱: 연결한 계정(Google·Apple)은 먼저 다시 로그인한다(Firebase는 최근 로그인 뒤에만 계정 삭제를 허용한다. 서버를
+  지운 뒤에 물으면 서버 데이터만 사라지고 계정은 남을 수 있다. Apple은 이때 앱의 Apple 토큰도 취소한다). 그다음 서버 삭제 →
+  Firebase `deleteUser`(로그아웃 된다). Admin SDK를 쓰지 않는 원칙(위 Firebase token 검증)대로 Firebase 계정은 앱이 지운다.
+- Firebase 삭제가 실패하면 로그아웃하지 않고 실패를 알린다. 사용자는 로그인한 채로 다시 누를 수 있고, 서버 삭제는 다시 해도
+  같아서(`AccountDeletionFlowTest.deletingAgainIsHarmless`) 그대로 끝난다. 그 사이 요청이 오면 빈 사용자가 다시 생기지만
+  재시도가 지운다.
 
 ## 게스트 정리
 
@@ -372,7 +375,8 @@ Firebase가 30일 지난 익명 계정을 지워도 서버의 사용자·방·�
 - **게스트 판단**: 토큰의 `firebase.sign_in_provider`가 `anonymous`이고 `firebase.identities`가 비어 있으면 게스트.
   Google을 연결하면 uid와 로그인 방식은 그대로지만 identity가 생겨서 게스트가 아니다.
 - **기록**: 인증된 요청마다(`UserService.current`) `guest`와 `lastSeenAt`을 적는다. 쓰기는 하루 한 번까지, 게스트 여부가
-  바뀌면 바로.
+  바뀌면 바로. 계정을 연결한 직후에는 앱이 `GET /api/me`를 한 번 불러서 바로 반영한다(`noteAccountLinked`). 그러지
+  않으면 연결하고 앱을 열지 않은 사용자가 아직 게스트로 남아, 30일이 지난 뒤 정리에 걸릴 수 있다.
 - **대상**: 게스트이고, 만든 지 30일이 지났고(Firebase가 지웠을 때), 7일 동안 요청이 없는 사용자. 두 조건을 다 보므로
   Firebase 정리가 늦어도 쓰고 있는 게스트는 지우지 않는다. 지우는 방법은 계정 삭제(`AccountService`)와 같다.
 - 이 필드가 생기기 전의 사용자는 정리하지 않는다(테스트 기간의 몇 명뿐).
