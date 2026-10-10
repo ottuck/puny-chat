@@ -49,19 +49,26 @@ public class RoomService {
     }
 
     /**
-     * Creates the user's solo room with a new egg. The user's room is claimed first with a
-     * conditional update, so two concurrent requests cannot create two rooms.
+     * Saves the room before attaching it to the user, so an insert failure leaves no dangling
+     * roomId. Only one concurrent create can attach its room; the other candidates are removed.
      */
     public Mono<RoomView> create(User user, String buddyName) {
-        if (user.roomId() != null) return Mono.error(roomAlreadyExists());
+        if (user.roomId() != null || user.roomJoinId() != null) return Mono.error(roomAlreadyExists());
         String roomId = new ObjectId().toHexString();
         Instant now = Instant.now(clock);
-        return userService
-                .assignRoomIfNone(user.id(), roomId)
-                .flatMap(claimed -> claimed
-                        ? rooms.insert(Room.solo(roomId, user.id(), Buddy.hatch(buddyName, now), now))
-                        : Mono.error(roomAlreadyExists()))
-                .flatMap(this::toView);
+        return rooms.insert(Room.solo(roomId, user.id(), Buddy.hatch(buddyName, now), now))
+                .flatMap(room -> userService
+                        .assignRoomIfNone(user.id(), roomId)
+                        .flatMap(claimed -> claimed ? toView(room) : Mono.error(roomAlreadyExists())))
+                .onErrorResume(error -> userService
+                        .isInRoom(user.id(), roomId)
+                        // A write may have succeeded even though its response was lost.
+                        .flatMap(attached -> attached ? Mono.<Void>empty() : deleteIfSolo(roomId, user.id()))
+                        .onErrorResume(cleanupError -> {
+                            error.addSuppressed(cleanupError);
+                            return Mono.empty();
+                        })
+                        .then(Mono.error(error)));
     }
 
     /** Who is in the room (empty if it no longer exists). */
@@ -82,6 +89,11 @@ public class RoomService {
     public Mono<Void> leave(User user) {
         String roomId = user.roomId();
         if (roomId == null) return Mono.error(roomNotFound());
+        return leaveFromRoom(roomId, user);
+    }
+
+    // Also finishes cleanup of the old room after an invitation changed the user's roomId.
+    Mono<Void> leaveFromRoom(String roomId, User user) {
         Mono<Boolean> removed = mongo.updateFirst(
                         query(where("_id").is(roomId).and("memberIds").is(user.id())),
                         new Update().pull("memberIds", user.id()).inc("memberCount", -1),

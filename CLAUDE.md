@@ -13,7 +13,7 @@
 - `server/` — Java 25, Spring Boot 4.1 + WebFlux + Reactive MongoDB. 패키지는 기능 모듈(`auth`, `user`, `room`, `chat`, `buddy`, `realtime`).
 - `infra/` — Terraform: Railway(서버), MongoDB Atlas(DB), Cloudflare(DNS, state는 R2).
 - `docs/` — 기획과 설계 문서
-- `.github/workflows/ci.yml` — app(lint / typecheck / format), server(spotless / test)
+- `.github/workflows/ci.yml` — app(lint / typecheck / test / format), server(spotless / test)
 - `.github/workflows/deploy.yml` — main에서 CI 통과 후 서버(Railway, `railway up`)와 웹(Cloudflare Worker, `wrangler deploy`) 배포
 - 로컬 전용(gitignore): `.claude/`(desktop app preview 설정), `.idea/`, `.env*`
 
@@ -24,7 +24,8 @@
   JS 수정은 Metro로 바로 반영되고, 네이티브 설정(패키지·config plugin·`app.json`)이 바뀔 때만 다시 빌드한다:
   `npx eas-cli build --profile development --platform ios`(Apple 계정 로그인이 필요해 사용자가 실행, `eas.json`).
 - 번역 JSON 등 수정이 화면에 반영되지 않으면 Metro 캐시 문제다: `pnpm start --clear`
-- `pnpm lint` / `pnpm typecheck` / `pnpm format:check` · 한 번에: `pnpm check`
+- `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm format:check` · 한 번에: `pnpm check`
+- `pnpm test` — Node 내장 테스트 러너로 메시지 복구 실패·페이지네이션·재연결·취소 회귀 테스트. 새 라이브러리는 쓰지 않는다.
 - `pnpm build:web` — 배포용 웹 빌드(`dist/`, Worker 정적 자산용 404·`_headers` 포함. `app/wrangler.jsonc`)
 - 패키지 추가는 `pnpm exec expo install <pkg>` — SDK와 맞는 버전을 고른다. `pnpm add`로 직접 넣지 않는다.
 - `pnpm exec expo-doctor` — 의존성·설정 진단
@@ -37,8 +38,9 @@
 
 - 서버 통신: `lib/api.ts`(REST, Firebase ID token 첨부) · `features/chat/socket.ts`(WebSocket, 첫 메시지 인증, 재연결)
 - `features/room/room-provider.tsx`: 로그인 후 `/api/me` → room 유무로 `welcome` / 채팅 화면을 나눈다(`_layout.tsx` 가드).
-- `features/chat/use-chat.ts`: 타임라인 상태. 재연결하면 놓친 메시지를 `after`로 채우고, ack 못 받은 메시지를 같은
-  `clientMessageId`로 다시 보낸다. 서버 에러 코드의 문구는 `errors.*` 번역 키로 보여준다.
+- `features/chat/use-chat.ts`: 타임라인 상태. `message-sync.ts`가 실시간 메시지와 별개인 복구 커서로 `after`를 읽고,
+  실패하면 마지막 성공 페이지에서 재시도한다. 복구 중 읽음은 보내지 않는다. ack 못 받은 메시지는 `ready`에서 같은
+  `clientMessageId`로 바로 다시 보내며 히스토리 복구를 기다리지 않는다. 서버 에러 코드의 문구는 `errors.*` 번역 키로 보여준다.
 - web은 Node에서 미리 렌더링되므로 모듈 최상위에서 `window`에 접근하지 않는다.
 - Buddy 상태(레벨, 배고픔, 똥, 돌볼 수 있는지)는 서버가 계산한 `BuddyView`를 그대로 보여준다. 앱에서 규칙을 다시 계산하지 않는다.
   무대 꾸미기(`stage-decor.tsx`의 `REWARDS`)는 서버가 준 레벨과 앨범으로 앱이 고른다(표시 규칙이라 서버에 없음). 도움말
@@ -141,6 +143,8 @@
   (feat/…, fix/…, chore/… 이름, `dev`로 PR).
 - `main`에는 직접 커밋하지 않는다. 기능 묶음이 끝나거나 릴리스 전에 `dev` → `main` PR을 열고,
   CI 통과 후 **merge commit**으로 합친다(squash하면 `dev`와 `main` 히스토리가 어긋난다).
+- 사용자가 일반 변경의 운영 배포까지 진행하도록 승인했다(2026-10-10). 큰 문제가 없는 변경은
+  검증·커밋·push·PR·CI 확인·merge·운영 배포 확인까지 별도 재확인 없이 진행한다.
 - Conventional commit prefix: feat, fix, refactor, test, docs, chore. 커밋은 논리 단위로 나눈다.
 - 커밋 전 `pnpm check`(app 변경 시).
 - 비밀 값(.env, 키, 인증서)을 커밋하지 않는다.

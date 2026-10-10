@@ -10,7 +10,7 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(data.title || 'puny-chat', {
       body: data.body || '',
       icon: '/icon-192.png',
-      badge: '/icon-192.png',
+      badge: '/badge.png',
       // One notification for the chat, replaced by the newest message, with a sound each time.
       tag: 'puny-chat',
       renotify: true,

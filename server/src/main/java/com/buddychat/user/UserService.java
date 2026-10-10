@@ -110,7 +110,12 @@ public class UserService {
      */
     public Mono<Boolean> assignRoomIfNone(String userId, String roomId) {
         return mongo.updateFirst(
-                        query(where("_id").is(userId).and("roomId").is(null)),
+                        query(where("_id")
+                                .is(userId)
+                                .and("roomId")
+                                .is(null)
+                                .and("roomJoinId")
+                                .is(null)),
                         Update.update("roomId", roomId),
                         User.class)
                 .map(result -> result.getModifiedCount() == 1);
@@ -146,8 +151,45 @@ public class UserService {
         return mongo.remove(query(where("_id").is(userId)), User.class).then();
     }
 
-    public Mono<Void> moveToRoom(String userId, String roomId) {
-        return mongo.updateFirst(query(where("_id").is(userId)), Update.update("roomId", roomId), User.class)
+    /** Reserves one invitation per user, without exposing the target room before joining it. */
+    public Mono<Boolean> reserveRoomJoin(String userId, @Nullable String expectedRoomId, String invitationId) {
+        return mongo.updateFirst(
+                        query(where("_id")
+                                .is(userId)
+                                .and("roomId")
+                                .is(expectedRoomId)
+                                .orOperator(
+                                        where("roomJoinId").is(null),
+                                        where("roomJoinId").is(invitationId))),
+                        Update.update("roomJoinId", invitationId),
+                        User.class)
+                .map(result -> result.getMatchedCount() == 1);
+    }
+
+    /** Finishes only the reserved join against the room observed before it started. */
+    public Mono<Boolean> finishRoomJoin(
+            String userId, @Nullable String expectedRoomId, String roomId, String invitationId) {
+        return mongo.updateFirst(
+                        query(where("_id")
+                                .is(userId)
+                                .and("roomId")
+                                .is(expectedRoomId)
+                                .and("roomJoinId")
+                                .is(invitationId)),
+                        new Update().set("roomId", roomId).unset("roomJoinId"),
+                        User.class)
+                .map(result -> result.getMatchedCount() == 1);
+    }
+
+    public Mono<Void> releaseRoomJoin(String userId, String invitationId) {
+        return mongo.updateFirst(
+                        query(where("_id").is(userId).and("roomJoinId").is(invitationId)),
+                        new Update().unset("roomJoinId"),
+                        User.class)
                 .then();
+    }
+
+    public Mono<Boolean> isInRoom(String userId, String roomId) {
+        return mongo.exists(query(where("_id").is(userId).and("roomId").is(roomId)), User.class);
     }
 }

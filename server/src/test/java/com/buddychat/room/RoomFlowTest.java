@@ -1,11 +1,19 @@
 package com.buddychat.room;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
 
 import com.buddychat.TestcontainersConfiguration;
+import com.buddychat.chat.ChatService;
+import com.buddychat.common.ApiException;
+import com.buddychat.realtime.RoomHub;
 import com.buddychat.user.User;
 import com.buddychat.user.UserService;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +33,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 @SpringBootTest
@@ -46,6 +55,18 @@ class RoomFlowTest {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    RoomService roomService;
+
+    @Autowired
+    InvitationService invitationService;
+
+    @Autowired
+    ChatService chatService;
+
+    @Autowired
+    RoomHub hub;
 
     record Error(String code) {}
 
@@ -93,6 +114,66 @@ class RoomFlowTest {
 
         assertThat(statuses).containsOnlyOnce(201);
         assertThat(rooms.count().block()).isEqualTo(1);
+    }
+
+    @Test
+    void roomInsertFailureDoesNotAttachAMissingRoomAndCanBeRetried() {
+        User user = userService.getOrCreate("henry", "henry").block();
+        RoomRepository failingRooms = mock(RoomRepository.class);
+        when(failingRooms.insert(any(Room.class))).thenReturn(Mono.error(new IllegalStateException("insert failed")));
+        RoomService failingService =
+                new RoomService(failingRooms, userService, mongo, chatService, hub, Clock.systemUTC());
+
+        assertThatThrownBy(() -> failingService.create(user, "Mugi").block()).hasMessage("insert failed");
+        assertThat(userService.getOrCreate("henry", "henry").block().roomId()).isNull();
+        assertThat(rooms.count().block()).isZero();
+        createRoom("henry", "Mugi");
+    }
+
+    @Test
+    void failedRoomAssignmentRemovesTheCandidate() {
+        User user = userService.getOrCreate("henry", "henry").block();
+        UserService failingUsers = mock(UserService.class);
+        when(failingUsers.assignRoomIfNone(any(), any()))
+                .thenReturn(Mono.error(new IllegalStateException("assign failed")));
+        when(failingUsers.isInRoom(any(), any())).thenReturn(Mono.just(false));
+        RoomService failingService = new RoomService(rooms, failingUsers, mongo, chatService, hub, Clock.systemUTC());
+
+        assertThatThrownBy(() -> failingService.create(user, "Mugi").block()).hasMessage("assign failed");
+        assertThat(rooms.count().block()).isZero();
+        assertThat(userService.getOrCreate("henry", "henry").block().roomId()).isNull();
+        createRoom("henry", "Mugi");
+    }
+
+    @Test
+    void staleConcurrentCreateDoesNotDeleteTheWinningRoom() {
+        User stale = userService.getOrCreate("henry", "henry").block();
+        RoomView winner = roomService.create(stale, "Mugi").block();
+
+        assertThatThrownBy(() -> roomService.create(stale, "Other").block())
+                .isInstanceOf(ApiException.class)
+                .hasMessage("ROOM_ALREADY_EXISTS");
+        assertThat(rooms.count().block()).isEqualTo(1);
+        assertThat(rooms.existsById(winner.id()).block()).isTrue();
+    }
+
+    @Test
+    void aLostAssignmentResponseDoesNotDeleteTheAttachedRoom() {
+        User user = userService.getOrCreate("henry", "henry").block();
+        UserService lostResponseUsers = mock(UserService.class);
+        when(lostResponseUsers.assignRoomIfNone(any(), any()))
+                .thenAnswer(invocation -> userService
+                        .assignRoomIfNone(invocation.getArgument(0), invocation.getArgument(1))
+                        .then(Mono.error(new IllegalStateException("response lost"))));
+        when(lostResponseUsers.isInRoom(any(), any()))
+                .thenAnswer(invocation -> userService.isInRoom(invocation.getArgument(0), invocation.getArgument(1)));
+        RoomService failingService =
+                new RoomService(rooms, lostResponseUsers, mongo, chatService, hub, Clock.systemUTC());
+
+        assertThatThrownBy(() -> failingService.create(user, "Mugi").block()).hasMessage("response lost");
+        User after = userService.getOrCreate("henry", "henry").block();
+        assertThat(rooms.existsById(after.roomId()).block()).isTrue();
+        get("henry", "/api/rooms/me").expectStatus().isOk();
     }
 
     @Test
@@ -154,7 +235,7 @@ class RoomFlowTest {
         RoomView room = createRoom("henry", "Mugi");
         Instant past = Instant.now().minusSeconds(60);
         invitations
-                .insert(new Invitation(null, room.id(), "EXPIRED2", "x", past.minusSeconds(60), past, null, null))
+                .insert(new Invitation(null, room.id(), "EXPIRED2", "x", past.minusSeconds(60), past, null, null, null))
                 .block();
 
         assertError(accept("yuki", "NOPE2345", false), HttpStatus.NOT_FOUND, "INVITATION_NOT_FOUND");
@@ -282,6 +363,136 @@ class RoomFlowTest {
                 .collect(Collectors.partitioningBy(inv -> inv.usedAt() != null, Collectors.counting()))
                 .block();
         assertThat(usedCounts.get(true)).isEqualTo(1);
+    }
+
+    @Test
+    void oneUserAcceptingDifferentRoomsConcurrentlyJoinsOnlyOne() {
+        List<String> codes = java.util.stream.IntStream.range(0, 6)
+                .mapToObj(i -> {
+                    String owner = "owner-" + i;
+                    createRoom(owner, "Mugi");
+                    return invite(owner);
+                })
+                .toList();
+        // Both HTTP requests may have read this same snapshot before either accept starts.
+        User stale = userService.getOrCreate("yuki", "yuki").block();
+        List<String> results = Flux.fromIterable(codes)
+                .flatMap(code -> invitationService
+                        .accept(stale, code, false)
+                        .map(RoomView::id)
+                        .onErrorResume(ApiException.class, e -> Mono.just(e.code())))
+                .collectList()
+                .block();
+
+        assertThat(results.stream().filter(id -> !id.equals("ALREADY_IN_ROOM")).count())
+                .isEqualTo(1);
+        User after = userService.getOrCreate("yuki", "yuki").block();
+        assertThat(after.roomJoinId()).isNull();
+        List<Room> memberships = mongo.find(
+                        Query.query(Criteria.where("memberIds").is(after.id())), Room.class)
+                .collectList()
+                .block();
+        assertThat(memberships).hasSize(1);
+        assertThat(memberships.getFirst().id()).isEqualTo(after.roomId());
+        assertThat(invitations
+                        .findAll()
+                        .filter(inv -> inv.usedAt() != null)
+                        .count()
+                        .block())
+                .isEqualTo(1);
+    }
+
+    @Test
+    void soloUserAcceptingTwoRoomsConcurrentlyLeavesOnlyTheWinningMembership() {
+        RoomView previous = createRoom("yuki", "Pico");
+        createRoom("henry", "Mugi");
+        createRoom("mika", "Mochi");
+        List<String> codes = List.of(invite("henry"), invite("mika"));
+        User stale = userService.getOrCreate("yuki", "yuki").block();
+        List<String> results = Flux.fromIterable(codes)
+                .flatMap(code -> invitationService
+                        .accept(stale, code, true)
+                        .map(RoomView::id)
+                        .onErrorResume(ApiException.class, e -> Mono.just(e.code())))
+                .collectList()
+                .block();
+
+        assertThat(results).containsOnlyOnce("ALREADY_IN_ROOM");
+        assertThat(rooms.existsById(previous.id()).block()).isFalse();
+        User after = userService.getOrCreate("yuki", "yuki").block();
+        assertThat(mongo.find(Query.query(Criteria.where("memberIds").is(after.id())), Room.class)
+                        .count()
+                        .block())
+                .isEqualTo(1);
+        assertThat(after.roomJoinId()).isNull();
+    }
+
+    @Test
+    void staleRetryOfACompletedAcceptKeepsTheInvitationSingleUse() {
+        createRoom("henry", "Mugi");
+        String code = invite("henry");
+        User stale = userService.getOrCreate("yuki", "yuki").block();
+        invitationService.accept(stale, code, false).block();
+
+        invitationService.accept(stale, code, false).block();
+        assertThat(invitations.findByCode(code).block().usedBy()).isEqualTo(stale.id());
+        assertError(accept("mika", code, false), HttpStatus.GONE, "INVITATION_USED");
+    }
+
+    @Test
+    void retryAfterUserMovedStillRemovesThePreviousSoloRoom() {
+        createRoom("henry", "Mugi");
+        RoomView previous = createRoom("yuki", "Pico");
+        String code = invite("henry");
+        accept("yuki", code, true).expectStatus().isOk();
+        // Simulates a failure after the user was moved but before the previous room was removed.
+        rooms.insert(Room.solo(
+                        previous.id(),
+                        userId("yuki"),
+                        com.buddychat.buddy.Buddy.hatch("Pico", Instant.now()),
+                        Instant.now()))
+                .block();
+
+        accept("yuki", code, true).expectStatus().isOk();
+        assertThat(rooms.existsById(previous.id()).block()).isFalse();
+    }
+
+    @Test
+    void fullRoomReleasesTheUsersReservationAndTheInvite() {
+        createRoom("henry", "Mugi");
+        String loserCode = invite("henry");
+        String winnerCode = invite("henry");
+        accept("mika", winnerCode, false).expectStatus().isOk();
+        assertError(accept("yuki", loserCode, false), HttpStatus.CONFLICT, "ROOM_FULL");
+
+        User after = userService.getOrCreate("yuki", "yuki").block();
+        assertThat(after.roomId()).isNull();
+        assertThat(after.roomJoinId()).isNull();
+        Invitation released = invitations.findByCode(loserCode).block();
+        assertThat(released.usedBy()).isNull();
+        assertThat(released.usedAt()).isNull();
+        createRoom("yuki", "Pico");
+    }
+
+    @Test
+    void anInterruptedReservationCanResumeButCannotJoinAnotherRoom() {
+        createRoom("henry", "Mugi");
+        createRoom("mika", "Pico");
+        String code = invite("henry");
+        String otherCode = invite("mika");
+        User user = userService.getOrCreate("yuki", "yuki").block();
+        Invitation claimed = invitations.findByCode(code).block();
+        mongo.updateFirst(
+                        Query.query(Criteria.where("_id").is(claimed.id())),
+                        new Update().set("usedAt", Instant.now()).set("usedBy", user.id()),
+                        Invitation.class)
+                .block();
+        userService.reserveRoomJoin(user.id(), null, claimed.id()).block();
+
+        assertError(accept("yuki", otherCode, false), HttpStatus.CONFLICT, "ALREADY_IN_ROOM");
+        assertError(post("yuki", "/api/rooms", Map.of("buddyName", "Egg")), HttpStatus.CONFLICT, "ROOM_ALREADY_EXISTS");
+        accept("yuki", code, false).expectStatus().isOk();
+        assertThat(userService.getOrCreate("yuki", "yuki").block().roomJoinId()).isNull();
     }
 
     // --- helpers ---

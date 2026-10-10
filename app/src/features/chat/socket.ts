@@ -126,7 +126,10 @@ export class ChatSocket {
     this.ws = ws;
     this.ready = false;
 
-    ws.onmessage = (event) => this.onEvent(ws, JSON.parse(String(event.data)) as ServerEvent);
+    ws.onmessage = (event) => {
+      if (this.ws !== ws || this.stopped || this.paused) return;
+      this.onEvent(ws, JSON.parse(String(event.data)) as ServerEvent);
+    };
     ws.onclose = () => {
       if (this.ws !== ws) return; // an old socket closing after a reconnect
       this.ws = null;

@@ -13,6 +13,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
  *     not seen since this was added.
  * @param lastSeenAt the last authenticated request, kept to the day ({@link UserService#current}).
  *     Null on users not seen since this was added.
+ * @param roomJoinId invitation reserved by an unfinished join. Null when no join is in progress,
+ *     including on older documents.
  */
 @Document("users")
 public record User(
@@ -22,11 +24,12 @@ public record User(
         @Nullable String roomId,
         Instant createdAt,
         @Nullable Boolean guest,
-        @Nullable Instant lastSeenAt) {
+        @Nullable Instant lastSeenAt,
+        @Nullable String roomJoinId) {
 
     public static final int MAX_NAME_LENGTH = 20;
 
     static User create(String firebaseUid, @Nullable String displayName, boolean guest, Instant now) {
-        return new User(null, firebaseUid, displayName, null, now, guest, now);
+        return new User(null, firebaseUid, displayName, null, now, guest, now, null);
     }
 }

@@ -19,6 +19,7 @@ import {
   deleteAccount,
   isCancelledSignIn,
   linkedProvider,
+  noteAccountLinked,
   signOut,
   switchAccount,
 } from '@/features/auth/actions';
@@ -293,6 +294,7 @@ function AccountCard({
     setError(null);
     try {
       await linkAccount();
+      await noteAccountLinked();
     } catch (e) {
       if (e instanceof AccountInUseError) {
         const ok = await confirm({

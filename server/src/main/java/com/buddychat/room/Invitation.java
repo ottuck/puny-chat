@@ -15,4 +15,5 @@ public record Invitation(
         Instant createdAt,
         Instant expiresAt,
         @Nullable Instant usedAt,
-        @Nullable String usedBy) {}
+        @Nullable String usedBy,
+        @Nullable String previousRoomId) {}
