@@ -81,6 +81,14 @@ export default function NameScreen() {
             onPress={save}
             disabled={busy || !name.trim()}
           />
+          {!editing ? (
+            <Button
+              label={t('settings.title')}
+              onPress={() => router.push('/settings')}
+              disabled={busy}
+              variant="secondary"
+            />
+          ) : null}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

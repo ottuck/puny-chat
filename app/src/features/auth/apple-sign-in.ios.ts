@@ -1,17 +1,18 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
+import Constants from 'expo-constants';
 import * as Crypto from 'expo-crypto';
 import { FirebaseError } from 'firebase/app';
 import {
   linkWithCredential,
   OAuthProvider,
   reauthenticateWithCredential,
-  revokeAccessToken,
   signInWithCredential,
 } from 'firebase/auth';
 
 import { auth } from '@/lib/firebase';
 
 import { AccountInUseError } from './account-in-use';
+import { revokeAppleToken } from './revoke-apple-token';
 
 // Sign in with Apple (App Store Guideline 4.8), through Apple's own sheet and then Firebase.
 // Needs the Apple provider in the Firebase console and `ios.usesAppleSignIn` (app.json).
@@ -57,15 +58,17 @@ export async function linkApple(): Promise<void> {
 
 // Signs in with Apple again, just now: Firebase deletes an account only after a recent sign-in.
 // Also revokes the app's Apple tokens, which Apple asks for when an account is deleted (needs the
-// Services ID and key in the Firebase Apple provider); a failure there does not stop the deletion.
+// Services ID and key in the Firebase Apple provider). A failure stops deletion before data is lost.
 export async function reauthenticateApple(): Promise<void> {
   const user = auth.currentUser;
   if (!user) throw new Error('Not signed in.');
   const { credential, authorizationCode } = await appleSignIn();
   await reauthenticateWithCredential(user, credential);
-  if (authorizationCode) {
-    await revokeAccessToken(auth, authorizationCode).catch((e) =>
-      console.warn('revoking the Apple token failed', e),
-    );
-  }
+  await revokeAppleToken({
+    apiKey: auth.app.options.apiKey!,
+    idToken: await user.getIdToken(),
+    authorizationCode: authorizationCode ?? '',
+    bundleId: Constants.expoConfig?.ios?.bundleIdentifier ?? '',
+    tenantId: auth.tenantId,
+  });
 }

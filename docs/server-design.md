@@ -378,6 +378,9 @@ App Store Guideline 5.1.1(v)(앱에서 만든 계정은 앱에서 지울 수 있
 - 앱: 연결한 계정(Google·Apple)은 먼저 다시 로그인한다(Firebase는 최근 로그인 뒤에만 계정 삭제를 허용한다. 서버를
   지운 뒤에 물으면 서버 데이터만 사라지고 계정은 남을 수 있다. Apple은 이때 앱의 Apple 토큰도 취소한다). 그다음 서버 삭제 →
   Firebase `deleteUser`(로그아웃 된다). Admin SDK를 쓰지 않는 원칙(위 Firebase token 검증)대로 Firebase 계정은 앱이 지운다.
+- iOS Apple 토큰 취소는 Firebase iOS SDK와 같은 `accounts:revokeToken` 요청으로, 인증 코드(`CODE`)와 Firebase ID token,
+  `X-Ios-Bundle-Identifier`를 보낸다. JS SDK의 `revokeAccessToken`은 액세스 토큰만 받아 네이티브 인증 코드를 전달할 수 없다.
+  취소 실패는 숨기지 않고 서버 삭제 전에 중단한다. Firebase Apple 제공업체의 OAuth 코드 설정과 실제 기기 확인이 필요하다.
 - Firebase 삭제가 실패하면 로그아웃하지 않고 실패를 알린다. 사용자는 로그인한 채로 다시 누를 수 있고, 서버 삭제는 다시 해도
   같아서(`AccountDeletionFlowTest.deletingAgainIsHarmless`) 그대로 끝난다. 그 사이 요청이 오면 빈 사용자가 다시 생기지만
   재시도가 지운다.

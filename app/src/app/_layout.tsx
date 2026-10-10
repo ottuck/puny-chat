@@ -111,6 +111,12 @@ function RootNavigator() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={signedIn && state.status === 'ready' && named}>
         <Stack.Screen name="index" />
+      </Stack.Protected>
+      <Stack.Protected guard={signedIn && state.status === 'none' && named}>
+        <Stack.Screen name="welcome" />
+      </Stack.Protected>
+      <Stack.Protected guard={!!me}>
+        <Stack.Screen name="name" />
         <Stack.Screen
           name="settings"
           options={{ headerShown: true, title: t('settings.title'), headerBackTitle: '' }}
@@ -119,12 +125,6 @@ function RootNavigator() {
           name="guide"
           options={{ headerShown: true, title: t('guide.title'), headerBackTitle: '' }}
         />
-      </Stack.Protected>
-      <Stack.Protected guard={signedIn && state.status === 'none' && named}>
-        <Stack.Screen name="welcome" />
-      </Stack.Protected>
-      <Stack.Protected guard={!!me}>
-        <Stack.Screen name="name" />
       </Stack.Protected>
       <Stack.Protected guard={signedIn && named}>
         <Stack.Screen
