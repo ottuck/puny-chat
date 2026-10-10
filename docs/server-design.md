@@ -394,7 +394,9 @@ Firebase가 30일 지난 익명 계정을 지워도 서버의 사용자·방·�
 - **게스트 판단**: 토큰의 `firebase.sign_in_provider`가 `anonymous`이고 `firebase.identities`가 비어 있으면 게스트.
   Google을 연결하면 uid와 로그인 방식은 그대로지만 identity가 생겨서 게스트가 아니다.
 - **기록**: 인증된 요청마다(`UserService.current`) `guest`와 `lastSeenAt`을 적는다. 쓰기는 하루 한 번까지, 게스트 여부가
-  바뀌면 바로. 계정을 연결한 직후에는 앱이 `GET /api/me`를 한 번 불러서 바로 반영한다(`noteAccountLinked`). 그러지
+  바뀌면 바로. `guest=true`는 사용자 생성 때만 적고, 연결 후에는 `false`로만 바꾼다. 연결 전 발급된 게스트 토큰은
+  다른 기기에 최대 1시간 남을 수 있으므로, 그런 토큰이나 지연된 요청이 연결 상태를 게스트로 되돌리지 않는다.
+  계정을 연결한 직후에는 앱이 `GET /api/me`를 한 번 불러서 바로 반영한다(`noteAccountLinked`). 그러지
   않으면 연결하고 앱을 열지 않은 사용자가 아직 게스트로 남아, 30일이 지난 뒤 정리에 걸릴 수 있다.
 - **대상**: 게스트이고, 만든 지 30일이 지났고(Firebase가 지웠을 때), 7일 동안 요청이 없는 사용자. 두 조건을 다 보므로
   Firebase 정리가 늦어도 쓰고 있는 게스트는 지우지 않는다. 지우는 방법은 계정 삭제(`AccountService`)와 같다.
