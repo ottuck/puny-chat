@@ -78,6 +78,23 @@ class GuestCleanupFlowTest {
     }
 
     @Test
+    void anOlderGuestTokenCannotTurnALinkedAccountBackIntoACleanupCandidate() {
+        createRoom(guestToken("linked-with-old-device"));
+        String roomId = user("linked-with-old-device").roomId();
+        me(token("linked-with-old-device"));
+        assertThat(user("linked-with-old-device").guest()).isFalse();
+
+        // Another device may still have the anonymous token issued before the account was linked.
+        me(guestToken("linked-with-old-device"));
+        assertThat(user("linked-with-old-device").guest()).isFalse();
+        clock.advance(Duration.ofDays(40));
+
+        assertThat(cleanup.run().block()).isZero();
+        assertThat(user("linked-with-old-device")).isNotNull();
+        assertThat(mongo.findById(roomId, Room.class).block()).isNotNull();
+    }
+
+    @Test
     void aDeletedGuestsPartnerKeepsTheRoom() {
         createRoom(token("henry"));
         String code = post(token("henry"), "/api/rooms/me/invitations")

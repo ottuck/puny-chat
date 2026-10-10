@@ -62,12 +62,18 @@ public class UserService {
     private Mono<User> noteSeen(User user, boolean guest) {
         Instant now = Instant.now(clock);
         Instant seen = user.lastSeenAt();
-        if (Boolean.valueOf(guest).equals(user.guest()) && seen != null && seen.isAfter(now.minus(SEEN_EVERY))) {
+        boolean becameLinked = !guest && !Boolean.FALSE.equals(user.guest());
+        if (!becameLinked && seen != null && seen.isAfter(now.minus(SEEN_EVERY))) {
             return Mono.just(user);
         }
+        Update note = new Update().set("lastSeenAt", now);
+        // A token from before linking stays valid for an hour and may arrive from another device.
+        // Only creation sets guest=true; later requests may only clear it. Not writing true here
+        // also protects against a stale request racing with the request that recorded the link.
+        if (!guest) note.set("guest", false);
         return mongo.findAndModify(
                         query(where("_id").is(user.id())),
-                        new Update().set("guest", guest).set("lastSeenAt", now),
+                        note,
                         FindAndModifyOptions.options().returnNew(true),
                         User.class)
                 .defaultIfEmpty(user);
