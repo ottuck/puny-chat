@@ -48,7 +48,7 @@ export default function SettingsScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { state } = useRoom();
-  const me = state.status === 'ready' ? state.me : null;
+  const me = state.status === 'ready' || state.status === 'none' ? state.me : null;
   const guest = !!user?.isAnonymous;
   const daysLeft = useGuestDaysLeft(user);
 
@@ -148,16 +148,18 @@ export default function SettingsScreen() {
         </Pressable>
 
         {/* For someone who started solo and got a friend's code later. */}
-        <Pressable
-          onPress={() => router.push('/join')}
-          accessibilityRole="button"
-          style={({ pressed }) => [
-            styles.card,
-            { backgroundColor: colors.surface, opacity: pressed ? 0.7 : 1 },
-          ]}
-        >
-          <Text style={[styles.row, { color: colors.text }]}>{t('settings.joinWithCode')}</Text>
-        </Pressable>
+        {me?.displayName ? (
+          <Pressable
+            onPress={() => router.push('/join')}
+            accessibilityRole="button"
+            style={({ pressed }) => [
+              styles.card,
+              { backgroundColor: colors.surface, opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <Text style={[styles.row, { color: colors.text }]}>{t('settings.joinWithCode')}</Text>
+          </Pressable>
+        ) : null}
 
         <Pressable
           onPress={onSignOut}

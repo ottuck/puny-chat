@@ -76,6 +76,12 @@ export default function WelcomeScreen() {
             disabled={busy}
             variant="secondary"
           />
+          <Button
+            label={t('settings.title')}
+            onPress={() => router.push('/settings')}
+            disabled={busy}
+            variant="secondary"
+          />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
