@@ -14,6 +14,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
@@ -57,8 +58,8 @@ class InvitationService {
             if (room.isFull()) return Mono.error(new ApiException(HttpStatus.CONFLICT, "ROOM_FULL"));
             Instant now = Instant.now(clock);
             // A new random code per attempt; the unique index catches the rare collision.
-            return Mono.defer(() -> invitations.insert(
-                            new Invitation(null, room.id(), newCode(), user.id(), now, now.plus(VALIDITY), null, null)))
+            return Mono.defer(() -> invitations.insert(new Invitation(
+                            null, room.id(), newCode(), user.id(), now, now.plus(VALIDITY), null, null, null)))
                     .retryWhen(Retry.max(3).filter(DuplicateKeyException.class::isInstance));
         });
     }
@@ -79,24 +80,51 @@ class InvitationService {
                 .switchIfEmpty(Mono.error(new ApiException(HttpStatus.NOT_FOUND, "INVITATION_NOT_FOUND")))
                 .flatMap(invitation -> {
                     boolean resuming = user.id().equals(invitation.usedBy());
-                    if (invitation.roomId().equals(user.roomId())) {
-                        // Only the old solo room's deletion can be missing, and nobody sees that room.
-                        if (resuming) return joined(invitation, user);
+                    boolean alreadyHere = invitation.roomId().equals(user.roomId());
+                    if (alreadyHere && !resuming) {
                         return Mono.error(new ApiException(HttpStatus.CONFLICT, "ALREADY_MEMBER"));
                     }
                     if (!resuming && invitation.usedAt() != null) return Mono.error(invitationUsed());
                     if (!resuming && !invitation.expiresAt().isAfter(now))
                         return Mono.error(new ApiException(HttpStatus.GONE, "INVITATION_EXPIRED"));
-                    return checkCanLeaveCurrentRoom(user, leaveCurrentRoom)
+                    return (alreadyHere ? Mono.<Void>empty() : checkCanLeaveCurrentRoom(user, leaveCurrentRoom))
                             .then(claim(invitation, user, now))
-                            .then(joinOrRelease(invitation, user))
-                            .then(userService.moveToRoom(user.id(), invitation.roomId()))
-                            .then(
-                                    user.roomId() == null
-                                            ? Mono.<Void>empty()
-                                            : roomService.deleteIfSolo(user.roomId(), user.id()))
-                            .then(joined(invitation, user));
+                            .flatMap(claimed -> reserve(claimed, user)
+                                    .then(joinOrRelease(claimed, user))
+                                    .then(finish(claimed, user))
+                                    .then(cleanPreviousRoom(claimed, user))
+                                    .then(joined(claimed, user)));
                 });
+    }
+
+    private Mono<Void> reserve(Invitation invitation, User user) {
+        return userService
+                .reserveRoomJoin(user.id(), user.roomId(), invitation.id())
+                .flatMap(reserved -> reserved ? Mono.just(true) : userService.isInRoom(user.id(), invitation.roomId()))
+                .flatMap(reserved -> reserved
+                        ? Mono.<Void>empty()
+                        : releaseInvitation(invitation, user).then(Mono.error(alreadyInRoom())));
+    }
+
+    private Mono<Void> finish(Invitation invitation, User user) {
+        return userService
+                .finishRoomJoin(user.id(), user.roomId(), invitation.roomId(), invitation.id())
+                .flatMap(finished -> finished ? Mono.just(true) : userService.isInRoom(user.id(), invitation.roomId()))
+                .flatMap(finished -> finished
+                        ? Mono.<Void>empty()
+                        // E.g. another device left the old room during this join. Do not leave a
+                        // member behind in the target or overwrite the user's newer room.
+                        : roomService
+                                .leaveFromRoom(invitation.roomId(), user)
+                                .then(release(invitation, user))
+                                .then(Mono.error(alreadyInRoom())));
+    }
+
+    private Mono<Void> cleanPreviousRoom(Invitation invitation, User user) {
+        String previous = invitation.previousRoomId();
+        return previous == null || previous.equals(invitation.roomId())
+                ? Mono.empty()
+                : roomService.leaveFromRoom(previous, user);
     }
 
     private Mono<RoomView> joined(Invitation invitation, User user) {
@@ -118,21 +146,39 @@ class InvitationService {
         });
     }
 
-    // Marks the invitation used; only one of several concurrent accepts can do this. The user who
-    // already claimed it may claim it again, to finish an accept that failed midway.
-    private Mono<Void> claim(Invitation invitation, User user, Instant now) {
-        return mongo.updateFirst(
+    // Keep the old room on the invitation, including after roomId was changed: a retry can
+    // still finish old-room cleanup. Existing used invitations have no previousRoomId yet.
+    private Mono<Invitation> claim(Invitation invitation, User user, Instant now) {
+        return mongo.findAndModify(
                         query(where("_id")
                                 .is(invitation.id())
-                                .orOperator(
-                                        where("usedAt")
-                                                .is(null)
-                                                .and("expiresAt")
-                                                .gt(now),
-                                        where("usedBy").is(user.id()))),
-                        new Update().set("usedAt", now).set("usedBy", user.id()),
+                                .and("usedAt")
+                                .is(null)
+                                .and("expiresAt")
+                                .gt(now)),
+                        new Update().set("usedAt", now).set("usedBy", user.id()).set("previousRoomId", user.roomId()),
+                        FindAndModifyOptions.options().returnNew(true),
                         Invitation.class)
-                .flatMap(result -> result.getMatchedCount() == 1 ? Mono.<Void>empty() : Mono.error(invitationUsed()));
+                .switchIfEmpty(Mono.defer(() -> invitations
+                        .findById(invitation.id())
+                        .filter(current -> user.id().equals(current.usedBy()))))
+                .switchIfEmpty(Mono.error(invitationUsed()))
+                .flatMap(claimed -> {
+                    if (claimed.previousRoomId() != null
+                            || user.roomId() == null
+                            || user.roomId().equals(claimed.roomId())) return Mono.just(claimed);
+                    return mongo.findAndModify(
+                                    query(where("_id")
+                                            .is(claimed.id())
+                                            .and("usedBy")
+                                            .is(user.id())
+                                            .and("previousRoomId")
+                                            .is(null)),
+                                    Update.update("previousRoomId", user.roomId()),
+                                    FindAndModifyOptions.options().returnNew(true),
+                                    Invitation.class)
+                            .switchIfEmpty(invitations.findById(claimed.id()));
+                });
     }
 
     // The room can still be full when another code for it was accepted at the same moment. Then
@@ -140,12 +186,24 @@ class InvitationService {
     private Mono<Void> joinOrRelease(Invitation invitation, User user) {
         return roomService.join(invitation.roomId(), user.id()).flatMap(joined -> {
             if (joined) return Mono.<Void>empty();
-            return mongo.updateFirst(
-                            query(where("_id").is(invitation.id())),
-                            new Update().unset("usedAt").unset("usedBy"),
-                            Invitation.class)
-                    .then(Mono.error(new ApiException(HttpStatus.CONFLICT, "ROOM_FULL")));
+            return release(invitation, user).then(Mono.error(new ApiException(HttpStatus.CONFLICT, "ROOM_FULL")));
         });
+    }
+
+    private Mono<Void> release(Invitation invitation, User user) {
+        return userService.releaseRoomJoin(user.id(), invitation.id()).then(releaseInvitation(invitation, user));
+    }
+
+    private Mono<Void> releaseInvitation(Invitation invitation, User user) {
+        return mongo.updateFirst(
+                        query(where("_id").is(invitation.id()).and("usedBy").is(user.id())),
+                        new Update().unset("usedAt").unset("usedBy").unset("previousRoomId"),
+                        Invitation.class)
+                .then();
+    }
+
+    private static ApiException alreadyInRoom() {
+        return new ApiException(HttpStatus.CONFLICT, "ALREADY_IN_ROOM");
     }
 
     private String newCode() {

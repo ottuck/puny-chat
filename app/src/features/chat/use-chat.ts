@@ -6,8 +6,10 @@ import type { BuddyView } from '@/features/buddy/api';
 import { chatWord } from '@/features/buddy/chat-words';
 import type { Cue } from '@/features/buddy/components/buddy-stage';
 import { missedEvolution, type Reaction, reactionTo } from '@/features/buddy/reactions';
+import { ApiError } from '@/lib/api';
 
 import { fetchNewer, fetchNewest, fetchOlder } from './api';
+import { MessageSync } from './message-sync';
 import { ChatSocket, type ConnectionStatus } from './socket';
 import { fromServer, type Message, type ServerMessage } from './types';
 
@@ -47,6 +49,8 @@ type Options = {
 export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<ConnectionStatus>('connecting');
+  const [syncing, setSyncing] = useState(true);
+  const syncingRef = useRef(true);
   const [hasOlder, setHasOlder] = useState(false);
   // The first page has arrived; before that an empty timeline means "not loaded yet".
   const [loaded, setLoaded] = useState(false);
@@ -62,16 +66,20 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   const typingSentAt = useRef(0);
   const readSent = useRef<string | undefined>(undefined);
   const messagesRef = useRef(messages);
-  messagesRef.current = messages;
+  // Kept synchronously in event handlers: ready can arrive before React commits the pending bubble.
+  const outbox = useRef(new Map<string, { text: string; status: 'sending' | 'failed' }>());
   const socketRef = useRef<ChatSocket | null>(null);
   const onRoomLostRef = useRef(onRoomLost);
-  onRoomLostRef.current = onRoomLost;
   const onRoomChangedRef = useRef(onRoomChanged);
-  onRoomChangedRef.current = onRoomChanged;
   const onBuddyRef = useRef(onBuddy);
-  onBuddyRef.current = onBuddy;
   const myIdRef = useRef(myId);
-  myIdRef.current = myId;
+  useEffect(() => {
+    messagesRef.current = messages;
+    onRoomLostRef.current = onRoomLost;
+    onRoomChangedRef.current = onRoomChanged;
+    onBuddyRef.current = onBuddy;
+    myIdRef.current = myId;
+  }, [messages, onRoomLost, onRoomChanged, onBuddy, myId]);
   // The latest live event for the buddy to react to (see reactionTo).
   const [reaction, setReaction] = useState<Reaction | null>(null);
   // The latest one-word message ("밥", "춤", …) from either of us, for the buddy to answer.
@@ -86,14 +94,14 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
     setMessages((prev) => merge(prev, incoming));
   }, []);
 
-  const setTypingOf = useCallback((userId: string, on: boolean) => {
+  const setTypingOf = useCallback(function updateTyping(userId: string, on: boolean) {
     const timers = typingTimers.current;
     clearTimeout(timers.get(userId));
     timers.delete(userId);
     if (on)
       timers.set(
         userId,
-        setTimeout(() => setTypingOf(userId, false), TYPING_TTL_MS),
+        setTimeout(() => updateTyping(userId, false), TYPING_TTL_MS),
       );
     setTyping((prev) => {
       const without = prev.filter((id) => id !== userId);
@@ -102,6 +110,8 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   }, []);
 
   const markStatus = useCallback((clientMessageId: string, status: 'sending' | 'failed') => {
+    const pending = outbox.current.get(clientMessageId);
+    if (pending) outbox.current.set(clientMessageId, { ...pending, status });
     setMessages((prev) =>
       prev.map((m) =>
         m.clientMessageId === clientMessageId && m.type === 'TEXT' && !m.id ? { ...m, status } : m,
@@ -110,39 +120,41 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   }, []);
 
   useEffect(() => {
-    // Fetch what arrived while this device was away, then resend what never got an ack.
-    // `myRead`: the newest message this user had read, from the server.
-    const catchUp = async (myRead: string | undefined) => {
-      let after = messagesRef.current.find((m) => m.id)?.id;
-      const fetched: ServerMessage[] = [];
-      if (!after) {
-        const page = await fetchNewest();
+    const sync = new MessageSync({
+      fetchNewest,
+      fetchNewer,
+      onPage: (page, initial) => {
         apply(page.messages);
-        fetched.push(...page.messages);
-        setHasOlder(page.hasMore);
-        setLoaded(true);
-      } else {
-        for (;;) {
-          const page = await fetchNewer(after);
-          apply(page.messages);
-          fetched.push(...page.messages);
-          if (!page.hasMore || page.messages.length === 0) break;
-          after = page.messages[0].id;
+        if (initial) {
+          setHasOlder(page.hasMore);
+          setLoaded(true);
         }
-      }
-      const missed = missedEvolution(fetched, myRead);
-      if (missed) setReaction(missed);
-      for (const m of messagesRef.current) {
-        if (m.type === 'TEXT' && !m.id && m.status === 'sending') {
-          socketRef.current?.send(m.clientMessageId, m.text);
+      },
+      onSynced: (fetched, myRead) => {
+        const missed = missedEvolution(fetched, myRead);
+        if (missed) setReaction(missed);
+      },
+      onSyncing: (next) => {
+        syncingRef.current = next;
+        setSyncing(next);
+      },
+      onError: (error) => {
+        if (error instanceof ApiError && error.code === 'ROOM_NOT_FOUND') {
+          sync.stop();
+          onRoomLostRef.current();
+        } else {
+          console.warn('catch-up failed; retrying', error);
         }
-      }
-    };
+      },
+    });
 
     const socket = new ChatSocket({
       onStatus: (next) => {
         setStatus(next);
         if (next !== 'online') {
+          sync.stop();
+          syncingRef.current = true;
+          setSyncing(true);
           // Unknown while disconnected; ready brings the current state back.
           setOnline([]);
           for (const userId of typingTimers.current.keys()) setTypingOf(userId, false);
@@ -154,9 +166,16 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
         // Anything sent before the connection dropped may not have arrived.
         readSent.current = undefined;
         typingSentAt.current = 0;
-        catchUp(readsNow[myIdRef.current]).catch((e) => console.warn('catch-up failed', e));
+        sync.start(readsNow[myIdRef.current]);
+        // Outgoing messages do not wait for REST history recovery. The same id keeps retries safe.
+        for (const [clientMessageId, message] of outbox.current) {
+          if (message.status === 'sending') {
+            socket.send(clientMessageId, message.text);
+          }
+        }
       },
       onAck: (_clientMessageId, message) => {
+        outbox.current.delete(message.clientMessageId);
         apply([message]);
         cueFrom(message);
       },
@@ -206,6 +225,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
     const timers = typingTimers.current;
     return () => {
       subscription.remove();
+      sync.stop();
       socket.stop();
       socketRef.current = null;
       for (const timer of timers.values()) clearTimeout(timer);
@@ -216,12 +236,12 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   // While the chat is on screen, tell the others how far I have read: up to the newest message
   // that is not my own. Hex ids sort by time, so comparing strings compares age.
   useEffect(() => {
-    if (status !== 'online' || !active) return;
+    if (status !== 'online' || !active || syncing || syncingRef.current) return;
     const newest = messages.find((m) => m.id && !(m.type === 'TEXT' && m.senderId === myId))?.id;
     if (!newest) return;
     if ((reads[myId] ?? '') >= newest || (readSent.current ?? '') >= newest) return;
     if (socketRef.current?.sendRead(newest)) readSent.current = newest;
-  }, [messages, status, active, reads, myId]);
+  }, [messages, status, active, reads, myId, syncing]);
 
   // Called as the draft changes. Repeats "typing" while it keeps changing; the partner lets it
   // lapse once it stops, so no timer is needed here.
@@ -248,6 +268,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
         createdAt: new Date().toISOString(),
         status: 'sending',
       };
+      outbox.current.set(clientMessageId, { text, status: 'sending' });
       setMessages((prev) => sortTimeline([pending, ...prev]));
       // The partner stops showing "typing" when the message arrives; start over for the next one.
       typingSentAt.current = 0;
@@ -292,7 +313,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
 
   return {
     messages,
-    status,
+    status: status === 'online' && syncing ? 'connecting' : status,
     online,
     typing,
     reads,

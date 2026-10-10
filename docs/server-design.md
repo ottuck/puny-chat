@@ -63,13 +63,13 @@ com.buddychat
 ## 컬렉션
 
 ```text
-users        { _id, firebaseUid (unique), displayName, roomId?, createdAt, guest?, lastSeenAt? }
+users        { _id, firebaseUid (unique), displayName, roomId?, createdAt, guest?, lastSeenAt?, roomJoinId? }
 rooms        { _id, memberIds [1..2], memberCount, createdAt, album? [{ name, bornAt, graduatedAt }],
                buddy { name, exp, bornAt, lastFedAt?, lastCleanedAt?, poopsCleaned?, expDay?, messageExpToday?,
                        talkDay?, talkers?, togetherDay? } }
 messages     { _id, roomId, senderId?, type (TEXT | SYSTEM | BUDDY_EVENT), text?, buddyEvent?, systemEvent?, actorId?,
                clientMessageId, createdAt }
-invitations  { _id, roomId, code (unique), createdBy, createdAt, expiresAt, usedAt?, usedBy? }
+invitations  { _id, roomId, code (unique), createdBy, createdAt, expiresAt, usedAt?, usedBy?, previousRoomId? }
 reads        { _id: "<roomId>:<userId>", roomId, userId, messageId, updatedAt }
 push_tokens  { _id: <Expo push token | Web Push endpoint>, userId, updatedAt, p256dh?, auth? }
 settings     { _id: "buddy", expPerLevel }
@@ -156,7 +156,13 @@ server → client
   Firebase에서 새 토큰을 받아 다시 인증한다. 즉시 폐기(로그아웃·정지) 확인은 하지 않고 토큰 수명(1시간)만큼 늦는 걸 허용한다.
 - 연결은 인증 시점의 room에 묶인다. 초대를 수락해 room이 바뀌면 앱이 다시 연결한다.
 - 한 연결의 이벤트는 순서대로 처리한다(보낸 순서 = 저장 순서).
-- 재연결하면 클라이언트는 마지막으로 받은 메시지 이후를 REST로 채우고, ack 못 받은 메시지를 같은 `clientMessageId`로 다시 보낸다.
+- 재연결하면 `features/chat/message-sync.ts`가 **REST로 연속해서 확인한 마지막 메시지** 이후를 채운다. 실시간 메시지나 ack는
+  화면에 바로 합치되 복구 커서는 움직이지 않는다. 각 페이지가 성공하면 그 페이지의 최신 id까지 커서를 전진시키고, 실패하면
+  그 위치에서 3초 뒤 다시 시도한다(요청 제한 시간 15초). 처음 조회에 실패하면 초기 페이지부터 다시 읽고, 처음 방이 비어 있으면
+  가장 작은 ObjectId를 커서로 써서 이후 메시지를 모두 페이지별로 복구한다.
+- 복구는 한 번에 하나만 실행한다. 재연결·종료 시 진행 중인 요청을 취소하고 이전 연결의 늦은 응답을 무시한다.
+  복구 중에는 읽음 위치를 보내지 않고 연결 표시도 복구 중으로 둔다. ack 못 받은 메시지는 히스토리 복구와 별개로
+  `ready`에서 같은 `clientMessageId`로 다시 보내므로 REST 장애가 전송을 막지 않는다.
 - 세션·presence·typing은 서버 메모리에만 둔다(아래 인프라). 재배포하면 사라지는 것을 전제로 한다.
   presence는 연결에서 계산한다(한 사람이 기기 여러 대로 접속해도 하나로 본다). 한 room의 입장·퇴장은 순서대로
   처리해서 online/offline 이벤트 순서가 뒤바뀌지 않는다.
@@ -331,6 +337,9 @@ iPhone / Web ──HTTPS·WSS──▶ Railway (Spring WebFlux, Docker, 싱가�
 
 ## Room·초대 규칙 (S2에서 확정)
 
+- 방 생성은 room 저장 → `users.roomId: null, roomJoinId: null` 조건으로 연결 순서다. 방 저장 실패는 사용자에 영향을 주지 않는다.
+  동시 생성에서 연결하지 못한 후보 room은 삭제한다. 오류 응답이 왔어도 실제로 사용자에게 연결된 room은 지우지 않는다.
+  트랜잭션이 없어서 저장 직후 프로세스가 종료되면 연결되지 않은 후보 room이 남을 수는 있지만, 사용자의 재시도를 막지는 않는다.
 - 초대 코드: 8자리(헷갈리는 0/O, 1/I/L 제외), 24시간 유효, 한 번만 사용. 대소문자 구분 없음.
 - 초대 링크: 앱이 공유하는 문구에 `<웹 주소>/join?code=<코드>`를 넣는다. 서버는 바뀌지 않는다: 웹이 로그인 전에 코드를 이 탭에
   기억해 뒀다가(sessionStorage), 시작하고 이름을 정하면 코드가 채워진 참가 화면을 연다(`lib/pending-invite`).
@@ -343,12 +352,19 @@ iPhone / Web ──HTTPS·WSS──▶ Railway (Spring WebFlux, Docker, 싱가�
   (조건부) → 빈 room이면 삭제 + 기록 삭제. 둘이 동시에 나가면 room을 비운 쪽이 지운다. 먼저 나간 쪽의 SYSTEM 메시지가
   그 뒤에 저장될 수 있어서, 저장 뒤 room이 없으면 기록을 한 번 더 지운다(테스트로 잡은 경쟁). 다시 나가면 중간에 멈춘
   나가기를 끝낸다. 초대 수락으로 solo room을 떠날 때도 기록을 함께 지운다.
-- 동시성: 초대 사용은 `usedAt: null` 조건부 update, 참가는 `memberCount < 2` 조건부 update로 보장한다.
-  같은 room의 서로 다른 코드가 동시에 수락되어 자리가 없으면, 진 쪽의 초대는 사용 처리를 되돌린다.
-- 트랜잭션이 없으므로 초대 사용 → 참가 → 사용자 roomId 변경 → 기존 room 삭제 순서로 처리한다. 중간에 실패하면
-  (예: 참가는 됐는데 roomId 변경 실패) 같은 사용자가 같은 코드를 다시 수락했을 때 멈춘 곳부터 이어서 끝낸다.
-  초대의 `usedBy`가 자신이면 사용된 코드여도 통과하고, 이미 멤버면 참가 성공으로 본다. 앱은 에러 뒤 다시
-  시도하기만 하면 된다. 끝내 다시 시도하지 않으면 그 자리는 유령 멤버로 남는다(MVP에서는 감수).
+- 동시성: 초대 사용은 `usedAt: null`, 참가는 `memberCount < 2` 조건부 update로 보장한다. 참가 전에는 사용자의
+  `roomJoinId`에 초대 id를 예약한다(현재 `roomId`가 요청 시작 시 값이고 예약이 없거나 같은 초대일 때만).
+  다른 방의 코드를 동시에 수락해도 한 초대만 예약되고, 진 쪽의 초대 사용은 되돌린다. 예약 중에는 방 생성도 거절한다.
+  자리가 없으면 사용자 예약과 자기 소유의 초대 사용을 해제한다. 예약만으로 `roomId`를 바꾸지 않으므로 참가 전에는
+  새 room을 조회하거나 WebSocket으로 접근할 수 없다.
+- 트랜잭션 없이 초대 사용 → 사용자 예약 → 참가 → 예약·기존 roomId를 확인하며 새 roomId 설정 및 예약 해제 → 기존 room 나가기
+  순서로 처리한다. 초대에 `previousRoomId`를 남겨 roomId를 바꾼 후 실패해도 기존 room 정리를 재시도할 수 있다.
+  기존 room은 멤버에서 사용자를 빼고 비었을 때만 삭제한다. 이동 사이 누군가 기존 room에 참가했다면 그 사람의 room과 Buddy는 남고,
+  이동한 사용자의 이전 기기 연결은 닫힌다. 동시에 기존 room에서 나가 roomId가 바뀌었다면 참가한 target 멤버와 예약을 정리하고
+  `ALREADY_IN_ROOM`을 반환하며, 더 최근의 roomId를 덮어쓰지 않는다.
+- 중간 실패는 같은 사용자가 같은 코드를 다시 수락하면 이어서 끝낸다. `usedBy`가 자신이면 사용된 코드도 통과하고,
+  이미 target 멤버면 참가 성공으로 본다. 이전 문서에 예약·이전 room 필드가 없어도 처리한다. 끝내 재시도하지 않으면
+  예약이나 미완료 참가가 남을 수 있다(MVP에서는 감수).
 
 ## 계정 삭제
 

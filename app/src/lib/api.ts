@@ -21,7 +21,7 @@ export async function idToken(): Promise<string> {
 
 export async function api<T>(
   path: string,
-  init: { method?: string; body?: unknown } = {},
+  init: { method?: string; body?: unknown; signal?: AbortSignal } = {},
 ): Promise<T> {
   let response: Response;
   try {
@@ -32,6 +32,7 @@ export async function api<T>(
         ...(init.body === undefined ? {} : { 'Content-Type': 'application/json' }),
       },
       body: init.body === undefined ? undefined : JSON.stringify(init.body),
+      signal: init.signal,
     });
   } catch {
     throw new ApiError(0, 'NETWORK');
