@@ -61,8 +61,8 @@ type Act = 'dance' | 'sing' | 'refuse';
 // A one-word message for the buddy ("밥", "춤", …, features/buddy/chat-words.ts), or the tour's
 // script asking for a dance or a song.
 export type Cue = { id: string; kind: ChatWord };
-const ACT_REPEATS = 2;
-const ACT_MS: Record<Act, number> = { dance: 600, sing: 1600, refuse: 900 };
+const ACT_REPEATS = 1;
+const ACT_MS: Record<Act, number> = { dance: 300, sing: 800, refuse: 900 };
 // How often, left alone, it dances or sings.
 const IDLE_ACT_MIN_MS = 20_000;
 const IDLE_ACT_MAX_MS = 40_000;
@@ -299,9 +299,13 @@ export function BuddyStage({
   });
 
   const perform = useCallback((next: Act) => {
-    if (actTimer.current) clearTimeout(actTimer.current);
+    // Timer refs lock immediately, including clicks before React renders the new pose.
+    if (actTimer.current || petTimer.current) return;
     setAct(next);
-    actTimer.current = setTimeout(() => setAct(null), ACT_MS[next]);
+    actTimer.current = setTimeout(() => {
+      actTimer.current = null;
+      setAct(null);
+    }, ACT_MS[next]);
   }, []);
 
   // Wander: walk to a random spot, look around, repeat. A hungry or eating buddy stays by the bowl,
@@ -376,26 +380,30 @@ export function BuddyStage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cue]);
 
-  // Care or growth in the room ends a dance or a song. A new message does not: "노래" from the
-  // other one is a message too, and asks for the song.
+  // Care or growth takes priority over petting, dancing or singing. A new message does not:
+  // "노래" from the other one is a message too, and asks for the song.
   useEffect(() => {
     if (!reaction || reaction.kind === 'message') return;
     const timer = setTimeout(() => {
       if (actTimer.current) clearTimeout(actTimer.current);
+      actTimer.current = null;
+      if (petTimer.current) clearTimeout(petTimer.current);
+      petTimer.current = null;
       setAct(null);
+      setPetted(false);
     }, 0);
     return () => clearTimeout(timer);
   }, [reaction]);
 
   // Left alone, now and then a dance or a song.
   useEffect(() => {
-    if (egg || settled || active || acting) return;
+    if (egg || settled || active || acting || petted) return;
     const timer = setTimeout(
       () => perform(Math.random() < 0.5 ? 'dance' : 'sing'),
       IDLE_ACT_MIN_MS + Math.random() * (IDLE_ACT_MAX_MS - IDLE_ACT_MIN_MS),
     );
     return () => clearTimeout(timer);
-  }, [egg, settled, active, acting, perform]);
+  }, [egg, settled, active, acting, petted, perform]);
 
   // Little hops while dancing, notes rising while singing.
   useEffect(() => {
@@ -567,14 +575,16 @@ export function BuddyStage({
 
   // Petting: glad (and a thank-you once grown), or a dance, or a song.
   const pet = () => {
-    if (egg) return;
+    if (egg || busy || active || acting || petted || actTimer.current || petTimer.current) return;
     const roll = Math.random();
     if (roll < 0.3) return perform('dance');
     if (roll < 0.6) return perform('sing');
     setPetted(true);
     say('thanks');
-    if (petTimer.current) clearTimeout(petTimer.current);
-    petTimer.current = setTimeout(() => setPetted(false), PET_MS);
+    petTimer.current = setTimeout(() => {
+      petTimer.current = null;
+      setPetted(false);
+    }, PET_MS);
   };
 
   const pose: Pose = eating
