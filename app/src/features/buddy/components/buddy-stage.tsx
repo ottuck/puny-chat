@@ -55,13 +55,14 @@ const PROP_SCALE = 3;
 const TICK_MS = 450;
 // While evolving the old and new looks swap this fast.
 const FAST_TICK_MS = 90;
-const PET_MS = 1800;
+const PET_MS = 900;
 // Things the buddy does by itself: a dance, a song, or shaking its head at a full bowl.
 type Act = 'dance' | 'sing' | 'refuse';
 // A one-word message for the buddy ("밥", "춤", …, features/buddy/chat-words.ts), or the tour's
 // script asking for a dance or a song.
 export type Cue = { id: string; kind: ChatWord };
-const ACT_MS: Record<Act, number> = { dance: 3000, sing: 3200, refuse: 900 };
+const ACT_REPEATS = 2;
+const ACT_MS: Record<Act, number> = { dance: 600, sing: 1600, refuse: 900 };
 // How often, left alone, it dances or sings.
 const IDLE_ACT_MIN_MS = 20_000;
 const IDLE_ACT_MAX_MS = 40_000;
@@ -406,17 +407,24 @@ export function BuddyStage({
               Animated.timing(hop, { toValue: -6, duration: 150, useNativeDriver: NATIVE_DRIVER }),
               Animated.timing(hop, { toValue: 0, duration: 150, useNativeDriver: NATIVE_DRIVER }),
             ]),
+            { iterations: ACT_REPEATS },
           )
         : Animated.loop(
             Animated.sequence([
               Animated.timing(note, { toValue: 0, duration: 0, useNativeDriver: NATIVE_DRIVER }),
-              Animated.timing(note, { toValue: 1, duration: 1000, useNativeDriver: NATIVE_DRIVER }),
+              Animated.timing(note, {
+                toValue: 1,
+                duration: ACT_MS.sing / ACT_REPEATS,
+                useNativeDriver: NATIVE_DRIVER,
+              }),
             ]),
+            { iterations: ACT_REPEATS },
           );
     move.start();
     return () => {
       move.stop();
       hop.setValue(0);
+      note.setValue(0);
     };
   }, [act, hop, note]);
 
@@ -478,7 +486,11 @@ export function BuddyStage({
       ]),
     );
     rock.start();
-    return () => rock.stop();
+    return () => {
+      rock.stop();
+      // stop() preserves the last angle; evolution must not inherit a tilted egg.
+      tilt.setValue(0);
+    };
   }, [egg, tilt]);
 
   // Movement that goes with a reaction: hops for a message or a new level, a shudder while
@@ -926,6 +938,7 @@ export function BuddyStage({
             ))
           : null}
         <Pressable
+          nativeID="buddy-sprite-button"
           onPress={pet}
           accessibilityRole="button"
           accessibilityLabel={t('buddy.pet', { buddy: buddy.name })}
