@@ -92,4 +92,10 @@ html[data-theme="dark"] body { background-color: #16161A; }
   html[data-theme="dark"] #web-frame { border-color: #2E2E35; background-color: #16161A; box-shadow: none; }
 }
 * { scrollbar-width: thin; }
+#buddy-sprite-button:focus:not(:focus-visible) { outline: none; }
+#buddy-sprite-button:focus-visible {
+  outline: 2px solid #F6784D;
+  outline-offset: 4px;
+  border-radius: 12px;
+}
 html:lang(ko) body { word-break: keep-all; overflow-wrap: anywhere; }`;

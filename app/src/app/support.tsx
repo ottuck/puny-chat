@@ -39,7 +39,7 @@ export default function SupportScreen() {
   const { user } = useAuth();
   const { state, reload } = useRoom();
   const params = useLocalSearchParams<{ type?: string; roomId?: string; targetId?: string }>();
-  const [type, setType] = useState<'inquiry' | 'report'>(
+  const [selectedType, setType] = useState<'inquiry' | 'report'>(
     params.type === 'report' ? 'report' : 'inquiry',
   );
   const [savedTarget, setSavedTarget] = useState<Target | null>(null);
@@ -78,6 +78,8 @@ export default function SupportScreen() {
         }
       : null;
   const target = savedTarget ?? currentTarget;
+  // No room or partner yet: even an old report link opens the inquiry form.
+  const type = selectedType === 'report' && target ? 'report' : 'inquiry';
 
   const send = async () => {
     if (!user || sending.current || (type === 'report' && !target)) return;
@@ -208,25 +210,27 @@ export default function SupportScreen() {
           </View>
         ) : user ? (
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
-            <View style={styles.choices} accessibilityRole="radiogroup">
-              {(['inquiry', 'report'] as const).map((option) => (
-                <Pressable
-                  key={option}
-                  disabled={busy || locked}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: type === option }}
-                  onPress={() => setType(option)}
-                  style={[
-                    styles.choice,
-                    { backgroundColor: type === option ? colors.accent : colors.background },
-                  ]}
-                >
-                  <Text style={{ color: type === option ? colors.onAccent : colors.text }}>
-                    {t(`support.${option}`)}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+            {target ? (
+              <View style={styles.choices} accessibilityRole="radiogroup">
+                {(['inquiry', 'report'] as const).map((option) => (
+                  <Pressable
+                    key={option}
+                    disabled={busy || locked}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: type === option }}
+                    onPress={() => setType(option)}
+                    style={[
+                      styles.choice,
+                      { backgroundColor: type === option ? colors.accent : colors.background },
+                    ]}
+                  >
+                    <Text style={{ color: type === option ? colors.onAccent : colors.text }}>
+                      {t(`support.${option}`)}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
             {type === 'report' ? (
               <>
                 <Text style={[styles.body, { color: colors.text }]}>
