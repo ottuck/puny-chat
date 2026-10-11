@@ -51,6 +51,7 @@ com.buddychat
  ├ auth       SecurityConfig, 현재 사용자(uid) 꺼내기
  ├ user       User, /api/me
  ├ account    계정 삭제(여러 모듈의 service를 차례로 부른다)
+ ├ support    문의·신고 접수, 대화 종료 복구, 운영자 이메일 알림
  ├ room       Room, Invitation, 멤버 관리
  ├ chat       Message, 히스토리 조회
  ├ buddy      Buddy 규칙과 상태 변경
@@ -64,7 +65,7 @@ com.buddychat
 
 ```text
 users        { _id, firebaseUid (unique), displayName, roomId?, createdAt, guest?, lastSeenAt?, roomJoinId? }
-rooms        { _id, memberIds [1..2], memberCount, createdAt, album? [{ name, bornAt, graduatedAt }],
+rooms        { _id, memberIds [1..2], memberCount, createdAt, closureId?, album? [{ name, bornAt, graduatedAt }],
                buddy { name, exp, bornAt, lastFedAt?, lastCleanedAt?, poopsCleaned?, expDay?, messageExpToday?,
                        talkDay?, talkers?, togetherDay? } }
 messages     { _id, roomId, senderId?, type (TEXT | SYSTEM | BUDDY_EVENT), text?, buddyEvent?, systemEvent?, actorId?,
@@ -73,6 +74,9 @@ invitations  { _id, roomId, code (unique), createdBy, createdAt, expiresAt, used
 reads        { _id: "<roomId>:<userId>", roomId, userId, messageId, updatedAt }
 push_tokens  { _id: <Expo push token | Web Push endpoint>, userId, updatedAt, p256dh?, auth? }
 settings     { _id: "buddy", expPerLevel }
+supportTickets { _id: requestId, kind (INQUIRY | REPORT | REMOVE), reporterId, reporterName?, replyEmail?,
+                 reason?, description, roomId?, roomSnapshot?, targetId?, targetName?, nextRoomId?, evidence [],
+                 createdAt, expiresAt, completedAt?, closureConfirmed, emailStatus, emailAttempts, nextEmailAttemptAt }
 ```
 
 - `push_tokens`의 `p256dh`·`auth`는 Web Push 구독의 암호화 키다. Expo 토큰이면 없다.
@@ -109,6 +113,8 @@ settings     { _id: "buddy", expPerLevel }
 | POST | `/api/rooms/me/invitations` | 초대 코드 발급 |
 | POST | `/api/invitations/{code}/accept` | 초대 수락 → room 참가 |
 | POST | `/api/rooms/me/leave` | room 나가기 → 204(아래 Room 규칙) |
+| POST | `/api/support/inquiries` | 문의 `{ requestId, description, replyEmail? }` → 201 `{ id }` |
+| POST | `/api/rooms/me/partner-removal` | 상대 종료 `{ requestId, roomId, targetId, report, reason?, description, replyEmail? }` → 201 `{ id }` |
 | GET | `/api/rooms/me/messages?before=&after=&limit=` | 타임라인(최신순, limit ≤ 50). `before`: 이전 페이지, `after`: 재연결 후 놓친 메시지. 응답 `{ messages, hasMore }` |
 | POST | `/api/rooms/me/buddy/feed` | 밥주기 → `{ buddy, changed }`. 필요 없었거나 상대가 방금 했으면 `changed: false`(아래 Buddy 규칙) |
 | POST | `/api/rooms/me/buddy/clean` | 💩 청소 → `{ buddy, changed }` |
@@ -365,6 +371,28 @@ iPhone / Web ──HTTPS·WSS──▶ Railway (Spring WebFlux, Docker, 싱가�
 - 중간 실패는 같은 사용자가 같은 코드를 다시 수락하면 이어서 끝낸다. `usedBy`가 자신이면 사용된 코드도 통과하고,
   이미 target 멤버면 참가 성공으로 본다. 이전 문서에 예약·이전 room 필드가 없어도 처리한다. 끝내 재시도하지 않으면
   예약이나 미완료 참가가 남을 수 있다(MVP에서는 감수).
+
+## 문의·신고와 상대 내보내기
+
+- 접수는 Firebase 인증을 요구한다. 내용은 1~4000자, 답장 주소는 선택이며 이메일 형식·254자·헤더 개행 금지를 검증한다.
+  일반 문의는 이용자당 최근 1시간 접수 기록이 5개 이상이면 `SUPPORT_RATE_LIMIT`(429)이다. 신고·내보내기는 이 제한에 막히지 않는다.
+- 앱이 만드는 UUID `requestId`를 접수 문서의 키로 쓴다. 같은 작성자의 같은 요청 재시도는 기존 접수를 이어서 끝내고,
+  다른 작성자 또는 방·대상·유형이 달라지면 `PARTNER_CHANGED`(409)를 반환한다. 문의는 내용 일치도 확인한다.
+- 요청의 `roomId`와 `targetId`가 현재 두 사람의 방과 상대인지 확인한다. 신고만 최근 TEXT 메시지 최대 50개를 시간순으로 복사한다.
+  `supportTickets`에 먼저 저장한 뒤 방의 `closureId`를 조건부 설정한다. 두 사람이 동시에 요청해도 한 작업만 방을 종료한다.
+  종료 소유권(`closureConfirmed`)과 Buddy 사본을 접수 기록에 확정 저장한 다음 후속 삭제를 실행한다.
+- 기존 방 ID를 재사용하지 않고 요청자에게 새 solo 방 ID로 Buddy·앨범을 옮긴다. 대상의 기존 방 포인터, 모든 기존 초대와
+  초대 예약, 기존 방, 전체 메시지·읽음 위치를 지우고 두 사람의 기존 소켓을 닫는다. 사용·미사용 초대 모두 다시 접근할 방이 없어진다.
+  예전 토큰이나 소켓의 캐시된 사용자 정보만으로 권한이 살아나지 않도록 현재 멤버십을 메시지·읽음·Buddy·소켓 이벤트에서 확인한다.
+  종료가 완료되면 접수의 임시 Buddy 사본을 제거한다. 재시도는 이미 변경한 Buddy를 초기 상태로 덮어쓰지 않는다.
+- 서버 중단으로 남은 접수는 60초마다 이어서 처리한다(접수 후 30초 이상, 한 번에 20개). 서로 다른 종료 요청의 경쟁에서 진 기록은
+  신고 사본을 비우고 메일 알림을 취소한다. 일반 내보내기는 처음부터 대화 사본과 운영자 메일이 없다.
+- `expiresAt` TTL 인덱스로 접수 후 90일에 정리한다. 자료를 조회하는 공개 API는 없다. 운영자는 기존 Atlas 콘솔에서 접수 번호로 확인한다.
+- 완료한 문의·신고의 메일은 운영자에게만 보낸다. 60초마다 최대 10건을 DB에서 원자적으로 임대하고, 실패하면 2~60분 간격으로
+  재시도한다. Gmail API(HTTPS)의 토큰 갱신·발송을 `boundedElastic`에서 실행하고 요청 제한 시간을 각각 5초로 둔다. 발송 후 DB 기록 전에 프로세스가
+  종료되면 같은 접수 알림이 중복될 수 있으므로 접수 번호로 구분한다. 사용자 자동 답장은 없다.
+- Railway Hobby의 SMTP 제한 때문에 Gmail OAuth의 `gmail.send` 권한으로 발송한다. Gmail 인증 값 미설정 시 알림은 대기하고 접수·안전 조치는 동작한다. 메일 상태를 전체 health 판정에서 제외해 설정 누락이나
+  Gmail 장애가 채팅 서버 배포를 막지 않게 한다. 환경변수와 수동 운영은 `docs/support-operations.md`를 따른다.
 
 ## 계정 삭제
 

@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { FirebaseError } from 'firebase/app';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PageTitle } from '@/components/page-title';
@@ -89,6 +89,14 @@ export default function SignInScreen() {
           </Text>
           {busy ? <ActivityIndicator color={colors.accent} /> : null}
           {error ? <Text style={[styles.error, { color: colors.accent }]}>{error}</Text> : null}
+          <View style={styles.links}>
+            <Pressable onPress={() => router.push('/privacy')} accessibilityRole="link">
+              <Text style={[styles.notice, { color: colors.textMuted }]}>{t('privacy.title')}</Text>
+            </Pressable>
+            <Pressable onPress={() => router.push('/support')} accessibilityRole="link">
+              <Text style={[styles.notice, { color: colors.textMuted }]}>{t('support.title')}</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     </SafeAreaView>
@@ -96,6 +104,7 @@ export default function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
+  links: { flexDirection: 'row', justifyContent: 'center', gap: 18, paddingVertical: 8 },
   screen: {
     flex: 1,
     alignItems: 'center',

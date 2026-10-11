@@ -1,6 +1,7 @@
 package com.buddychat.buddy;
 
 import com.buddychat.common.ApiException;
+import com.buddychat.room.RoomAccess;
 import com.buddychat.user.User;
 import com.buddychat.user.UserService;
 import jakarta.validation.Valid;
@@ -20,10 +21,12 @@ class BuddyController {
 
     private final UserService userService;
     private final BuddyService buddyService;
+    private final RoomAccess access;
 
-    BuddyController(UserService userService, BuddyService buddyService) {
+    BuddyController(UserService userService, BuddyService buddyService, RoomAccess access) {
         this.userService = userService;
         this.buddyService = buddyService;
+        this.access = access;
     }
 
     // 200 either way: "changed: false" means it was not needed (or the other member just did it).
@@ -47,8 +50,11 @@ class BuddyController {
                 .current(jwt)
                 .flatMap((User user) -> user.roomId() == null
                         ? Mono.error(new ApiException(HttpStatus.NOT_FOUND, "ROOM_NOT_FOUND"))
-                        : buddyService.graduate(
-                                user.roomId(), user.id(), request.buddyName().strip()));
+                        : access.requireMember(user.roomId(), user.id())
+                                .then(buddyService.graduate(
+                                        user.roomId(),
+                                        user.id(),
+                                        request.buddyName().strip())));
     }
 
     private Mono<BuddyService.CareResult> inMyRoom(
@@ -57,6 +63,6 @@ class BuddyController {
                 .current(jwt)
                 .flatMap((User user) -> user.roomId() == null
                         ? Mono.error(new ApiException(HttpStatus.NOT_FOUND, "ROOM_NOT_FOUND"))
-                        : action.apply(user.roomId(), user.id()));
+                        : access.requireMember(user.roomId(), user.id()).then(action.apply(user.roomId(), user.id())));
     }
 }

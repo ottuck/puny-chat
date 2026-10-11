@@ -3,6 +3,13 @@ spring:
     name: buddy-chat-server
 
 buddychat:
+  support:
+    email: ${SUPPORT_EMAIL:vison901@gmail.com}
+    from: ${SUPPORT_FROM:vison901@gmail.com}
+    gmail:
+      client-id: ${GMAIL_CLIENT_ID:}
+      client-secret: ${GMAIL_CLIENT_SECRET:}
+      refresh-token: ${GMAIL_REFRESH_TOKEN:}
   firebase:
     # Public project id (also in the app's firebase config). Tokens must be issued for it.
     project-id: ${FIREBASE_PROJECT_ID:buddy-chat-67e35}
@@ -11,6 +18,10 @@ buddychat:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8081,http://localhost:8082,http://localhost:8083}
 
 management:
+  health:
+    # Mail authorization or provider outages must not take durable report intake offline.
+    mail:
+      enabled: false
   endpoints:
     web:
       exposure:
