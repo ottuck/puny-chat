@@ -255,6 +255,7 @@ export function BuddyStage({
   const cue = latestCue && latestCue.id !== cueMountedAfter ? latestCue : null;
   const evolving = active?.kind === 'evolved' && active.phase === 'main';
   const [act, setAct] = useState<Act | null>(null);
+  const [actRun, setActRun] = useState(0);
   const actTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tick = useTick(evolving || act === 'refuse' ? FAST_TICK_MS : TICK_MS);
   const night = useSleeping();
@@ -299,9 +300,14 @@ export function BuddyStage({
   });
 
   const perform = useCallback((next: Act) => {
-    // Timer refs lock immediately, including clicks before React renders the new pose.
-    if (actTimer.current || petTimer.current) return;
+    // Chat and tour cues replace the local action; only character taps are locked in pet().
+    if (actTimer.current) clearTimeout(actTimer.current);
+    if (petTimer.current) clearTimeout(petTimer.current);
+    petTimer.current = null;
+    setPetted(false);
     setAct(next);
+    // The same cue must restart the finite animation even when its kind has not changed.
+    setActRun((run) => run + 1);
     actTimer.current = setTimeout(() => {
       actTimer.current = null;
       setAct(null);
@@ -434,7 +440,7 @@ export function BuddyStage({
       hop.setValue(0);
       note.setValue(0);
     };
-  }, [act, hop, note]);
+  }, [act, actRun, hop, note]);
 
   // The bowl and the poops bob now and then while they need tapping.
   const wantsFood = buddy.hungry && !eating;
@@ -575,6 +581,7 @@ export function BuddyStage({
 
   // Petting: glad (and a thank-you once grown), or a dance, or a song.
   const pet = () => {
+    // Timer refs lock immediately, including taps before React renders the new pose.
     if (egg || busy || active || acting || petted || actTimer.current || petTimer.current) return;
     const roll = Math.random();
     if (roll < 0.3) return perform('dance');
