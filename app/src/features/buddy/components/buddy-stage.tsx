@@ -299,8 +299,9 @@ export function BuddyStage({
     greets,
   });
 
-  const perform = useCallback((next: Act) => {
-    // Chat and tour cues replace the local action; only character taps are locked in pet().
+  const perform = useCallback((next: Act, replaceCurrent = false) => {
+    // Only explicit cues replace an action. A queued idle callback must respect the tap lock.
+    if (!replaceCurrent && (actTimer.current || petTimer.current)) return;
     if (actTimer.current) clearTimeout(actTimer.current);
     if (petTimer.current) clearTimeout(petTimer.current);
     petTimer.current = null;
@@ -375,9 +376,9 @@ export function BuddyStage({
   useEffect(() => {
     if (!cue || egg) return;
     const timer = setTimeout(() => {
-      if (cue.kind === 'dance' || cue.kind === 'sing') perform(cue.kind);
+      if (cue.kind === 'dance' || cue.kind === 'sing') perform(cue.kind, true);
       else if (cue.kind === 'feed' && !canFeed) {
-        perform('refuse');
+        perform('refuse', true);
         say('full');
       } else if (cue.kind === 'clean' && poops === 0) say('alreadyClean');
     }, 0);
