@@ -51,6 +51,7 @@ export default function SupportScreen() {
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [receiptCopied, setReceiptCopied] = useState(false);
   // A failed request is retried with the same id: deletion and mail notification are not duplicated.
   const requestId = useRef<string | null>(null);
   const sending = useRef(false);
@@ -133,7 +134,7 @@ export default function SupportScreen() {
     try {
       await Linking.openURL(`mailto:${SUPPORT_EMAIL}`);
     } catch {
-      setError(t('support.mailUnavailable'));
+      setError(t('support.mailUnavailable', { email: SUPPORT_EMAIL }));
     }
   };
 
@@ -146,29 +147,32 @@ export default function SupportScreen() {
       <PageTitle title={t('support.title')} />
       <View style={styles.column}>
         <Text style={[styles.intro, { color: colors.textMuted }]}>{t('support.intro')}</Text>
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.label, { color: colors.textMuted }]}>{t('support.contact')}</Text>
-          <Pressable onPress={mail} accessibilityRole="link" accessibilityLabel={SUPPORT_EMAIL}>
-            <Text selectable style={[styles.email, { color: colors.accent }]}>
-              {SUPPORT_EMAIL}
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            onPress={async () => {
-              try {
-                await copyText(SUPPORT_EMAIL);
-                setCopied(true);
-              } catch {
-                setError(t('support.mailUnavailable'));
-              }
-            }}
-          >
-            <Text style={{ color: colors.textMuted }}>
-              {t(copied ? 'support.copied' : 'support.copyEmail')}
-            </Text>
-          </Pressable>
-        </View>
+        {!user ? (
+          <View style={[styles.card, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.label, { color: colors.textMuted }]}>{t('support.contact')}</Text>
+            <Pressable onPress={mail} accessibilityRole="link" accessibilityLabel={SUPPORT_EMAIL}>
+              <Text selectable style={[styles.email, { color: colors.accent }]}>
+                {SUPPORT_EMAIL}
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={async () => {
+                try {
+                  await copyText(SUPPORT_EMAIL);
+                  setCopied(true);
+                  setError(null);
+                } catch {
+                  setError(t('support.copyFailed'));
+                }
+              }}
+            >
+              <Text style={{ color: colors.textMuted }}>
+                {t(copied ? 'support.copied' : 'support.copyEmail')}
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
         {receipt ? (
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
             <Text accessibilityRole="alert" style={[styles.success, { color: colors.text }]}>
@@ -178,8 +182,28 @@ export default function SupportScreen() {
               {t(type === 'report' ? 'support.reportReceived' : 'support.inquiryReceived')}
             </Text>
             <Text selectable style={[styles.body, { color: colors.textMuted }]}>
-              {t('support.receipt', { id: receipt.id })}
+              {t('support.receipt', {
+                id: `${receipt.id.slice(0, 8).toUpperCase()}…${receipt.id.slice(-4).toUpperCase()}`,
+              })}
             </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={async () => {
+                try {
+                  await copyText(receipt.id);
+                  setReceiptCopied(true);
+                  setError(null);
+                } catch {
+                  setReceiptCopied(false);
+                  setError(`${t('support.copyFailed')}\n${receipt.id}`);
+                }
+              }}
+              style={styles.copyReceipt}
+            >
+              <Text accessibilityLiveRegion="polite" style={{ color: colors.accent }}>
+                {t(receiptCopied ? 'support.copied' : 'support.copyReceipt')}
+              </Text>
+            </Pressable>
             <Button label={t('support.done')} onPress={() => router.replace('/')} />
           </View>
         ) : user ? (
@@ -295,9 +319,20 @@ export default function SupportScreen() {
           </Text>
         )}
         {error ? (
-          <Text accessibilityRole="alert" style={{ color: colors.accent }}>
+          <Text selectable accessibilityRole="alert" style={{ color: colors.accent }}>
             {error}
           </Text>
+        ) : null}
+        {user ? (
+          <Pressable
+            onPress={mail}
+            accessibilityRole="link"
+            accessibilityLabel={`${t('support.emailDirect')} (${SUPPORT_EMAIL})`}
+          >
+            <Text style={[styles.footer, { color: colors.textMuted }]}>
+              {t('support.emailDirect')}
+            </Text>
+          </Pressable>
         ) : null}
         <Pressable onPress={() => router.push('/privacy')} accessibilityRole="link">
           <Text style={[styles.footer, { color: colors.textMuted }]}>{t('privacy.title')}</Text>
@@ -320,5 +355,6 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1, borderRadius: 12, padding: 12, fontSize: 15, minHeight: 48 },
   message: { minHeight: 140, textAlignVertical: 'top' },
   success: { fontSize: 22, fontWeight: '700' },
+  copyReceipt: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' },
   footer: { textAlign: 'center', fontSize: 13, textDecorationLine: 'underline', padding: 10 },
 });
