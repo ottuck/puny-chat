@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 
 // Public contact and notification recipient start with the same address (server application.yaml).
-export const SUPPORT_EMAIL = 'vison901@gmail.com';
+export const SUPPORT_EMAIL = 'support@puny-chat.com';
 export const REPORT_REASONS = ['HARASSMENT', 'SEXUAL', 'THREATS', 'SPAM', 'OTHER'] as const;
 export type ReportReason = (typeof REPORT_REASONS)[number];
 export type Receipt = { id: string };

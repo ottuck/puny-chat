@@ -343,7 +343,7 @@
       },
       "providers": {
         "title": "5. Service providers and international processing",
-        "body": "Google Firebase Authentication provides sign-in and processes authentication data in the United States. MongoDB Atlas and Railway store chat/service data and operate the server; the current service region is Singapore. Cloudflare delivers the website and network security and may process technical information across its global network. Notifications pass through Expo, Apple or your browser push provider. Operator email uses Google Gmail; submission content may be processed on Google infrastructure globally. These providers process information to supply their services, including necessary international network transfers during use. Contact us with questions or requests about international processing."
+        "body": "Google Firebase Authentication provides sign-in and processes authentication data in the United States. MongoDB Atlas and Railway store chat/service data and operate the server; the current service region is Singapore. Cloudflare delivers the website and network security and may process technical information across its global network. Notifications pass through Expo, Apple or your browser push provider. Inquiry and report emails pass through Cloudflare Email Routing to the operator's Google Gmail inbox; content may be processed on these providers' global infrastructure. These providers process information to supply their services, including necessary international network transfers during use. Contact us with questions or requests about international processing."
       },
       "retention": {
         "title": "6. Retention and deletion",

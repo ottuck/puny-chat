@@ -27,6 +27,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -122,7 +123,7 @@ class SupportFlowTest {
         sockets.forEach(TestSocket::close);
     }
 
-    @Test
+    @RepeatedTest(5)
     void reportingKeepsBuddyButDeletesBothSidesOfConversationAndEveryOldInvitation() {
         create("henry");
         String unused = invite("henry");
@@ -181,7 +182,7 @@ class SupportFlowTest {
         mail.drain().block();
         mail.drain().block();
         assertThat(sender.sent).hasSize(1);
-        assertThat(sender.sent.getFirst().getTo()).containsExactly("vison901@gmail.com");
+        assertThat(sender.sent.getFirst().getTo()).containsExactly("support@puny-chat.com");
         assertThat(sender.sent.getFirst().getReplyTo()).isEqualTo("reply@example.com");
         assertThat(sender.sent.getFirst().getText()).contains("problem text", "hello", id);
         // There is no account ban: both people can start a new invited relationship.
@@ -249,7 +250,7 @@ class SupportFlowTest {
         clock.advance(Duration.ofMinutes(3));
         mail.drain().block();
         assertThat(sender.sent).hasSize(1);
-        assertThat(sender.sent.getFirst().getTo()).containsExactly("vison901@gmail.com");
+        assertThat(sender.sent.getFirst().getTo()).containsExactly("support@puny-chat.com");
         assertThat(mongo.findById(id, SupportTicket.class).block().emailStatus())
                 .isEqualTo("SENT");
         assertThat(mail.drain().block()).isZero();
