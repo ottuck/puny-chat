@@ -283,6 +283,9 @@
     "intro": "Tell us about a question or a problem. The operator reviews submissions and replies personally when needed.",
     "contact": "Contact",
     "copyEmail": "Copy email address",
+    "emailDirect": "Contact us directly by email",
+    "copyReceipt": "Copy full reference number",
+    "copyFailed": "Could not copy. Please try again.",
     "copied": "Copied",
     "inquiry": "Question",
     "report": "Report partner",
@@ -318,7 +321,7 @@
     "receipt": "Reference: {{id}}",
     "done": "Go back",
     "signedOutHelp": "You can contact the email above without signing in. Start the app to submit a question or report your partner here.",
-    "mailUnavailable": "Could not open a mail app. Copy the email address above and send your message directly."
+    "mailUnavailable": "Could not open a mail app. Please email {{email}} directly."
   },
   "privacy": {
     "title": "Privacy policy",
