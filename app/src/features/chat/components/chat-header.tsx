@@ -14,6 +14,7 @@ type Props = {
   onPressSettings?: () => void;
   // How to raise the buddy (the guide).
   onPressHelp?: () => void;
+  onPressPartner?: () => void;
 };
 
 export function ChatHeader({
@@ -24,6 +25,7 @@ export function ChatHeader({
   onPressInvite,
   onPressSettings,
   onPressHelp,
+  onPressPartner,
 }: Props) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -40,9 +42,19 @@ export function ChatHeader({
                 { backgroundColor: partnerOnline ? colors.online : colors.border },
               ]}
             />
-            <Text style={[styles.partnerName, { color: colors.text }]} numberOfLines={1}>
-              {partnerName}
-            </Text>
+            <Pressable
+              onPress={onPressPartner}
+              disabled={!onPressPartner}
+              accessibilityRole="button"
+              accessibilityLabel={t('support.partnerMenu', { name: partnerName })}
+              hitSlop={8}
+              style={styles.partnerName}
+            >
+              <Text style={[styles.partnerLabel, { color: colors.text }]} numberOfLines={1}>
+                {partnerName}
+                {onPressPartner ? ' ⌄' : ''}
+              </Text>
+            </Pressable>
             {partnerTyping ? (
               <Text style={[styles.typing, { color: colors.textMuted }]}>{t('chat.typing')}</Text>
             ) : null}
@@ -127,9 +139,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   partnerName: {
+    flexShrink: 1,
+  },
+  partnerLabel: {
     fontSize: 18,
     fontWeight: '700',
-    flexShrink: 1,
   },
   settingsButton: {
     marginLeft: 'auto',

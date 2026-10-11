@@ -4,6 +4,7 @@ import com.buddychat.buddy.BuddyService;
 import com.buddychat.chat.ChatService;
 import com.buddychat.common.ApiException;
 import com.buddychat.notification.NotificationService;
+import com.buddychat.room.RoomAccess;
 import com.buddychat.user.User;
 import com.buddychat.user.UserService;
 import java.time.Duration;
@@ -49,6 +50,7 @@ class ChatWebSocketHandler implements WebSocketHandler {
     private final RoomHub hub;
     private final JsonMapper json;
     private final RealtimeProperties properties;
+    private final RoomAccess access;
 
     ChatWebSocketHandler(
             ReactiveJwtDecoder jwtDecoder,
@@ -58,7 +60,8 @@ class ChatWebSocketHandler implements WebSocketHandler {
             NotificationService notifications,
             RoomHub hub,
             JsonMapper json,
-            RealtimeProperties properties) {
+            RealtimeProperties properties,
+            RoomAccess access) {
         this.jwtDecoder = jwtDecoder;
         this.userService = userService;
         this.chatService = chatService;
@@ -67,6 +70,7 @@ class ChatWebSocketHandler implements WebSocketHandler {
         this.hub = hub;
         this.json = json;
         this.properties = properties;
+        this.access = access;
     }
 
     @Override
@@ -177,7 +181,8 @@ class ChatWebSocketHandler implements WebSocketHandler {
                         .current(jwt)
                         .flatMap(user -> user.roomId() == null
                                 ? Mono.error(new ApiException(HttpStatus.CONFLICT, "ROOM_NOT_FOUND"))
-                                : Mono.just(new SignedIn(user, jwt.getExpiresAt()))));
+                                : access.requireMember(user.roomId(), user.id())
+                                        .thenReturn(new SignedIn(user, jwt.getExpiresAt()))));
     }
 
     private static Duration untilExpiry(SignedIn signedIn) {
@@ -187,6 +192,16 @@ class ChatWebSocketHandler implements WebSocketHandler {
     }
 
     private Mono<Void> onEvent(RoomHub.Connection connection, User user, String text) {
+        return access.requireMember(connection.roomId, user.id())
+                .then(Mono.defer(() -> onAuthorizedEvent(connection, user, text)))
+                .onErrorResume(ApiException.class, e -> {
+                    connection.emit(new ServerEvent.Error(e.code(), null));
+                    connection.complete();
+                    return Mono.empty();
+                });
+    }
+
+    private Mono<Void> onAuthorizedEvent(RoomHub.Connection connection, User user, String text) {
         ClientEvent event = parse(text);
         return switch (event) {
             case ClientEvent.Send send ->

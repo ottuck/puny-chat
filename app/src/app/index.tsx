@@ -27,6 +27,7 @@ import { registerForPush } from '@/features/notifications/push';
 import { InviteSheet } from '@/features/room/components/invite-sheet';
 import type { Me, Room } from '@/features/room/api';
 import { useReadyRoom } from '@/features/room/room-provider';
+import { PartnerSheet } from '@/features/support/components/partner-sheet';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
 export default function ChatRoute() {
@@ -52,6 +53,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
   const chat = useChat({ myId: me.id, onRoomLost, onRoomChanged, onBuddy: setBuddy });
   const { messages, status, online, typing, reads, unreadWhileAway } = chat;
   const [buddyOpen, setBuddyOpen] = useState(false);
+  const [partnerOpen, setPartnerOpen] = useState(false);
   const { user } = useAuth();
   const guestDaysLeft = useGuestDaysLeft(user);
 
@@ -87,6 +89,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
           onPressInvite={() => setInviteOpen(true)}
           onPressSettings={() => router.push('/settings')}
           onPressHelp={() => router.push('/guide')}
+          onPressPartner={partner ? () => setPartnerOpen(true) : undefined}
         />
         <GuestExpiryBanner daysLeft={guestDaysLeft} onPress={() => router.push('/settings')} />
         <GuideBanner onOpen={() => router.push('/guide')} />
@@ -144,6 +147,18 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
         }}
       />
       <InviteSheet visible={inviteOpen} onClose={() => setInviteOpen(false)} />
+      {partner ? (
+        <PartnerSheet
+          visible={partnerOpen}
+          onClose={() => setPartnerOpen(false)}
+          roomId={room.id}
+          targetId={partner.id}
+          partnerName={partner.displayName ?? ''}
+          onRemoved={async () => {
+            await onRoomLost();
+          }}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }

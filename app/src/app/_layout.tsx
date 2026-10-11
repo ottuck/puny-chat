@@ -68,6 +68,7 @@ function RootNavigator() {
   const signedIn = !!user;
   const settled = !initializing && (!signedIn || state.status !== 'loading');
   const pathname = usePathname();
+  const publicPage = pathname === '/privacy' || pathname === '/support';
   const canJoin =
     signedIn && (state.status === 'none' || state.status === 'ready') && !!state.me.displayName;
 
@@ -83,17 +84,17 @@ function RootNavigator() {
   }, [canJoin, pathname]);
 
   useEffect(() => {
-    if (settled) SplashScreen.hideAsync();
-  }, [settled]);
+    if (settled || publicPage) SplashScreen.hideAsync();
+  }, [settled, publicPage]);
 
   // Web: the page is rendered at build time in English; tell the browser the language in use.
   useEffect(() => {
     if (Platform.OS === 'web') document.documentElement.lang = i18n.language;
   }, [i18n.language]);
 
-  if (initializing) return null;
-  if (signedIn && state.status === 'loading') return <StatusScreen loading />;
-  if (signedIn && state.status === 'error') {
+  if (initializing && !publicPage) return null;
+  if (signedIn && state.status === 'loading' && !publicPage) return <StatusScreen loading />;
+  if (signedIn && state.status === 'error' && !publicPage) {
     return (
       <StatusScreen
         message={t('errors.loadFailed')}
@@ -141,6 +142,14 @@ function RootNavigator() {
         <Stack.Screen name="sign-in" />
         <Stack.Screen name="demo" />
       </Stack.Protected>
+      <Stack.Screen
+        name="privacy"
+        options={{ headerShown: true, title: t('privacy.title'), headerBackTitle: '' }}
+      />
+      <Stack.Screen
+        name="support"
+        options={{ headerShown: true, title: t('support.title'), headerBackTitle: '' }}
+      />
     </Stack>
   );
 }

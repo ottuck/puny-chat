@@ -152,6 +152,23 @@ public class UserService {
                 .then();
     }
 
+    /** Moves only the old room pointer; never reattaches an account that left or was deleted. */
+    public Mono<Boolean> replaceRoom(String userId, String oldRoomId, String newRoomId) {
+        return mongo.updateFirst(
+                        query(where("_id").is(userId).and("roomId").is(oldRoomId)),
+                        new Update().set("roomId", newRoomId).unset("roomJoinId"),
+                        User.class)
+                .map(result -> result.getMatchedCount() == 1)
+                .flatMap(moved -> moved ? Mono.just(true) : isInRoom(userId, newRoomId));
+    }
+
+    public Mono<Void> releaseJoins(Collection<String> invitationIds) {
+        if (invitationIds.isEmpty()) return Mono.empty();
+        return mongo.updateMulti(
+                        query(where("roomJoinId").in(invitationIds)), new Update().unset("roomJoinId"), User.class)
+                .then();
+    }
+
     /** Removes the user (account deletion). Removing twice is harmless. */
     public Mono<Void> delete(String userId) {
         return mongo.remove(query(where("_id").is(userId)), User.class).then();

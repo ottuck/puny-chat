@@ -93,7 +93,15 @@ class InvitationService {
                                     .then(joinOrRelease(claimed, user))
                                     .then(finish(claimed, user))
                                     .then(cleanPreviousRoom(claimed, user))
-                                    .then(joined(claimed, user)));
+                                    .then(joined(claimed, user))
+                                    .onErrorResume(
+                                            ApiException.class,
+                                            e -> "ROOM_NOT_FOUND".equals(e.code())
+                                                    ? roomService
+                                                            .leaveFromRoom(claimed.roomId(), user)
+                                                            .then(release(claimed, user))
+                                                            .then(Mono.error(e))
+                                                    : Mono.error(e)));
                 });
     }
 
@@ -130,6 +138,8 @@ class InvitationService {
     private Mono<RoomView> joined(Invitation invitation, User user) {
         return roomService
                 .findById(invitation.roomId())
+                .filter(room -> room.closureId() == null && room.memberIds().contains(user.id()))
+                .switchIfEmpty(Mono.error(new ApiException(HttpStatus.NOT_FOUND, "ROOM_NOT_FOUND")))
                 .flatMap(roomService::toView)
                 .doOnNext(room ->
                         hub.publish(room.id(), new ServerEvent.MemberJoined(user.id(), user.displayName()), null));

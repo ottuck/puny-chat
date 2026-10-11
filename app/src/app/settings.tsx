@@ -136,6 +136,26 @@ export default function SettingsScreen() {
 
         {state.status === 'ready' ? <RoomCard room={state.room} myId={state.me.id} /> : null}
 
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.label, { color: colors.textMuted }]}>
+            {t('support.serviceInfo')}
+          </Text>
+          <Pressable
+            onPress={() => router.push('/support')}
+            accessibilityRole="button"
+            style={styles.leave}
+          >
+            <Text style={[styles.row, { color: colors.text }]}>{t('support.title')}</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => router.push('/privacy')}
+            accessibilityRole="link"
+            style={styles.leave}
+          >
+            <Text style={[styles.row, { color: colors.text }]}>{t('privacy.title')}</Text>
+          </Pressable>
+        </View>
+
         <Pressable
           onPress={() => router.push('/guide')}
           accessibilityRole="button"
@@ -510,6 +530,26 @@ function RoomCard({ room, myId }: { room: Room; myId: string }) {
           {member.displayName ?? t('chat.guestName')}
         </Text>
       ))}
+      {partner ? (
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: '/support',
+              params: {
+                type: 'report',
+                roomId: room.id,
+                targetId: partner.id,
+              },
+            })
+          }
+          accessibilityRole="button"
+          style={styles.leave}
+        >
+          <Text style={[styles.signOut, { color: colors.accent }]}>
+            {t('support.reportAndRemove')}
+          </Text>
+        </Pressable>
+      ) : null}
       <Pressable
         onPress={leave}
         disabled={leaving}

@@ -11,6 +11,9 @@ const KNOWN = [
   'INVITATION_USED',
   'ALREADY_MEMBER',
   'ALREADY_IN_ROOM',
+  'PARTNER_CHANGED',
+  'SUPPORT_RATE_LIMIT',
+  'ROOM_NOT_FOUND',
 ] as const;
 
 export function errorMessage(t: TFunction, error: unknown): string {

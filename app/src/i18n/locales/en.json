@@ -14,7 +14,10 @@
     "INVITATION_USED": "That invite was already used. Ask for a new one.",
     "ALREADY_MEMBER": "You're already in this room.",
     "ALREADY_IN_ROOM": "You're already chatting with someone in another room.",
-    "BUDDY_NOT_GROWN": "A new egg is already here."
+    "BUDDY_NOT_GROWN": "A new egg is already here.",
+    "PARTNER_CHANGED": "The partner or room has changed. Please try again from your current conversation.",
+    "SUPPORT_RATE_LIMIT": "Too many submissions. Please try again later.",
+    "ROOM_NOT_FOUND": "This conversation has ended. Please reload your current room."
   },
   "signIn": {
     "tagline": "Chat with someone you like, and raise a tiny buddy together.",
@@ -272,6 +275,96 @@
       "top": "The top level is 30. Then you can let your buddy go its own way from its details.",
       "album": "It stays in the album and hangs on the wall in a frame. A new egg comes to the stage.",
       "keep": "The rewards you collected stay with the new egg."
+    }
+  },
+  "support": {
+    "title": "Help & reports",
+    "serviceInfo": "About the service",
+    "intro": "Tell us about a question or a problem. The operator reviews submissions and replies personally when needed.",
+    "contact": "Contact",
+    "copyEmail": "Copy email address",
+    "copied": "Copied",
+    "inquiry": "Question",
+    "report": "Report partner",
+    "partnerMenu": "Report or remove {{name}}",
+    "partnerHelp": "You can end an uncomfortable conversation. Reporting also keeps a limited copy for the operator to review.",
+    "remove": "Remove partner",
+    "removeTitle": "End this conversation?",
+    "removeConfirm": "Remove {{name}} and delete the entire conversation for both people. All existing invites will stop working. You keep the Buddy and album. This cannot be undone.",
+    "reportAndRemove": "Report & remove partner",
+    "reportConfirm": "Report and remove {{name}}? The entire conversation will be deleted for both people and all existing invites will stop working. You keep the Buddy and album. Up to 50 recent text messages are retained separately for 90 days for review. This cannot be undone.",
+    "target": "Reporting: {{name}}",
+    "noPartner": "There is no current partner to report. For a past conversation, please submit a question.",
+    "reason": "Reason",
+    "reasons": {
+      "HARASSMENT": "Harassment",
+      "SEXUAL": "Sexual content",
+      "THREATS": "Threats or violence",
+      "SPAM": "Spam or scams",
+      "OTHER": "Other"
+    },
+    "reportNotice": "Reporting removes your partner and deletes the entire conversation and existing invites. Up to 50 recent text messages are retained separately for 90 days, accessible only to the operator for review.",
+    "message": "Message",
+    "reportPlaceholder": "Tell us what happened. (Optional)",
+    "inquiryPlaceholder": "Describe your question or problem.",
+    "defaultReport": "Report partner and end conversation",
+    "replyEmail": "Email for a reply (optional)",
+    "replyPlaceholder": "Enter an email if you would like a reply.",
+    "replyNotice": "Your email is used only to respond to this submission. Replies are sent personally when needed, not automatically. Submission records are stored on the server for 90 days.",
+    "send": "Submit",
+    "received": "Received",
+    "reportReceived": "Your partner has been removed. The conversation and existing invites have been deleted. Your Buddy stays with you. The operator will review your report.",
+    "inquiryReceived": "Your question has been received. If a reply is needed, we will contact the email you provided.",
+    "receipt": "Reference: {{id}}",
+    "done": "Go back",
+    "signedOutHelp": "You can contact the email above without signing in. Start the app to submit a question or report your partner here.",
+    "mailUnavailable": "Could not open a mail app. Copy the email address above and send your message directly."
+  },
+  "privacy": {
+    "title": "Privacy policy",
+    "effective": "Effective · October 11, 2026",
+    "intro": "puny-chat provides invite-only, one-to-one text chat and a shared Buddy. This policy explains the information we process and your choices.",
+    "sections": {
+      "operator": {
+        "title": "1. Operator and contact",
+        "body": "The individual operator of puny-chat manages personal information. Send support and privacy requests to {{email}}."
+      },
+      "collection": {
+        "title": "2. Information processed",
+        "body": "We process your account identifier (Firebase UID), display name, creation and recent activity times, guest/link status, room membership and invitations. We store message text, send times, read positions, and Buddy and album state. If you enable notifications, we process device push tokens or web push subscriptions. Google or Apple processes login information such as your email when you link an account; the app may display it to identify your account. Questions and reports include your message, selected reason, related user/room identifiers and an optional reply email. Reports retain up to 50 recent text messages separately. Network and hosting operations may process IP addresses, request times and error information."
+      },
+      "purposes": {
+        "title": "3. Purposes",
+        "body": "Information is used for authentication and account management, invitations, message delivery and recovery, Buddy state, notifications you enable, support replies, report review and ending conversations, security and troubleshooting. We do not sell personal information or use conversations for targeted advertising. The service currently has no advertising or separate behavioral analytics tools."
+      },
+      "sharing": {
+        "title": "4. Conversations and reports",
+        "body": "Messages are shared with your room partner. Reporting or removing a partner ends their membership, invalidates existing invites and deletes the conversation for both people. The person initiating removal keeps the Buddy and album. Report evidence is kept separately for operator review and is not shared with the reported person or other users. Submission content may be sent to the operator by email. Information may be disclosed to relevant authorities where legally required and only to the necessary extent."
+      },
+      "providers": {
+        "title": "5. Service providers and international processing",
+        "body": "Google Firebase Authentication provides sign-in and processes authentication data in the United States. MongoDB Atlas and Railway store chat/service data and operate the server; the current service region is Singapore. Cloudflare delivers the website and network security and may process technical information across its global network. Notifications pass through Expo, Apple or your browser push provider. Operator email uses Google Gmail; submission content may be processed on Google infrastructure globally. These providers process information to supply their services, including necessary international network transfers during use. Contact us with questions or requests about international processing."
+      },
+      "retention": {
+        "title": "6. Retention and deletion",
+        "body": "Account and service data are retained while you use the service. Delete your account in Settings. If your partner remains after ordinary room departure or account deletion, their room, Buddy and shared conversation remain. When the last member leaves, the room and conversation are deleted. Reporting/removal deletes the conversation for both people, while report evidence is retained separately. Server records for questions, reports and removals become eligible for automatic deletion 90 days after submission and are removed by the database cleanup cycle. Operator email copies are manually deleted when no longer needed after handling. Unlinked guest accounts are cleaned up by Firebase after 30 days from creation; expired guest service data is cleaned up periodically. Technical security/error information follows the relevant infrastructure provider retention policies."
+      },
+      "security": {
+        "title": "7. Safeguards",
+        "body": "We use HTTPS/WSS and verify authentication and current room membership. Report evidence is not exposed through public APIs and is available only to people with operational access. Chat is not end-to-end encrypted: the server processes conversation content as needed to provide the service and handle reports."
+      },
+      "rights": {
+        "title": "8. Your choices and rights",
+        "body": "Change your display name, turn off device notifications, leave a room or delete your account in Settings. Send access, correction, deletion or processing restriction requests to {{email}}. We verify identity and consider other users’ rights before responding under applicable law. Reply email is optional; reports and removals remain available without one."
+      },
+      "children": {
+        "title": "9. Children",
+        "body": "This service is not directed to children under 13. Contact us if you believe information from such a child has been collected; we will verify and take appropriate action, including deletion."
+      },
+      "changes": {
+        "title": "10. Changes",
+        "body": "We update this page and its effective date when the policy changes. Significant changes to purposes or sharing are announced in the app or service website, with separate consent where required."
+      }
     }
   }
 }

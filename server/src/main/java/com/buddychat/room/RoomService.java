@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import org.bson.types.ObjectId;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
@@ -73,7 +75,7 @@ public class RoomService {
 
     /** Who is in the room (empty if it no longer exists). */
     public Mono<List<String>> memberIds(String roomId) {
-        return rooms.findById(roomId).map(Room::memberIds);
+        return rooms.findById(roomId).filter(room -> room.closureId() == null).map(Room::memberIds);
     }
 
     public Mono<RoomView> getMine(User user) {
@@ -134,7 +136,9 @@ public class RoomService {
 
     Mono<Room> findMine(User user) {
         if (user.roomId() == null) return Mono.error(roomNotFound());
-        return rooms.findById(user.roomId()).switchIfEmpty(Mono.error(roomNotFound()));
+        return rooms.findById(user.roomId())
+                .filter(room -> room.closureId() == null && room.memberIds().contains(user.id()))
+                .switchIfEmpty(Mono.error(roomNotFound()));
     }
 
     Mono<Room> findById(String roomId) {
@@ -152,6 +156,8 @@ public class RoomService {
                                 .is(roomId)
                                 .and("memberCount")
                                 .lt(Room.MAX_MEMBERS)
+                                .and("closureId")
+                                .is(null)
                                 .and("memberIds")
                                 .ne(userId)),
                         new Update().push("memberIds", userId).inc("memberCount", 1),
@@ -159,7 +165,76 @@ public class RoomService {
                 .flatMap(result -> result.getModifiedCount() == 1
                         ? Mono.just(true)
                         : mongo.exists(
-                                query(where("_id").is(roomId).and("memberIds").is(userId)), Room.class));
+                                query(where("_id")
+                                        .is(roomId)
+                                        .and("memberIds")
+                                        .is(userId)
+                                        .and("closureId")
+                                        .is(null)),
+                                Room.class));
+    }
+
+    public Mono<Room> removalSnapshot(User user, String expectedRoomId, String targetId) {
+        if (!expectedRoomId.equals(user.roomId()) || targetId.equals(user.id()))
+            return Mono.error(new ApiException(HttpStatus.CONFLICT, "PARTNER_CHANGED"));
+        return findMine(user)
+                .filter(room -> room.memberIds().contains(targetId))
+                .switchIfEmpty(Mono.error(new ApiException(HttpStatus.CONFLICT, "PARTNER_CHANGED")));
+    }
+
+    /** Only one of two simultaneous removal requests may own a conversation's closure. */
+    public Mono<Room> claimRemoval(String operationId, Room snapshot, String ownerId) {
+        var originalOrSolo = where("_id")
+                .is(snapshot.id())
+                .and("closureId")
+                .is(null)
+                .orOperator(
+                        where("memberIds").is(snapshot.memberIds()),
+                        where("memberIds").is(List.of(ownerId)));
+        return mongo.findAndModify(
+                        query(originalOrSolo),
+                        Update.update("closureId", operationId),
+                        FindAndModifyOptions.options().returnNew(true),
+                        Room.class)
+                .switchIfEmpty(rooms.findById(snapshot.id())
+                        .flatMap(room -> operationId.equals(room.closureId())
+                                ? Mono.just(room)
+                                : Mono.error(new ApiException(HttpStatus.CONFLICT, "PARTNER_CHANGED"))))
+                .switchIfEmpty(Mono.error(new ApiException(HttpStatus.CONFLICT, "PARTNER_CHANGED")));
+    }
+
+    /** Called only after the support record durably confirms ownership of the closure. */
+    public Mono<Void> removePartner(
+            String operationId, Room snapshot, String ownerId, String targetId, String newRoomId) {
+        Mono<Room> close = rooms.findById(snapshot.id())
+                .flatMap(room -> operationId.equals(room.closureId())
+                        ? Mono.just(room)
+                        : Mono.error(new ApiException(HttpStatus.CONFLICT, "PARTNER_CHANGED")))
+                .defaultIfEmpty(snapshot);
+        return close.flatMap(closed -> rooms.insert(new Room(
+                                newRoomId,
+                                List.of(ownerId),
+                                1,
+                                closed.buddy(),
+                                closed.createdAt(),
+                                closed.album(),
+                                null))
+                        .onErrorResume(DuplicateKeyException.class, e -> rooms.findById(newRoomId)))
+                .then(userService.replaceRoom(ownerId, snapshot.id(), newRoomId))
+                .flatMap(attached -> attached ? Mono.<Void>empty() : deleteIfSolo(newRoomId, ownerId))
+                .then(userService.leaveRoom(targetId, snapshot.id()))
+                .then(mongo.find(query(where("roomId").is(snapshot.id())), Invitation.class)
+                        .map(Invitation::id)
+                        .collectList()
+                        .flatMap(userService::releaseJoins))
+                .then(mongo.remove(query(where("roomId").is(snapshot.id())), Invitation.class))
+                .then(mongo.remove(
+                        query(where("_id").is(snapshot.id()).and("closureId").is(operationId)), Room.class))
+                .then(chatService.deleteRoomHistory(snapshot.id()))
+                .then(Mono.fromRunnable(() -> {
+                    hub.disconnect(snapshot.id(), targetId, new ServerEvent.Error("ROOM_NOT_FOUND", null));
+                    hub.disconnect(snapshot.id(), ownerId, new ServerEvent.Error("ROOM_NOT_FOUND", null));
+                }));
     }
 
     /** Deletes a room, with its history, only while the given user is still its only member. */

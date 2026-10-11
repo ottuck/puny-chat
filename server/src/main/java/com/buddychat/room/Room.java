@@ -22,12 +22,13 @@ public record Room(
         int memberCount,
         Buddy buddy,
         Instant createdAt,
-        @Nullable List<AlbumEntry> album) {
+        @Nullable List<AlbumEntry> album,
+        @Nullable String closureId) {
 
     public static final int MAX_MEMBERS = 2;
 
     static Room solo(String id, String ownerId, Buddy buddy, Instant now) {
-        return new Room(id, List.of(ownerId), 1, buddy, now, List.of());
+        return new Room(id, List.of(ownerId), 1, buddy, now, List.of(), null);
     }
 
     boolean isFull() {

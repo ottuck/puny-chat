@@ -4,6 +4,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.buddychat.common.ApiException;
+import com.buddychat.room.RoomAccess;
 import com.buddychat.user.User;
 import java.time.Clock;
 import java.time.Instant;
@@ -30,11 +31,13 @@ public class ChatService {
     private final MessageRepository messages;
     private final ReactiveMongoTemplate mongo;
     private final Clock clock;
+    private final RoomAccess access;
 
-    ChatService(MessageRepository messages, ReactiveMongoTemplate mongo, Clock clock) {
+    ChatService(MessageRepository messages, ReactiveMongoTemplate mongo, Clock clock, RoomAccess access) {
         this.messages = messages;
         this.mongo = mongo;
         this.clock = clock;
+        this.access = access;
     }
 
     /** {@code created} is false when this was a resend of an already stored message. */
@@ -58,12 +61,23 @@ public class ChatService {
             return Mono.error(new ApiException(HttpStatus.BAD_REQUEST, "INVALID_MESSAGE"));
         }
         Message message = Message.text(roomId, sender.id(), clientMessageId, text, Instant.now(clock));
-        return messages.insert(message)
-                .map(saved -> new SendResult(saved, true))
-                .onErrorResume(
-                        DuplicateKeyException.class,
-                        e -> messages.findByRoomIdAndSenderIdAndClientMessageId(roomId, sender.id(), clientMessageId)
-                                .map(existing -> new SendResult(existing, false)));
+        return access.requireMember(roomId, sender.id())
+                .then(messages.insert(message)
+                        .map(saved -> new SendResult(saved, true))
+                        .onErrorResume(
+                                DuplicateKeyException.class,
+                                e -> messages.findByRoomIdAndSenderIdAndClientMessageId(
+                                                roomId, sender.id(), clientMessageId)
+                                        .map(existing -> new SendResult(existing, false))))
+                .flatMap(result -> access.requireMember(roomId, sender.id())
+                        .thenReturn(result)
+                        .onErrorResume(
+                                ApiException.class,
+                                e -> (result.created()
+                                                ? messages.deleteById(
+                                                        result.message().id())
+                                                : Mono.<Void>empty())
+                                        .then(Mono.error(e))));
     }
 
     /**
@@ -77,15 +91,31 @@ public class ChatService {
     /** As above, with a detail kept in {@code text} (the new level for LEVELED_UP). */
     public Mono<Message> recordBuddyEvent(
             String roomId, String event, @Nullable String detail, @Nullable String actorId, String key) {
-        return messages.insert(Message.buddyEvent(roomId, event, detail, actorId, key, Instant.now(clock)))
-                .onErrorResume(DuplicateKeyException.class, e -> Mono.empty());
+        return access.isOpen(roomId)
+                .flatMap(open -> open
+                        ? messages.insert(Message.buddyEvent(roomId, event, detail, actorId, key, Instant.now(clock)))
+                                .flatMap(this::keepInOpenRoom)
+                                .onErrorResume(DuplicateKeyException.class, e -> Mono.empty())
+                        : Mono.empty());
     }
 
     /** Adds a system entry (e.g. a member left) to a room's timeline. */
     public Mono<Message> recordSystemEvent(String roomId, String event, String actorId, @Nullable String actorName) {
         Instant now = Instant.now(clock);
         String key = "system:" + event + ":" + actorId + ":" + now.toEpochMilli();
-        return messages.insert(Message.system(roomId, event, actorId, actorName, key, now));
+        return access.isOpen(roomId)
+                .flatMap(open -> open
+                        ? messages.insert(Message.system(roomId, event, actorId, actorName, key, now))
+                                .flatMap(this::keepInOpenRoom)
+                        : Mono.empty());
+    }
+
+    // An event started before removal may finish after the old timeline has been deleted.
+    private Mono<Message> keepInOpenRoom(Message message) {
+        return access.isOpen(message.roomId())
+                .flatMap(open -> open
+                        ? Mono.just(message)
+                        : messages.deleteById(message.id()).then(Mono.empty()));
     }
 
     /** Removes a deleted room's timeline and read marks. */
@@ -98,6 +128,17 @@ public class ChatService {
     /** Removes how far the user has read, in any room (account deletion). */
     public Mono<Void> deleteReadMarksOf(String userId) {
         return mongo.remove(query(where("userId").is(userId)), ReadMark.class).then();
+    }
+
+    /** A bounded copy for a report, kept separately before the conversation is deleted. */
+    public Mono<List<Message>> reportEvidence(String roomId) {
+        return mongo.find(
+                        query(where("roomId").is(roomId).and("type").is(Message.Type.TEXT))
+                                .with(Sort.by(Sort.Direction.DESC, "_id"))
+                                .limit(50),
+                        Message.class)
+                .collectList()
+                .map(List::reversed);
     }
 
     /**
@@ -118,13 +159,14 @@ public class ChatService {
             sort = Sort.by(Sort.Direction.ASC, "_id");
         }
         boolean forward = after != null;
-        return mongo.find(query(criteria).with(sort).limit(limit + 1), Message.class)
-                .collectList()
-                .map(found -> {
-                    boolean hasMore = found.size() > limit;
-                    List<Message> page = hasMore ? found.subList(0, limit) : found;
-                    return new MessagePage(forward ? page.reversed() : page, hasMore);
-                });
+        return access.requireMember(roomId, user.id())
+                .then(mongo.find(query(criteria).with(sort).limit(limit + 1), Message.class)
+                        .collectList()
+                        .map(found -> {
+                            boolean hasMore = found.size() > limit;
+                            List<Message> page = hasMore ? found.subList(0, limit) : found;
+                            return new MessagePage(forward ? page.reversed() : page, hasMore);
+                        }));
     }
 
     /**
@@ -137,31 +179,33 @@ public class ChatService {
         if (roomId == null) return Mono.error(new ApiException(HttpStatus.NOT_FOUND, "ROOM_NOT_FOUND"));
         if (messageId == null || !ObjectId.isValid(messageId)) return Mono.error(invalid());
         String id = ReadMark.key(roomId, user.id());
-        return mongo.exists(
-                        query(where("_id")
-                                .is(new ObjectId(messageId))
-                                .and("roomId")
-                                .is(roomId)),
-                        Message.class)
-                .flatMap(exists -> {
-                    if (!exists) return Mono.error(invalid());
-                    // Only an older mark matches (ids compare in timeline order). With no match the
-                    // upsert tries to insert the same _id and hits a duplicate key. That means the
-                    // mark exists, but not that it is newer: concurrent first reads race to create it,
-                    // and an older one may have won. So try once more against the existing mark.
-                    Query older = query(where("_id").is(id).and("messageId").lt(messageId));
-                    Update mark = new Update()
-                            .set("roomId", roomId)
-                            .set("userId", user.id())
-                            .set("messageId", messageId)
-                            .set("updatedAt", Instant.now(clock));
-                    return mongo.upsert(older, mark, ReadMark.class)
-                            .thenReturn(true)
-                            .onErrorResume(
-                                    DuplicateKeyException.class,
-                                    e -> mongo.updateFirst(older, mark, ReadMark.class)
-                                            .map(result -> result.getModifiedCount() == 1));
-                });
+        return access.requireMember(roomId, user.id())
+                .then(mongo.exists(
+                                query(where("_id")
+                                        .is(new ObjectId(messageId))
+                                        .and("roomId")
+                                        .is(roomId)),
+                                Message.class)
+                        .flatMap(exists -> {
+                            if (!exists) return Mono.error(invalid());
+                            // Only an older mark matches (ids compare in timeline order). With no match the
+                            // upsert tries to insert the same _id and hits a duplicate key. That means the
+                            // mark exists, but not that it is newer: concurrent first reads race to create it,
+                            // and an older one may have won. So try once more against the existing mark.
+                            Query older =
+                                    query(where("_id").is(id).and("messageId").lt(messageId));
+                            Update mark = new Update()
+                                    .set("roomId", roomId)
+                                    .set("userId", user.id())
+                                    .set("messageId", messageId)
+                                    .set("updatedAt", Instant.now(clock));
+                            return mongo.upsert(older, mark, ReadMark.class)
+                                    .thenReturn(true)
+                                    .onErrorResume(
+                                            DuplicateKeyException.class,
+                                            e -> mongo.updateFirst(older, mark, ReadMark.class)
+                                                    .map(result -> result.getModifiedCount() == 1));
+                        }));
     }
 
     /** Each member's read mark in the room: user id → newest message id they have read. */
