@@ -393,6 +393,9 @@ iPhone / Web ──HTTPS·WSS──▶ Railway (Spring WebFlux, Docker, 싱가�
   종료되면 같은 접수 알림이 중복될 수 있으므로 접수 번호로 구분한다. 사용자 자동 답장은 없다.
 - Railway Hobby의 SMTP 제한 때문에 Gmail OAuth의 `gmail.send` 권한으로 발송한다. Gmail 인증 값 미설정 시 알림은 대기하고 접수·안전 조치는 동작한다. 메일 상태를 전체 health 판정에서 제외해 설정 누락이나
   Gmail 장애가 채팅 서버 배포를 막지 않게 한다. 환경변수와 수동 운영은 `docs/support-operations.md`를 따른다.
+- 공개 연락처·알림 수신 주소는 `support@puny-chat.com`으로, Cloudflare Email Routing이 운영자 Gmail로 전달한다.
+  라우팅은 수신용이며 서버 발송 계정은 운영자 Gmail을 유지한다. 소켓 종료도 일반 이벤트와 같은 직렬화 재시도를 적용해
+  동시 presence/Buddy 전송 때문에 종료 신호가 버려지지 않게 한다.
 
 ## 계정 삭제
 

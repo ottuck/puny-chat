@@ -43,7 +43,9 @@ public class RoomHub {
         }
 
         void complete() {
-            outbound.tryEmitComplete();
+            // Presence or Buddy events may be emitting while the other member is disconnected.
+            // A failed tryEmitComplete would silently leave this socket open.
+            outbound.emitComplete(Sinks.EmitFailureHandler.busyLooping(Duration.ofMillis(100)));
         }
     }
 
