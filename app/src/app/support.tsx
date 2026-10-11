@@ -194,7 +194,8 @@ export default function SupportScreen() {
                   setReceiptCopied(true);
                   setError(null);
                 } catch {
-                  setError(t('support.copyFailed'));
+                  setReceiptCopied(false);
+                  setError(`${t('support.copyFailed')}\n${receipt.id}`);
                 }
               }}
               style={styles.copyReceipt}
