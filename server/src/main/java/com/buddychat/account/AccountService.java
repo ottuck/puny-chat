@@ -40,10 +40,14 @@ public class AccountService {
                 ? Mono.empty()
                 // Already gone from a room that no longer exists: nothing to leave.
                 : roomService.leave(user).onErrorResume(ApiException.class, e -> Mono.empty());
-        return leave.then(roomService.deleteInvitationsBy(user.id()))
+        return chatService
+                .beginAccountDeletion(user.id())
+                .then(leave)
+                .then(roomService.deleteInvitationsBy(user.id()))
                 .then(chatService.deleteUserHistory(user.id()))
                 .then(chatService.deleteReadMarksOf(user.id()))
                 .then(notificationService.forget(user.id()))
-                .then(userService.delete(user.id()));
+                .then(userService.delete(user.id()))
+                .then(chatService.finishAccountDeletion(user.id()));
     }
 }

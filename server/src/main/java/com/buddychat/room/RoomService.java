@@ -117,9 +117,9 @@ public class RoomService {
                     if (!announce) return Mono.<Void>empty();
                     return chatService
                             .recordSystemEvent(roomId, "MEMBER_LEFT", user.id(), user.displayName())
-                            .doOnNext(message -> {
+                            .doOnSuccess(message -> {
                                 hub.publish(roomId, new ServerEvent.MemberLeft(user.id()), null);
-                                hub.publish(roomId, new ServerEvent.NewMessage(message), null);
+                                if (message != null) hub.publish(roomId, new ServerEvent.NewMessage(message), null);
                             })
                             // The last member may have left meanwhile and deleted the history before
                             // this note was stored; then it goes too.

@@ -6,6 +6,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import com.buddychat.common.ApiException;
 import com.buddychat.room.RoomAccess;
 import com.buddychat.user.User;
+import com.buddychat.user.UserService;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
@@ -32,12 +33,19 @@ public class ChatService {
     private final ReactiveMongoTemplate mongo;
     private final Clock clock;
     private final RoomAccess access;
+    private final UserService userService;
 
-    ChatService(MessageRepository messages, ReactiveMongoTemplate mongo, Clock clock, RoomAccess access) {
+    ChatService(
+            MessageRepository messages,
+            ReactiveMongoTemplate mongo,
+            Clock clock,
+            RoomAccess access,
+            UserService userService) {
         this.messages = messages;
         this.mongo = mongo;
         this.clock = clock;
         this.access = access;
+        this.userService = userService;
     }
 
     /** {@code created} is false when this was a resend of an already stored message. */
@@ -117,6 +125,14 @@ public class ChatService {
                         ? Mono.just(message)
                         : messages.deleteById(message.id()).then(Mono.empty()))
                 .flatMap(saved -> {
+                    if (saved.type() == Message.Type.SYSTEM && saved.actorId() != null) {
+                        // The row is inserted before this check. If deletion begins afterwards its
+                        // purge sees it; if it already began, the durable fence removes it.
+                        return actorCanBeNamed(saved.actorId())
+                                .flatMap(allowed -> allowed
+                                        ? Mono.just(saved)
+                                        : messages.deleteById(saved.id()).then(Mono.empty()));
+                    }
                     if (saved.type() != Message.Type.BUDDY_EVENT || saved.actorId() == null) return Mono.just(saved);
                     // A care request that started before departure may insert its event after the
                     // account purge. Do not restore the departed actor's identifier then.
@@ -130,6 +146,26 @@ public class ChatService {
                                                     Message.class)
                                             .thenReturn(saved.withoutActor()));
                 });
+    }
+
+    private Mono<Boolean> actorCanBeNamed(String userId) {
+        return mongo.exists(query(where("_id").is(userId)), HistoryDeletion.class)
+                .flatMap(deleting -> deleting ? Mono.just(false) : userService.exists(userId));
+    }
+
+    /** Fence late named events before any room membership or authored history is removed. */
+    public Mono<Void> beginAccountDeletion(String userId) {
+        return mongo.upsert(
+                        query(where("_id").is(userId)),
+                        new Update().setOnInsert("roomIds", List.of()),
+                        HistoryDeletion.class)
+                .then();
+    }
+
+    /** The user document must be gone before removing the deletion fence. */
+    public Mono<Void> finishAccountDeletion(String userId) {
+        return mongo.remove(query(where("_id").is(userId)), HistoryDeletion.class)
+                .then();
     }
 
     /** Removes a deleted room's timeline and read marks. */
@@ -172,7 +208,6 @@ public class ChatService {
                                 query(where("actorId").is(userId)), new Update().unset("actorId"), Message.class))
                         .then(access.forgetTalker(userId))
                         .then(access.invalidateHistory(deletion.roomIds(), userId))
-                        .then(mongo.remove(query(where("_id").is(userId)), HistoryDeletion.class))
                         .then());
     }
 

@@ -174,6 +174,10 @@ public class UserService {
         return mongo.remove(query(where("_id").is(userId)), User.class).then();
     }
 
+    public Mono<Boolean> exists(String userId) {
+        return users.existsById(userId);
+    }
+
     /** Reserves one invitation per user, without exposing the target room before joining it. */
     public Mono<Boolean> reserveRoomJoin(String userId, @Nullable String expectedRoomId, String invitationId) {
         return mongo.updateFirst(

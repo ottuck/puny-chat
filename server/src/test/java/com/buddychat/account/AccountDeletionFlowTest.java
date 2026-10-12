@@ -102,7 +102,6 @@ class AccountDeletionFlowTest {
 
         // Henry keeps their room, buddy and own text, and is told to drop cached history.
         assertThat(henry.expect("left").get("userId").asString()).isEqualTo(yukiId);
-        henry.expect("message"); // named departure note, removed by the following purge
         assertThat(henry.expect("historyChanged").get("historyVersion").asLong())
                 .isEqualTo(1L);
         assertThat(mongo.findById(roomId, Room.class).block().memberIds())
@@ -213,6 +212,30 @@ class AccountDeletionFlowTest {
         assertThat(late.actorId()).isNull();
         assertThat(count("messages", "actorId", yukiId)).isZero();
         assertThat(mongo.findById(roomId, Room.class).block().buddy().talkers()).isNullOrEmpty();
+        assertThat(chatService
+                        .recordSystemEvent(roomId, "MEMBER_LEFT", yukiId, "deleted name")
+                        .block())
+                .isNull();
+        assertThat(count("messages", "actorId", yukiId)).isZero();
+    }
+
+    @Test
+    void deletionFencePreventsNamedEventsWhileTheUserStillExists() {
+        String roomId = duoRoom("henry", "yuki");
+        String yukiId = user("yuki").id();
+        TestSocket henry = connect("henry");
+        chatService.beginAccountDeletion(yukiId).block();
+
+        assertThat(chatService
+                        .recordSystemEvent(roomId, "MEMBER_LEFT", yukiId, "deleted name")
+                        .block())
+                .isNull();
+        assertThat(user("yuki")).isNotNull();
+        assertThat(count("messages", "actorId", yukiId)).isZero();
+        delete("yuki").expectStatus().isNoContent();
+        henry.expect("left");
+        assertThat(user("yuki")).isNull();
+        assertThat(mongo.count(new Query(), "history_deletions").block()).isZero();
     }
 
     @Test
