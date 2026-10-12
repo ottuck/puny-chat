@@ -49,6 +49,9 @@ class AccountDeletionFlowTest {
     @Autowired
     com.buddychat.buddy.BuddyService buddyService;
 
+    @org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+    com.buddychat.user.UserService userService;
+
     private final List<TestSocket> sockets = new ArrayList<>();
     private WebTestClient http;
 
@@ -236,6 +239,33 @@ class AccountDeletionFlowTest {
         henry.expect("left");
         assertThat(user("yuki")).isNull();
         assertThat(mongo.count(new Query(), "history_deletions").block()).isZero();
+    }
+
+    @Test
+    void aRejectedLateSystemInsertionAlsoInvalidatesAnyHistoryThatObservedIt() {
+        String roomId = duoRoom("henry", "yuki");
+        String yukiId = user("yuki").id();
+        TestSocket henry = connect("henry");
+        var checks = new java.util.concurrent.atomic.AtomicInteger();
+        org.mockito.Mockito.doAnswer(invocation -> checks.incrementAndGet() == 1
+                        ? reactor.core.publisher.Mono.just(true)
+                        : mongo.count(Query.query(Criteria.where("actorId").is(yukiId)), Message.class)
+                                .doOnNext(count -> assertThat(count).isEqualTo(1L))
+                                .then(chatService.beginAccountDeletion(yukiId))
+                                .thenReturn(false))
+                .when(userService)
+                .exists(yukiId);
+
+        assertThat(chatService
+                        .recordSystemEvent(roomId, "MEMBER_LEFT", yukiId, "late private name")
+                        .block())
+                .isNull();
+
+        JsonNode changed = henry.expect("historyChanged");
+        assertThat(changed.get("deletedUserId").asString()).isEqualTo(yukiId);
+        assertThat(changed.get("historyVersion").asLong()).isEqualTo(1L);
+        assertThat(count("messages", "actorId", yukiId)).isZero();
+        assertThat(mongo.findById(roomId, Room.class).block().historyVersion()).isEqualTo(1L);
     }
 
     @Test

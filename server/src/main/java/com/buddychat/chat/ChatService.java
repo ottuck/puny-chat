@@ -112,7 +112,8 @@ public class ChatService {
         Instant now = Instant.now(clock);
         String key = "system:" + event + ":" + actorId + ":" + now.toEpochMilli();
         return access.isOpen(roomId)
-                .flatMap(open -> open
+                .zipWith(actorCanBeNamed(actorId))
+                .flatMap(allowed -> allowed.getT1() && allowed.getT2()
                         ? messages.insert(Message.system(roomId, event, actorId, actorName, key, now))
                                 .flatMap(this::keepInOpenRoom)
                         : Mono.empty());
@@ -131,7 +132,13 @@ public class ChatService {
                         return actorCanBeNamed(saved.actorId())
                                 .flatMap(allowed -> allowed
                                         ? Mono.just(saved)
-                                        : messages.deleteById(saved.id()).then(Mono.empty()));
+                                        : messages.deleteById(saved.id())
+                                                // A history request may have observed the brief insertion
+                                                // window. Invalidate this room even if the main purge did
+                                                // not collect it, so online and offline caches discard it.
+                                                .then(access.invalidateHistory(
+                                                        List.of(saved.roomId()), saved.actorId()))
+                                                .then(Mono.empty()));
                     }
                     if (saved.type() != Message.Type.BUDDY_EVENT || saved.actorId() == null) return Mono.just(saved);
                     // A care request that started before departure may insert its event after the
