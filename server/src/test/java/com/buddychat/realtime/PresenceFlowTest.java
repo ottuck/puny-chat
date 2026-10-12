@@ -199,7 +199,7 @@ class PresenceFlowTest {
 
     private TestSocket open(String uid) {
         // Buddy growth from the messages sent here is covered in BuddyFlowTest.
-        TestSocket socket = new TestSocket(URI.create("ws://localhost:" + port + "/ws"), json).ignoring("buddy");
+        TestSocket socket = new TestSocket(URI.create("ws://localhost:" + port + "/ws"), json).ignoringBuddyEvents();
         sockets.add(socket);
         socket.expect("hello");
         socket.send(Map.of("type", "auth", "token", token(uid)));

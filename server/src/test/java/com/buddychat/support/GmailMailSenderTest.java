@@ -69,8 +69,7 @@ class GmailMailSenderTest {
     private SimpleMailMessage message() {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("sender@example.com");
-        message.setTo("support@puny-chat.com");
-        message.setReplyTo("reply@example.com");
+        message.setTo("operator@example.com");
         message.setSubject("[puny-chat] 문의 · 접수 번호");
         message.setText("문의가 접수됐어요.\n사용자에게 자동 답장은 보내지 않습니다.");
         return message;
@@ -95,8 +94,8 @@ class GmailMailSenderTest {
         MimeMessage parsed = new MimeMessage(
                 Session.getInstance(new Properties()),
                 new ByteArrayInputStream(Base64.getUrlDecoder().decode(raw)));
-        assertThat(parsed.getAllRecipients()).extracting(Object::toString).containsExactly("support@puny-chat.com");
-        assertThat(parsed.getReplyTo()).extracting(Object::toString).containsExactly("reply@example.com");
+        assertThat(parsed.getAllRecipients()).extracting(Object::toString).containsExactly("operator@example.com");
+        assertThat(parsed.getHeader("Reply-To")).isNull();
         assertThat(parsed.getSubject()).isEqualTo(message().getSubject());
         assertThat(parsed.getContent().toString()).contains("문의가 접수됐어요", "자동 답장은 보내지 않습니다");
     }

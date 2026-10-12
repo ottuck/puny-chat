@@ -37,9 +37,8 @@ variable "atlas_region" {
   default = "AP_SOUTHEAST_1"
 }
 
-# Faster growth than the server default (20) while the app is shown as a portfolio piece.
-# Set to null before a real launch.
+# Launch growth rate, including solo use. Null falls back to the server default (5).
 variable "buddy_exp_per_level" {
   type    = number
-  default = 3
+  default = 5
 }

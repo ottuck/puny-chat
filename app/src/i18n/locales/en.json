@@ -158,6 +158,7 @@
     "signOut": "Sign out",
     "joinWithCode": "Join with an invite code",
     "room": "Room",
+    "buddy": "Buddy",
     "members": "Members",
     "since": "Since {{date}}",
     "leave": "Leave room",
