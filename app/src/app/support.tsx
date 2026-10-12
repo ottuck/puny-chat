@@ -46,7 +46,6 @@ export default function SupportScreen() {
   const [locked, setLocked] = useState(false);
   const [reason, setReason] = useState<ReportReason>('HARASSMENT');
   const [description, setDescription] = useState('');
-  const [replyEmail, setReplyEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +57,6 @@ export default function SupportScreen() {
   const frozenDraft = useRef<{
     type: 'inquiry' | 'report';
     description: string;
-    replyEmail: string;
     reason: ReportReason;
   } | null>(null);
 
@@ -99,11 +97,10 @@ export default function SupportScreen() {
       requestId.current ??= randomUUID();
       setLocked(true);
       setSavedTarget(target);
-      frozenDraft.current ??= { type, description, replyEmail, reason };
+      frozenDraft.current ??= { type, description, reason };
       const draft = frozenDraft.current;
       setError(null);
       const text = draft.description.trim() || t('support.defaultReport');
-      const email = draft.replyEmail.trim() || undefined;
       const next =
         draft.type === 'report'
           ? await removePartner({
@@ -113,9 +110,8 @@ export default function SupportScreen() {
               report: true,
               reason: draft.reason,
               description: text,
-              replyEmail: email,
             })
-          : await submitInquiry(requestId.current, text, email);
+          : await submitInquiry(requestId.current, text);
       setReceipt(next);
       if (draft.type === 'report') await reload();
     } catch (e) {
@@ -281,24 +277,8 @@ export default function SupportScreen() {
                 { color: colors.text, borderColor: colors.border },
               ]}
             />
-            <Text style={[styles.label, { color: colors.textMuted }]}>
-              {t('support.replyEmail')}
-            </Text>
-            <TextInput
-              value={replyEmail}
-              onChangeText={setReplyEmail}
-              maxLength={254}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              autoComplete="email"
-              editable={!busy && !locked}
-              accessibilityLabel={t('support.replyEmail')}
-              placeholder={t('support.replyPlaceholder')}
-              placeholderTextColor={colors.textMuted}
-              style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-            />
             <Text style={[styles.body, { color: colors.textMuted }]}>
-              {t('support.replyNotice')}
+              {t('support.submissionNotice')}
             </Text>
             {busy ? <ActivityIndicator color={colors.accent} /> : null}
             <Button
@@ -310,11 +290,7 @@ export default function SupportScreen() {
                     : 'support.send',
               )}
               onPress={send}
-              disabled={
-                busy ||
-                (type === 'report' ? !target : !description.trim()) ||
-                (!!replyEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(replyEmail.trim()))
-              }
+              disabled={busy || (type === 'report' ? !target : !description.trim())}
             />
           </View>
         ) : (

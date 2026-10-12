@@ -113,8 +113,8 @@ supportTickets { _id: requestId, kind (INQUIRY | REPORT | REMOVE), reporterId, r
 | POST | `/api/rooms/me/invitations` | 초대 코드 발급 |
 | POST | `/api/invitations/{code}/accept` | 초대 수락 → room 참가 |
 | POST | `/api/rooms/me/leave` | room 나가기 → 204(아래 Room 규칙) |
-| POST | `/api/support/inquiries` | 문의 `{ requestId, description, replyEmail? }` → 201 `{ id }` |
-| POST | `/api/rooms/me/partner-removal` | 상대 종료 `{ requestId, roomId, targetId, report, reason?, description, replyEmail? }` → 201 `{ id }` |
+| POST | `/api/support/inquiries` | 문의 `{ requestId, description }` → 201 `{ id }` |
+| POST | `/api/rooms/me/partner-removal` | 상대 종료 `{ requestId, roomId, targetId, report, reason?, description }` → 201 `{ id }` |
 | GET | `/api/rooms/me/messages?before=&after=&limit=` | 타임라인(최신순, limit ≤ 50). `before`: 이전 페이지, `after`: 재연결 후 놓친 메시지. 응답 `{ messages, hasMore }` |
 | POST | `/api/rooms/me/buddy/feed` | 밥주기 → `{ buddy, changed }`. 필요 없었거나 상대가 방금 했으면 `changed: false`(아래 Buddy 규칙) |
 | POST | `/api/rooms/me/buddy/clean` | 💩 청소 → `{ buddy, changed }` |
@@ -375,7 +375,8 @@ iPhone / Web ──HTTPS·WSS──▶ Railway (Spring WebFlux, Docker, 싱가�
 
 ## 문의·신고와 상대 내보내기
 
-- 접수는 Firebase 인증을 요구한다. 내용은 1~4000자, 답장 주소는 선택이며 이메일 형식·254자·헤더 개행 금지를 검증한다.
+- 접수는 Firebase 인증을 요구한다. 내용은 1~4000자다. 이전 앱의 `replyEmail` 필드는 호환을 위해 받아 검증하지만
+  새 접수에 저장하지 않고 알림에도 사용하지 않는다. DB의 기존 답장 주소는 접수 기록과 함께 90일 TTL 대상이다.
   일반 문의는 이용자당 최근 1시간 접수 기록이 5개 이상이면 `SUPPORT_RATE_LIMIT`(429)이다. 신고·내보내기는 이 제한에 막히지 않는다.
 - 앱이 만드는 UUID `requestId`를 접수 문서의 키로 쓴다. 같은 작성자의 같은 요청 재시도는 기존 접수를 이어서 끝내고,
   다른 작성자 또는 방·대상·유형이 달라지면 `PARTNER_CHANGED`(409)를 반환한다. 문의는 내용 일치도 확인한다.
@@ -391,11 +392,12 @@ iPhone / Web ──HTTPS·WSS──▶ Railway (Spring WebFlux, Docker, 싱가�
 - `expiresAt` TTL 인덱스로 접수 후 90일에 정리한다. 자료를 조회하는 공개 API는 없다. 운영자는 기존 Atlas 콘솔에서 접수 번호로 확인한다.
 - 완료한 문의·신고의 메일은 운영자에게만 보낸다. 60초마다 최대 10건을 DB에서 원자적으로 임대하고, 실패하면 2~60분 간격으로
   재시도한다. Gmail API(HTTPS)의 토큰 갱신·발송을 `boundedElastic`에서 실행하고 요청 제한 시간을 각각 5초로 둔다. 발송 후 DB 기록 전에 프로세스가
-  종료되면 같은 접수 알림이 중복될 수 있으므로 접수 번호로 구분한다. 사용자 자동 답장은 없다.
+  종료되면 같은 접수 알림이 중복될 수 있으므로 접수 번호로 구분한다. 사용자 개별 이메일 답장은 없다.
 - Railway Hobby의 SMTP 제한 때문에 Gmail OAuth의 `gmail.send` 권한으로 발송한다. Gmail 인증 값 미설정 시 알림은 대기하고 접수·안전 조치는 동작한다. 메일 상태를 전체 health 판정에서 제외해 설정 누락이나
   Gmail 장애가 채팅 서버 배포를 막지 않게 한다. 환경변수와 수동 운영은 `docs/support-operations.md`를 따른다.
-- 공개 연락처·알림 수신 주소는 `support@puny-chat.com`으로, Cloudflare Email Routing이 운영자 Gmail로 전달한다.
-  라우팅은 수신용이며 서버 발송 계정은 운영자 Gmail을 유지한다. 소켓 종료도 일반 이벤트와 같은 직렬화 재시도를 적용해
+- 공개 연락처는 `support@puny-chat.com`으로, 외부 메일은 Cloudflare Email Routing이 운영자에게 전달한다.
+  서버 알림은 `SUPPORT_EMAIL`의 운영자 메일함으로 직접 보내며 `SUPPORT_FROM`은 승인한 Gmail 발송 계정이다.
+  개인 주소는 Railway 환경변수로만 관리하고 저장소에는 기본값을 두지 않는다. 소켓 종료도 일반 이벤트와 같은 직렬화 재시도를 적용해
   동시 presence/Buddy 전송 때문에 종료 신호가 버려지지 않게 한다.
 
 ## 계정 삭제
