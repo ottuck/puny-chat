@@ -28,7 +28,7 @@
 - `pnpm test` — Node 내장 테스트 러너로 메시지 복구 실패·페이지네이션·재연결·취소 회귀 테스트. 새 라이브러리는 쓰지 않는다.
 - `pnpm build:web` — 배포용 웹 빌드(`dist/`, Worker 정적 자산용 404·`_headers` 포함. `app/wrangler.jsonc`)
 - 패키지 추가는 `pnpm exec expo install <pkg>` — SDK와 맞는 버전을 고른다. `pnpm add`로 직접 넣지 않는다.
-- `pnpm exec expo-doctor` — 의존성·설정 진단
+- `pnpm dlx expo-doctor` — 의존성·설정 진단(프로젝트 의존성으로 설치되어 있지 않음)
 - Node 24+, pnpm (버전은 `app/package.json`의 `packageManager`)
 - 처음 한 번: `app/.env.example`을 `app/.env.local`로 복사하고 Firebase 웹 앱 설정값을 채운다(공개 설정값, git 제외).
 - 서버 주소는 `EXPO_PUBLIC_API_URL`(`.env.local`, 예: https://api.puny-chat.com). 비우면 Metro를 띄운 PC의 :8080 로컬 서버
