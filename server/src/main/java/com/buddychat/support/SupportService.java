@@ -45,7 +45,7 @@ public class SupportService {
 
     public record Receipt(String id) {}
 
-    Mono<Receipt> inquire(User user, String id, String description, @Nullable String replyEmail) {
+    Mono<Receipt> inquire(User user, String id, String description) {
         return existing(user, id)
                 .switchIfEmpty(Mono.defer(() -> checkLimit(user).then(Mono.defer(() -> {
                     Instant now = Instant.now(clock);
@@ -54,7 +54,7 @@ public class SupportService {
                             SupportTicket.Kind.INQUIRY,
                             user.id(),
                             user.displayName(),
-                            replyEmail,
+                            null,
                             null,
                             description.strip(),
                             null,
@@ -85,8 +85,7 @@ public class SupportService {
             String targetId,
             boolean report,
             SupportTicket.@Nullable Reason reason,
-            String description,
-            @Nullable String replyEmail) {
+            String description) {
         if (report && reason == null) return Mono.error(new ApiException(HttpStatus.BAD_REQUEST, "INVALID_REQUEST"));
         var kind = report ? SupportTicket.Kind.REPORT : SupportTicket.Kind.REMOVE;
         return existing(user, id)
@@ -103,7 +102,7 @@ public class SupportService {
                                                     kind,
                                                     user.id(),
                                                     user.displayName(),
-                                                    replyEmail,
+                                                    null,
                                                     reason,
                                                     description.strip(),
                                                     room.id(),

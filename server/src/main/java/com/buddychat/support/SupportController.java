@@ -26,6 +26,7 @@ class SupportController {
         this.support = support;
     }
 
+    // Legacy clients may send replyEmail; it is validated but never stored or used for replies.
     record InquiryRequest(
             @NotBlank @Pattern(regexp = "[a-fA-F0-9-]{36}") String requestId,
             @NotBlank @Size(max = 4000) String description,
@@ -47,9 +48,7 @@ class SupportController {
     @PostMapping("/api/support/inquiries")
     @ResponseStatus(HttpStatus.CREATED)
     Mono<SupportService.Receipt> inquire(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody InquiryRequest request) {
-        return users.current(jwt)
-                .flatMap(user ->
-                        support.inquire(user, request.requestId(), request.description(), request.replyEmail()));
+        return users.current(jwt).flatMap(user -> support.inquire(user, request.requestId(), request.description()));
     }
 
     @PostMapping("/api/rooms/me/partner-removal")
@@ -63,7 +62,6 @@ class SupportController {
                         request.targetId(),
                         request.report(),
                         request.reason(),
-                        request.description(),
-                        request.replyEmail()));
+                        request.description()));
     }
 }

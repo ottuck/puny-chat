@@ -44,7 +44,7 @@ class SupportMail {
         this.clock = clock;
         this.recipient = recipient;
         this.from = from;
-        this.configured = gmail.configured();
+        this.configured = gmail.configured() && !recipient.isBlank() && !from.isBlank();
     }
 
     @Scheduled(fixedDelay = 60000, initialDelay = 10000)
@@ -99,7 +99,6 @@ class SupportMail {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(from);
         message.setTo(recipient);
-        if (ticket.replyEmail() != null && !ticket.replyEmail().isBlank()) message.setReplyTo(ticket.replyEmail());
         message.setSubject("[puny-chat] " + ticket.kind() + " · " + ticket.id());
         StringBuilder body = new StringBuilder("접수 번호: ")
                 .append(ticket.id())
@@ -110,8 +109,6 @@ class SupportMail {
                 .append(" (")
                 .append(ticket.reporterId())
                 .append(")")
-                .append("\n답장 주소: ")
-                .append(ticket.replyEmail() == null ? "미입력" : ticket.replyEmail())
                 .append("\n유형: ")
                 .append(ticket.kind())
                 .append("\n사유: ")
@@ -139,7 +136,7 @@ class SupportMail {
                         .append("\n");
             }
         }
-        body.append("\n\n사용자에게 자동 답장은 발송하지 않았습니다. 필요한 경우 직접 답장해 주세요.");
+        body.append("\n\n운영자 확인용 알림입니다. 문의·신고에 대한 개별 이메일 답장은 보내지 않습니다.");
         message.setText(body.toString());
         return message;
     }
