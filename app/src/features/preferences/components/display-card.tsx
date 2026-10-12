@@ -89,8 +89,8 @@ function PreferenceRow<T extends string>({
         animationType={Platform.OS === 'web' ? 'none' : 'fade'}
         onRequestClose={() => setOpen(false)}
       >
-        <WebFrame>
-          <View style={styles.overlay}>
+        <WebFrame transparent>
+          <View nativeID="preferences-overlay" style={styles.overlay}>
             <Pressable
               onPress={() => setOpen(false)}
               accessibilityRole="button"
@@ -192,7 +192,15 @@ const styles = StyleSheet.create({
   valueLabel: { flexShrink: 1, fontSize: 14 },
   divider: { height: StyleSheet.hairlineWidth },
   overlay: { flex: 1, justifyContent: 'flex-end', padding: 12, backgroundColor: '#00000055' },
-  sheet: { maxHeight: '85%', borderRadius: 24, paddingHorizontal: 20, paddingTop: 12 },
+  sheet: {
+    width: '100%',
+    maxWidth: 440,
+    alignSelf: 'center',
+    maxHeight: '85%',
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
