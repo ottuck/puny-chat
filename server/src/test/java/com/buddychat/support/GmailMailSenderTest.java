@@ -68,7 +68,7 @@ class GmailMailSenderTest {
 
     private SimpleMailMessage message() {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("vison901@gmail.com");
+        message.setFrom("sender@example.com");
         message.setTo("support@puny-chat.com");
         message.setReplyTo("reply@example.com");
         message.setSubject("[puny-chat] 문의 · 접수 번호");

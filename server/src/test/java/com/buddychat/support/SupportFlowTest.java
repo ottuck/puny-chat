@@ -47,7 +47,9 @@ import reactor.core.scheduler.Schedulers;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = {"buddychat.support.email=operator@example.com", "buddychat.support.from=sender@example.com"})
 @Import({
     TestcontainersConfiguration.class,
     TestJwtConfiguration.class,
@@ -182,8 +184,9 @@ class SupportFlowTest {
         mail.drain().block();
         mail.drain().block();
         assertThat(sender.sent).hasSize(1);
-        assertThat(sender.sent.getFirst().getTo()).containsExactly("support@puny-chat.com");
-        assertThat(sender.sent.getFirst().getReplyTo()).isEqualTo("reply@example.com");
+        assertThat(sender.sent.getFirst().getTo()).containsExactly("operator@example.com");
+        assertThat(sender.sent.getFirst().getReplyTo()).isNull();
+        assertThat(ticket.replyEmail()).isNull();
         assertThat(sender.sent.getFirst().getText()).contains("problem text", "hello", id);
         // There is no account ban: both people can start a new invited relationship.
         create("yuki");
@@ -250,7 +253,9 @@ class SupportFlowTest {
         clock.advance(Duration.ofMinutes(3));
         mail.drain().block();
         assertThat(sender.sent).hasSize(1);
-        assertThat(sender.sent.getFirst().getTo()).containsExactly("support@puny-chat.com");
+        assertThat(sender.sent.getFirst().getTo()).containsExactly("operator@example.com");
+        assertThat(sender.sent.getFirst().getReplyTo()).isNull();
+        assertThat(mongo.findById(id, SupportTicket.class).block().replyEmail()).isNull();
         assertThat(mongo.findById(id, SupportTicket.class).block().emailStatus())
                 .isEqualTo("SENT");
         assertThat(mail.drain().block()).isZero();
