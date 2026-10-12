@@ -13,11 +13,13 @@ type ServerEvent =
       roomId: string;
       online: string[];
       reads: Record<string, string>;
+      historyVersion?: number;
     }
   | { type: 'ack'; clientMessageId: string; message: ServerMessage }
   | { type: 'message'; message: ServerMessage }
   | { type: 'member'; userId: string; displayName: string | null }
   | { type: 'left'; userId: string }
+  | { type: 'historyChanged'; historyVersion: number; deletedUserId: string | null }
   | { type: 'buddy'; buddy: BuddyView }
   | { type: 'presence'; userId: string; online: boolean }
   | { type: 'typing'; userId: string; typing: boolean }
@@ -31,7 +33,8 @@ export type SocketListener = {
   onStatus: (status: ConnectionStatus) => void;
   // Authenticated; the app should fetch what it missed and resend unacknowledged messages.
   // online: other members connected now. reads: user id → newest message id they have read.
-  onReady: (online: string[], reads: Record<string, string>) => void;
+  onReady: (online: string[], reads: Record<string, string>, historyVersion: number) => void;
+  onHistoryChanged: (historyVersion: number, deletedUserId: string | null) => void;
   onAck: (clientMessageId: string, message: ServerMessage) => void;
   onMessage: (message: ServerMessage) => void;
   // A friend joined or left this room; the room's member list is out of date.
@@ -149,7 +152,7 @@ export class ChatSocket {
         this.ready = true;
         this.attempt = 0;
         this.listener.onStatus('online');
-        this.listener.onReady(event.online, event.reads);
+        this.listener.onReady(event.online, event.reads, event.historyVersion ?? 0);
         break;
       case 'ack':
         this.listener.onAck(event.clientMessageId, event.message);
@@ -172,6 +175,9 @@ export class ChatSocket {
       case 'member':
       case 'left':
         this.listener.onMembersChanged();
+        break;
+      case 'historyChanged':
+        this.listener.onHistoryChanged(event.historyVersion, event.deletedUserId);
         break;
       case 'error':
         if (event.clientMessageId) {

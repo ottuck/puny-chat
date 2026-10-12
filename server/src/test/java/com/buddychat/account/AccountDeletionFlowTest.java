@@ -43,6 +43,12 @@ class AccountDeletionFlowTest {
     @Autowired
     ReactiveMongoTemplate mongo;
 
+    @Autowired
+    com.buddychat.chat.ChatService chatService;
+
+    @Autowired
+    com.buddychat.buddy.BuddyService buddyService;
+
     private final List<TestSocket> sockets = new ArrayList<>();
     private WebTestClient http;
 
@@ -50,7 +56,7 @@ class AccountDeletionFlowTest {
     void setUp() {
         Flux.just(Room.class, User.class, Message.class)
                 .flatMap(type -> mongo.remove(new Query(), type))
-                .thenMany(Flux.just("reads", "invitations", "push_tokens")
+                .thenMany(Flux.just("reads", "invitations", "push_tokens", "history_deletions")
                         .flatMap(collection -> mongo.remove(new Query(), collection)))
                 .blockLast();
         http = WebTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
@@ -62,11 +68,23 @@ class AccountDeletionFlowTest {
     }
 
     @Test
-    void deletingLeavesTheRoomToThePartnerAndRemovesWhatWasOnlyTheirs() {
+    void deletingKeepsThePartnersRoomAndMessagesButRemovesAuthoredHistory() {
         String roomId = duoRoom("henry", "yuki");
         String yukiId = user("yuki").id();
         TestSocket henry = connect("henry");
         TestSocket yuki = connect("yuki");
+        mongo.insert(new Message(
+                        null,
+                        roomId,
+                        user("henry").id(),
+                        Message.Type.TEXT,
+                        "my message",
+                        null,
+                        null,
+                        null,
+                        "h-1",
+                        java.time.Instant.now()))
+                .block();
         yuki.send(Map.of("type", "send", "clientMessageId", "c-1", "text", "bye"))
                 .expect("ack");
         henry.expect("message");
@@ -82,15 +100,119 @@ class AccountDeletionFlowTest {
 
         delete("yuki").expectStatus().isNoContent();
 
-        // Henry is told as when someone leaves, and keeps the room, the buddy and the conversation.
+        // Henry keeps their room, buddy and own text, and is told to drop cached history.
         assertThat(henry.expect("left").get("userId").asString()).isEqualTo(yukiId);
+        henry.expect("message"); // named departure note, removed by the following purge
+        assertThat(henry.expect("historyChanged").get("historyVersion").asLong())
+                .isEqualTo(1L);
         assertThat(mongo.findById(roomId, Room.class).block().memberIds())
                 .containsExactly(user("henry").id());
-        assertThat(count("messages", "senderId", yukiId)).isEqualTo(1);
+        assertThat(count("messages", "senderId", yukiId)).isZero();
+        assertThat(count("messages", "actorId", yukiId)).isZero();
+        assertThat(count("messages", "senderId", user("henry").id())).isEqualTo(1);
+        assertThat(mongo.findById(roomId, Room.class).block().buddy().name()).isEqualTo("Mugi");
+        assertThat(mongo.count(new Query(), "history_deletions").block()).isZero();
         // Nothing of yuki's own is left.
         assertThat(user("yuki")).isNull();
         assertThat(count("reads", "userId", yukiId)).isZero();
         assertThat(count("push_tokens", "userId", yukiId)).isZero();
+    }
+
+    @Test
+    void deletionCoversPreviouslyLeftRoomsAndAnonymizesBuddyEvents() {
+        String oldRoom = duoRoom("henry", "yuki");
+        String yukiId = user("yuki").id();
+        TestSocket yuki = connect("yuki");
+        yuki.send(Map.of("type", "send", "clientMessageId", "old", "text", "old private text"))
+                .expect("ack");
+        http.post()
+                .uri("/api/rooms/me/leave")
+                .header("Authorization", "Bearer " + token("yuki"))
+                .exchange()
+                .expectStatus()
+                .isNoContent();
+        TestSocket henry = connect("henry");
+        String currentRoom = duoRoom("third", "yuki");
+        TestSocket third = connect("third");
+        connect("yuki")
+                .send(Map.of("type", "send", "clientMessageId", "current", "text", "current private text"))
+                .expect("ack");
+        third.expect("message");
+        mongo.insert(new Message(
+                        null,
+                        oldRoom,
+                        null,
+                        Message.Type.BUDDY_EVENT,
+                        null,
+                        "FED",
+                        null,
+                        yukiId,
+                        "care-event",
+                        java.time.Instant.now()))
+                .block();
+
+        delete("yuki").expectStatus().isNoContent();
+
+        henry.expect("historyChanged");
+        assertThat(count("messages", "senderId", yukiId)).isZero();
+        assertThat(count("messages", "actorId", yukiId)).isZero();
+        assertThat(mongo.findOne(Query.query(Criteria.where("clientMessageId").is("care-event")), Message.class)
+                        .block()
+                        .actorId())
+                .isNull();
+        assertThat(mongo.findById(oldRoom, Room.class).block().historyVersion()).isEqualTo(1L);
+        assertThat(mongo.findById(currentRoom, Room.class).block().historyVersion())
+                .isEqualTo(1L);
+        // A device offline during deletion receives the changed version when it reconnects.
+        TestSocket reconnected = new TestSocket(URI.create("ws://localhost:" + port + "/ws"), json);
+        sockets.add(reconnected);
+        reconnected.expect("hello");
+        assertThat(reconnected
+                        .send(Map.of("type", "auth", "token", token("henry")))
+                        .expect("ready")
+                        .get("historyVersion")
+                        .asLong())
+                .isEqualTo(1L);
+    }
+
+    @Test
+    void retriesNotifyRoomsEvenWhenMessagesWereAlreadyRemoved() {
+        String roomId = duoRoom("henry", "yuki");
+        String yukiId = user("yuki").id();
+        http.post()
+                .uri("/api/rooms/me/leave")
+                .header("Authorization", "Bearer " + token("yuki"))
+                .exchange()
+                .expectStatus()
+                .isNoContent();
+        mongo.remove(Query.query(Criteria.where("actorId").is(yukiId)), Message.class)
+                .block();
+        mongo.insert(
+                        new Document("_id", new org.bson.types.ObjectId(yukiId)).append("roomIds", List.of(roomId)),
+                        "history_deletions")
+                .block();
+        TestSocket henry = connect("henry");
+
+        delete("yuki").expectStatus().isNoContent();
+
+        henry.expect("historyChanged");
+        assertThat(mongo.findById(roomId, Room.class).block().historyVersion()).isEqualTo(1L);
+        assertThat(mongo.count(new Query(), "history_deletions").block()).isZero();
+    }
+
+    @Test
+    void lateCareAndTalkUpdatesCannotRestoreADeletedActor() {
+        String roomId = duoRoom("henry", "yuki");
+        String yukiId = user("yuki").id();
+        delete("yuki").expectStatus().isNoContent();
+
+        Message late =
+                chatService.recordBuddyEvent(roomId, "FED", yukiId, "late-care").block();
+        buddyService.talked(roomId, yukiId).block();
+
+        assertThat(late.actorId()).isNull();
+        assertThat(count("messages", "actorId", yukiId)).isZero();
+        assertThat(mongo.findById(roomId, Room.class).block().buddy().talkers()).isNullOrEmpty();
     }
 
     @Test

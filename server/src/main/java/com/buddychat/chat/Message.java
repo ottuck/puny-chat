@@ -49,4 +49,8 @@ public record Message(
     static Message text(String roomId, String senderId, String clientMessageId, String text, Instant now) {
         return new Message(null, roomId, senderId, Type.TEXT, text, null, null, null, clientMessageId, now);
     }
+
+    Message withoutActor() {
+        return new Message(id, roomId, senderId, type, text, buddyEvent, systemEvent, null, clientMessageId, createdAt);
+    }
 }

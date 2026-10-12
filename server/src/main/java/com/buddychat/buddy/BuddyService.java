@@ -224,14 +224,24 @@ public class BuddyService {
         String today = BuddyRules.day(now);
         // Both return the buddy as it was, to tell whether the sender is new today.
         Mono<RoomBuddy> sameDay = Mono.defer(() -> mongo.findAndModify(
-                query(where("_id").is(roomId).and("buddy.talkDay").is(today)),
+                query(where("_id")
+                        .is(roomId)
+                        .and("memberIds")
+                        .is(senderId)
+                        .and("buddy.talkDay")
+                        .is(today)),
                 new Update().addToSet("buddy.talkers", senderId),
                 RoomBuddy.class,
                 ROOMS));
         // The day's first message starts the list. If another message won that race, join the day
         // it just started.
         Mono<RoomBuddy> newDay = Mono.defer(() -> mongo.findAndModify(
-                query(where("_id").is(roomId).and("buddy.talkDay").ne(today)),
+                query(where("_id")
+                        .is(roomId)
+                        .and("memberIds")
+                        .is(senderId)
+                        .and("buddy.talkDay")
+                        .ne(today)),
                 new Update().set("buddy.talkDay", today).set("buddy.talkers", List.of(senderId)),
                 RoomBuddy.class,
                 ROOMS));

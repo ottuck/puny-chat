@@ -186,9 +186,9 @@
     "notificationsUnavailable": "This device can’t receive notifications.",
     "deleteAccount": "Delete account",
     "deleteTitle": "Delete your account?",
-    "deleteNoRoom": "Your name and account will be deleted. This can’t be undone.",
-    "deleteSolo": "{{buddy}}, your messages, your name and your account will all be deleted. This can’t be undone.",
-    "deleteDuo": "Your name and account will be deleted and you’ll leave the room. {{buddy}} stays with {{partner}}, and the messages you shared stay with {{partner}}. This can’t be undone.",
+    "deleteNoRoom": "Your name, account and messages you sent in previous rooms will be deleted. This can’t be undone.",
+    "deleteSolo": "{{buddy}}, the current room’s conversation, your name and account will be deleted. Messages you sent in previous rooms will also be deleted. This can’t be undone.",
+    "deleteDuo": "Your name, account and messages you sent will be deleted, including in rooms you previously left. {{buddy}} stays with {{partner}}, and their messages remain. This can’t be undone.",
     "deleteConfirm": "Delete",
     "deleteFailed": "Couldn’t delete your account. Please try again.",
     "display": "Display",
@@ -325,7 +325,7 @@
   },
   "privacy": {
     "title": "Privacy policy",
-    "effective": "Effective · October 11, 2026",
+    "effective": "Effective · October 12, 2026",
     "intro": "puny-chat provides invite-only, one-to-one text chat and a shared Buddy. This policy explains the information we process and your choices.",
     "sections": {
       "operator": {
@@ -350,7 +350,7 @@
       },
       "retention": {
         "title": "6. Retention and deletion",
-        "body": "Account and service data are retained while you use the service. Delete your account in Settings. If your partner remains after ordinary room departure or account deletion, their room, Buddy and shared conversation remain. When the last member leaves, the room and conversation are deleted. Reporting/removal deletes the conversation for both people, while report evidence is retained separately. Server records for questions, reports and removals become eligible for automatic deletion 90 days after submission and are removed by the database cleanup cycle. Operator email copies are manually deleted when no longer needed after handling. Unlinked guest accounts are cleaned up by Firebase after 30 days from creation; expired guest service data is cleaned up periodically. Technical security/error information follows the relevant infrastructure provider retention policies."
+        "body": "Account and service data are retained while you use the service. Delete your account in Settings. If your partner remains after ordinary room departure, their room, Buddy and shared conversation remain. Account deletion removes messages you sent and system records containing your name, including in rooms you previously left, and removes your actor information from care events. Your partner’s messages, room, Buddy and album remain. When the last member leaves, the room and conversation are deleted. Reporting/removal deletes the conversation for both people, while report evidence is retained separately. Server records for questions, reports and removals become eligible for automatic deletion 90 days after submission and are removed by the database cleanup cycle. Operator email copies are manually deleted when no longer needed after handling. Unlinked guest accounts are cleaned up by Firebase after 30 days from creation; expired guest service data is cleaned up periodically. Technical security/error information follows the relevant infrastructure provider retention policies."
       },
       "security": {
         "title": "7. Safeguards",

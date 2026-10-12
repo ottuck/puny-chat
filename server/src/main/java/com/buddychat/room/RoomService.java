@@ -218,6 +218,7 @@ public class RoomService {
                                 closed.buddy(),
                                 closed.createdAt(),
                                 closed.album(),
+                                null,
                                 null))
                         .onErrorResume(DuplicateKeyException.class, e -> rooms.findById(newRoomId)))
                 .then(userService.replaceRoom(ownerId, snapshot.id(), newRoomId))

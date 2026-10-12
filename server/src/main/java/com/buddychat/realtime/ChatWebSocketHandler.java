@@ -99,8 +99,9 @@ class ChatWebSocketHandler implements WebSocketHandler {
                         return reject(preAuth, outboundSource, "UNAUTHORIZED");
                     }
                     return authenticate(auth.token())
-                            .zipWhen(signedIn ->
-                                    chatService.readMarks(signedIn.user().roomId()))
+                            .zipWhen(signedIn -> Mono.zip(
+                                    chatService.readMarks(signedIn.user().roomId()),
+                                    access.historyVersion(signedIn.user().roomId())))
                             .flatMapMany(authenticated -> {
                                 User user = authenticated.getT1().user();
                                 RoomHub.Connection connection = new RoomHub.Connection(user.id(), user.roomId());
@@ -113,13 +114,26 @@ class ChatWebSocketHandler implements WebSocketHandler {
                                 hub.join(
                                         connection,
                                         online -> new ServerEvent.Ready(
-                                                user.id(), user.roomId(), online, authenticated.getT2()));
+                                                user.id(),
+                                                user.roomId(),
+                                                online,
+                                                authenticated.getT2().getT1(),
+                                                authenticated.getT2().getT2()));
                                 log.debug(
                                         "[{}] authenticated user {} in room {}",
                                         session.getId(),
                                         user.id(),
                                         user.roomId());
                                 // Hunger or poops since anyone last looked go to the whole room.
+                                // A purge may have happened after the version query but before join,
+                                // when this connection could not receive its historyChanged event.
+                                Mono<Void> noticeHistory = access.historyVersion(user.roomId())
+                                        .doOnNext(version -> {
+                                            if (version > authenticated.getT2().getT2()) {
+                                                connection.emit(new ServerEvent.HistoryChanged(version, null));
+                                            }
+                                        })
+                                        .then();
                                 Mono<Void> noticeBuddy = buddyService
                                         .observe(user.roomId())
                                         .onErrorResume(e -> Mono.empty())
@@ -132,7 +146,8 @@ class ChatWebSocketHandler implements WebSocketHandler {
                                             connection.emit(new ServerEvent.Error("TOKEN_EXPIRED", null));
                                             connection.complete();
                                         });
-                                return noticeBuddy
+                                return noticeHistory
+                                        .then(noticeBuddy)
                                         .thenMany(rest.skip(1))
                                         .concatMap(text -> onEvent(connection, user, text))
                                         .doFinally(signal -> {
