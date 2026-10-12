@@ -64,6 +64,16 @@ body { background-color: #F6F4F1; }
 @media (min-width: 768px) {
   body, #web-backdrop { background-color: #E8E3DC; }
   #web-backdrop { align-items: center; justify-content: center; }
+  #web-overlay-backdrop { align-items: center; justify-content: center; }
+  #web-overlay-frame {
+    flex: none;
+    width: 440px;
+    height: min(920px, calc(100% - 48px));
+    border: 1px solid transparent;
+    border-radius: 28px;
+    overflow: hidden;
+  }
+  #preferences-overlay { justify-content: center; padding: 24px; }
   #web-frame {
     flex: none;
     width: 440px;
