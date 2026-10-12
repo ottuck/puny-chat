@@ -151,6 +151,7 @@ public class ChatService {
                                                     query(where("_id").is(saved.id())),
                                                     new Update().unset("actorId"),
                                                     Message.class)
+                                            .then(access.invalidateHistory(List.of(saved.roomId()), saved.actorId()))
                                             .thenReturn(saved.withoutActor()));
                 });
     }
@@ -172,6 +173,15 @@ public class ChatService {
     /** The user document must be gone before removing the deletion fence. */
     public Mono<Void> finishAccountDeletion(String userId) {
         return mongo.remove(query(where("_id").is(userId)), HistoryDeletion.class)
+                .then();
+    }
+
+    /** A failed final cleanup can outlive the user; retries then create a different user ID. */
+    public Mono<Void> cleanupFinishedDeletions() {
+        return mongo.find(new Query(), HistoryDeletion.class)
+                .concatMap(deletion -> userService
+                        .exists(deletion.id())
+                        .flatMap(exists -> exists ? Mono.<Void>empty() : finishAccountDeletion(deletion.id())))
                 .then();
     }
 

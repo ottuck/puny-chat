@@ -50,8 +50,9 @@ class GuestCleanup {
     /** Deletes the guests that are gone, one after another. Emits how many. */
     Mono<Long> run() {
         Instant now = Instant.now(clock);
-        return userService
-                .findIdleGuests(now.minus(GUEST_LIFETIME), now.minus(IDLE))
+        return accountService
+                .cleanupFinishedDeletions()
+                .thenMany(userService.findIdleGuests(now.minus(GUEST_LIFETIME), now.minus(IDLE)))
                 .concatMap(user -> accountService.delete(user).thenReturn(user))
                 .count();
     }

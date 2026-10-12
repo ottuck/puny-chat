@@ -50,4 +50,8 @@ public class AccountService {
                 .then(userService.delete(user.id()))
                 .then(chatService.finishAccountDeletion(user.id()));
     }
+
+    Mono<Void> cleanupFinishedDeletions() {
+        return chatService.cleanupFinishedDeletions();
+    }
 }

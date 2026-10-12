@@ -208,11 +208,16 @@ class AccountDeletionFlowTest {
         String yukiId = user("yuki").id();
         delete("yuki").expectStatus().isNoContent();
 
+        TestSocket henry = connect("henry");
+
         Message late =
                 chatService.recordBuddyEvent(roomId, "FED", yukiId, "late-care").block();
         buddyService.talked(roomId, yukiId).block();
 
         assertThat(late.actorId()).isNull();
+        assertThat(henry.expect("historyChanged").get("deletedUserId").asString())
+                .isEqualTo(yukiId);
+        assertThat(mongo.findById(roomId, Room.class).block().historyVersion()).isEqualTo(1L);
         assertThat(count("messages", "actorId", yukiId)).isZero();
         assertThat(mongo.findById(roomId, Room.class).block().buddy().talkers()).isNullOrEmpty();
         assertThat(chatService
