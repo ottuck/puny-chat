@@ -6,13 +6,13 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 
 /**
- * Growth and care rules. The numbers are placeholders until tuned (docs/server-design.md, Buddy 규칙). The
- * buddy never dies: neglect only makes it hungry and dirty (docs/product.md).
+ * Growth and care rules, with the initial launch values (docs/server-design.md, Buddy 규칙). The buddy
+ * never dies: neglect only makes it hungry and dirty (docs/product.md).
  */
 public final class BuddyRules {
 
-    public static final int DEFAULT_EXP_PER_LEVEL = 20;
-    // Set once at startup from BuddyProperties (lowered while testing evolutions).
+    public static final int DEFAULT_EXP_PER_LEVEL = 5;
+    // Set once at startup from BuddyProperties.
     private static volatile int expPerLevel = DEFAULT_EXP_PER_LEVEL;
     public static final int FEED_EXP = 2;
     public static final int CLEAN_EXP = 2;

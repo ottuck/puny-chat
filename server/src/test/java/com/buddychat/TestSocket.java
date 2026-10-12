@@ -30,6 +30,7 @@ public class TestSocket implements AutoCloseable {
     // Everything received so far, for failure messages.
     private final List<String> log = new CopyOnWriteArrayList<>();
     private final Set<String> ignored = ConcurrentHashMap.newKeySet();
+    private boolean ignoreBuddyMessages;
     private final CountDownLatch closed = new CountDownLatch(1);
     private final Disposable connection;
 
@@ -79,12 +80,25 @@ public class TestSocket implements AutoCloseable {
         return this;
     }
 
+    /** Chat-only tests still check every text message, regardless of how often the buddy grows. */
+    public TestSocket ignoringBuddyEvents() {
+        ignored.add("buddy");
+        ignoreBuddyMessages = true;
+        return this;
+    }
+
     private JsonNode poll(Duration wait) {
         long deadline = System.nanoTime() + wait.toNanos();
         try {
             while (true) {
                 JsonNode event = received.poll(deadline - System.nanoTime(), TimeUnit.NANOSECONDS);
-                if (event == null || !ignored.contains(event.get("type").asString())) return event;
+                if (event == null) return null;
+                String type = event.get("type").asString();
+                if (ignored.contains(type)) continue;
+                if (ignoreBuddyMessages
+                        && type.equals("message")
+                        && event.path("message").path("type").asString().equals("BUDDY_EVENT")) continue;
+                return event;
             }
         } catch (InterruptedException e) {
             throw new IllegalStateException(e);

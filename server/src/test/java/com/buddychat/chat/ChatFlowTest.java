@@ -275,8 +275,9 @@ class ChatFlowTest {
 
     private TestSocket openSilently() {
         // Buddy growth from chatting is covered in BuddyFlowTest, presence in PresenceFlowTest.
-        TestSocket socket =
-                new TestSocket(URI.create("ws://localhost:" + port + "/ws"), json).ignoring("buddy", "presence");
+        TestSocket socket = new TestSocket(URI.create("ws://localhost:" + port + "/ws"), json)
+                .ignoring("presence")
+                .ignoringBuddyEvents();
         sockets.add(socket);
         return socket;
     }
