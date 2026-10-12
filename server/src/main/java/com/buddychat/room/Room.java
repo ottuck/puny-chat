@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
  *
  * @param album buddies that grew up and went their own way, oldest first; written by
  *     {@code BuddyService.graduate} together with the new egg. Null on rooms from before.
+ * @param historyVersion increases when account deletion changes stored history; null means zero
  */
 @Document("rooms")
 public record Room(
@@ -23,12 +24,13 @@ public record Room(
         Buddy buddy,
         Instant createdAt,
         @Nullable List<AlbumEntry> album,
-        @Nullable String closureId) {
+        @Nullable String closureId,
+        @Nullable Long historyVersion) {
 
     public static final int MAX_MEMBERS = 2;
 
     static Room solo(String id, String ownerId, Buddy buddy, Instant now) {
-        return new Room(id, List.of(ownerId), 1, buddy, now, List.of(), null);
+        return new Room(id, List.of(ownerId), 1, buddy, now, List.of(), null, null);
     }
 
     boolean isFull() {

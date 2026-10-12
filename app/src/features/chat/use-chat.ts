@@ -11,7 +11,7 @@ import { ApiError } from '@/lib/api';
 import { fetchNewer, fetchNewest, fetchOlder } from './api';
 import { MessageSync } from './message-sync';
 import { ChatSocket, type ConnectionStatus } from './socket';
-import { fromServer, type Message, type ServerMessage } from './types';
+import { fromServer, type Message, redactDeletedActor, type ServerMessage } from './types';
 
 // While typing, "typing" is repeated this often; the partner drops it when it stops coming.
 const TYPING_REPEAT_MS = 3_000;
@@ -59,6 +59,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   const [typing, setTyping] = useState<string[]>([]);
   // User id → newest message id they have read.
   const [reads, setReads] = useState<Record<string, string>>({});
+  const readsRef = useRef(reads);
   const [active, setActive] = useState(AppState.currentState === 'active');
   // Newest message id when the app last went to the background, to count what arrived since.
   const [awaySince, setAwaySince] = useState<string | undefined>(undefined);
@@ -66,6 +67,9 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   const typingSentAt = useRef(0);
   const readSent = useRef<string | undefined>(undefined);
   const messagesRef = useRef(messages);
+  const historyVersion = useRef<number | undefined>(undefined);
+  const historyGeneration = useRef(0);
+  const deletedUsers = useRef(new Set<string>());
   // Kept synchronously in event handlers: ready can arrive before React commits the pending bubble.
   const outbox = useRef(new Map<string, { text: string; status: 'sending' | 'failed' }>());
   const socketRef = useRef<ChatSocket | null>(null);
@@ -79,7 +83,8 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
     onRoomChangedRef.current = onRoomChanged;
     onBuddyRef.current = onBuddy;
     myIdRef.current = myId;
-  }, [messages, onRoomLost, onRoomChanged, onBuddy, myId]);
+    readsRef.current = reads;
+  }, [messages, onRoomLost, onRoomChanged, onBuddy, myId, reads]);
   // The latest live event for the buddy to react to (see reactionTo).
   const [reaction, setReaction] = useState<Reaction | null>(null);
   // The latest one-word message ("밥", "춤", …) from either of us, for the buddy to answer.
@@ -91,7 +96,11 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   }, []);
 
   const apply = useCallback((incoming: ServerMessage[]) => {
-    setMessages((prev) => merge(prev, incoming));
+    const visible = incoming.flatMap((message) => {
+      const redacted = redactDeletedActor(message, deletedUsers.current);
+      return redacted ? [redacted] : [];
+    });
+    setMessages((prev) => merge(prev, visible));
   }, []);
 
   const setTypingOf = useCallback(function updateTyping(userId: string, on: boolean) {
@@ -148,6 +157,19 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
       },
     });
 
+    const resetHistory = (version: number, myRead: string | undefined) => {
+      historyVersion.current = version;
+      historyGeneration.current += 1;
+      // Unconfirmed outgoing messages remain in the outbox and can still be retried.
+      setMessages((prev) => prev.filter((message) => !message.id));
+      setHasOlder(false);
+      setLoaded(false);
+      setReaction(null);
+      setCue(null);
+      readSent.current = undefined;
+      sync.reset(myRead);
+    };
+
     const socket = new ChatSocket({
       onStatus: (next) => {
         setStatus(next);
@@ -160,13 +182,19 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
           for (const userId of typingTimers.current.keys()) setTypingOf(userId, false);
         }
       },
-      onReady: (onlineNow, readsNow) => {
+      onReady: (onlineNow, readsNow, version) => {
         setOnline(onlineNow);
         setReads(readsNow);
+        readsRef.current = readsNow;
         // Anything sent before the connection dropped may not have arrived.
         readSent.current = undefined;
         typingSentAt.current = 0;
-        sync.start(readsNow[myIdRef.current]);
+        if (historyVersion.current !== undefined && historyVersion.current !== version) {
+          resetHistory(version, readsNow[myIdRef.current]);
+        } else {
+          historyVersion.current = version;
+          sync.start(readsNow[myIdRef.current]);
+        }
         // Outgoing messages do not wait for REST history recovery. The same id keeps retries safe.
         for (const [clientMessageId, message] of outbox.current) {
           if (message.status === 'sending') {
@@ -179,7 +207,9 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
         apply([message]);
         cueFrom(message);
       },
-      onMessage: (message) => {
+      onMessage: (incoming) => {
+        const message = redactDeletedActor(incoming, deletedUsers.current);
+        if (!message) return;
         // The message they were typing has arrived.
         if (message.senderId) setTypingOf(message.senderId, false);
         apply([message]);
@@ -205,6 +235,12 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
         ),
       onSendFailed: (clientMessageId) => markStatus(clientMessageId, 'failed'),
       onMembersChanged: () => onRoomChangedRef.current(),
+      onHistoryChanged: (version, deletedUserId) => {
+        if (deletedUserId) deletedUsers.current.add(deletedUserId);
+        if (version > (historyVersion.current ?? -1)) {
+          resetHistory(version, readsRef.current[myIdRef.current]);
+        }
+      },
       onBuddy: (buddy) => onBuddyRef.current(buddy),
       onFatal: () => onRoomLostRef.current(),
     });
@@ -293,8 +329,10 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
     const oldest = messagesRef.current.findLast((m) => m.id)?.id;
     if (!hasOlder || !oldest || loadingOlder.current) return;
     loadingOlder.current = true;
+    const generation = historyGeneration.current;
     try {
       const page = await fetchOlder(oldest);
+      if (generation !== historyGeneration.current) return;
       apply(page.messages);
       setHasOlder(page.hasMore);
     } catch (e) {

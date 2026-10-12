@@ -17,6 +17,7 @@ import org.jspecify.annotations.Nullable;
     @JsonSubTypes.Type(value = ServerEvent.NewMessage.class, name = "message"),
     @JsonSubTypes.Type(value = ServerEvent.MemberJoined.class, name = "member"),
     @JsonSubTypes.Type(value = ServerEvent.MemberLeft.class, name = "left"),
+    @JsonSubTypes.Type(value = ServerEvent.HistoryChanged.class, name = "historyChanged"),
     @JsonSubTypes.Type(value = ServerEvent.BuddyUpdated.class, name = "buddy"),
     @JsonSubTypes.Type(value = ServerEvent.Presence.class, name = "presence"),
     @JsonSubTypes.Type(value = ServerEvent.Typing.class, name = "typing"),
@@ -36,7 +37,8 @@ public sealed interface ServerEvent {
      * Authenticated. {@code online} is who else in the room is connected right now; {@code reads}
      * is each member's read mark (user id → newest message id they have read).
      */
-    record Ready(String userId, String roomId, List<String> online, Map<String, String> reads) implements ServerEvent {}
+    record Ready(String userId, String roomId, List<String> online, Map<String, String> reads, long historyVersion)
+            implements ServerEvent {}
 
     /** The sender's own message was stored (also for a resend of an already stored one). */
     record Ack(String clientMessageId, Message message) implements ServerEvent {}
@@ -48,6 +50,9 @@ public sealed interface ServerEvent {
 
     /** A member left the room (duo → solo). */
     record MemberLeft(String userId) implements ServerEvent {}
+
+    /** Stored history changed; clients must discard cached history and fetch it again. */
+    record HistoryChanged(long historyVersion, @Nullable String deletedUserId) implements ServerEvent {}
 
     /** The buddy changed (care, EXP): its state as of now. */
     record BuddyUpdated(BuddyView buddy) implements ServerEvent {}

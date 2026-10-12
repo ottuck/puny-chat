@@ -25,6 +25,9 @@ class MessageIndexes implements ApplicationRunner {
                         // History pages: newest first within a room.
                         ops.createIndex(
                                 new Index().on("roomId", Sort.Direction.ASC).on("_id", Sort.Direction.DESC)),
+                        // Account deletion covers messages in previously left rooms too.
+                        ops.createIndex(new Index().on("senderId", Sort.Direction.ASC)),
+                        ops.createIndex(new Index().on("actorId", Sort.Direction.ASC)),
                         // A resent message (same clientMessageId) is stored once.
                         ops.createIndex(new Index()
                                 .on("roomId", Sort.Direction.ASC)

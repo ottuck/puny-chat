@@ -6,6 +6,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import com.buddychat.common.ApiException;
 import com.buddychat.room.RoomAccess;
 import com.buddychat.user.User;
+import com.buddychat.user.UserService;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
@@ -32,12 +33,19 @@ public class ChatService {
     private final ReactiveMongoTemplate mongo;
     private final Clock clock;
     private final RoomAccess access;
+    private final UserService userService;
 
-    ChatService(MessageRepository messages, ReactiveMongoTemplate mongo, Clock clock, RoomAccess access) {
+    ChatService(
+            MessageRepository messages,
+            ReactiveMongoTemplate mongo,
+            Clock clock,
+            RoomAccess access,
+            UserService userService) {
         this.messages = messages;
         this.mongo = mongo;
         this.clock = clock;
         this.access = access;
+        this.userService = userService;
     }
 
     /** {@code created} is false when this was a resend of an already stored message. */
@@ -104,7 +112,8 @@ public class ChatService {
         Instant now = Instant.now(clock);
         String key = "system:" + event + ":" + actorId + ":" + now.toEpochMilli();
         return access.isOpen(roomId)
-                .flatMap(open -> open
+                .zipWith(actorCanBeNamed(actorId))
+                .flatMap(allowed -> allowed.getT1() && allowed.getT2()
                         ? messages.insert(Message.system(roomId, event, actorId, actorName, key, now))
                                 .flatMap(this::keepInOpenRoom)
                         : Mono.empty());
@@ -115,7 +124,65 @@ public class ChatService {
         return access.isOpen(message.roomId())
                 .flatMap(open -> open
                         ? Mono.just(message)
-                        : messages.deleteById(message.id()).then(Mono.empty()));
+                        : messages.deleteById(message.id()).then(Mono.empty()))
+                .flatMap(saved -> {
+                    if (saved.type() == Message.Type.SYSTEM && saved.actorId() != null) {
+                        // The row is inserted before this check. If deletion begins afterwards its
+                        // purge sees it; if it already began, the durable fence removes it.
+                        return actorCanBeNamed(saved.actorId())
+                                .flatMap(allowed -> allowed
+                                        ? Mono.just(saved)
+                                        : messages.deleteById(saved.id())
+                                                // A history request may have observed the brief insertion
+                                                // window. Invalidate this room even if the main purge did
+                                                // not collect it, so online and offline caches discard it.
+                                                .then(access.invalidateHistory(
+                                                        List.of(saved.roomId()), saved.actorId()))
+                                                .then(Mono.empty()));
+                    }
+                    if (saved.type() != Message.Type.BUDDY_EVENT || saved.actorId() == null) return Mono.just(saved);
+                    // A care request that started before departure may insert its event after the
+                    // account purge. Do not restore the departed actor's identifier then.
+                    return access.requireMember(saved.roomId(), saved.actorId())
+                            .thenReturn(saved)
+                            .onErrorResume(
+                                    ApiException.class,
+                                    error -> mongo.updateFirst(
+                                                    query(where("_id").is(saved.id())),
+                                                    new Update().unset("actorId"),
+                                                    Message.class)
+                                            .then(access.invalidateHistory(List.of(saved.roomId()), saved.actorId()))
+                                            .thenReturn(saved.withoutActor()));
+                });
+    }
+
+    private Mono<Boolean> actorCanBeNamed(String userId) {
+        return mongo.exists(query(where("_id").is(userId)), HistoryDeletion.class)
+                .flatMap(deleting -> deleting ? Mono.just(false) : userService.exists(userId));
+    }
+
+    /** Fence late named events before any room membership or authored history is removed. */
+    public Mono<Void> beginAccountDeletion(String userId) {
+        return mongo.upsert(
+                        query(where("_id").is(userId)),
+                        new Update().setOnInsert("roomIds", List.of()),
+                        HistoryDeletion.class)
+                .then();
+    }
+
+    /** The user document must be gone before removing the deletion fence. */
+    public Mono<Void> finishAccountDeletion(String userId) {
+        return mongo.remove(query(where("_id").is(userId)), HistoryDeletion.class)
+                .then();
+    }
+
+    /** A failed final cleanup can outlive the user; retries then create a different user ID. */
+    public Mono<Void> cleanupFinishedDeletions() {
+        return mongo.find(new Query(), HistoryDeletion.class)
+                .concatMap(deletion -> userService
+                        .exists(deletion.id())
+                        .flatMap(exists -> exists ? Mono.<Void>empty() : finishAccountDeletion(deletion.id())))
+                .then();
     }
 
     /** Removes a deleted room's timeline and read marks. */
@@ -128,6 +195,37 @@ public class ChatService {
     /** Removes how far the user has read, in any room (account deletion). */
     public Mono<Void> deleteReadMarksOf(String userId) {
         return mongo.remove(query(where("userId").is(userId)), ReadMark.class).then();
+    }
+
+    /** Deletes authored text and named system notes in every room, not just the current one. */
+    public Mono<Void> deleteUserHistory(String userId) {
+        Criteria authored = new Criteria()
+                .orOperator(where("senderId").is(userId), where("actorId").is(userId));
+        return mongo.find(query(authored), Message.class)
+                .map(Message::roomId)
+                .distinct()
+                .collectList()
+                // Keep the affected rooms until notification succeeds. A failed final step must
+                // still invalidate caches on retry after the authored messages have already gone.
+                .flatMap(roomIds -> mongo.upsert(
+                                query(where("_id").is(userId)),
+                                new Update().addToSet("roomIds").each(roomIds.toArray()),
+                                HistoryDeletion.class)
+                        .then(mongo.findById(userId, HistoryDeletion.class)))
+                .flatMap(deletion -> mongo.remove(
+                                query(new Criteria()
+                                        .orOperator(
+                                                where("senderId").is(userId),
+                                                where("type")
+                                                        .is(Message.Type.SYSTEM)
+                                                        .and("actorId")
+                                                        .is(userId))),
+                                Message.class)
+                        .then(mongo.updateMulti(
+                                query(where("actorId").is(userId)), new Update().unset("actorId"), Message.class))
+                        .then(access.forgetTalker(userId))
+                        .then(access.invalidateHistory(deletion.roomIds(), userId))
+                        .then());
     }
 
     /** A bounded copy for a report, kept separately before the conversation is deleted. */

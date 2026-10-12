@@ -48,7 +48,7 @@ class GuestCleanupFlowTest {
         clock.reset();
         Flux.just(Room.class, User.class, Message.class)
                 .flatMap(type -> mongo.remove(new Query(), type))
-                .thenMany(Flux.just("reads", "invitations", "push_tokens")
+                .thenMany(Flux.just("reads", "invitations", "push_tokens", "history_deletions")
                         .flatMap(collection -> mongo.remove(new Query(), collection)))
                 .blockLast();
         http = WebTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
@@ -128,6 +128,43 @@ class GuestCleanupFlowTest {
         clock.advance(Duration.ofHours(20));
         me(guestToken("daily"));
         assertThat(user("daily").lastSeenAt()).isAfter(first);
+    }
+
+    @Test
+    void cleanupRemovesAnOrphanFenceAfterTheSameFirebaseUserWasRecreatedButKeepsActiveFences() {
+        createRoom(token("deleted-linked"));
+        String oldId = user("deleted-linked").id();
+        String oldRoom = user("deleted-linked").roomId();
+        http.delete()
+                .uri("/api/me")
+                .header("Authorization", "Bearer " + token("deleted-linked"))
+                .exchange()
+                .expectStatus()
+                .isNoContent();
+        // The final fence removal failed after the user document was already removed.
+        mongo.insert(
+                        new org.bson.Document("_id", new org.bson.types.ObjectId(oldId))
+                                .append("roomIds", java.util.List.of(oldRoom)),
+                        "history_deletions")
+                .block();
+        me(token("deleted-linked"));
+        String newId = user("deleted-linked").id();
+        assertThat(newId).isNotEqualTo(oldId);
+        mongo.insert(
+                        new org.bson.Document("_id", new org.bson.types.ObjectId(newId))
+                                .append("roomIds", java.util.List.of()),
+                        "history_deletions")
+                .block();
+
+        assertThat(cleanup.run().block()).isZero();
+
+        assertThat(mongo.findById(new org.bson.types.ObjectId(oldId), org.bson.Document.class, "history_deletions")
+                        .block())
+                .isNull();
+        assertThat(mongo.findById(new org.bson.types.ObjectId(newId), org.bson.Document.class, "history_deletions")
+                        .block())
+                .isNotNull();
+        assertThat(user("deleted-linked").id()).isEqualTo(newId);
     }
 
     // --- helpers ---

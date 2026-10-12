@@ -25,6 +25,19 @@ export type ServerMessage = {
   createdAt: string;
 };
 
+// A live frame or already-started REST response may arrive after deletion was announced.
+export function redactDeletedActor(
+  message: ServerMessage,
+  deletedUsers: ReadonlySet<string>,
+): ServerMessage | null {
+  if (message.senderId && deletedUsers.has(message.senderId)) return null;
+  if (message.actorId && deletedUsers.has(message.actorId)) {
+    if (message.type === 'SYSTEM') return null;
+    return { ...message, actorId: null };
+  }
+  return message;
+}
+
 type MessageBase = {
   // Server id; absent while one of my messages is still on its way.
   id?: string;

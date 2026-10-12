@@ -11,8 +11,8 @@ import reactor.core.publisher.Mono;
 
 /**
  * Deletes a user's account (docs/server-design.md, 계정 삭제; App Store Guideline 5.1.1(v)).
- * Leaving the room works as a normal leave: the partner keeps the room, the buddy and the
- * conversation, and a room left empty goes with its history. Then everything that is only the
+ * The partner keeps the room, the buddy and their own messages. Authored messages and named
+ * system notes are removed across all rooms, and a room left empty goes with its history. Everything only the
  * user's is removed. No transaction: each step can run again, so a retry finishes a deletion that
  * failed midway. The Firebase account itself is deleted by the app afterwards.
  */
@@ -40,9 +40,18 @@ public class AccountService {
                 ? Mono.empty()
                 // Already gone from a room that no longer exists: nothing to leave.
                 : roomService.leave(user).onErrorResume(ApiException.class, e -> Mono.empty());
-        return leave.then(roomService.deleteInvitationsBy(user.id()))
+        return chatService
+                .beginAccountDeletion(user.id())
+                .then(leave)
+                .then(roomService.deleteInvitationsBy(user.id()))
+                .then(chatService.deleteUserHistory(user.id()))
                 .then(chatService.deleteReadMarksOf(user.id()))
                 .then(notificationService.forget(user.id()))
-                .then(userService.delete(user.id()));
+                .then(userService.delete(user.id()))
+                .then(chatService.finishAccountDeletion(user.id()));
+    }
+
+    Mono<Void> cleanupFinishedDeletions() {
+        return chatService.cleanupFinishedDeletions();
     }
 }

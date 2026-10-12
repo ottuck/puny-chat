@@ -45,6 +45,35 @@ function harness(options) {
   return { sync, pages, states, finished, errors };
 }
 
+test('reset after deletion refetches newest history and discards an older in-flight response', async (t) => {
+  const stale = deferred();
+  let newestCalls = 0;
+  const h = harness({
+    fetchNewest: async () => (++newestCalls === 1 ? page([100, 99]) : page([101])),
+    fetchNewer: async () => stale.promise,
+  });
+  t.after(() => h.sync.stop());
+  h.sync.start(undefined);
+  await h.finished.next();
+  h.sync.start(id(100));
+  h.sync.reset(id(100));
+  stale.resolve(page([102, 99]));
+  const fresh = await h.finished.next();
+  assert.equal(newestCalls, 2);
+  assert.deepEqual(
+    fresh.messages.map((message) => message.id),
+    [id(101)],
+  );
+  assert.deepEqual(
+    h.pages.map((result) => result.initial),
+    [true, true],
+  );
+  assert.equal(
+    h.pages.flatMap((result) => result.messages).some((message) => message.id === id(102)),
+    false,
+  );
+});
+
 test('live 103 does not skip 101 and 102 after a failed recovery from 100', async (t) => {
   const calls = [];
   const failed = deferred();

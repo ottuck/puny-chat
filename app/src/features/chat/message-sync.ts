@@ -53,6 +53,13 @@ export class MessageSync {
     this.abort?.abort();
   }
 
+  // Account deletion can remove messages behind the recovery cursor.
+  reset(myRead: string | undefined) {
+    this.cursor = undefined;
+    this.recovered = [];
+    this.start(myRead);
+  }
+
   private current(generation: number) {
     return this.connected && this.generation === generation;
   }

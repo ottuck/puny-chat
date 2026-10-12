@@ -141,12 +141,13 @@ client → server
 
 server → client
   { type: "hello" }                               연결됨, 이제 auth를 보내도 됨
-  { type: "ready", userId, roomId, online, reads } 인증 완료. online: 지금 접속한 다른 멤버,
+  { type: "ready", userId, roomId, online, reads, historyVersion } 인증 완료. online: 지금 접속한 다른 멤버,
                                                   reads: 멤버별 마지막으로 읽은 메시지 id
   { type: "ack", clientMessageId, message }       내 메시지 저장 완료(재전송이어도 같은 응답)
   { type: "message", message }                    상대 메시지, Buddy 이벤트
   { type: "member", userId, displayName }         친구가 초대를 수락함(solo → duo)
   { type: "left", userId }                         친구가 나감(duo → solo). 타임라인에는 SYSTEM MEMBER_LEFT 메시지
+  { type: "historyChanged", historyVersion, deletedUserId } 계정 삭제로 기록 변경. 캐시를 비우고 다시 읽음
   { type: "buddy", buddy }                         Buddy 상태 변경(돌봄, 경험치, 새로 알게 된 배고픔·💩)
   { type: "typing", userId, typing }              다른 멤버에게만. 6초 동안 다시 안 오면 앱이 지운다
   { type: "presence", userId, online }            그 사용자의 첫 연결이 열리거나 마지막 연결이 닫힐 때
@@ -402,10 +403,21 @@ iPhone / Web ──HTTPS·WSS──▶ Railway (Spring WebFlux, Docker, 싱가�
 App Store Guideline 5.1.1(v)(앱에서 만든 계정은 앱에서 지울 수 있어야 한다) 때문에 넣었다. 게스트는 30일 뒤 Firebase가
 익명 계정을 지우지만 서버 데이터는 남으므로, 스스로 지울 방법이 있어야 한다.
 
-- 서버(`DELETE /api/me`, `account/AccountService`): room 나가기(위 나가기와 같다: 2명 room이면 상대가 room·Buddy·대화를
-  그대로 갖고 `left`를 받는다, 혼자 room이면 기록과 함께 삭제) → 내가 만든 초대 코드 → 내 읽음 위치 → 내 푸시 토큰 →
-  사용자 문서 순으로 지운다. 트랜잭션 없이 단계마다 다시 해도 되는 삭제라, 중간에 실패해도 다시 요청하면 끝난다.
-- 상대와 주고받은 메시지는 상대의 대화이기도 해서 room에 남는다(메신저의 일반적인 방식). 삭제 확인 문구에서 알린다.
+- 서버(`DELETE /api/me`, `account/AccountService`): 삭제 진행 표식을 먼저 저장 → room 나가기(2명 room이면 상대가 room·Buddy를 갖고 `left`를 받는다,
+  혼자 room이면 기록과 함께 삭제) → 내가 만든 초대 코드 → 모든 방의 본인 메시지·작성자 정보 → 내 읽음 위치 → 내 푸시 토큰 →
+  사용자 문서 → 삭제 진행 표식 순으로 지운다. 트랜잭션 없이 단계마다 다시 해도 되는 삭제라, 중간에 실패해도 다시 요청하면 끝난다.
+- 본인이 보낸 텍스트와 본인 이름이 들어간 SYSTEM 기록은 예전에 나간 방까지 모두 삭제한다. Buddy 이벤트는 작성자 ID를
+  제거하고 성장·돌봄 기록은 유지하며 `buddy.talkers`에서도 본인을 뺀다. 상대가 보낸 메시지·Buddy·앨범은 유지한다.
+  일반 방 나가기는 대화를 유지하며 계정 삭제와 구분한다. 삭제 확인 문구와 개인정보처리방침에 같은 규칙을 안내한다.
+- 변경된 방은 `historyVersion`을 증가시키고 `historyChanged`를 보낸다. 앱은 표시 중인 기록을 비우고 다시 읽으며,
+  재연결의 `ready.historyVersion`이 달라졌을 때도 같은 처리를 한다. 이전 페이지 요청은 무효화하고 미전송 메시지는 유지한다.
+  `history_deletions`에 영향받는 방 ID를 임시 저장해 삭제 후 알림 단계가 실패해도 재시도할 수 있고, 성공하면 이 기록도 삭제한다.
+  이 표식은 방 나가기 전에 만들고 사용자 문서 삭제 후에 지운다. 늦게 저장된 이름 포함 SYSTEM 기록도 표식과 사용자 존재 여부를
+  확인해 제거한다. 저장 전에도 삭제 상태를 확인하며, 저장 후 늦게 제거한 기록은 해당 방을 별도로 갱신해 조회 중이던 캐시도 무효화한다.
+  계정 삭제로 이름 기록을 만들지 않는 경우에도 상대에게 `left`는 전달한다.
+  늦은 Buddy 이벤트의 작성자 ID를 제거한 경우에도 해당 방의 캐시를 무효화한다. 마지막 표식 삭제가 실패해 사용자가 먼저 사라진
+  경우에는 기존 주간 정리의 첫 단계에서 고아 표식을 제거한다. 사용자가 아직 남아 있는 삭제 표식은 유지한다.
+  별도 신고 사본·운영 메일은 기존 신고 대응 보관 정책을 따르며 일반 대화 삭제와 별개다.
 - 앱: 연결한 계정(Google·Apple)은 먼저 다시 로그인한다(Firebase는 최근 로그인 뒤에만 계정 삭제를 허용한다. 서버를
   지운 뒤에 물으면 서버 데이터만 사라지고 계정은 남을 수 있다. Apple은 이때 앱의 Apple 토큰도 취소한다). 그다음 서버 삭제 →
   Firebase `deleteUser`(로그아웃 된다). Admin SDK를 쓰지 않는 원칙(위 Firebase token 검증)대로 Firebase 계정은 앱이 지운다.
