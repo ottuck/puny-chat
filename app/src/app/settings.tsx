@@ -361,7 +361,9 @@ function NotificationsCard() {
           value={state === 'on'}
           onValueChange={toggle}
           disabled={state === null || state === 'unavailable' || state === 'needsInstall'}
-          trackColor={{ true: colors.accent }}
+          trackColor={{ false: colors.switchTrack, true: colors.accent }}
+          ios_backgroundColor={colors.switchTrack}
+          thumbColor={Platform.OS === 'ios' ? undefined : colors.onAccent}
           accessibilityLabel={t('settings.notifications')}
         />
       </View>
@@ -441,10 +443,13 @@ function RoomCard({ room, myId }: { room: Room; myId: string }) {
   return (
     <View style={[styles.card, { backgroundColor: colors.surface }]}>
       <Text style={[styles.label, { color: colors.textMuted }]}>{t('settings.room')}</Text>
-      <Text style={[styles.name, { color: colors.text }]}>{room.buddy.name}</Text>
       <Text style={[styles.email, { color: colors.textMuted }]}>
         {t('settings.since', { date: since })}
       </Text>
+      <Text style={[styles.label, styles.section, { color: colors.textMuted }]}>
+        {t('settings.buddy')}
+      </Text>
+      <Text style={[styles.name, { color: colors.text }]}>{room.buddy.name}</Text>
       <Text style={[styles.label, styles.section, { color: colors.textMuted }]}>
         {t('settings.members')}
       </Text>

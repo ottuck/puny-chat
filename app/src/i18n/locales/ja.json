@@ -158,6 +158,7 @@
     "signOut": "ログアウト",
     "joinWithCode": "招待コードで参加",
     "room": "ルーム",
+    "buddy": "バディ",
     "members": "メンバー",
     "since": "{{date}}から",
     "leave": "ルームを退出",

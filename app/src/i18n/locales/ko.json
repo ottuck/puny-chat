@@ -158,6 +158,7 @@
     "signOut": "로그아웃",
     "joinWithCode": "초대 코드로 참가",
     "room": "방",
+    "buddy": "버디",
     "members": "함께하는 사람",
     "since": "{{date}}부터",
     "leave": "방 나가기",
