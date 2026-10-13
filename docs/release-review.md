@@ -1,17 +1,18 @@
-# 출시 전 점검 (2026-10-13)
+# 출시 전 점검 (2026-10-14)
 
 개인 프로젝트 기준으로 데이터 손실, 주요 기능과 App Store 제출에 영향을 주는 항목만 확인했다.
 
 ## 현재 상태와 진행 순서
 
-개발·운영 서버 준비는 대부분 완료했다. App Store Connect 앱 등록과 iPhone 실기기 검증은 아직 하지 않았다고
-운영자가 확인했다. EAS의 iOS 빌드 기록도 0건이다. 현재 상태는 제출 준비 완료가 아니라 첫 iOS 빌드 준비 단계다.
+개발·운영 서버 준비는 대부분 완료했다. Apple Developer 가입, App ID·Sign in with Apple·Services ID 설정, Firebase Apple
+제공업체, App Store Connect 앱 등록은 운영자가 완료했다(진행 상태는 `docs/app-store-release.md`). iPhone 실기기 검증은 아직
+하지 않았고 EAS의 iOS 빌드 기록도 0건이다. 현재 상태는 제출 준비 완료가 아니라 첫 iOS 빌드 직전 단계다.
 콘텐츠 필터·차단 보완은 운영자 결정에 따라 이번 출시 작업에서 제외한다.
 
 | 순서 | 할 일 | 담당·현재 상태 |
 | --- | --- | --- |
-| 1 | 첫 네이티브 빌드 전에 SDK 57 권장 패치 5개 정리 | 코드 작업으로 진행 가능. 이번 점검에서는 변경하지 않음 |
-| 2 | App Store Connect에 앱 등록 | 운영자 Apple 계정으로 등록. Bundle ID는 `com.ottuck.buddychat` |
+| 1 | 첫 네이티브 빌드 전에 SDK 57 권장 패치 5개 정리 | 완료(2026-10-14). expo-doctor 21/21 |
+| 2 | App Store Connect에 앱 등록 | 완료. Bundle ID는 `com.ottuck.buddychat` |
 | 3 | iPhone 개발 빌드 생성·설치 | CLI·설정은 지원 가능. 운영자는 Apple 인증과 기기 등록·설치 진행 |
 | 4 | Apple 로그인·계정 연결·삭제, 푸시, 채팅·재연결, 문의 수신 확인 | 운영자 실기기 조작, 결과에 따른 코드 수정은 지원 가능 |
 | 5 | production 빌드·업로드, TestFlight 확인 | CLI·설정은 지원 가능. 운영자는 인증과 실기기 확인 진행 |
@@ -25,10 +26,11 @@
   알림 수신은 서버에서 운영자 수신함으로 직접 보내도록 설정되어 있다. 변경 후 실제 문의 알림의 수신 확인은 남아 있다.
 - 현재 Git 관리 파일에서 개인 운영자 메일 주소를 찾지 못했다. 과거 Git 기록은 변경하지 않았다.
 - 출시 성장 속도는 운영자 결정에 따라 레벨당 **5 EXP**로 정했다. 서버 기본값·Terraform 설정·Railway 운영값을 맞춘다.
-- 오늘 Expo Doctor는 **20/21**을 통과했다. 남은 항목은 최신 권장 패치와의 버전 차이 하나다:
-  `expo` 57.0.27 → 57.0.28, `expo-crypto` 57.0.3 → 57.0.4,
-  `expo-dev-client` 57.0.19 → 57.0.20, `expo-router` 57.0.25 → 57.0.26,
-  `expo-splash-screen` 57.0.9 → 57.0.10. 이 결과만으로 기능 장애가 확인된 것은 아니다.
+- Expo SDK 57 권장 패치 5개(`expo`, `expo-crypto`, `expo-dev-client`, `expo-router`, `expo-splash-screen`)를 맞췄고
+  `pnpm dlx expo-doctor`는 21/21을 통과한다. `ios.infoPlist`에 `ITSAppUsesNonExemptEncryption: false`를 넣어
+  업로드마다 수출 규정 질문을 받지 않게 했다(표준 암호화만 사용). 앱 검사·테스트 12개·웹 빌드를 다시 통과했다.
+- 이번 점검에서 서버 테스트는 다시 실행하지 않았다(main CI 성공). 레벨당 5 EXP가 Railway 운영값에도 반영됐는지는
+  변수 값이 노출될 수 있어 읽지 않았다. 운영자가 Railway 변수 `BUDDYCHAT_BUDDY_EXPPERLEVEL`을 확인한다.
 
 ## 수정·검증한 것
 
@@ -105,8 +107,6 @@
 
 ## 당장 출시를 막는 버그로 보지 않은 것
 
-앞선 SDK 57 패치 업데이트 당시 `pnpm dlx expo-doctor`는 21개 검사를 모두 통과했다.
-오늘 재점검에서는 새 권장 패치 5개가 안내되어 20/21이다. 구체적인 버전과 처리 순서는 위 현재 상태에 기록했다.
 다음 실기기 검증에는 최종 의존성을 포함한 새 네이티브 빌드를 사용한다.
 
 ## 근거

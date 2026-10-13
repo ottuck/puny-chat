@@ -12,7 +12,7 @@
 - `app/` — Expo(React Native) + TypeScript + Expo Router. iOS / Web / Android 공용 코드.
 - `server/` — Java 25, Spring Boot 4.1 + WebFlux + Reactive MongoDB. 패키지는 기능 모듈(`auth`, `user`, `room`, `chat`, `buddy`, `realtime`).
 - `infra/` — Terraform: Railway(서버), MongoDB Atlas(DB), Cloudflare(DNS, state는 R2).
-- `docs/` — 기획과 설계 문서
+- `docs/` — 기획과 설계 문서, 출시 점검(`release-review.md`)과 App Store 출시 진행(`app-store-release.md`)
 - `.github/workflows/ci.yml` — app(lint / typecheck / test / format), server(spotless / test)
 - `.github/workflows/deploy.yml` — main에서 CI 통과 후 서버(Railway, `railway up`)와 웹(Cloudflare Worker, `wrangler deploy`) 배포
 - 로컬 전용(gitignore): `.claude/`(desktop app preview 설정), `.idea/`, `.env*`
