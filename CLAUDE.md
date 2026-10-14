@@ -144,6 +144,7 @@
 ## Git workflow
 
 - 브랜치: `main`(검증된 코드, 릴리스 기준) ← `dev`(개발). 기본 작업 브랜치는 `dev`.
+  GitHub 기본 브랜치는 `main`이다(2026-10-14, `main` push CI가 캐시를 채워 `dev`로 가는 PR이 읽도록). 그래서 PR은 `--base dev`를 명시한다.
 - 평소 작업은 `dev`에 바로 커밋·push한다. 기능 브랜치는 크거나 실험적인 작업일 때만 따로 만든다
   (feat/…, fix/…, chore/… 이름, `dev`로 PR). `dev`에 바로 push하면 CI가 돌지 않으므로 push 전에 로컬 검사
   (`pnpm check`, server는 `./gradlew spotlessCheck test`)를 한다. CI는 `dev`로 가는 PR과 `main` push에서만 돈다.
