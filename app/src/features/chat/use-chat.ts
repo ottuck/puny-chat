@@ -90,7 +90,10 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   // The latest one-word message ("밥", "춤", …) or mood word ("사랑해", "ㅋㅋ", …) from either of us,
   // for the buddy to answer.
   const [cue, setCue] = useState<Cue | null>(null);
+  // When a text last came or went live, for the buddy to start a talk only when it is quiet.
+  const [lastTalkAt, setLastTalkAt] = useState(0);
   const cueFrom = useCallback((message: ServerMessage) => {
+    if (message.type === 'TEXT') setLastTalkAt(Date.now());
     const kind =
       message.type === 'TEXT' && message.text
         ? (chatWord(message.text) ?? chatMood(message.text))
@@ -362,6 +365,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
     unreadWhileAway,
     reaction,
     cue,
+    lastTalkAt,
     loaded,
     send,
     retry,

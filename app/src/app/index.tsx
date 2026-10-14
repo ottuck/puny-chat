@@ -102,6 +102,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
           onOpenDetail={() => setBuddyOpen(true)}
           reaction={chat.reaction}
           cue={chat.cue}
+          lastTalkAt={chat.lastTalkAt}
           album={room.album}
         />
         <View style={styles.list}>

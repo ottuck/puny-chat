@@ -56,8 +56,9 @@ const TICK_MS = 450;
 // While evolving the old and new looks swap this fast.
 const FAST_TICK_MS = 90;
 const PET_MS = 900;
-// Things the buddy does by itself: a dance, a song, or shaking its head at a full bowl.
-type Act = 'dance' | 'sing' | 'refuse';
+// Things the buddy does by itself: a dance, a song, shaking its head at a full bowl, or the small
+// happenings of docs/fun-improvements.md, 4 (a hiccup, a start, a look around, a yawn).
+type Act = 'dance' | 'sing' | 'refuse' | 'hiccup' | 'startle' | 'lookAround' | 'yawn';
 // A one-word message for the buddy ("밥", "춤", …, features/buddy/chat-words.ts), or the tour's
 // script asking for a dance or a song.
 export type Cue = { id: string; kind: ChatWord | Mood };
@@ -79,7 +80,39 @@ const MOOD_LINE: Record<Mood, Line> = {
   morning: 'morning',
 };
 const ACT_REPEATS = 1;
-const ACT_MS: Record<Act, number> = { dance: 300, sing: 800, refuse: 900 };
+const ACT_MS: Record<Act, number> = {
+  dance: 300,
+  sing: 800,
+  refuse: 900,
+  hiccup: 900,
+  startle: 900,
+  lookAround: 1400,
+  yawn: 1500,
+};
+// What it says as it happens, once grown.
+const ACT_LINE: Partial<Record<Act, Line>> = {
+  hiccup: 'hiccup',
+  startle: 'startle',
+  lookAround: 'lookAround',
+  yawn: 'yawn',
+};
+// What it does when left alone, by weight: dancing and singing most, the small happenings between.
+const IDLE_ACTS: readonly (readonly [Act, number])[] = [
+  ['dance', 25],
+  ['sing', 25],
+  ['hiccup', 15],
+  ['startle', 15],
+  ['lookAround', 10],
+  ['yawn', 10],
+];
+function pickIdleAct(): Act {
+  let roll = Math.random() * IDLE_ACTS.reduce((sum, [, weight]) => sum + weight, 0);
+  for (const [act, weight] of IDLE_ACTS) {
+    roll -= weight;
+    if (roll < 0) return act;
+  }
+  return 'dance';
+}
 // How often, left alone, it dances or sings.
 const IDLE_ACT_MIN_MS = 20_000;
 const IDLE_ACT_MAX_MS = 40_000;
@@ -128,6 +161,8 @@ type Props = {
   // Greets on opening ("good morning"); off in the tour.
   greets?: boolean;
   cue?: Cue | null;
+  // When a text last came or went (ms): the buddy only starts a talk when it has been quiet.
+  lastTalkAt?: number;
   // Buddies gone their own way: their portraits hang on the wall, and the decorations stay.
   album?: AlbumEntry[];
 };
@@ -259,6 +294,7 @@ export function BuddyStage({
   companionEgg,
   greets = true,
   cue: latestCue,
+  lastTalkAt = 0,
   album,
 }: Props) {
   const colors = useColors();
@@ -316,23 +352,29 @@ export function BuddyStage({
     stage: buddy.stage,
     quiet: sleeping || !!active || acting || !!mood,
     greets,
+    lastTalkAt,
   });
 
-  const perform = useCallback((next: Act, replaceCurrent = false) => {
-    // Only explicit cues replace an action. A queued idle callback must respect the tap lock.
-    if (!replaceCurrent && (actTimer.current || petTimer.current)) return;
-    if (actTimer.current) clearTimeout(actTimer.current);
-    if (petTimer.current) clearTimeout(petTimer.current);
-    petTimer.current = null;
-    setPetted(false);
-    setAct(next);
-    // The same cue must restart the finite animation even when its kind has not changed.
-    setActRun((run) => run + 1);
-    actTimer.current = setTimeout(() => {
-      actTimer.current = null;
-      setAct(null);
-    }, ACT_MS[next]);
-  }, []);
+  const perform = useCallback(
+    (next: Act, replaceCurrent = false) => {
+      // Only explicit cues replace an action. A queued idle callback must respect the tap lock.
+      if (!replaceCurrent && (actTimer.current || petTimer.current)) return;
+      if (actTimer.current) clearTimeout(actTimer.current);
+      if (petTimer.current) clearTimeout(petTimer.current);
+      petTimer.current = null;
+      setPetted(false);
+      setAct(next);
+      // The same cue must restart the finite animation even when its kind has not changed.
+      setActRun((run) => run + 1);
+      const line = ACT_LINE[next];
+      if (line) say(line);
+      actTimer.current = setTimeout(() => {
+        actTimer.current = null;
+        setAct(null);
+      }, ACT_MS[next]);
+    },
+    [say],
+  );
 
   // A word from the chat that moves it: for a moment it shows how it feels, and says so once grown.
   const startMood = useCallback(
@@ -442,6 +484,25 @@ export function BuddyStage({
     return () => clearTimeout(timer);
   }, [reaction]);
 
+  // A hiccup is three small hops, a start one big one.
+  useEffect(() => {
+    if (act !== 'hiccup' && act !== 'startle') return;
+    const jump = (h: number, ms: number) =>
+      Animated.sequence([
+        Animated.timing(hop, { toValue: -h, duration: ms, useNativeDriver: NATIVE_DRIVER }),
+        Animated.timing(hop, { toValue: 0, duration: ms, useNativeDriver: NATIVE_DRIVER }),
+      ]);
+    const move =
+      act === 'hiccup'
+        ? Animated.sequence([jump(5, 110), jump(5, 110), jump(5, 110)])
+        : jump(18, 200);
+    move.start();
+    return () => {
+      move.stop();
+      hop.setValue(0);
+    };
+  }, [act, actRun, hop]);
+
   // Little hops for a mood; a good night sleeps instead.
   useEffect(() => {
     if (!mood) return;
@@ -470,7 +531,7 @@ export function BuddyStage({
   useEffect(() => {
     if (egg || settled || active || acting || petted || mood) return;
     const timer = setTimeout(
-      () => perform(Math.random() < 0.5 ? 'dance' : 'sing'),
+      () => perform(pickIdleAct()),
       IDLE_ACT_MIN_MS + Math.random() * (IDLE_ACT_MAX_MS - IDLE_ACT_MIN_MS),
     );
     return () => clearTimeout(timer);
@@ -677,25 +738,27 @@ export function BuddyStage({
           ? tick % 2 === 0
             ? 'eat'
             : 'happy'
-          : act === 'refuse'
-            ? 'idle'
-            : active?.kind === 'cleaned' ||
-                active?.kind === 'levelUp' ||
-                active?.kind === 'together' ||
-                (active?.kind === 'evolved' && !evolving) ||
-                petted
-              ? 'happy'
-              : sleeping
-                ? 'sleep'
-                : buddy.hungry
-                  ? 'hungry'
-                  : walking
-                    ? tick % 2 === 0
-                      ? 'step'
-                      : 'idle'
-                    : tick % 11 === 0
-                      ? 'blink'
-                      : 'idle';
+          : act === 'yawn'
+            ? 'sleep'
+            : act === 'refuse' || act === 'hiccup' || act === 'startle' || act === 'lookAround'
+              ? 'idle'
+              : active?.kind === 'cleaned' ||
+                  active?.kind === 'levelUp' ||
+                  active?.kind === 'together' ||
+                  (active?.kind === 'evolved' && !evolving) ||
+                  petted
+                ? 'happy'
+                : sleeping
+                  ? 'sleep'
+                  : buddy.hungry
+                    ? 'hungry'
+                    : walking
+                      ? tick % 2 === 0
+                        ? 'step'
+                        : 'idle'
+                      : tick % 11 === 0
+                        ? 'blink'
+                        : 'idle';
 
   // A mood from the chat shows on the face unless something bigger (eating, straining) is going on.
   const moodPose: Pose | null =
@@ -778,7 +841,8 @@ export function BuddyStage({
     [],
   );
   // Dancing and head-shaking turn the buddy left and right.
-  const flipped = act === 'dance' || act === 'refuse' ? tick % 2 === 0 : facingLeft;
+  const flipped =
+    act === 'dance' || act === 'refuse' || act === 'lookAround' ? tick % 2 === 0 : facingLeft;
 
   const feed = () => {
     if (busy) return;
@@ -965,7 +1029,7 @@ export function BuddyStage({
           <View style={styles.above}>
             <PixelSprite frame={HEART} palette={PROP_PALETTE} scale={3} />
           </View>
-        ) : active?.kind === 'message' ? (
+        ) : active?.kind === 'message' || act === 'startle' ? (
           <View style={styles.above}>
             <PixelSprite frame={EXCLAIM} palette={BUDDY_PALETTE} scale={3} />
           </View>
