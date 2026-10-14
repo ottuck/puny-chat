@@ -134,27 +134,27 @@ const IDLE_ACT_MAX_MS = 40_000;
 const EGG_ROOM = 72;
 const SLEEP_FROM = 23;
 const SLEEP_UNTIL = 7;
-// The radio DJ (OWL) keeps the opposite hours: on air in the small hours, asleep through the morning.
-const OWL_SLEEP_FROM = 3;
-const OWL_SLEEP_UNTIL = 11;
+// The radio DJ (DJ) keeps the opposite hours: on air in the small hours, asleep through the morning.
+const DJ_SLEEP_FROM = 3;
+const DJ_SLEEP_UNTIL = 11;
 
 // What each job looks like at its work, from the poses there are. A placeholder until the job art
 // (docs/fun-improvements.md, 디자인 인수인계): each job gets its own poses and a prop sprite.
 function jobPose(job: BuddyJob, tick: number): Pose {
   switch (job) {
     case 'CHEF': // stirring the pot
-    case 'CLEANER': // gardener: tending the plants
-    case 'OWL': // radio DJ: nodding to the music
+    case 'GARDENER': // gardener: tending the plants
+    case 'DJ': // radio DJ: nodding to the music
       return tick % 2 === 0 ? 'step' : 'idle';
     case 'COMEDIAN': // doing a bit
-    case 'ROMANTIC': // poet: writing a letter
+    case 'POET': // poet: writing a letter
       return 'happy';
-    case 'CHATTERBOX': // barista: mouth going
+    case 'BARISTA': // barista: mouth going
       return tick % 2 === 0 ? 'eat' : 'happy';
   }
 }
 // Where the job's prop floats: above the head, or beside the buddy at its hands.
-const JOB_PROP_ABOVE: ReadonlySet<BuddyJob> = new Set(['OWL', 'ROMANTIC']);
+const JOB_PROP_ABOVE: ReadonlySet<BuddyJob> = new Set(['DJ', 'POET']);
 // How long each reaction plays.
 const REACTION_MS: Record<ReactionKind, number> = {
   message: 1400,
@@ -216,7 +216,7 @@ function useSleeping(job: BuddyJob | null): boolean {
     const timer = setInterval(() => setHour(new Date().getHours()), 60_000);
     return () => clearInterval(timer);
   }, []);
-  if (job === 'OWL') return hour >= OWL_SLEEP_FROM && hour < OWL_SLEEP_UNTIL;
+  if (job === 'DJ') return hour >= DJ_SLEEP_FROM && hour < DJ_SLEEP_UNTIL;
   return hour >= SLEEP_FROM || hour < SLEEP_UNTIL;
 }
 
@@ -440,10 +440,10 @@ export function BuddyStage({
       setAct(null);
       setPetted(false);
       setMood(next);
-      // A romantic answers "love" in its own words, a comedian a laugh.
+      // A poet answers "love" in its own words, a comedian a laugh.
       const own =
-        job === 'ROMANTIC' && next === 'love'
-          ? 'romanticLove'
+        job === 'POET' && next === 'love'
+          ? 'poetLove'
           : job === 'COMEDIAN' && next === 'laugh'
             ? 'comedianLaugh'
             : null;
@@ -681,7 +681,7 @@ export function BuddyStage({
     if (active?.kind === 'fed' && active.phase === 'after')
       next = job === 'CHEF' ? 'chefFed' : pick(['thanks', 'yummy'] as const);
     else if (active?.kind === 'cleaned')
-      next = job === 'CLEANER' ? 'cleanerCleaned' : pick(['refreshed', 'digestion'] as const);
+      next = job === 'GARDENER' ? 'gardenerCleaned' : pick(['refreshed', 'digestion'] as const);
     else if (active?.kind === 'together') next = 'together';
     else if (active?.kind === 'here') next = 'bothHere';
     if (!next) return;
@@ -890,11 +890,11 @@ export function BuddyStage({
   const frame =
     evolving && tick % 2 === 0 ? buddyFrame(previousStage, 'idle') : buddyFrame(buddy.stage, pose);
 
-  // A romantic's love, and a pet shared by both, show a big heart.
-  const bigHeart = mood === 'coPet' || (mood === 'love' && job === 'ROMANTIC');
+  // A poet's love, and a pet shared by both, show a big heart.
+  const bigHeart = mood === 'coPet' || (mood === 'love' && job === 'POET');
   const showHeart =
     petted ||
-    (act === 'job' && job === 'ROMANTIC') ||
+    (act === 'job' && job === 'POET') ||
     mood === 'love' ||
     mood === 'coPet' ||
     (eating && active?.phase === 'after') ||
@@ -959,7 +959,7 @@ export function BuddyStage({
     act === 'dance' ||
     act === 'refuse' ||
     act === 'lookAround' ||
-    (act === 'job' && job === 'CLEANER')
+    (act === 'job' && job === 'GARDENER')
       ? tick % 2 === 0
       : facingLeft;
 

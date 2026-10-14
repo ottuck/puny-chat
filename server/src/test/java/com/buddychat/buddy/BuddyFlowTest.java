@@ -582,12 +582,12 @@ class BuddyFlowTest {
         assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.CHEF);
         assertThat(room("henry").buddy().canChangeJob()).isTrue(); // the automatic job used nothing up
 
-        post("henry", "/api/rooms/me/buddy/job", Map.of("job", "OWL"))
+        post("henry", "/api/rooms/me/buddy/job", Map.of("job", "DJ"))
                 .expectStatus()
                 .isOk();
 
         BuddyView changed = room("yuki").buddy();
-        assertThat(changed.job()).isEqualTo(BuddyJob.OWL);
+        assertThat(changed.job()).isEqualTo(BuddyJob.DJ);
         assertThat(changed.canChangeJob()).isFalse();
         assertThat(timeline("henry")).endsWith("JOB", "JOB_CHANGED");
         post("yuki", "/api/rooms/me/buddy/job", Map.of("job", "COMEDIAN"))
@@ -642,7 +642,7 @@ class BuddyFlowTest {
                 i -> post(
                                 i % 2 == 0 ? "henry" : "yuki",
                                 "/api/rooms/me/buddy/job",
-                                Map.of("job", i % 3 == 0 ? "OWL" : "CLEANER"))
+                                Map.of("job", i % 3 == 0 ? "DJ" : "GARDENER"))
                         .returnResult(Void.class)
                         .getStatus()
                         .value());
@@ -652,29 +652,29 @@ class BuddyFlowTest {
     }
 
     @Test
-    void withNothingStandingOutItIsAChatterbox() {
+    void withNothingStandingOutItIsABarista() {
         String roomId = createRoom("henry").id();
         setBuddy(roomId, new Update().set("buddy.fedCount", 4).set("buddy.cleanedCount", 4));
         setExp(roomId, BuddyRules.minExp(BuddyRules.ADULT_AT) - 1);
 
         buddyService.onMessageSent(roomId).block();
 
-        assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.CHATTERBOX);
+        assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.BARISTA);
     }
 
     @Test
     void jobsGoToTheMostPointsAndTiesToTheFirstListed() {
-        assertThat(BuddyJob.decide(counts(4, 4, 14, 14, 9))).isEqualTo(BuddyJob.CHATTERBOX);
+        assertThat(BuddyJob.decide(counts(4, 4, 14, 14, 9))).isEqualTo(BuddyJob.BARISTA);
         assertThat(BuddyJob.decide(counts(5, 0, 0, 0, 0))).isEqualTo(BuddyJob.CHEF);
         assertThat(BuddyJob.decide(counts(5, 5, 0, 0, 0))).isEqualTo(BuddyJob.CHEF);
-        assertThat(BuddyJob.decide(counts(5, 6, 0, 0, 0))).isEqualTo(BuddyJob.CLEANER);
-        assertThat(BuddyJob.decide(counts(0, 0, 15, 0, 0))).isEqualTo(BuddyJob.OWL);
+        assertThat(BuddyJob.decide(counts(5, 6, 0, 0, 0))).isEqualTo(BuddyJob.GARDENER);
+        assertThat(BuddyJob.decide(counts(0, 0, 15, 0, 0))).isEqualTo(BuddyJob.DJ);
         assertThat(BuddyJob.decide(counts(0, 0, 0, 15, 0))).isEqualTo(BuddyJob.COMEDIAN);
-        assertThat(BuddyJob.decide(counts(0, 0, 0, 0, 10))).isEqualTo(BuddyJob.ROMANTIC);
+        assertThat(BuddyJob.decide(counts(0, 0, 0, 0, 10))).isEqualTo(BuddyJob.POET);
         assertThat(BuddyJob.leaning(counts(0, 0, 0, 0, 0))).isNull();
-        assertThat(BuddyJob.leaning(counts(1, 0, 0, 0, 0))).isEqualTo(BuddyJob.CHATTERBOX);
-        assertThat(BuddyJob.leaning(counts(3, 1, 0, 0, 0))).isEqualTo(BuddyJob.CHATTERBOX);
-        assertThat(BuddyJob.leaning(counts(0, 0, 0, 0, 20))).isEqualTo(BuddyJob.ROMANTIC);
+        assertThat(BuddyJob.leaning(counts(1, 0, 0, 0, 0))).isEqualTo(BuddyJob.BARISTA);
+        assertThat(BuddyJob.leaning(counts(3, 1, 0, 0, 0))).isEqualTo(BuddyJob.BARISTA);
+        assertThat(BuddyJob.leaning(counts(0, 0, 0, 0, 20))).isEqualTo(BuddyJob.POET);
     }
 
     // --- helpers ---

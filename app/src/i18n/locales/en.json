@@ -135,30 +135,30 @@
       "chef2": "Taste this for me?",
       "chef3": "Simmering…",
       "chef4": "Tell me when you're hungry",
-      "cleaner1": "Growing nicely today",
-      "cleaner2": "Time to water",
-      "cleaner3": "One more leaf",
-      "cleaner4": "Taking its time",
-      "owl1": "It's two in the morning",
-      "owl2": "What should play next?",
-      "owl3": "For those who cannot sleep",
-      "owl4": "The night is still long",
+      "gardener1": "Growing nicely today",
+      "gardener2": "Time to water",
+      "gardener3": "One more leaf",
+      "gardener4": "Taking its time",
+      "dj1": "It's two in the morning",
+      "dj2": "What should play next?",
+      "dj3": "For those who cannot sleep",
+      "dj4": "The night is still long",
       "comedian1": "Mind if I try something?",
       "comedian2": "This one might land",
       "comedian3": "Good crowd tonight",
       "comedian4": "That was funny, right?",
-      "romantic1": "Got a line for today",
-      "romantic2": "Writing about you two",
-      "romantic3": "A good day",
-      "romantic4": "Writing a letter…",
-      "chatter1": "How was your day?",
-      "chatter2": "Something warm to drink?",
-      "chatter3": "I'm listening",
-      "chatter4": "Take your time",
+      "poet1": "Got a line for today",
+      "poet2": "Writing about you two",
+      "poet3": "A good day",
+      "poet4": "Writing a letter…",
+      "barista1": "How was your day?",
+      "barista2": "Something warm to drink?",
+      "barista3": "I'm listening",
+      "barista4": "Take your time",
       "chefFed": "Seasoned just right",
-      "cleanerCleaned": "Tidy at last",
+      "gardenerCleaned": "Tidy at last",
       "comedianLaugh": "See? It landed",
-      "romanticLove": "Me too"
+      "poetLove": "Me too"
     },
     "graduate": {
       "title": "Its own way",
@@ -195,19 +195,19 @@
     },
     "job": {
       "CHEF": "Chef",
-      "CLEANER": "Gardener",
-      "OWL": "Radio DJ",
+      "GARDENER": "Gardener",
+      "DJ": "Radio DJ",
       "COMEDIAN": "Comedian",
-      "ROMANTIC": "Poet",
-      "CHATTERBOX": "Barista"
+      "POET": "Poet",
+      "BARISTA": "Barista"
     },
     "jobWhy": {
       "CHEF": "You fed it well",
-      "CLEANER": "You kept the floor clean",
-      "OWL": "You talked late into the night",
+      "GARDENER": "You kept the floor clean",
+      "DJ": "You talked late into the night",
       "COMEDIAN": "You laughed a lot",
-      "ROMANTIC": "You said \"love you\" a lot",
-      "CHATTERBOX": "A bit of everything"
+      "POET": "You said \"love you\" a lot",
+      "BARISTA": "A bit of everything"
     },
     "jobCard": {
       "title": "Job",
@@ -223,11 +223,11 @@
     },
     "jobPerk": {
       "CHEF": "Gets extra excited at mealtime. Stirs a pot when alone.",
-      "CLEANER": "Is happier when you clean up. Tends the garden when alone.",
-      "OWL": "Upside-down days: on air in the small hours, asleep by day.",
+      "GARDENER": "Is happier when you clean up. Tends the garden when alone.",
+      "DJ": "Upside-down days: on air in the small hours, asleep by day.",
       "COMEDIAN": "Cracks up at laughing words. Rehearses a bit when alone.",
-      "ROMANTIC": "Shows a big heart at loving words. Writes a poem when alone.",
-      "CHATTERBOX": "Talks a lot, chiming in even while you chat."
+      "POET": "Shows a big heart at loving words. Writes a poem when alone.",
+      "BARISTA": "Talks a lot, chiming in even while you chat."
     }
   },
   "buddyEvent": {
