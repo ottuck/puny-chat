@@ -134,7 +134,7 @@ const IDLE_ACT_MAX_MS = 40_000;
 const EGG_ROOM = 72;
 const SLEEP_FROM = 23;
 const SLEEP_UNTIL = 7;
-// An owl keeps the opposite hours: awake in the small hours, asleep through the morning.
+// The radio DJ (OWL) keeps the opposite hours: on air in the small hours, asleep through the morning.
 const OWL_SLEEP_FROM = 3;
 const OWL_SLEEP_UNTIL = 11;
 
@@ -143,14 +143,13 @@ const OWL_SLEEP_UNTIL = 11;
 function jobPose(job: BuddyJob, tick: number): Pose {
   switch (job) {
     case 'CHEF': // stirring the pot
-    case 'CLEANER': // sweeping
+    case 'CLEANER': // gardener: tending the plants
+    case 'OWL': // radio DJ: nodding to the music
       return tick % 2 === 0 ? 'step' : 'idle';
-    case 'OWL': // gazing at the sky
-      return 'idle';
     case 'COMEDIAN': // doing a bit
-    case 'ROMANTIC': // writing a letter
+    case 'ROMANTIC': // poet: writing a letter
       return 'happy';
-    case 'CHATTERBOX': // mouth going
+    case 'CHATTERBOX': // barista: mouth going
       return tick % 2 === 0 ? 'eat' : 'happy';
   }
 }
