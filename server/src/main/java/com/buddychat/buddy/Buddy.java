@@ -20,8 +20,10 @@ import org.jspecify.annotations.Nullable;
  * @param fedCount meals given, and the next four: poops cleaned up, messages written at night, with a
  *     laugh, and with a "love you" in them. What the job is made of ({@link BuddyJob}); null on
  *     buddies from before they were counted, which counts as none
- * @param job set once, when the buddy becomes an adult; null before that, and on adults from before
- *     jobs existed
+ * @param job decided when the buddy becomes an adult; null before that, and on adults from before
+ *     jobs existed. An adult's members may change it, once a day
+ * @param jobChangedDay the last day (Asia/Tokyo) the members changed the job; null if never. The
+ *     first, automatic job does not count
  */
 public record Buddy(
         String name,
@@ -40,12 +42,13 @@ public record Buddy(
         @Nullable Integer nightCount,
         @Nullable Integer laughCount,
         @Nullable Integer loveCount,
-        @Nullable String job) {
+        @Nullable String job,
+        @Nullable String jobChangedDay) {
 
     public static final int MAX_NAME_LENGTH = 12;
 
     public static Buddy hatch(String name, Instant now) {
-        return new Buddy(name, 0, now, now, now, null, 0, 0, null, null, null, 0, 0, 0, 0, 0, null);
+        return new Buddy(name, 0, now, now, now, null, 0, 0, null, null, null, 0, 0, 0, 0, 0, null, null);
     }
 
     Instant fedAt() {
@@ -82,7 +85,7 @@ public record Buddy(
 
     /** The egg that takes this grown buddy's place. Today's talk carries over: one bonus a day. */
     Buddy next(String name, Instant now) {
-        return new Buddy(name, 0, now, now, now, null, 0, 0, talkDay, talkers, togetherDay, 0, 0, 0, 0, 0, null);
+        return new Buddy(name, 0, now, now, now, null, 0, 0, talkDay, talkers, togetherDay, 0, 0, 0, 0, 0, null, null);
     }
 
     /** Members who sent a message on that day. */

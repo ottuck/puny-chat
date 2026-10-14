@@ -196,6 +196,55 @@ public class BuddyService {
         });
     }
 
+    /**
+     * An adult's job, chosen by either member instead of the one its upbringing gave (docs/fun-improvements.md,
+     * 5): once a day, for the day the buddy is in (Asia/Tokyo). One conditional update on the job as read
+     * and the day, so two members choosing at once change it once; the other gets JOB_CHANGED_TODAY.
+     * The automatic first job does not use up the day.
+     */
+    public Mono<BuddyView> changeJob(String roomId, String actorId, BuddyJob job) {
+        Instant now = Instant.now(clock);
+        String today = BuddyRules.day(now);
+        return load(roomId).flatMap(buddy -> {
+            if (BuddyRules.stage(BuddyRules.level(buddy.exp())) != BuddyRules.Stage.ADULT) {
+                return Mono.error(new ApiException(HttpStatus.CONFLICT, "BUDDY_NOT_ADULT"));
+            }
+            if (job == BuddyJob.of(buddy.job())) {
+                return Mono.error(new ApiException(HttpStatus.CONFLICT, "JOB_UNCHANGED"));
+            }
+            if (today.equals(buddy.jobChangedDay())) return Mono.error(changedToday());
+            Query asRead = query(where("_id")
+                            .is(roomId)
+                            .and("buddy.bornAt")
+                            .is(buddy.bornAt())
+                            .and("buddy.exp")
+                            .gte(BuddyRules.minExp(BuddyRules.ADULT_AT))
+                            .and("buddy.jobChangedDay")
+                            .ne(today))
+                    .addCriteria(sameOrMissing("buddy.job", buddy.job()));
+            Update update = new Update().set("buddy.job", job.name()).set("buddy.jobChangedDay", today);
+            return mongo.findAndModify(asRead, update, RETURN_NEW, RoomBuddy.class, ROOMS)
+                    .switchIfEmpty(Mono.error(changedToday()))
+                    .flatMap(updated -> chatService
+                            .recordBuddyEvent(
+                                    roomId,
+                                    "JOB_CHANGED",
+                                    job.name(),
+                                    actorId,
+                                    eventKey(updated.buddy(), "jobchange:" + UUID.randomUUID()))
+                            .doOnNext(message -> hub.publish(roomId, new ServerEvent.NewMessage(message), null))
+                            .then(Mono.fromSupplier(() -> {
+                                BuddyView view = BuddyView.of(updated.buddy(), now);
+                                hub.publish(roomId, new ServerEvent.BuddyUpdated(view), null);
+                                return view;
+                            })));
+        });
+    }
+
+    private static ApiException changedToday() {
+        return new ApiException(HttpStatus.CONFLICT, "JOB_CHANGED_TODAY");
+    }
+
     private static ApiException notGrown() {
         return new ApiException(HttpStatus.CONFLICT, "BUDDY_NOT_GROWN");
     }

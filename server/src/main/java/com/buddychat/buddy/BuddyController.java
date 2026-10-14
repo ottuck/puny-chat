@@ -57,6 +57,21 @@ class BuddyController {
                                         request.buddyName().strip())));
     }
 
+    record JobRequest(@NotBlank String job) {}
+
+    // An adult's job, changed by either member, once a day.
+    @PostMapping("/api/rooms/me/buddy/job")
+    Mono<BuddyView> changeJob(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody JobRequest request) {
+        BuddyJob job = BuddyJob.of(request.job());
+        if (job == null) return Mono.error(new ApiException(HttpStatus.BAD_REQUEST, "INVALID_REQUEST"));
+        return userService
+                .current(jwt)
+                .flatMap((User user) -> user.roomId() == null
+                        ? Mono.error(new ApiException(HttpStatus.NOT_FOUND, "ROOM_NOT_FOUND"))
+                        : access.requireMember(user.roomId(), user.id())
+                                .then(buddyService.changeJob(user.roomId(), user.id(), job)));
+    }
+
     private Mono<BuddyService.CareResult> inMyRoom(
             Jwt jwt, BiFunction<String, String, Mono<BuddyService.CareResult>> action) {
         return userService

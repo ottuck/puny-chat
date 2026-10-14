@@ -24,7 +24,9 @@ public record BuddyView(
         // What it grew up to be (docs/fun-improvements.md, 5): set once it is an adult.
         @Nullable BuddyJob job,
         // As a child, the job it is heading for so far.
-        @Nullable BuddyJob leaning) {
+        @Nullable BuddyJob leaning,
+        // An adult's job can be changed once a day (BuddyService.changeJob).
+        boolean canChangeJob) {
 
     public static BuddyView of(Buddy buddy, Instant now) {
         int level = BuddyRules.level(buddy.exp());
@@ -44,6 +46,7 @@ public record BuddyView(
                 buddy.talkedOn(today),
                 today.equals(buddy.togetherDay()),
                 BuddyJob.of(buddy.job()),
-                BuddyRules.stage(level) == BuddyRules.Stage.CHILD ? BuddyJob.leaning(buddy) : null);
+                BuddyRules.stage(level) == BuddyRules.Stage.CHILD ? BuddyJob.leaning(buddy) : null,
+                BuddyRules.stage(level) == BuddyRules.Stage.ADULT && !today.equals(buddy.jobChangedDay()));
     }
 }

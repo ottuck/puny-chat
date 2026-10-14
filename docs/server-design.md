@@ -68,7 +68,7 @@ users        { _id, firebaseUid (unique), displayName, roomId?, createdAt, guest
 rooms        { _id, memberIds [1..2], memberCount, createdAt, closureId?, album? [{ name, bornAt, graduatedAt, job? }],
                buddy { name, exp, bornAt, lastFedAt?, lastCleanedAt?, poopsCleaned?, expDay?, messageExpToday?,
                        talkDay?, talkers?, togetherDay?, fedCount?, cleanedCount?, nightCount?, laughCount?, loveCount?,
-                       job? } }
+                       job?, jobChangedDay? } }
 messages     { _id, roomId, senderId?, type (TEXT | SYSTEM | BUDDY_EVENT), text?, buddyEvent?, systemEvent?, actorId?,
                clientMessageId, createdAt }
 invitations  { _id, roomId, code (unique), createdBy, createdAt, expiresAt, usedAt?, usedBy?, previousRoomId? }
@@ -302,7 +302,7 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
 - **저장하는 것**: `exp`, `bornAt`, `lastFedAt`, `lastCleanedAt`, 오늘 메시지 EXP 카운터, 오늘 메시지를 보낸 사람
   (`talkDay`, `talkers`)과 둘이 함께 보너스를 받은 날(`togetherDay`). 배고픔·똥은 저장하지 않고 조회 시점에 계산한다.
   앱은 서버가 계산한 `BuddyView`(level, stage, fullness, poops, canFeed, canClean, talkedToday, togetherToday, job,
-  leaning)를 그대로 보여준다.
+  leaning, canChangeJob)를 그대로 보여준다.
 - **배고픔**: 밥을 먹은 뒤 2시간 30분에 걸쳐 100 → 0. 80 미만이면(30분 뒤부터) 밥을 줄 수 있고, 30 이하면(1시간 45분 뒤)
   "배고파요". 2026-09-29에 12시간에서 줄였다: 잠깐 들르는 사람도 돌볼 거리가 있게.
 - **똥**: 바닥이 깨끗해진 뒤(`lastCleanedAt`) 1시간마다 하나(전에는 6시간), 최대 3개. **누를 때마다 하나씩** 치운다:
@@ -343,7 +343,7 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
   메시지부터는 아무것도 하지 않는다. 독립으로 온 새 알은 그날 기록을 이어받아 보너스가 두 번 들어가지 않는다. 혼자인 방은 받지
   않는다.
 - **타임라인 이벤트**: `FED`, `CLEANED`(누가 했는지 포함, 바닥이 깨끗해질 때 한 줄), `TOGETHER`(위), `LEVELED_UP`(`text`에 새 레벨,
-  단계가 바뀌면 대신 `EVOLVED` 하나만, 30이면 대신 `MAX_LEVEL`), `EVOLVED`는 일어날 때, `JOB`(직업, 아래), `HUNGRY`, `POOPED`는 누군가
+  단계가 바뀌면 대신 `EVOLVED` 하나만, 30이면 대신 `MAX_LEVEL`), `EVOLVED`는 일어날 때, `JOB`(직업, 아래), `JOB_CHANGED`(직업 바꾸기), `HUNGRY`, `POOPED`는 누군가
   앱을 열거나(`GET /api/rooms/me`) 연결할 때 기록한다. 원인 시각으로 만든 키(`buddy:hungry:<lastFedAt>` 등)가
   메시지 unique 인덱스에 걸려서 여러 번 확인해도 한 번만 남는다. 스케줄러가 없다.
 - **동시성**: 밥주기는 `lastFedAt < 지금 - 30분` 조건부 update, 청소는 읽은 `lastCleanedAt`·`poopsCleaned`가 그대로일 때만
@@ -356,10 +356,16 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
   `chat-words.ts`와 같이 고친다. 이 세 개(밤·웃음·사랑)는 해당하는 메시지가 있을 때만 `$inc` 한 번을 쓴다. 이 필드가 없는 버디는 0으로 본다.
   - 점수: 요리사=밥, 청소 대장=치운 💩, 올빼미=밤 메시지÷3, 코미디언=웃음÷3, 로맨티스트=사랑÷2. 가장 높은 직업이 되고 동점이면
     `BuddyJob`에 먼저 적힌 쪽이 이긴다. 모두 5점 미만이면 수다쟁이(`CHATTERBOX`). 수치는 `BuddyJob`에 있다.
-  - **어른이 될 때(Lv.20) 한 번** `buddy.job`을 정한다. `bornAt`이 같고 `job`이 아직 없을 때만 되는 조건부 update라 바뀌지 않는다.
+  - **어른이 될 때(Lv.20) 한 번** `buddy.job`을 정한다. `bornAt`이 같고 `job`이 아직 없을 때만 되는 조건부 update라 자동으로는 한 번만 정해진다(그 뒤의 변경은 아래 "직업 바꾸기").
     타임라인에는 `EVOLVED` 다음에 `JOB`(`text` = 직업 이름)이 남는다. 그래서 어른이 되는 순간의 타임라인은 두 줄이다.
   - 어린이(Lv.10~19)에게는 지금까지의 점수로 기울기만 `BuddyView.leaning`으로 준다(점수가 하나도 없으면 null). 어른은
     `BuddyView.job`. 이 기능 전부터 어른인 버디는 `job`이 null이고 정하지 않는다. 독립하면 `album`에 `job`이 같이 들어간다.
+- **직업 바꾸기**(`POST /api/rooms/me/buddy/job` `{ job }`): 어른(Lv.20 이상)이 된 뒤 두 멤버 누구든, **하루에 한 번**(`jobChangedDay`,
+  일본 시간 날짜, 둘이 합쳐서). `bornAt`·`exp`·읽은 `job`이 그대로이고 `jobChangedDay != 오늘`일 때만 되는 조건부 update 하나라 둘이
+  동시에 해도 한 번만 된다. 처음 자동으로 정해진 직업은 `jobChangedDay`를 쓰지 않는다. 타임라인 `JOB_CHANGED`(`text` = 새 직업,
+  `actorId` = 바꾼 사람, 키는 매번 새로 만든다)와 `buddy` 이벤트. `BuddyView.canChangeJob` = 어른이고 오늘 안 바꿈. 오류:
+  `INVALID_REQUEST`(400, 모르는 직업), `BUDDY_NOT_ADULT`·`JOB_UNCHANGED`(지금과 같음)·`JOB_CHANGED_TODAY`(409). 바꿔도 점수 세기는
+  그대로 이어진다. 직업 때문에 달라지는 숫자는 없다.
 - **독립**(`POST /api/rooms/me/buddy/graduate` `{ buddyName }`): 30레벨(`BuddyView.grown`)일 때만. 지금 버디를 room의 `album`
   (`{ name, bornAt, graduatedAt }`)에 push하고 `buddy`를 새 알로 바꾸는 것을 한 번의 조건부 update로 한다(같은 `bornAt`이고 EXP가
   30레벨 이상일 때만: 새 알은 EXP 0이라 같은 순간에 태어나도 걸리지 않는다). 둘이 동시에 하면 한 명만 되고 다른 쪽은
