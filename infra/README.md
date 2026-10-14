@@ -1,7 +1,7 @@
 # infra
 
-puny-chat's infrastructure as Terraform: the server on Railway, MongoDB on Atlas, DNS on Cloudflare,
-state in Cloudflare R2. The web app is a Cloudflare Worker that CI deploys with wrangler
+puny-chat's infrastructure as Terraform: MongoDB on Atlas, DNS on Cloudflare, state in Cloudflare R2.
+The server runs on a shared AWS Lightsail instance that Terraform does not manage (`server/deploy`). The web app is a Cloudflare Worker that CI deploys with wrangler
 (`app/wrangler.jsonc`). Decisions and costs: `docs/server-design.md`, 인프라.
 
 ## Accounts and tokens (once, by hand)
@@ -16,7 +16,8 @@ Everything below goes into `infra/.env` (copy `.env.example`; ignored by git). N
      Terraform uses it for DNS, and CI for the Worker (GitHub secret `CLOUDFLARE_API_TOKEN`).
 2. **MongoDB Atlas**: an organization, then Access Manager → Service Accounts, with the
    Organization Project Creator role. Its client id and secret; the organization id (settings).
-3. **Railway**: the Hobby plan, then Account Settings → Tokens → an account token (for Terraform).
+3. **AWS Lightsail** (not Terraform): the instance `quant-lab-02` in ap-southeast-2 with a static IP (`var.server_ip`).
+   Firewall: 80 and 443 open; SSH only through the Lightsail browser connection.
 
 ## Apply
 
@@ -32,12 +33,18 @@ Show the plan before applying, especially when it changes or destroys something 
 
 ## CI
 
-After the first apply, in the Railway dashboard: project puny-chat → Settings → Tokens → a project
-token for `production`. Then, as GitHub secrets and variables:
+As GitHub secrets and variables (the server image goes to GHCR with the workflow's own token, so there is no server secret):
 
 ```sh
-gh secret set RAILWAY_TOKEN
 gh secret set CLOUDFLARE_API_TOKEN
 gh secret set CLOUDFLARE_ACCOUNT_ID
 gh variable set EXPO_PUBLIC_API_URL --body "$(terraform output -raw server_url)"
 ```
+
+## The server on Lightsail
+
+Files and setup are in `server/deploy`. On the instance, in `/opt/puny-chat`: `compose.yaml`, `Caddyfile`, `update.sh`
+and `.env` (from `.env.example`; the MongoDB address comes from `terraform output -raw mongodb_uri`). Install
+`puny-chat-update.service` and `.timer` into `/etc/systemd/system`, then `systemctl enable --now puny-chat-update.timer`.
+After the first image is pushed, set the GHCR package `puny-chat-server` to Public once. After changing
+`.env`, run `docker compose up -d` there. If the cluster is recreated, the new address goes into `.env` too.

@@ -3,7 +3,7 @@
 iOS 앱을 App Store에 올리는 절차와 진행 상태. 제품 사양은 `docs/product.md`, 서버는 `docs/server-design.md`,
 출시 전 코드 점검 결과는 `docs/release-review.md`에 있다. 이 문서는 **계정·콘솔 설정과 빌드·제출 순서**만 다룬다.
 
-인증 키·private key·토큰·Team ID 같은 값은 이 문서와 Git에 적지 않는다. 값은 각 콘솔(Apple, Firebase, EAS, Railway)에만 둔다.
+인증 키·private key·토큰·Team ID 같은 값은 이 문서와 Git에 적지 않는다. 값은 각 콘솔(Apple, Firebase, EAS, 서버 `.env`)에만 둔다.
 아래 "완료"는 운영자가 콘솔에서 직접 확인한 것이고, 코드와 문서만으로는 검증할 수 없다.
 
 ## 진행 상태

@@ -98,8 +98,8 @@ flowchart LR
 
     Firebase["Firebase Auth<br/>sign-in · ID tokens"]
 
-    subgraph Cloud["☁️ Singapore"]
-        Server["Spring WebFlux server<br/>Railway"]
+    subgraph Cloud["☁️ Sydney"]
+        Server["Spring WebFlux server<br/>AWS Lightsail"]
         DB[("MongoDB Atlas")]
     end
 
@@ -121,7 +121,7 @@ flowchart LR
 | Server | Java 25, Spring Boot 4, WebFlux (reactive), WebSocket |
 | Data | MongoDB Atlas; concurrency through conditional updates and unique indexes, no transactions |
 | Auth · Push | Firebase Authentication, Expo push service, Web Push |
-| Infra | Railway · MongoDB Atlas · Cloudflare Workers, Terraform (state in R2), GitHub Actions |
+| Infra | AWS Lightsail · MongoDB Atlas · Cloudflare Workers, Terraform (state in R2), GitHub Actions |
 
 Built **small**, to fit a small service. One server holds every real-time connection, so there is no Redis or other
 broker in between, and the Buddy's hunger and 💩 are **computed when looked at**, with no scheduler. The decisions
@@ -134,7 +134,7 @@ and the reasons behind them are in the [server design](docs/server-design.md) (K
 ```text
 app/      Expo app (iOS · web)
 server/   Spring WebFlux server
-infra/    Terraform (Railway · Atlas · Cloudflare)
+infra/    Terraform (Atlas · Cloudflare)
 docs/     Product and server design docs (Korean)
 ```
 
@@ -158,7 +158,7 @@ On an iPhone, open it with a development build. The commands are collected in [C
 - [x] Start right away as a guest, link an account (Google on the web), create · invite · leave a room
 - [x] Real-time chat (reconnecting, exactly-once sending, typing · read · online)
 - [x] Buddy care and growth, the together bonus
-- [x] Deployment (server on Railway · web on Cloudflare Workers · DB on Atlas)
+- [x] Deployment (server on AWS Lightsail · web on Cloudflare Workers · DB on Atlas)
 - [x] Buddy pixel character and animations (eating · 💩 · evolving · reacting to messages)
 - [x] Web Push (the web added to the home screen)
 - [ ] iPhone development build and push notifications

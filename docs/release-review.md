@@ -25,12 +25,12 @@
 - Gmail 환경변수 5개와 토큰 갱신을 확인했다. OAuth 앱은 Production 상태이고 발송 권한이 있다.
   알림 수신은 서버에서 운영자 수신함으로 직접 보내도록 설정되어 있다. 변경 후 실제 문의 알림의 수신 확인은 남아 있다.
 - 현재 Git 관리 파일에서 개인 운영자 메일 주소를 찾지 못했다. 과거 Git 기록은 변경하지 않았다.
-- 출시 성장 속도는 운영자 결정에 따라 레벨당 **5 EXP**로 정했다. 서버 기본값·Terraform 설정·Railway 운영값을 맞춘다.
+- 출시 성장 속도는 운영자 결정에 따라 레벨당 **5 EXP**로 정했다. 서버 기본값·Terraform 설정·서버 `.env` 운영값을 맞춘다.
 - Expo SDK 57 권장 패치 5개(`expo`, `expo-crypto`, `expo-dev-client`, `expo-router`, `expo-splash-screen`)를 맞췄고
   `pnpm dlx expo-doctor`는 21/21을 통과한다. `ios.infoPlist`에 `ITSAppUsesNonExemptEncryption: false`를 넣어
   업로드마다 수출 규정 질문을 받지 않게 했다(표준 암호화만 사용). 앱 검사·테스트 12개·웹 빌드를 다시 통과했다.
-- 이번 점검에서 서버 테스트는 다시 실행하지 않았다(main CI 성공). 레벨당 5 EXP가 Railway 운영값에도 반영됐는지는
-  변수 값이 노출될 수 있어 읽지 않았다. 운영자가 Railway 변수 `BUDDYCHAT_BUDDY_EXPPERLEVEL`을 확인한다.
+- 이번 점검에서 서버 테스트는 다시 실행하지 않았다(main CI 성공). 레벨당 5 EXP가 운영값에도 반영됐는지는
+  변수 값이 노출될 수 있어 읽지 않았다. 운영자가 서버 `.env`의 `BUDDYCHAT_BUDDY_EXPPERLEVEL`을 확인한다(Lightsail 이전 때 Railway 값을 그대로 옮겼다).
 
 ## 수정·검증한 것
 
@@ -96,7 +96,7 @@
 
 - **제출 정보**: App Store Connect에 `https://puny-chat.com/privacy`와 지원 URL `https://puny-chat.com/support`를 등록하고,
   실제 수집 정보에 맞는 개인정보 항목을 채운다. 운영자 표기와 정책 내용은 출시 대상·운영 정보에 맞게 최종 확인한다.
-- **이메일 수신**: Gmail API 권한 승인과 Railway 환경변수 등록은 완료했다. 앱에서 문의를 한 번 접수해
+- **이메일 수신**: Gmail API 권한 승인과 서버 환경변수 등록은 완료했다. 앱에서 문의를 한 번 접수해
   운영자 수신함에 실제 알림이 도착하는지 확인한다. 절차는 `docs/support-operations.md`.
 - **사용자 콘텐츠 대응**: 초대로 연결하는 1:1 서비스라는 점과 신고·대화 종료·기존 코드 무효화·수동 대응 흐름을 심사 설명에 적는다.
   이번 구현에는 콘텐츠 사전 필터나 서비스 전체 영구 차단이 없다. 심사 지침 1.2의 필터링·차단 요건을 모두 충족한다고

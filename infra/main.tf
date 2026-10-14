@@ -1,16 +1,10 @@
-# puny-chat's infrastructure (docs/server-design.md, 인프라): the server on Railway, MongoDB on
-# Atlas, DNS on Cloudflare. The web app is a Cloudflare Worker deployed by CI with wrangler; its
+# puny-chat's infrastructure (docs/server-design.md, 인프라): MongoDB on Atlas and DNS on
+# Cloudflare. The server runs on a shared Lightsail instance (server/deploy), which Terraform does
+# not manage. The web app is a Cloudflare Worker deployed by CI with wrangler; its
 # custom domain comes with that deploy (app/wrangler.jsonc).
 
 locals {
   api_domain = "${var.api_subdomain}.${trimsuffix(data.cloudflare_zone.site.name, ".")}"
-  # Where the web app is served; the server allows these origins, plus local Expo dev servers.
-  web_origins = [
-    "https://${var.web_domain}",
-    "http://localhost:8081",
-    "http://localhost:8082",
-    "http://localhost:8083",
-  ]
 }
 
 data "cloudflare_zone" "site" {
@@ -63,12 +57,16 @@ resource "mongodbatlas_database_user" "server" {
   }
 }
 
-# Railway has no fixed outbound address on the Hobby plan, so the database accepts connections from
-# anywhere; the password (random, 32 characters) and TLS are what protect it.
-resource "mongodbatlas_project_ip_access_list" "anywhere" {
+# Only the Lightsail instance (its static IP) may connect; the password and TLS protect it as well.
+resource "mongodbatlas_project_ip_access_list" "server" {
   project_id = mongodbatlas_project.this.id
-  cidr_block = "0.0.0.0/0"
-  comment    = "Railway (no static egress IP)"
+  cidr_block = "${var.server_ip}/32"
+  comment    = "Lightsail quant-lab-02"
+}
+
+moved {
+  from = mongodbatlas_project_ip_access_list.anywhere
+  to   = mongodbatlas_project_ip_access_list.server
 }
 
 locals {
@@ -82,52 +80,6 @@ locals {
 resource "tls_private_key" "vapid" {
   algorithm   = "ECDSA"
   ecdsa_curve = "P256"
-}
-
-# --- Server: Railway ---
-
-resource "railway_project" "this" {
-  name        = "puny-chat"
-  description = "puny-chat server (Spring Boot)"
-  default_environment = {
-    name = "production"
-  }
-}
-
-# Deployed by CI (railway up from server/, which has the Dockerfile and railway.json), not from
-# the repository on every push: it deploys only after the checks pass.
-resource "railway_service" "server" {
-  name       = "server"
-  project_id = railway_project.this.id
-
-  # One replica: realtime state (connections, presence, typing) lives in memory.
-  regions = [
-    {
-      region       = var.railway_region
-      num_replicas = 1
-    }
-  ]
-}
-
-resource "railway_variable_collection" "server" {
-  environment_id = railway_project.this.default_environment.id
-  service_id     = railway_service.server.id
-
-  variables = concat(
-    [
-      { name = "PORT", value = "8080" },
-      { name = "SPRING_MONGODB_URI", value = local.mongodb_uri },
-      { name = "SPRING_MONGODB_DATABASE", value = "buddychat" },
-      { name = "CORS_ALLOWED_ORIGINS", value = join(",", local.web_origins) },
-      { name = "BUDDYCHAT_PUSH_VAPIDPRIVATEKEY", value = tls_private_key.vapid.private_key_pem_pkcs8 },
-      { name = "BUDDYCHAT_PUSH_VAPIDPUBLICKEY", value = tls_private_key.vapid.public_key_pem },
-      # Memory is billed as used: a fixed, small heap instead of a share of the machine.
-      { name = "JAVA_TOOL_OPTIONS", value = "-Xmx384m -XX:+UseSerialGC" },
-    ],
-    var.buddy_exp_per_level == null ? [] : [
-      { name = "BUDDYCHAT_BUDDY_EXPPERLEVEL", value = tostring(var.buddy_exp_per_level) },
-    ],
-  )
 }
 
 # The server runs on the Lightsail instance (server/deploy). Caddy there gets its own certificate,
