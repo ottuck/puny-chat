@@ -63,7 +63,9 @@ type Act = 'dance' | 'sing' | 'refuse' | 'hiccup' | 'startle' | 'lookAround' | '
 // A one-word message for the buddy ("밥", "춤", …, features/buddy/chat-words.ts), or the tour's
 // script asking for a dance or a song.
 // "job": the buddy does its work (only asked for by the art preview, app/preview.tsx).
-export type Cue = { id: string; kind: ChatWord | Mood | 'job' };
+// The happenings can be cued too, but only the preview screen does (app/preview.tsx).
+type Happening = 'hiccup' | 'startle' | 'lookAround' | 'yawn';
+export type Cue = { id: string; kind: ChatWord | Mood | 'job' | Happening };
 // How long a mood from the chat ("사랑해", "ㅋㅋ", …, chat-words.ts) shows, and what the buddy says.
 type StageMood = Mood | 'coPet';
 const MOOD_MS: Record<StageMood, number> = {
@@ -520,7 +522,15 @@ export function BuddyStage({
   useEffect(() => {
     if (!cue || egg) return;
     const timer = setTimeout(() => {
-      if (cue.kind === 'dance' || cue.kind === 'sing' || cue.kind === 'job')
+      if (
+        cue.kind === 'dance' ||
+        cue.kind === 'sing' ||
+        cue.kind === 'job' ||
+        cue.kind === 'hiccup' ||
+        cue.kind === 'startle' ||
+        cue.kind === 'lookAround' ||
+        cue.kind === 'yawn'
+      )
         perform(cue.kind, true);
       else if (cue.kind !== 'feed' && cue.kind !== 'clean') startMood(cue.kind);
       else if (cue.kind === 'feed' && !canFeed) {

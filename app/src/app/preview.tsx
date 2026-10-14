@@ -8,6 +8,8 @@ import type { BuddyJob, BuddyStage, BuddyView } from '@/features/buddy/api';
 import type { Mood } from '@/features/buddy/chat-words';
 import { BuddyStage as Stage, type Cue } from '@/features/buddy/components/buddy-stage';
 import { JOB_ICON, JOB_ORDER } from '@/features/buddy/jobs';
+import { PixelSprite } from '@/features/buddy/pixel/pixel-sprite';
+import { BUDDY_PALETTE, buddyFrame, POSES_IN_ORDER } from '@/features/buddy/pixel/sprites';
 import type { Reaction, ReactionKind } from '@/features/buddy/reactions';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
@@ -17,6 +19,7 @@ import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
 const STAGES: BuddyStage[] = ['EGG', 'BABY', 'CHILD', 'ADULT'];
 const LEVEL: Record<BuddyStage, number> = { EGG: 1, BABY: 3, CHILD: 10, ADULT: 20 };
+const HAPPENINGS = ['hiccup', 'startle', 'lookAround', 'yawn'] as const;
 const MOODS: Mood[] = ['laugh', 'love', 'cheer', 'comfort', 'goodnight', 'morning'];
 const REACTIONS: ReactionKind[] = [
   'message',
@@ -95,6 +98,29 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
+// Every pose of the chosen stage side by side, still and large, so the faces can be compared at a
+// glance.
+function PoseSheet({ stage }: { stage: BuddyStage }) {
+  const colors = useColors();
+  return (
+    <View style={styles.group}>
+      <Text style={[styles.title, { color: colors.textMuted }]}>poses</Text>
+      <View style={styles.row}>
+        {POSES_IN_ORDER.map((pose) => (
+          <View key={pose} style={[styles.pose, { backgroundColor: colors.stage }]}>
+            <PixelSprite
+              frame={buddyFrame(stage, pose)}
+              palette={BUDDY_PALETTE}
+              scale={stage === 'ADULT' ? 4 : 5}
+            />
+            <Text style={[styles.poseName, { color: colors.textMuted }]}>{pose}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 function Preview() {
   const colors = useColors();
   const { height: windowHeight } = useWindowDimensions();
@@ -144,6 +170,9 @@ function Preview() {
           <Chip label="job work" onPress={() => setCue({ id: randomUUID(), kind: 'job' })} />
           <Chip label="dance" onPress={() => setCue({ id: randomUUID(), kind: 'dance' })} />
           <Chip label="sing" onPress={() => setCue({ id: randomUUID(), kind: 'sing' })} />
+          {HAPPENINGS.map((h) => (
+            <Chip key={h} label={h} onPress={() => setCue({ id: randomUUID(), kind: h })} />
+          ))}
         </Group>
         <Group title="chat words">
           {MOODS.map((m) => (
@@ -165,6 +194,7 @@ function Preview() {
           />
           <Chip label="partner pets" onPress={() => setPartnerPet({ id: randomUUID() })} />
         </Group>
+        {stage !== 'EGG' && <PoseSheet stage={stage} />}
       </ScrollView>
     </SafeAreaView>
   );
@@ -177,5 +207,7 @@ const styles = StyleSheet.create({
   group: { gap: 6, paddingHorizontal: 12 },
   title: { fontSize: 12, fontWeight: '700' },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  pose: { alignItems: 'center', justifyContent: 'flex-end', padding: 4, borderRadius: 6 },
+  poseName: { fontSize: 10 },
   chip: { borderWidth: 1, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6 },
 });
