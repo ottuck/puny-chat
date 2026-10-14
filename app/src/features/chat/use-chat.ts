@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, Platform } from 'react-native';
 
 import type { BuddyView } from '@/features/buddy/api';
-import { chatWord } from '@/features/buddy/chat-words';
+import { chatMood, chatWord } from '@/features/buddy/chat-words';
 import type { Cue } from '@/features/buddy/components/buddy-stage';
 import { missedEvolution, type Reaction, reactionTo } from '@/features/buddy/reactions';
 import { ApiError } from '@/lib/api';
@@ -87,10 +87,14 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   }, [messages, onRoomLost, onRoomChanged, onBuddy, myId, reads]);
   // The latest live event for the buddy to react to (see reactionTo).
   const [reaction, setReaction] = useState<Reaction | null>(null);
-  // The latest one-word message ("밥", "춤", …) from either of us, for the buddy to answer.
+  // The latest one-word message ("밥", "춤", …) or mood word ("사랑해", "ㅋㅋ", …) from either of us,
+  // for the buddy to answer.
   const [cue, setCue] = useState<Cue | null>(null);
   const cueFrom = useCallback((message: ServerMessage) => {
-    const kind = message.type === 'TEXT' && message.text ? chatWord(message.text) : null;
+    const kind =
+      message.type === 'TEXT' && message.text
+        ? (chatWord(message.text) ?? chatMood(message.text))
+        : null;
     // A resent message is acked again with the same id: answered once.
     if (kind) setCue((prev) => (prev?.id === message.id ? prev : { id: message.id, kind }));
   }, []);

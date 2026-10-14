@@ -22,7 +22,33 @@ export type Line =
   | 'ateYet'
   | 'whatsUp'
   | 'howWasToday'
-  | 'together';
+  | 'together'
+  // Felt from a word in the chat (chat-words.ts, chatMood).
+  | 'laugh'
+  | 'love'
+  | 'goodnight'
+  | 'cheer'
+  | 'comfort'
+  // Both are here now, and both petted it.
+  | 'bothHere'
+  | 'coPet'
+  // Questions to start a talk (ASKS).
+  | 'bestThing'
+  | 'wantEat'
+  | 'wantGo'
+  | 'weekend'
+  | 'watching'
+  | 'music'
+  | 'sleptWell'
+  | 'funny'
+  | 'wish'
+  | 'favFood'
+  | 'tired'
+  // Small things that happen on their own.
+  | 'hiccup'
+  | 'startle'
+  | 'lookAround'
+  | 'yawn';
 
 const SAY_MS = 3000;
 const CHATTER_MIN_MS = 60_000;

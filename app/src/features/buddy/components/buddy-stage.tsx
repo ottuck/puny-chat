@@ -37,7 +37,7 @@ import {
   ZZZ,
 } from '../pixel/sprites';
 import type { Reaction, ReactionKind } from '../reactions';
-import type { ChatWord } from '../chat-words';
+import type { ChatWord, Mood } from '../chat-words';
 import { type Line, pick, useBuddyTalk } from '../use-buddy-talk';
 import { SpeechBubble } from './speech-bubble';
 import { decorFor, Plant, plantRoom as plantRoomFor, WallDecor } from './stage-decor';
@@ -60,7 +60,24 @@ const PET_MS = 900;
 type Act = 'dance' | 'sing' | 'refuse';
 // A one-word message for the buddy ("밥", "춤", …, features/buddy/chat-words.ts), or the tour's
 // script asking for a dance or a song.
-export type Cue = { id: string; kind: ChatWord };
+export type Cue = { id: string; kind: ChatWord | Mood };
+// How long a mood from the chat ("사랑해", "ㅋㅋ", …, chat-words.ts) shows, and what the buddy says.
+const MOOD_MS: Record<Mood, number> = {
+  laugh: 1800,
+  love: 2200,
+  goodnight: 4000,
+  cheer: 1800,
+  comfort: 1800,
+  morning: 1400,
+};
+const MOOD_LINE: Record<Mood, Line> = {
+  laugh: 'laugh',
+  love: 'love',
+  goodnight: 'goodnight',
+  cheer: 'cheer',
+  comfort: 'comfort',
+  morning: 'morning',
+};
 const ACT_REPEATS = 1;
 const ACT_MS: Record<Act, number> = { dance: 300, sing: 800, refuse: 900 };
 // How often, left alone, it dances or sings.
@@ -264,6 +281,8 @@ export function BuddyStage({
   const [facingLeft, setFacingLeft] = useState(false);
   const [petted, setPetted] = useState(false);
   const petTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [mood, setMood] = useState<Mood | null>(null);
+  const moodTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const placed = useRef(false);
   const [x] = useState(() => new Animated.Value(0));
   const [hop] = useState(() => new Animated.Value(0));
@@ -277,8 +296,8 @@ export function BuddyStage({
   const [onRightHalf, setOnRightHalf] = useState(false);
 
   const egg = buddy.stage === 'EGG';
-  // A reaction wakes a sleeping buddy for a moment.
-  const sleeping = night && !active && !petted;
+  // A reaction wakes a sleeping buddy for a moment, "good night" puts it to sleep by day too.
+  const sleeping = ((night && !mood) || mood === 'goodnight') && !active && !petted;
   const idleFrame = buddyFrame(buddy.stage, 'idle');
   const scale = gridScale(height, idleFrame.length);
   const spriteWidth = idleFrame[0].length * scale;
@@ -295,7 +314,7 @@ export function BuddyStage({
   const acting = act !== null;
   const { line, say } = useBuddyTalk({
     stage: buddy.stage,
-    quiet: sleeping || !!active || acting,
+    quiet: sleeping || !!active || acting || !!mood,
     greets,
   });
 
@@ -315,12 +334,32 @@ export function BuddyStage({
     }, ACT_MS[next]);
   }, []);
 
+  // A word from the chat that moves it: for a moment it shows how it feels, and says so once grown.
+  const startMood = useCallback(
+    (next: Mood) => {
+      if (actTimer.current) clearTimeout(actTimer.current);
+      if (petTimer.current) clearTimeout(petTimer.current);
+      if (moodTimer.current) clearTimeout(moodTimer.current);
+      actTimer.current = null;
+      petTimer.current = null;
+      setAct(null);
+      setPetted(false);
+      setMood(next);
+      say(MOOD_LINE[next]);
+      moodTimer.current = setTimeout(() => {
+        moodTimer.current = null;
+        setMood(null);
+      }, MOOD_MS[next]);
+    },
+    [say],
+  );
+
   // Wander: walk to a random spot, look around, repeat. A hungry or eating buddy stays by the bowl,
   // a sleeping one stays put, and an egg only wobbles.
   useEffect(() => {
     if (width === 0) return;
-    // Dancing or singing on the spot.
-    if (acting) {
+    // Dancing, singing or feeling something on the spot.
+    if (acting || mood) {
       x.stopAnimation();
       return;
     }
@@ -367,7 +406,7 @@ export function BuddyStage({
       stopped = true;
       current?.stop();
     };
-  }, [width, settled, acting, eating, buddy.hungry, minX, maxX, x]);
+  }, [width, settled, acting, mood, eating, buddy.hungry, minX, maxX, x]);
 
   // A one-word message: dance or sing; for "밥" when full or "청소" with nothing to clean, an
   // answer instead of nothing (the care itself, when needed, comes from the server as an event).
@@ -377,6 +416,7 @@ export function BuddyStage({
     if (!cue || egg) return;
     const timer = setTimeout(() => {
       if (cue.kind === 'dance' || cue.kind === 'sing') perform(cue.kind, true);
+      else if (cue.kind !== 'feed' && cue.kind !== 'clean') startMood(cue.kind);
       else if (cue.kind === 'feed' && !canFeed) {
         perform('refuse', true);
         say('full');
@@ -402,15 +442,39 @@ export function BuddyStage({
     return () => clearTimeout(timer);
   }, [reaction]);
 
+  // Little hops for a mood; a good night sleeps instead.
+  useEffect(() => {
+    if (!mood) return;
+    const jump = (h: number, ms = 140) =>
+      Animated.sequence([
+        Animated.timing(hop, { toValue: -h, duration: ms, useNativeDriver: NATIVE_DRIVER }),
+        Animated.timing(hop, { toValue: 0, duration: ms, useNativeDriver: NATIVE_DRIVER }),
+      ]);
+    const moves: Record<Mood, Animated.CompositeAnimation | null> = {
+      laugh: Animated.sequence([jump(6, 90), jump(6, 90), jump(6, 90), jump(6, 90)]),
+      love: Animated.sequence([jump(10), jump(6)]),
+      goodnight: null,
+      cheer: Animated.sequence([jump(16), jump(16)]),
+      comfort: jump(4, 220),
+      morning: jump(12),
+    };
+    const move = moves[mood];
+    move?.start();
+    return () => {
+      move?.stop();
+      hop.setValue(0);
+    };
+  }, [mood, hop]);
+
   // Left alone, now and then a dance or a song.
   useEffect(() => {
-    if (egg || settled || active || acting || petted) return;
+    if (egg || settled || active || acting || petted || mood) return;
     const timer = setTimeout(
       () => perform(Math.random() < 0.5 ? 'dance' : 'sing'),
       IDLE_ACT_MIN_MS + Math.random() * (IDLE_ACT_MAX_MS - IDLE_ACT_MIN_MS),
     );
     return () => clearTimeout(timer);
-  }, [egg, settled, active, acting, petted, perform]);
+  }, [egg, settled, active, acting, petted, mood, perform]);
 
   // Little hops while dancing, notes rising while singing.
   useEffect(() => {
@@ -576,6 +640,7 @@ export function BuddyStage({
     () => () => {
       if (petTimer.current) clearTimeout(petTimer.current);
       if (actTimer.current) clearTimeout(actTimer.current);
+      if (moodTimer.current) clearTimeout(moodTimer.current);
     },
     [],
   );
@@ -583,7 +648,8 @@ export function BuddyStage({
   // Petting: glad (and a thank-you once grown), or a dance, or a song.
   const pet = () => {
     // Timer refs lock immediately, including taps before React renders the new pose.
-    if (egg || busy || active || acting || petted || actTimer.current || petTimer.current) return;
+    if (egg || busy || active || acting || petted || mood || actTimer.current || petTimer.current)
+      return;
     const roll = Math.random();
     if (roll < 0.3) return perform('dance');
     if (roll < 0.6) return perform('sing');
@@ -595,7 +661,7 @@ export function BuddyStage({
     }, PET_MS);
   };
 
-  const pose: Pose = eating
+  const basePose: Pose = eating
     ? active?.phase === 'main'
       ? tick % 2 === 0
         ? 'eat'
@@ -631,12 +697,32 @@ export function BuddyStage({
                       ? 'blink'
                       : 'idle';
 
+  // A mood from the chat shows on the face unless something bigger (eating, straining) is going on.
+  const moodPose: Pose | null =
+    mood === 'laugh'
+      ? tick % 2 === 0
+        ? 'happy'
+        : 'step'
+      : mood === 'love' || mood === 'cheer' || mood === 'morning'
+        ? 'happy'
+        : mood === 'goodnight'
+          ? 'sleep'
+          : mood === 'comfort'
+            ? 'idle'
+            : null;
+  const pose: Pose =
+    moodPose && !eating && active?.kind !== 'pooped' && !acting ? moodPose : basePose;
+
   // While evolving, the old and new looks take turns quickly.
   const previousStage = STAGE_ORDER[Math.max(0, STAGE_ORDER.indexOf(buddy.stage) - 1)];
   const frame =
     evolving && tick % 2 === 0 ? buddyFrame(previousStage, 'idle') : buddyFrame(buddy.stage, pose);
 
-  const showHeart = petted || (eating && active?.phase === 'after') || active?.kind === 'together';
+  const showHeart =
+    petted ||
+    mood === 'love' ||
+    (eating && active?.phase === 'after') ||
+    active?.kind === 'together';
   const sparkling = active?.kind === 'cleaned';
   const bursting = active?.kind === 'evolved' && active.phase === 'after';
   const levelingUp = active?.kind === 'levelUp';

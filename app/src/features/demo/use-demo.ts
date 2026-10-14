@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { type BuddyStage, type BuddyView, TOGETHER_EXP } from '@/features/buddy/api';
+import { chatMood } from '@/features/buddy/chat-words';
 import { STAGE_ORDER } from '@/features/buddy/pixel/sprites';
 import type { Cue } from '@/features/buddy/components/buddy-stage';
 import type { Reaction, ReactionKind } from '@/features/buddy/reactions';
@@ -200,6 +201,9 @@ export function useDemo({ buddyName, lineText, replyText }: Options) {
   const send = useCallback(
     (value: string) => {
       text(DEMO_ME, value);
+      // A word that moves the buddy ("사랑해", "ㅋㅋ", …), as in a real room.
+      const mood = chatMood(value);
+      if (mood) setCue({ id: `mood-${replies.current}-${value}`, kind: mood });
       const reply = REPLIES[replies.current++ % REPLIES.length];
       later(REPLY_AFTER_MS, () => setPartnerTyping(true));
       later(REPLY_AFTER_MS + TYPING_MS, () => text(DEMO_PARTNER, replyRef.current(reply)));
