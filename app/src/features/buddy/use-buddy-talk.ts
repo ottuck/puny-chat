@@ -54,30 +54,30 @@ export type Line =
   | 'chef2'
   | 'chef3'
   | 'chef4'
-  | 'cleaner1'
-  | 'cleaner2'
-  | 'cleaner3'
-  | 'cleaner4'
-  | 'owl1'
-  | 'owl2'
-  | 'owl3'
-  | 'owl4'
+  | 'gardener1'
+  | 'gardener2'
+  | 'gardener3'
+  | 'gardener4'
+  | 'dj1'
+  | 'dj2'
+  | 'dj3'
+  | 'dj4'
   | 'comedian1'
   | 'comedian2'
   | 'comedian3'
   | 'comedian4'
-  | 'romantic1'
-  | 'romantic2'
-  | 'romantic3'
-  | 'romantic4'
-  | 'chatter1'
-  | 'chatter2'
-  | 'chatter3'
-  | 'chatter4'
+  | 'poet1'
+  | 'poet2'
+  | 'poet3'
+  | 'poet4'
+  | 'barista1'
+  | 'barista2'
+  | 'barista3'
+  | 'barista4'
   | 'chefFed'
-  | 'cleanerCleaned'
+  | 'gardenerCleaned'
   | 'comedianLaugh'
-  | 'romanticLove';
+  | 'poetLove';
 
 const SAY_MS = 3000;
 const CHATTER_MIN_MS = 60_000;
@@ -103,14 +103,14 @@ const ASKS: Line[] = [
 // question, and when it does its work alone.
 export const JOB_LINES: Record<BuddyJob, Line[]> = {
   CHEF: ['chef1', 'chef2', 'chef3', 'chef4'],
-  CLEANER: ['cleaner1', 'cleaner2', 'cleaner3', 'cleaner4'],
-  OWL: ['owl1', 'owl2', 'owl3', 'owl4'],
+  GARDENER: ['gardener1', 'gardener2', 'gardener3', 'gardener4'],
+  DJ: ['dj1', 'dj2', 'dj3', 'dj4'],
   COMEDIAN: ['comedian1', 'comedian2', 'comedian3', 'comedian4'],
-  ROMANTIC: ['romantic1', 'romantic2', 'romantic3', 'romantic4'],
-  CHATTERBOX: ['chatter1', 'chatter2', 'chatter3', 'chatter4'],
+  POET: ['poet1', 'poet2', 'poet3', 'poet4'],
+  BARISTA: ['barista1', 'barista2', 'barista3', 'barista4'],
 };
-// A chatterbox talks this much more often, and also while the two are chatting.
-const CHATTERBOX_PACE = 0.6;
+// A barista talks this much more often, and also while the two are chatting.
+const BARISTA_PACE = 0.6;
 // How often an adult with a job says one of its own lines instead of a question.
 const OWN_LINE_CHANCE = 0.35;
 
@@ -214,14 +214,14 @@ export function useBuddyTalk({
   }, [greets, say]);
 
   // Now and then a question of its own, when the two have not been writing for a while, or a line
-  // of its job's. While they are chatting it keeps out of the way (a chatterbox does not).
+  // of its job's. While they are chatting it keeps out of the way (a barista does not).
   useEffect(() => {
     if (!canTalk || quiet || line) return;
-    const pace = job === 'CHATTERBOX' ? CHATTERBOX_PACE : 1;
+    const pace = job === 'BARISTA' ? BARISTA_PACE : 1;
     const timer = setTimeout(
       () => {
         const lively = Date.now() - lastTalkRef.current < QUIET_CHAT_MS;
-        if (lively && job !== 'CHATTERBOX') {
+        if (lively && job !== 'BARISTA') {
           setSkipped((count) => count + 1);
           return;
         }

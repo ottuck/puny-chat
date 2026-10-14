@@ -5,23 +5,23 @@ import org.jspecify.annotations.Nullable;
 /**
  * What a buddy grows up to be, from how the two raised it (docs/fun-improvements.md, 5). Nobody
  * picks it: each job has points from what they did, and the highest wins when the buddy becomes an
- * adult. Ties go to the job listed first; with too few points for any it is the chatterbox.
+ * adult. Ties go to the job listed first; with too few points for any it is the barista.
  */
 public enum BuddyJob {
     // Meals given.
     CHEF,
     // Poops cleaned up.
-    CLEANER,
+    GARDENER,
     // Messages written at night (23:00 to 7:00, Japan time), three to a point.
-    OWL,
+    DJ,
     // Messages with a laugh in them, three to a point.
     COMEDIAN,
     // Messages with a "love you" in them, two to a point.
-    ROMANTIC,
+    POET,
     // Nothing stood out.
-    CHATTERBOX;
+    BARISTA;
 
-    /** Below this for every job the buddy is a chatterbox. */
+    /** Below this for every job the buddy is a barista. */
     static final int MIN_POINTS = 5;
 
     static final int NIGHT_PER_POINT = 3;
@@ -31,11 +31,11 @@ public enum BuddyJob {
     private int points(Buddy buddy) {
         return switch (this) {
             case CHEF -> buddy.fed();
-            case CLEANER -> buddy.cleanedUp();
-            case OWL -> buddy.nights() / NIGHT_PER_POINT;
+            case GARDENER -> buddy.cleanedUp();
+            case DJ -> buddy.nights() / NIGHT_PER_POINT;
             case COMEDIAN -> buddy.laughs() / LAUGH_PER_POINT;
-            case ROMANTIC -> buddy.loves() / LOVE_PER_POINT;
-            case CHATTERBOX -> 0;
+            case POET -> buddy.loves() / LOVE_PER_POINT;
+            case BARISTA -> 0;
         };
     }
 
@@ -43,7 +43,7 @@ public enum BuddyJob {
     private record Best(BuddyJob job, int points) {}
 
     private static Best best(Buddy buddy) {
-        Best best = new Best(CHATTERBOX, 0);
+        Best best = new Best(BARISTA, 0);
         for (BuddyJob job : values()) {
             int points = job.points(buddy);
             if (points > best.points()) best = new Best(job, points);
@@ -54,7 +54,7 @@ public enum BuddyJob {
     /** The job this buddy would have if it became an adult now. */
     static BuddyJob decide(Buddy buddy) {
         Best best = best(buddy);
-        return best.points() >= MIN_POINTS ? best.job() : CHATTERBOX;
+        return best.points() >= MIN_POINTS ? best.job() : BARISTA;
     }
 
     /** Where it is heading as a child; null until there is anything to go by. */
