@@ -22,6 +22,7 @@ import org.jspecify.annotations.Nullable;
     @JsonSubTypes.Type(value = ServerEvent.Presence.class, name = "presence"),
     @JsonSubTypes.Type(value = ServerEvent.Typing.class, name = "typing"),
     @JsonSubTypes.Type(value = ServerEvent.Read.class, name = "read"),
+    @JsonSubTypes.Type(value = ServerEvent.Pet.class, name = "pet"),
     @JsonSubTypes.Type(value = ServerEvent.Error.class, name = "error"),
     @JsonSubTypes.Type(value = ServerEvent.Pong.class, name = "pong"),
 })
@@ -65,6 +66,9 @@ public sealed interface ServerEvent {
 
     /** A member has read the room up to {@code messageId}. */
     record Read(String userId, String messageId) implements ServerEvent {}
+
+    /** A member petted the buddy just now (docs/fun-improvements.md, 2). Not stored; only seen live. */
+    record Pet(String userId) implements ServerEvent {}
 
     /** {@code clientMessageId} is set when a send failed, so the app can mark that message. */
     record Error(String code, @Nullable String clientMessageId) implements ServerEvent {}

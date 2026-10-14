@@ -137,6 +137,7 @@ client → server
   { type: "send", clientMessageId, text }
   { type: "typing", typing: true|false }          입력 중이면 3초마다 다시 보낸다
   { type: "read", messageId }                     화면에 보이는 가장 최근 상대 메시지(또는 Buddy 이벤트)
+  { type: "pet" }                                  버디를 쓰다듬었다. 저장하지 않고 상대에게 전달만 한다
   { type: "ping" }
 
 server → client
@@ -152,6 +153,7 @@ server → client
   { type: "typing", userId, typing }              다른 멤버에게만. 6초 동안 다시 안 오면 앱이 지운다
   { type: "presence", userId, online }            그 사용자의 첫 연결이 열리거나 마지막 연결이 닫힐 때
   { type: "read", userId, messageId }             읽음 위치가 앞으로 움직였을 때만
+  { type: "pet", userId }                          상대가 방금 버디를 쓰다듬었다. 다른 멤버에게만, 저장하지 않는다
   { type: "error", code }
   { type: "pong" }
 ```

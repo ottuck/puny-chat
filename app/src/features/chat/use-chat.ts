@@ -16,6 +16,7 @@ import { fromServer, type Message, redactDeletedActor, type ServerMessage } from
 // While typing, "typing" is repeated this often; the partner drops it when it stops coming.
 const TYPING_REPEAT_MS = 3_000;
 const TYPING_TTL_MS = 6_000;
+const HERE_AGAIN_MS = 10 * 60_000;
 
 // Newest first, which is the order the inverted list renders. My unconfirmed messages have no
 // server id yet and sit on top; the rest follow the server's order (ids increase over time).
@@ -90,6 +91,17 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   // The latest one-word message ("밥", "춤", …) or mood word ("사랑해", "ㅋㅋ", …) from either of us,
   // for the buddy to answer.
   const [cue, setCue] = useState<Cue | null>(null);
+  // The partner just petted the buddy; the stage sets it against this user's own pets (a pet of
+  // both within seconds is a bigger moment, docs/fun-improvements.md, 2).
+  const [partnerPet, setPartnerPet] = useState<{ id: string } | null>(null);
+  // When the partner's arrival last made the buddy cheer: once in a while, not at every reconnect.
+  const hereAt = useRef(0);
+  const cheerPartnerHere = useCallback(() => {
+    const now = Date.now();
+    if (now - hereAt.current < HERE_AGAIN_MS) return;
+    hereAt.current = now;
+    setReaction({ id: `here-${now}`, kind: 'here' });
+  }, []);
   // When a text last came or went live, for the buddy to start a talk only when it is quiet.
   const [lastTalkAt, setLastTalkAt] = useState(0);
   const cueFrom = useCallback((message: ServerMessage) => {
@@ -191,6 +203,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
       },
       onReady: (onlineNow, readsNow, version) => {
         setOnline(onlineNow);
+        if (onlineNow.length > 0) cheerPartnerHere();
         setReads(readsNow);
         readsRef.current = readsNow;
         // Anything sent before the connection dropped may not have arrived.
@@ -233,8 +246,10 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
           const without = prev.filter((id) => id !== userId);
           return isOnline ? [...without, userId] : without;
         });
-        if (!isOnline) setTypingOf(userId, false);
+        if (isOnline) cheerPartnerHere();
+        else setTypingOf(userId, false);
       },
+      onPet: () => setPartnerPet({ id: randomUUID() }),
       onTyping: setTypingOf,
       onRead: (userId, messageId) =>
         setReads((prev) =>
@@ -274,7 +289,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
       for (const timer of timers.values()) clearTimeout(timer);
       timers.clear();
     };
-  }, [apply, cueFrom, markStatus, setTypingOf]);
+  }, [apply, cheerPartnerHere, cueFrom, markStatus, setTypingOf]);
 
   // While the chat is on screen, tell the others how far I have read: up to the newest message
   // that is not my own. Hex ids sort by time, so comparing strings compares age.
@@ -299,6 +314,8 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
       socketRef.current?.sendTyping(false);
     }
   }, []);
+
+  const notifyPet = useCallback(() => socketRef.current?.sendPet(), []);
 
   const send = useCallback(
     (text: string) => {
@@ -366,6 +383,8 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
     reaction,
     cue,
     lastTalkAt,
+    partnerPet,
+    notifyPet,
     loaded,
     send,
     retry,

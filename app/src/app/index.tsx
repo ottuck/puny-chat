@@ -103,6 +103,9 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
           reaction={chat.reaction}
           cue={chat.cue}
           lastTalkAt={chat.lastTalkAt}
+          partnerPet={chat.partnerPet}
+          onPet={chat.notifyPet}
+          partnerHere={status === 'online' && !!partner && online.includes(partner.id)}
           album={room.album}
         />
         <View style={styles.list}>

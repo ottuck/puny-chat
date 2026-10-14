@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
     @JsonSubTypes.Type(value = ClientEvent.Send.class, name = "send"),
     @JsonSubTypes.Type(value = ClientEvent.Typing.class, name = "typing"),
     @JsonSubTypes.Type(value = ClientEvent.Read.class, name = "read"),
+    @JsonSubTypes.Type(value = ClientEvent.Pet.class, name = "pet"),
     @JsonSubTypes.Type(value = ClientEvent.Ping.class, name = "ping"),
 })
 sealed interface ClientEvent {
@@ -23,6 +24,9 @@ sealed interface ClientEvent {
 
     /** The newest message the user has seen in the room. */
     record Read(String messageId) implements ClientEvent {}
+
+    /** The user petted the buddy. Only passed on to the other member, never stored. */
+    record Pet() implements ClientEvent {}
 
     record Ping() implements ClientEvent {}
 }
