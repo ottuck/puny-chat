@@ -32,9 +32,16 @@ variable "railway_region" {
   default = "asia-southeast1-eqsg3a"
 }
 
+# Sydney, next to the Lightsail instance, so every query stays local. M0 is offered there.
 variable "atlas_region" {
   type    = string
-  default = "AP_SOUTHEAST_1"
+  default = "AP_SOUTHEAST_2"
+}
+
+# The Lightsail instance's static IP (ap-southeast-2), where api.<domain> points.
+variable "server_ip" {
+  type    = string
+  default = "54.79.210.198"
 }
 
 # Launch growth rate, including solo use. Null falls back to the server default (5).
