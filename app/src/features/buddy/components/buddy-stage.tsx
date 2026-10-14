@@ -402,13 +402,18 @@ export function BuddyStage({
   const eating = active?.kind === 'fed';
   const settled = sleeping || buddy.hungry || egg || eating || evolving;
   const acting = act !== null;
-  const { line, say } = useBuddyTalk({
+  const { line, say, hush } = useBuddyTalk({
     stage: buddy.stage,
     quiet: sleeping || !!active || acting || !!mood,
     greets,
     lastTalkAt,
     job,
   });
+  // The evolution has the stage to itself: what was being said ("배고파…") goes, and nothing is
+  // shown over the growing and shrinking body until it settles.
+  useEffect(() => {
+    if (evolving) hush();
+  }, [evolving, hush]);
 
   const perform = useCallback(
     (next: Act, replaceCurrent = false) => {
@@ -1222,7 +1227,7 @@ export function BuddyStage({
             <PixelSprite frame={NOTE} palette={BUDDY_PALETTE} scale={4} />
           </Animated.View>
         ) : null}
-        {line ? (
+        {line && !evolving ? (
           <SpeechBubble
             text={t(`buddy.say.${line}`)}
             side={onRightHalf ? 'left' : 'right'}
