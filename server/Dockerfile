@@ -13,7 +13,8 @@ RUN ./gradlew --no-daemon bootJar \
     && java -Djarmode=tools -jar build/libs/app.jar extract --layers --launcher --destination extracted
 
 FROM eclipse-temurin:25-jre
-# Links the GHCR package to this (public) repository, which makes the package public too.
+# Links the GHCR package to this repository. A new package is private: set it to public once in the
+# package settings on GitHub, because the instance pulls it without logging in (the image holds no secrets).
 LABEL org.opencontainers.image.source="https://github.com/ottuck/puny-chat"
 RUN useradd --system --uid 1001 app
 USER app

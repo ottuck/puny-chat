@@ -5,4 +5,4 @@ Requires=docker.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/flock -n /run/puny-chat-update.lock /opt/puny-chat/update.sh
+ExecStart=/usr/bin/flock -n /run/puny-chat-update.lock /bin/sh /opt/puny-chat/update.sh

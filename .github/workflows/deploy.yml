@@ -66,10 +66,22 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/puny-chat-server:latest
             ghcr.io/${{ github.repository_owner }}/puny-chat-server:${{ github.sha }}
+          labels: org.opencontainers.image.revision=${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Up to five minutes: the timer, the pull, then Spring Boot starting.
+      # update.sh publishes the revision it is running at /_revision once the new container is up.
+      # Without this the old container's health would pass the check below.
+      - name: Wait for the new release
+        if: steps.changed.outputs.deploy == 'true'
+        run: |
+          for i in $(seq 1 60); do
+            if [ "$(curl -fsS "${{ vars.EXPO_PUBLIC_API_URL }}/_revision" || true)" = "${{ github.sha }}" ]; then exit 0; fi
+            sleep 5
+          done
+          echo "the instance did not pick up ${{ github.sha }}" && exit 1
+
+      # Up to five minutes: Spring Boot starting.
       - name: Health check
         if: steps.changed.outputs.deploy == 'true'
         run: |
