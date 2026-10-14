@@ -847,40 +847,44 @@ export function BuddyStage({
           : act === 'job' && job
             ? jobPose(job, tick)
             : act === 'yawn'
-              ? 'sleep'
-              : act === 'refuse' || act === 'hiccup' || act === 'startle' || act === 'lookAround'
-                ? 'idle'
-                : active?.kind === 'cleaned' ||
-                    active?.kind === 'levelUp' ||
-                    active?.kind === 'together' ||
-                    active?.kind === 'here' ||
-                    (active?.kind === 'evolved' && !evolving) ||
-                    petted
-                  ? 'happy'
-                  : sleeping
-                    ? 'sleep'
-                    : buddy.hungry
-                      ? 'hungry'
-                      : walking
-                        ? tick % 2 === 0
-                          ? 'step'
-                          : 'idle'
-                        : tick % 11 === 0
-                          ? 'blink'
-                          : 'idle';
+              ? 'yawn'
+              : act === 'hiccup'
+                ? 'hiccup'
+                : act === 'startle'
+                  ? 'surprised'
+                  : act === 'refuse' || act === 'lookAround'
+                    ? 'idle'
+                    : active?.kind === 'cleaned' ||
+                        active?.kind === 'levelUp' ||
+                        active?.kind === 'together' ||
+                        active?.kind === 'here' ||
+                        (active?.kind === 'evolved' && !evolving) ||
+                        petted
+                      ? 'happy'
+                      : sleeping
+                        ? 'sleep'
+                        : buddy.hungry
+                          ? 'hungry'
+                          : walking
+                            ? tick % 2 === 0
+                              ? 'step'
+                              : 'idle'
+                            : tick % 11 === 0
+                              ? 'blink'
+                              : 'idle';
 
   // A mood from the chat shows on the face unless something bigger (eating, straining) is going on.
   const moodPose: Pose | null =
     mood === 'laugh'
       ? tick % 2 === 0
-        ? 'happy'
-        : 'step'
+        ? 'laugh'
+        : 'happy'
       : mood === 'love' || mood === 'cheer' || mood === 'morning' || mood === 'coPet'
         ? 'happy'
         : mood === 'goodnight'
           ? 'sleep'
           : mood === 'comfort'
-            ? 'idle'
+            ? 'worried'
             : null;
   const pose: Pose =
     moodPose && !eating && active?.kind !== 'pooped' && !acting ? moodPose : basePose;

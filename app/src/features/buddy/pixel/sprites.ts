@@ -18,6 +18,7 @@ export const BUDDY_PALETTE: Palette = {
   G: '#5DA14E', // leaf shade, stem
   f: '#FF9EB5', // petals
   y: '#FFD166', // flower center
+  m: '#D9576B', // inside of an open mouth
 };
 
 // prettier-ignore
@@ -118,6 +119,7 @@ type Anatomy = {
   base: Frame;
   eyes: [top: number, bottom: number, left: number, right: number];
   mouth: [row: number, from: number, to: number];
+  cheeks: [row: number, left: number, right: number];
   feet: number; // first of the two feet rows
   feetStep: [string, string]; // those rows mid-step
 };
@@ -127,6 +129,7 @@ const ANATOMY: Record<Exclude<BuddyStage, 'EGG'>, Anatomy> = {
     base: BABY,
     eyes: [7, 8, 4, 11],
     mouth: [9, 7, 8],
+    cheeks: [9, 3, 12],
     feet: 14,
     feetStep: ['..kbk......kbk..', '..kkk......kkk..'],
   },
@@ -134,6 +137,7 @@ const ANATOMY: Record<Exclude<BuddyStage, 'EGG'>, Anatomy> = {
     base: CHILD,
     eyes: [9, 10, 5, 14],
     mouth: [11, 9, 10],
+    cheeks: [11, 3, 16],
     feet: 17,
     feetStep: ['....kbk......kbk....', '....kkk......kkk....'],
   },
@@ -141,12 +145,42 @@ const ANATOMY: Record<Exclude<BuddyStage, 'EGG'>, Anatomy> = {
     base: ADULT,
     eyes: [12, 13, 7, 16],
     mouth: [14, 11, 12],
+    cheeks: [14, 5, 18],
     feet: 21,
     feetStep: ['.....kbk........kbk.....', '.....kkk........kkk.....'],
   },
 };
 
-export type Pose = 'idle' | 'step' | 'blink' | 'happy' | 'sleep' | 'hungry' | 'eat' | 'strain';
+export type Pose =
+  | 'idle'
+  | 'step'
+  | 'blink'
+  | 'happy'
+  | 'sleep'
+  | 'hungry'
+  | 'eat'
+  | 'strain'
+  | 'laugh'
+  | 'worried'
+  | 'yawn'
+  | 'hiccup'
+  | 'surprised';
+
+export const POSES_IN_ORDER: readonly Pose[] = [
+  'idle',
+  'step',
+  'blink',
+  'happy',
+  'sleep',
+  'hungry',
+  'eat',
+  'strain',
+  'laugh',
+  'worried',
+  'yawn',
+  'hiccup',
+  'surprised',
+];
 
 type Pixel = [row: number, col: number, key: string];
 
@@ -156,12 +190,47 @@ function paint(frame: Frame, pixels: Pixel[]): Frame {
   return rows.map((row) => row.join(''));
 }
 
-function makePoses({ base, eyes, mouth, feet, feetStep }: Anatomy): Record<Pose, Frame> {
+function makePoses({ base, eyes, mouth, cheeks, feet, feetStep }: Anatomy): Record<Pose, Frame> {
   const [top, bottom, left, right] = eyes;
   const [mouthRow, m1, m2] = mouth;
+  const [cheekRow, cheekLeft, cheekRight] = cheeks;
   const open: Pixel[] = [
     [top, left, 'b'],
     [top, right, 'b'],
+  ];
+  const smiling: Pixel[] = [
+    [bottom, left, 'b'],
+    [bottom, left - 1, 'k'],
+    [bottom, left + 1, 'k'],
+    [bottom, right, 'b'],
+    [bottom, right - 1, 'k'],
+    [bottom, right + 1, 'k'],
+  ];
+  // Eyes shut as short lines.
+  const shut: Pixel[] = [...open, [bottom, left - 1, 'k'], [bottom, right + 1, 'k']];
+  // A small round "o" for a mouth, from the mouth row down.
+  const oMouth: Pixel[] = [
+    [mouthRow + 1, m1 - 1, 'k'],
+    [mouthRow + 1, m2 + 1, 'k'],
+    [mouthRow + 2, m1, 'k'],
+    [mouthRow + 2, m2, 'k'],
+  ];
+  // The mouth opened down, `rows` rows of inside under the usual line, which widens to its edges.
+  const openMouth = (rows: number, wideTop: boolean): Pixel[] => [
+    ...(wideTop
+      ? ([
+          [mouthRow, m1 - 1, 'k'],
+          [mouthRow, m2 + 1, 'k'],
+        ] as Pixel[])
+      : []),
+    ...Array.from({ length: rows }, (_, i): Pixel[] => [
+      [mouthRow + 1 + i, m1 - 1, 'k'],
+      [mouthRow + 1 + i, m1, 'm'],
+      [mouthRow + 1 + i, m2, 'm'],
+      [mouthRow + 1 + i, m2 + 1, 'k'],
+    ]).flat(),
+    [mouthRow + 1 + rows, m1, 'k'],
+    [mouthRow + 1 + rows, m2, 'k'],
   ];
   return {
     idle: base,
@@ -169,14 +238,7 @@ function makePoses({ base, eyes, mouth, feet, feetStep }: Anatomy): Record<Pose,
     // Eyes as short lines.
     blink: paint(base, [...open, [bottom, left - 1, 'k'], [bottom, right + 1, 'k']]),
     // ^ ^
-    happy: paint(base, [
-      [bottom, left, 'b'],
-      [bottom, left - 1, 'k'],
-      [bottom, left + 1, 'k'],
-      [bottom, right, 'b'],
-      [bottom, right - 1, 'k'],
-      [bottom, right + 1, 'k'],
-    ]),
+    happy: paint(base, smiling),
     sleep: paint(base, [...open, [bottom, left - 1, 'k'], [bottom, right - 1, 'k']]),
     // A small, lowered mouth.
     hungry: paint(base, [
@@ -199,6 +261,31 @@ function makePoses({ base, eyes, mouth, feet, feetStep }: Anatomy): Record<Pose,
       [top, right, 'b'],
       [top, right + 1, 'k'],
     ]),
+    // ^ ^ and a wide-open mouth, laughing out loud.
+    laugh: paint(base, [...smiling, ...openMouth(1, true)]),
+    // Brows raised at the inner ends, clear of the eyes, and a little frown: "are you okay?"
+    worried: paint(base, [
+      [top - 2, left + 1, 'k'],
+      [top - 2, right - 1, 'k'],
+      [mouthRow + 1, m1 - 1, 'k'],
+      [mouthRow + 1, m2 + 1, 'k'],
+    ]),
+    // Sleepy eyes and a tall open mouth.
+    yawn: paint(base, [
+      ...open,
+      [bottom, left - 1, 'k'],
+      [bottom, right - 1, 'k'],
+      ...openMouth(2, false),
+    ]),
+    // Eyes squeezed, a small "o" and flushed cheeks: hic!
+    hiccup: paint(base, [
+      ...shut,
+      ...oMouth,
+      [cheekRow, cheekLeft + 1, 'p'],
+      [cheekRow, cheekRight - 1, 'p'],
+    ]),
+    // Eyes grown tall and a small "o".
+    surprised: paint(base, [[top - 1, left, 'k'], [top - 1, right, 'k'], ...oMouth]),
   };
 }
 
