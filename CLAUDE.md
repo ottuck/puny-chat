@@ -15,6 +15,8 @@
 - `docs/` — 기획과 설계 문서, 출시 점검(`release-review.md`)과 App Store 출시 진행(`app-store-release.md`)
 - `.github/workflows/ci.yml` — app(lint / typecheck / test / format), server(spotless / test). Actions 무료 분(월 2,000분)을 아끼려고 같은 코드를
   두 번만 돌린다: `dev`로 가는 PR과 `main` push(배포 관문). `dev` push와 `dev` → `main` PR에서는 돌지 않고, 문서·`infra/`만 바뀐 변경도 건너뛴다.
+  `changes` 잡이 바뀐 파일을 보고 `app/`이 바뀌었을 때만 app 잡을, `server/`가 바뀌었을 때만 server 잡을 돌린다(그 밖의 파일이 바뀌면 둘 다).
+  deploy는 건너뛴 잡이 있어도 실패한 잡이 없으면 돈다.
 - `.github/workflows/deploy.yml` — main에서 CI 통과 후 서버 이미지를 GHCR에 올리고(인스턴스가 1분마다 받아 간다) 웹(Cloudflare Worker, `wrangler deploy`)을 배포
 - 로컬 전용(gitignore): `.claude/`(desktop app preview 설정), `.idea/`, `.env*`
 
