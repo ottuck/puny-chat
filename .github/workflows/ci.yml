@@ -1,16 +1,26 @@
 name: CI
 
-# Documentation-only changes (Markdown, docs/) skip CI.
+# To save Actions minutes (2,000/month on the free plan) the same code never runs more than twice
+# (2026-10-14): once on the work PR into dev, and once on the push to main, which gates the deploy.
+# Pushes to dev and dev -> main PRs are skipped as duplicates.
+# Changes to docs, Markdown, infra (Terraform) and similar files skip CI; such a push deploys nothing.
 on:
   pull_request:
+    branches: [dev]
     paths-ignore:
       - "**/*.md"
       - "docs/**"
+      - "infra/**"
+      - "LICENSE"
+      - ".claude/**"
   push:
-    branches: [main, dev]
+    branches: [main]
     paths-ignore:
       - "**/*.md"
       - "docs/**"
+      - "infra/**"
+      - "LICENSE"
+      - ".claude/**"
 
 concurrency:
   group: ci-${{ github.ref }}

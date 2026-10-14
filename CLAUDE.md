@@ -13,7 +13,8 @@
 - `server/` — Java 25, Spring Boot 4.1 + WebFlux + Reactive MongoDB. 패키지는 기능 모듈(`auth`, `user`, `room`, `chat`, `buddy`, `realtime`).
 - `infra/` — Terraform: MongoDB Atlas(DB, 시드니), Cloudflare(DNS, state는 R2). 서버는 AWS Lightsail 인스턴스(`quant-lab-02`, 시드니)에서 `server/deploy`의 Docker Compose로 돈다.
 - `docs/` — 기획과 설계 문서, 출시 점검(`release-review.md`)과 App Store 출시 진행(`app-store-release.md`)
-- `.github/workflows/ci.yml` — app(lint / typecheck / test / format), server(spotless / test)
+- `.github/workflows/ci.yml` — app(lint / typecheck / test / format), server(spotless / test). Actions 무료 분(월 2,000분)을 아끼려고 같은 코드를
+  두 번만 돌린다: `dev`로 가는 PR과 `main` push(배포 관문). `dev` push와 `dev` → `main` PR에서는 돌지 않고, 문서·`infra/`만 바뀐 변경도 건너뛴다.
 - `.github/workflows/deploy.yml` — main에서 CI 통과 후 서버 이미지를 GHCR에 올리고(인스턴스가 1분마다 받아 간다) 웹(Cloudflare Worker, `wrangler deploy`)을 배포
 - 로컬 전용(gitignore): `.claude/`(desktop app preview 설정), `.idea/`, `.env*`
 
@@ -142,9 +143,11 @@
 
 - 브랜치: `main`(검증된 코드, 릴리스 기준) ← `dev`(개발). 기본 작업 브랜치는 `dev`.
 - 평소 작업은 `dev`에 바로 커밋·push한다. 기능 브랜치는 크거나 실험적인 작업일 때만 따로 만든다
-  (feat/…, fix/…, chore/… 이름, `dev`로 PR).
+  (feat/…, fix/…, chore/… 이름, `dev`로 PR). `dev`에 바로 push하면 CI가 돌지 않으므로 push 전에 로컬 검사
+  (`pnpm check`, server는 `./gradlew spotlessCheck test`)를 한다. CI는 `dev`로 가는 PR과 `main` push에서만 돈다.
 - `main`에는 직접 커밋하지 않는다. 기능 묶음이 끝나거나 릴리스 전에 `dev` → `main` PR을 열고,
-  CI 통과 후 **merge commit**으로 합친다(squash하면 `dev`와 `main` 히스토리가 어긋난다).
+  **merge commit**으로 합친다(squash하면 `dev`와 `main` 히스토리가 어긋난다). 이 PR에서는 CI가 돌지 않는다
+  (같은 코드를 `dev`로 가는 PR에서 이미 돌렸다). 합친 뒤 `main` push CI가 통과해야 배포되므로 그 결과와 배포를 확인한다.
 - Codex 자동 리뷰는 선택 사항이다(2026-10-14 사용자 지시). 완료를 기다리거나 재리뷰를 요청하지 않는다. 이미 달린 리뷰 댓글은 읽고 타당한 것만 반영한다.
 - (선택) 리뷰가 달렸다면 완료 상태·대상 커밋과 개별 댓글도 확인한다. CI 통과만으로 리뷰를 확인했다고 보지 않는다.
   지적은 최신 코드와 제품 요구에 맞춰 평가하고, 타당한 문제는 수정·검증한다. 리뷰 대상 이후 코드를 고쳤다면 바뀐 부분과

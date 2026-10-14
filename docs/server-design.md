@@ -256,7 +256,7 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
 - **Terraform**(`infra/`, 사용법은 `infra/README.md`): Atlas 프로젝트·M0·DB 사용자·접근 목록, Cloudflare DNS, VAPID 키(출력은
   없고 state에만 있다. 운영 값은 서버 `.env`가 쥔다). state는 Cloudflare R2(S3 호환 backend)에 둔다. 인증 정보는 `infra/.env`
   (git 제외)에만 있다. Lightsail 인스턴스는 다른 서비스와 나눠 쓰므로 Terraform이 만들지 않는다(고정 IP만 변수로 받는다).
-- **배포**(`.github/workflows/deploy.yml`): main에서 CI가 통과하면 서버는 이미지를 빌드해 GHCR
+- **배포**(`.github/workflows/deploy.yml`): `main` push에서 CI가 통과하면(CI는 `dev`로 가는 PR과 `main` push에서만 돈다) 서버는 이미지를 빌드해 GHCR
   (`ghcr.io/ottuck/puny-chat-server`, `latest`와 커밋 sha 태그, 패키지는 처음 한 번 GitHub 설정에서 Public으로 바꾼다)에 올리고, 웹은 `wrangler deploy`한다.
   인스턴스의 systemd 타이머(`puny-chat-update.timer`)가 1분마다 `server/deploy/update.sh`로 새 이미지를 받아 컨테이너를
   다시 만든다. CI가 인스턴스에 SSH로 들어가지 않으므로 22번을 열 필요가 없다. 배포 확인은 CI가 한다: `update.sh`가 실행 중인 커밋을
