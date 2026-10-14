@@ -4,6 +4,8 @@ name: CI
 # (2026-10-14): once on the work PR into dev, and once on the push to main, which gates the deploy.
 # Pushes to dev and dev -> main PRs are skipped as duplicates.
 # Changes to docs, Markdown, infra (Terraform) and similar files skip CI; such a push deploys nothing.
+# Of the two jobs, only the one whose folder changed runs (see "changes"); anything outside app/ and
+# server/ (workflows, root files) runs both.
 on:
   pull_request:
     branches: [dev]
@@ -27,7 +29,54 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Decides which of app/server needs to run from the changed files (GitHub API, no checkout).
+  # On any error, or when the comparison is unavailable, both run.
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+      server: ${{ steps.filter.outputs.server }}
+    steps:
+      - id: filter
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          app=false; server=false
+          if [ "$EVENT" = "pull_request" ]; then
+            files=$(gh api --paginate "repos/$REPO/pulls/$PR/files" -q '.[].filename') || files=
+          elif [ -n "$BEFORE" ] && [ "${BEFORE#0000000}" != "$BEFORE" ]; then
+            files=
+          else
+            files=$(gh api "repos/$REPO/compare/$BEFORE...$SHA" -q '.files[].filename') || files=
+          fi
+          if [ -z "$files" ]; then
+            app=true; server=true
+          else
+            while IFS= read -r f; do
+              case "$f" in
+                # The same files paths-ignore skips.
+                *.md|docs/*|infra/*|LICENSE|.claude/*) ;;
+                app/*) app=true ;;
+                server/*) server=true ;;
+                *) app=true; server=true ;;
+              esac
+            done <<< "$files"
+          fi
+          echo "app=$app" >> "$GITHUB_OUTPUT"
+          echo "server=$server" >> "$GITHUB_OUTPUT"
+          echo "app=$app server=$server"
+
   app:
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -50,6 +99,8 @@ jobs:
       - run: pnpm format:check
 
   server:
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -70,10 +121,11 @@ jobs:
           name: server-test-reports
           path: server/build/reports/tests/test
 
-  # A push to main that passed both jobs deploys the server and the web app.
+  # A push to main deploys the server and the web app when no job failed. A job skipped by "changes"
+  # does not block it, so the condition must not rely on the default "all needs succeeded".
   deploy:
-    needs: [app, server]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [changes, app, server]
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     permissions:
       contents: read
       packages: write
