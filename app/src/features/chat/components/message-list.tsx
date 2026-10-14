@@ -91,6 +91,20 @@ export function MessageList({
             </View>
           );
         }
+        if (item.type === 'BUDDY_EVENT' && item.event === 'JOB_CHANGED' && isJob(item.detail)) {
+          return (
+            <View style={styles.spaced}>
+              <BuddyEventRow
+                label={t('buddyEvent.JOB_CHANGED', {
+                  icon: JOB_ICON[item.detail],
+                  actor: nameOf(item.actorId),
+                  buddy: buddyName,
+                  job: t(`buddy.job.${item.detail}`),
+                })}
+              />
+            </View>
+          );
+        }
         if (item.type === 'BUDDY_EVENT' && item.event === 'TOGETHER') {
           return (
             <View style={styles.spaced}>

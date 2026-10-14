@@ -19,8 +19,8 @@ import { errorMessage } from '@/features/room/error-message';
 import { confirm } from '@/lib/confirm';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
-import { type BuddyView, TOGETHER_EXP } from '../api';
-import { isJob, JOB_ICON } from '../jobs';
+import { type BuddyJob, type BuddyView, TOGETHER_EXP } from '../api';
+import { isJob, JOB_ICON, JOB_ORDER } from '../jobs';
 import { BuddyAvatar } from './buddy-avatar';
 import { rewardIcon } from './buddy-guide';
 import { nextReward } from './stage-decor';
@@ -39,6 +39,8 @@ type Props = {
   album?: AlbumEntry[];
   // At the top level: the buddy goes into the album and a new egg with this name arrives.
   onGraduate?: (newName: string) => Promise<void>;
+  // An adult's job, changed once a day; none in the tour.
+  onChangeJob?: (job: BuddyJob) => Promise<void>;
   // With a partner in the room: today's together bonus, and who has talked.
   together?: { myId: string; partnerId: string; partnerName: string };
 };
@@ -56,6 +58,7 @@ export function BuddySheet({
   onClean,
   album,
   onGraduate,
+  onChangeJob,
   together,
 }: Props) {
   const colors = useColors();
@@ -138,7 +141,7 @@ export function BuddySheet({
 
             {together ? <TogetherCard buddy={buddy} {...together} /> : null}
 
-            <JobCard buddy={buddy} />
+            <JobCard buddy={buddy} onChangeJob={onChangeJob} />
 
             <NextReward level={buddy.level} album={album ?? []} />
 
@@ -190,29 +193,67 @@ function TogetherCard({
 }
 
 // What it grows up to be (docs/fun-improvements.md, 5): the job once an adult, and before that where
-// it is heading, so the way they raise it shows.
-function JobCard({ buddy }: { buddy: BuddyView }) {
+// it is heading, so the way they raise it shows. An adult's job can be changed, once a day.
+function JobCard({
+  buddy,
+  onChangeJob,
+}: {
+  buddy: BuddyView;
+  onChangeJob?: (job: BuddyJob) => Promise<void>;
+}) {
   const colors = useColors();
   const { t } = useTranslation();
+  const [choosing, setChoosing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const job = buddy.job ?? buddy.leaning;
-  if (!job) return null;
-  const name = t(`buddy.job.${job}`, { defaultValue: job });
+  const changeable = buddy.stage === 'ADULT' && !!onChangeJob;
+  if (!job && !changeable) return null;
+  const nameOf = (value: BuddyJob) => t(`buddy.job.${value}`, { defaultValue: value });
+
+  const choose = async (next: BuddyJob) => {
+    if (!onChangeJob || next === buddy.job) return;
+    const ok = await confirm({
+      title: t('buddy.jobCard.confirmTitle'),
+      message: t('buddy.jobCard.confirmMessage', { icon: JOB_ICON[next], job: nameOf(next) }),
+      confirmLabel: t('buddy.jobCard.confirm'),
+      cancelLabel: t('common.cancel'),
+    });
+    if (!ok) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await onChangeJob(next);
+      setChoosing(false);
+    } catch (e) {
+      setError(errorMessage(t, e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <View style={[styles.card, { backgroundColor: colors.surface }]}>
       <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('buddy.jobCard.title')}</Text>
-      {buddy.job ? (
+      {buddy.job && isJob(buddy.job) ? (
         <>
           <Text style={[styles.body, { color: colors.text }]}>
-            {JOB_ICON[job]} {name}
+            {JOB_ICON[buddy.job]} {nameOf(buddy.job)}
           </Text>
-          <Text style={[styles.body, { color: colors.textMuted }]}>
-            {t(`buddy.jobWhy.${job}`, { defaultValue: '' })}
+          <Text
+            lineBreakStrategyIOS="hangul-word"
+            style={[styles.body, { color: colors.textMuted }]}
+          >
+            {t(`buddy.jobPerk.${buddy.job}`, { defaultValue: '' })}
           </Text>
         </>
-      ) : (
+      ) : buddy.leaning && isJob(buddy.leaning) ? (
         <>
           <Text lineBreakStrategyIOS="hangul-word" style={[styles.body, { color: colors.text }]}>
-            {t('buddy.jobCard.leaning', { icon: JOB_ICON[job], job: name })}
+            {t('buddy.jobCard.leaning', {
+              icon: JOB_ICON[buddy.leaning],
+              job: nameOf(buddy.leaning),
+            })}
           </Text>
           <Text
             lineBreakStrategyIOS="hangul-word"
@@ -221,7 +262,64 @@ function JobCard({ buddy }: { buddy: BuddyView }) {
             {t('buddy.jobCard.hint')}
           </Text>
         </>
-      )}
+      ) : null}
+
+      {changeable ? (
+        buddy.canChangeJob ? (
+          <>
+            <Pressable
+              onPress={() => setChoosing((open) => !open)}
+              accessibilityRole="button"
+              style={({ pressed }) => [
+                styles.jobButton,
+                { borderColor: colors.accent, opacity: pressed ? 0.7 : 1 },
+              ]}
+            >
+              <Text style={[styles.careLabel, { color: colors.accent }]}>
+                {t('buddy.jobCard.change')}
+              </Text>
+            </Pressable>
+            {choosing ? (
+              <View style={{ gap: 8 }}>
+                <Text style={[styles.body, { color: colors.textMuted }]}>
+                  {t('buddy.jobCard.changeTitle')}
+                </Text>
+                {JOB_ORDER.map((option) => (
+                  <Pressable
+                    key={option}
+                    onPress={() => choose(option)}
+                    disabled={busy || option === buddy.job}
+                    accessibilityRole="button"
+                    style={({ pressed }) => [
+                      styles.jobOption,
+                      {
+                        borderColor: option === buddy.job ? colors.accent : colors.border,
+                        opacity: busy ? 0.5 : pressed ? 0.7 : 1,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.statLabel, { color: colors.text }]}>
+                      {JOB_ICON[option]} {nameOf(option)}
+                      {option === buddy.job ? ` · ${t('buddy.jobCard.current')}` : ''}
+                    </Text>
+                    <Text
+                      lineBreakStrategyIOS="hangul-word"
+                      style={[styles.statValue, { color: colors.textMuted }]}
+                    >
+                      {t(`buddy.jobPerk.${option}`)}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
+          </>
+        ) : (
+          <Text style={[styles.body, { color: colors.textMuted }]}>
+            {t('buddy.jobCard.changedToday')}
+          </Text>
+        )
+      ) : null}
+      {error ? <Text style={[styles.body, { color: colors.accent }]}>{error}</Text> : null}
     </View>
   );
 }
@@ -470,6 +568,19 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
+  },
+  jobOption: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    gap: 4,
+  },
+  jobButton: {
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   card: {
     borderRadius: 16,
