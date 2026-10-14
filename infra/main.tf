@@ -130,28 +130,13 @@ resource "railway_variable_collection" "server" {
   )
 }
 
-resource "railway_custom_domain" "api" {
-  domain         = local.api_domain
-  environment_id = railway_project.this.default_environment.id
-  service_id     = railway_service.server.id
-  target_port    = 8080
-}
-
-# Railway checks the TXT record, then serves the CNAME with its own certificate; Cloudflare only
-# answers DNS for it (not proxied), so WebSockets go straight to Railway.
+# The server runs on the Lightsail instance (server/deploy). Caddy there gets its own certificate,
+# and Cloudflare only answers DNS for it (not proxied), so WebSockets go straight to the instance.
 resource "cloudflare_dns_record" "api" {
   zone_id = var.cloudflare_zone_id
-  name    = railway_custom_domain.api.host_label
-  type    = "CNAME"
-  content = railway_custom_domain.api.dns_record_value
+  name    = var.api_subdomain
+  type    = "A"
+  content = var.server_ip
   proxied = false
-  ttl     = 1
-}
-
-resource "cloudflare_dns_record" "api_verification" {
-  zone_id = var.cloudflare_zone_id
-  name    = railway_custom_domain.api.verification_host_label
-  type    = "TXT"
-  content = railway_custom_domain.api.verification_record_value
-  ttl     = 1
+  ttl     = 60
 }

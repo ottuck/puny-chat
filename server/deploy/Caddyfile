@@ -1,0 +1,15 @@
+# HTTPS for the API: Caddy gets and renews the certificate itself (needs ports 80 and 443 open).
+# WebSocket upgrades pass through reverse_proxy unchanged.
+api.puny-chat.com {
+	# The revision of the running image, written by update.sh; CI waits for it after a push.
+	handle /_revision {
+		root * /srv/public
+		rewrite * /revision
+		header Cache-Control no-store
+		file_server
+	}
+
+	handle {
+		reverse_proxy server:8080
+	}
+}

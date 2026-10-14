@@ -1,0 +1,29 @@
+# The server on the Lightsail instance (docs/server-design.md, 인프라). Lives in /opt/puny-chat next to
+# a .env file with the server's settings (not in Git; see .env.example).
+# CI builds and pushes the image; update.sh (a systemd timer) pulls it and recreates the container.
+
+services:
+  server:
+    image: ghcr.io/ottuck/puny-chat-server:latest
+    restart: unless-stopped
+    env_file: .env
+    # The instance is shared: the JVM heap (-Xmx in .env) plus metaspace and threads must fit.
+    mem_limit: 640m
+    expose:
+      - "8080"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./public:/srv/public:ro
+      - caddy_data:/data
+    depends_on:
+      - server
+
+volumes:
+  caddy_data:

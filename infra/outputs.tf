@@ -6,7 +6,12 @@ output "web_url" {
   value = "https://${var.web_domain}"
 }
 
-# For CI (a project token is made in the Railway dashboard for this project and environment).
+# For the server's env file on the instance: terraform output -raw mongodb_uri
+output "mongodb_uri" {
+  value     = local.mongodb_uri
+  sensitive = true
+}
+
 output "railway_project_id" {
   value = railway_project.this.id
 }
