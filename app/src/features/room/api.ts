@@ -1,11 +1,17 @@
-import type { BuddyView } from '@/features/buddy/api';
+import type { BuddyJob, BuddyView } from '@/features/buddy/api';
 import { api, ApiError } from '@/lib/api';
 
 // Shapes returned by the server (server/src/main/java/com/buddychat/room/RoomView.java).
 export type Me = { id: string; displayName: string | null; roomId: string | null };
 export type RoomMember = { id: string; displayName: string | null };
 // A buddy that grew up and went its own way, kept in the room's album.
-export type AlbumEntry = { name: string; bornAt: string; graduatedAt: string };
+export type AlbumEntry = {
+  name: string;
+  bornAt: string;
+  graduatedAt: string;
+  // The job it grew into; null for those who left before jobs existed.
+  job?: BuddyJob | null;
+};
 export type Room = {
   id: string;
   members: RoomMember[];

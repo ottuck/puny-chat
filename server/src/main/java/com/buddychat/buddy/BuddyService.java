@@ -103,7 +103,10 @@ public class BuddyService {
                 roomId,
                 actorId,
                 orMissing("buddy.lastFedAt", where("buddy.lastFedAt").lt(BuddyRules.feedableIfFedBefore(now))),
-                new Update().set("buddy.lastFedAt", now).inc("buddy.exp", BuddyRules.FEED_EXP),
+                new Update()
+                        .set("buddy.lastFedAt", now)
+                        .inc("buddy.exp", BuddyRules.FEED_EXP)
+                        .inc("buddy.fedCount", 1),
                 "FED",
                 BuddyRules.FEED_EXP,
                 now);
@@ -138,7 +141,8 @@ public class BuddyService {
             Query unchanged = query(where("_id").is(roomId))
                     .addCriteria(sameOrMissing("buddy.lastCleanedAt", buddy.lastCleanedAt()))
                     .addCriteria(sameOrMissing("buddy.poopsCleaned", buddy.poopsCleaned()));
-            return mongo.findAndModify(unchanged, update.inc("buddy.exp", gain), RETURN_NEW, RoomBuddy.class, ROOMS)
+            update.inc("buddy.exp", gain).inc("buddy.cleanedCount", removed);
+            return mongo.findAndModify(unchanged, update, RETURN_NEW, RoomBuddy.class, ROOMS)
                     .flatMap(updated -> (floorClean
                                     ? chatService
                                             .recordBuddyEvent(
@@ -177,7 +181,7 @@ public class BuddyService {
                     .and("buddy.exp")
                     .gte(BuddyRules.minExp(BuddyRules.MAX_LEVEL)));
             Update update = new Update()
-                    .push("album", new AlbumEntry(buddy.name(), buddy.bornAt(), now))
+                    .push("album", new AlbumEntry(buddy.name(), buddy.bornAt(), now, buddy.job()))
                     .set("buddy", buddy.next(newName, now));
             return mongo.findAndModify(same, update, RETURN_NEW, RoomBuddy.class, ROOMS)
                     .switchIfEmpty(Mono.error(notGrown()))
@@ -210,7 +214,35 @@ public class BuddyService {
         Mono<?> care = CareCommand.of(text)
                 .map(command -> command == CareCommand.FEED ? feed(roomId, senderId) : cleanAll(roomId, senderId))
                 .orElse(Mono.empty());
-        return onMessageSent(roomId).then(talked(roomId, senderId)).then(care).then();
+        return onMessageSent(roomId)
+                .then(noteHabits(roomId, text, Instant.now(clock)))
+                .then(talked(roomId, senderId))
+                .then(care)
+                .then();
+    }
+
+    /**
+     * What the message says about how they chat, for the buddy's job ({@link BuddyJob}): written at
+     * night, with a laugh, or with a "love you" (the laugh only if not the love). Counts only, so a
+     * message that is none of these writes nothing.
+     */
+    private Mono<Void> noteHabits(String roomId, String text, Instant now) {
+        Update habits = new Update();
+        boolean any = false;
+        if (BuddyRules.isNight(now)) {
+            habits.inc("buddy.nightCount", 1);
+            any = true;
+        }
+        if (MoodWords.love(text)) {
+            habits.inc("buddy.loveCount", 1);
+            any = true;
+        } else if (MoodWords.laugh(text)) {
+            habits.inc("buddy.laughCount", 1);
+            any = true;
+        }
+        if (!any) return Mono.empty();
+        return mongo.updateFirst(query(where("_id").is(roomId)), habits, RoomBuddy.class, ROOMS)
+                .then();
     }
 
     /**
@@ -339,6 +371,7 @@ public class BuddyService {
         Mono<Message> event;
         if (stage != BuddyRules.stage(levelBefore)) {
             event = chatService.recordBuddyEvent(roomId, "EVOLVED", null, eventKey(after, "evolved:" + stage));
+            if (stage == BuddyRules.Stage.ADULT) return becameAdult(roomId, after, event, now);
         } else if (level == BuddyRules.MAX_LEVEL && levelBefore < level) {
             // The top: a thank-you in the timeline instead of one more level.
             event = chatService.recordBuddyEvent(
@@ -363,6 +396,38 @@ public class BuddyService {
         return event.doOnNext(message -> hub.publish(roomId, new ServerEvent.NewMessage(message), null))
                 .then(Mono.fromRunnable(() -> hub.publish(roomId, new ServerEvent.BuddyUpdated(view), null)))
                 .thenReturn(view);
+    }
+
+    /**
+     * Growing up fixes the job (docs/fun-improvements.md, 5): from what the two did so far, once. The
+     * update only goes through for this buddy while it has none, so the job never changes after.
+     * The timeline gets the evolution, then the job.
+     */
+    private Mono<BuddyView> becameAdult(String roomId, Buddy after, Mono<Message> evolved, Instant now) {
+        BuddyJob job = BuddyJob.decide(after);
+        Query unsettled = query(where("_id")
+                .is(roomId)
+                .and("buddy.bornAt")
+                .is(after.bornAt())
+                .and("buddy.job")
+                .exists(false));
+        return evolved.doOnNext(message -> hub.publish(roomId, new ServerEvent.NewMessage(message), null))
+                .then(mongo.findAndModify(
+                                unsettled,
+                                new Update().set("buddy.job", job.name()),
+                                RETURN_NEW,
+                                RoomBuddy.class,
+                                ROOMS)
+                        .map(RoomBuddy::buddy)
+                        .switchIfEmpty(Mono.defer(() -> load(roomId))))
+                .flatMap(settled -> chatService
+                        .recordBuddyEvent(roomId, "JOB", String.valueOf(settled.job()), null, eventKey(after, "job"))
+                        .doOnNext(message -> hub.publish(roomId, new ServerEvent.NewMessage(message), null))
+                        .then(Mono.fromSupplier(() -> {
+                            BuddyView view = BuddyView.of(settled, now);
+                            hub.publish(roomId, new ServerEvent.BuddyUpdated(view), null);
+                            return view;
+                        })));
     }
 
     private Mono<Buddy> load(String roomId) {

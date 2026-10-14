@@ -245,6 +245,11 @@ class ChatWebSocketHandler implements WebSocketHandler {
                 hub.publishToOthers(connection.roomId, new ServerEvent.Typing(user.id(), typing.typing()), user.id());
                 yield Mono.empty();
             }
+            case ClientEvent.Pet pet -> {
+                // Not stored, like typing: the partner's buddy just feels it.
+                hub.publishToOthers(connection.roomId, new ServerEvent.Pet(user.id()), user.id());
+                yield Mono.empty();
+            }
             case ClientEvent.Read read ->
                 chatService
                         .markRead(user, read.messageId())

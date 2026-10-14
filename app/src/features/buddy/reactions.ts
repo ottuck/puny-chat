@@ -2,7 +2,15 @@ import type { ServerMessage } from '@/features/chat/types';
 
 // Something that just happened in the room, for the buddy on its stage to react to.
 export type ReactionKind =
-  'message' | 'fed' | 'cleaned' | 'pooped' | 'levelUp' | 'evolved' | 'together';
+  | 'message'
+  | 'fed'
+  | 'cleaned'
+  | 'pooped'
+  | 'levelUp'
+  | 'evolved'
+  | 'together'
+  // The partner is here too (docs/fun-improvements.md, 2): not from a message but from presence.
+  | 'here';
 export type Reaction = { id: string; kind: ReactionKind };
 
 const BY_EVENT: Partial<Record<string, ReactionKind>> = {

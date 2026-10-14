@@ -24,6 +24,7 @@ type ServerEvent =
   | { type: 'presence'; userId: string; online: boolean }
   | { type: 'typing'; userId: string; typing: boolean }
   | { type: 'read'; userId: string; messageId: string }
+  | { type: 'pet'; userId: string }
   | { type: 'error'; code: string; clientMessageId: string | null }
   | { type: 'pong' };
 
@@ -44,6 +45,8 @@ export type SocketListener = {
   onPresence: (userId: string, online: boolean) => void;
   onTyping: (userId: string, typing: boolean) => void;
   onRead: (userId: string, messageId: string) => void;
+  // The partner petted the buddy just now.
+  onPet: (userId: string) => void;
   onSendFailed: (clientMessageId: string, code: string) => void;
   // The server refused the connection for a reason reconnecting will not fix (e.g. no room).
   onFatal: (code: string) => void;
@@ -117,6 +120,11 @@ export class ChatSocket {
     if (this.ws && this.ready) this.ws.send(JSON.stringify({ type: 'typing', typing }));
   }
 
+  // Like typing: only worth sending right now, and only the partner sees it.
+  sendPet() {
+    if (this.ws && this.ready) this.ws.send(JSON.stringify({ type: 'pet' }));
+  }
+
   sendRead(messageId: string): boolean {
     if (!this.ws || !this.ready) return false;
     this.ws.send(JSON.stringify({ type: 'read', messageId }));
@@ -171,6 +179,9 @@ export class ChatSocket {
         break;
       case 'read':
         this.listener.onRead(event.userId, event.messageId);
+        break;
+      case 'pet':
+        this.listener.onPet(event.userId);
         break;
       case 'member':
       case 'left':

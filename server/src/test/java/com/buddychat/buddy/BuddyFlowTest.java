@@ -498,7 +498,130 @@ class BuddyFlowTest {
         assertThat(room("old-timer").buddy().exp()).isEqualTo(BuddyRules.FEED_EXP + BuddyRules.MESSAGE_EXP);
     }
 
+    @Test
+    void mealsAndCleaningAreCounted() {
+        String roomId = createRoom("henry").id();
+        clock.advance(BuddyRules.hungryAfter()); // hungry, and one poop
+
+        care("henry", "feed");
+        care("henry", "clean");
+
+        Document buddy = buddyDocument(roomId);
+        assertThat(buddy.getInteger("fedCount")).isEqualTo(1);
+        assertThat(buddy.getInteger("cleanedCount")).isEqualTo(1);
+    }
+
+    @Test
+    void nightMessagesLaughsAndLovesAreCountedAndOrdinaryOnesAreNot() {
+        String roomId = createRoom("henry").id();
+        TestSocket henry = connect("henry").ignoring("buddy", "presence");
+        clock.set(Instant.parse("2026-01-10T03:00:00Z")); // noon in Japan
+        say(henry, "c-1", "그거 진짜 웃겨 ㅋㅋ");
+        say(henry, "c-2", "사랑해 ㅋㅋ"); // both: counted as love only
+        say(henry, "c-3", "오늘 뭐 먹을까");
+        await(() -> room("henry").buddy().exp() == 3); // all three are counted before the night comes
+        clock.set(Instant.parse("2026-01-10T15:30:00Z")); // half past midnight in Japan
+        say(henry, "c-4", "자야겠다");
+
+        await(() -> {
+            Document buddy = buddyDocument(roomId);
+            return Integer.valueOf(1).equals(buddy.getInteger("nightCount"))
+                    && Integer.valueOf(1).equals(buddy.getInteger("loveCount"))
+                    && Integer.valueOf(1).equals(buddy.getInteger("laughCount"));
+        });
+    }
+
+    @Test
+    void growingUpFixesTheJobFromHowTheyRaisedIt() {
+        String roomId = createRoom("henry").id();
+        setBuddy(roomId, new Update().set("buddy.fedCount", 7).set("buddy.cleanedCount", 3));
+        setExp(roomId, BuddyRules.minExp(BuddyRules.CHILD_AT));
+        assertThat(room("henry").buddy().job()).isNull();
+        assertThat(room("henry").buddy().leaning()).isEqualTo(BuddyJob.CHEF);
+
+        setExp(roomId, BuddyRules.minExp(BuddyRules.ADULT_AT) - 1);
+        buddyService.onMessageSent(roomId).block();
+
+        BuddyView adult = room("henry").buddy();
+        assertThat(adult.stage()).isEqualTo(BuddyRules.Stage.ADULT);
+        assertThat(adult.job()).isEqualTo(BuddyJob.CHEF);
+        assertThat(adult.leaning()).isNull();
+        assertThat(timeline("henry")).endsWith("EVOLVED", "JOB");
+    }
+
+    @Test
+    void theJobStaysWhateverTheyDoLaterAndGoesIntoTheAlbum() {
+        String roomId = createRoom("henry").id();
+        setBuddy(roomId, new Update().set("buddy.fedCount", 5));
+        setExp(roomId, BuddyRules.minExp(BuddyRules.ADULT_AT) - 1);
+        buddyService.onMessageSent(roomId).block();
+        assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.CHEF);
+
+        setBuddy(
+                roomId,
+                new Update().set("buddy.laughCount", 300).set("buddy.exp", BuddyRules.minExp(BuddyRules.MAX_LEVEL)));
+        buddyService.onMessageSent(roomId).block();
+        assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.CHEF);
+
+        clock.advance(Duration.ofMinutes(1));
+        post("henry", "/api/rooms/me/buddy/graduate", Map.of("buddyName", "Mochi"))
+                .expectStatus()
+                .isOk();
+        RoomView afterwards = room("henry");
+        assertThat(afterwards.album().getFirst().job()).isEqualTo("CHEF");
+        assertThat(afterwards.buddy().job()).isNull(); // the new egg has none yet
+    }
+
+    @Test
+    void withNothingStandingOutItIsAChatterbox() {
+        String roomId = createRoom("henry").id();
+        setBuddy(roomId, new Update().set("buddy.fedCount", 4).set("buddy.cleanedCount", 4));
+        setExp(roomId, BuddyRules.minExp(BuddyRules.ADULT_AT) - 1);
+
+        buddyService.onMessageSent(roomId).block();
+
+        assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.CHATTERBOX);
+    }
+
+    @Test
+    void jobsGoToTheMostPointsAndTiesToTheFirstListed() {
+        assertThat(BuddyJob.decide(counts(4, 4, 14, 14, 9))).isEqualTo(BuddyJob.CHATTERBOX);
+        assertThat(BuddyJob.decide(counts(5, 0, 0, 0, 0))).isEqualTo(BuddyJob.CHEF);
+        assertThat(BuddyJob.decide(counts(5, 5, 0, 0, 0))).isEqualTo(BuddyJob.CHEF);
+        assertThat(BuddyJob.decide(counts(5, 6, 0, 0, 0))).isEqualTo(BuddyJob.CLEANER);
+        assertThat(BuddyJob.decide(counts(0, 0, 15, 0, 0))).isEqualTo(BuddyJob.OWL);
+        assertThat(BuddyJob.decide(counts(0, 0, 0, 15, 0))).isEqualTo(BuddyJob.COMEDIAN);
+        assertThat(BuddyJob.decide(counts(0, 0, 0, 0, 10))).isEqualTo(BuddyJob.ROMANTIC);
+        assertThat(BuddyJob.leaning(counts(0, 0, 0, 0, 0))).isNull();
+        assertThat(BuddyJob.leaning(counts(1, 0, 0, 0, 0))).isEqualTo(BuddyJob.CHATTERBOX);
+        assertThat(BuddyJob.leaning(counts(3, 1, 0, 0, 0))).isEqualTo(BuddyJob.CHATTERBOX);
+        assertThat(BuddyJob.leaning(counts(0, 0, 0, 0, 20))).isEqualTo(BuddyJob.ROMANTIC);
+    }
+
     // --- helpers ---
+
+    private static Buddy counts(int fed, int cleaned, int nights, int laughs, int loves) {
+        Instant now = Instant.now();
+        return new Buddy(
+                "Mugi", 0, now, now, now, null, 0, 0, null, null, null, fed, cleaned, nights, laughs, loves, null);
+    }
+
+    private void say(TestSocket socket, String clientMessageId, String text) {
+        socket.send(Map.of("type", "send", "clientMessageId", clientMessageId, "text", text))
+                .expect("ack");
+    }
+
+    private Document buddyDocument(String roomId) {
+        Document room = mongo.findOne(
+                        Query.query(Criteria.where("_id").is(new ObjectId(roomId))), Document.class, "rooms")
+                .block();
+        return room.get("buddy", Document.class);
+    }
+
+    private void setBuddy(String roomId, Update update) {
+        mongo.updateFirst(Query.query(Criteria.where("_id").is(new ObjectId(roomId))), update, "rooms")
+                .block();
+    }
 
     // One message short of hatching, then the message.
     private void hatch(String roomId) {

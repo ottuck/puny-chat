@@ -127,6 +127,23 @@ class PresenceFlowTest {
     }
 
     @Test
+    void aPetReachesThePartnerButNotMyOtherDevices() {
+        duoRoom("henry", "yuki");
+        TestSocket henry = open("henry").ignoring("presence");
+        ready(henry);
+        TestSocket phone = open("yuki").ignoring("presence");
+        String yukiId = ready(phone).get("userId").asString();
+        TestSocket laptop = open("yuki").ignoring("presence");
+        ready(laptop);
+
+        phone.send(Map.of("type", "pet"));
+
+        assertThat(henry.expect("pet").get("userId").asString()).isEqualTo(yukiId);
+        laptop.expectSilence();
+        phone.expectSilence();
+    }
+
+    @Test
     void readMarkReachesThePartnerAndOnlyMovesForward() {
         duoRoom("henry", "yuki");
         TestSocket henry = open("henry").ignoring("presence");

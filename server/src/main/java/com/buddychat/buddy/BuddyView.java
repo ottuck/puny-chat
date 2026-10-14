@@ -2,6 +2,7 @@ package com.buddychat.buddy;
 
 import java.time.Instant;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 
 /** The buddy as the app shows it, computed at {@code now}. The app does not re-derive the rules. */
 public record BuddyView(
@@ -19,7 +20,11 @@ public record BuddyView(
         boolean grown,
         // Members who sent a message today, and whether both have (the day's bonus is given).
         List<String> talkedToday,
-        boolean togetherToday) {
+        boolean togetherToday,
+        // What it grew up to be (docs/fun-improvements.md, 5): set once it is an adult.
+        @Nullable BuddyJob job,
+        // As a child, the job it is heading for so far.
+        @Nullable BuddyJob leaning) {
 
     public static BuddyView of(Buddy buddy, Instant now) {
         int level = BuddyRules.level(buddy.exp());
@@ -37,6 +42,8 @@ public record BuddyView(
                 BuddyRules.canClean(buddy, now),
                 level == BuddyRules.MAX_LEVEL,
                 buddy.talkedOn(today),
-                today.equals(buddy.togetherDay()));
+                today.equals(buddy.togetherDay()),
+                BuddyJob.of(buddy.job()),
+                BuddyRules.stage(level) == BuddyRules.Stage.CHILD ? BuddyJob.leaning(buddy) : null);
     }
 }

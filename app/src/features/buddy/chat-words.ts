@@ -22,3 +22,74 @@ export function chatWord(text: string): ChatWord | null {
   }
   return null;
 }
+
+// Words anywhere in a message that the buddy feels (docs/fun-improvements.md, 1). Only the buddy's
+// face changes; nothing is sent. The server counts "laugh" and "love" for the buddy's job
+// (server: buddy/MoodWords, keep those two lists in step).
+export type Mood = 'love' | 'goodnight' | 'cheer' | 'comfort' | 'laugh' | 'morning';
+
+// In this order: a message with several is felt as the first (love beats a laugh).
+const MOODS: readonly (readonly [Mood, readonly string[]])[] = [
+  [
+    'love',
+    [
+      '사랑해',
+      '좋아해',
+      '보고싶',
+      '보고 싶',
+      '大好き',
+      '愛してる',
+      '会いたい',
+      'love you',
+      'miss you',
+      '❤',
+      '💕',
+      '💗',
+      '😍',
+      '🥰',
+    ],
+  ],
+  ['goodnight', ['잘자', '굿나잇', 'おやすみ', 'good night', 'goodnight', '😴', '🌙']],
+  [
+    'cheer',
+    [
+      '화이팅',
+      '파이팅',
+      '힘내',
+      '아자',
+      'がんばれ',
+      '頑張って',
+      'ファイト',
+      'fighting',
+      'good luck',
+      '💪',
+    ],
+  ],
+  [
+    'comfort',
+    [
+      'ㅠㅠ',
+      'ㅜㅜ',
+      '슬퍼',
+      '우울',
+      '힘들',
+      '悲しい',
+      'つらい',
+      'しんどい',
+      'さみしい',
+      '😢',
+      '😭',
+      '🥺',
+    ],
+  ],
+  ['laugh', ['ㅋㅋ', 'ㅎㅎ', '笑', 'www', 'lol', 'haha', '😂', '🤣']],
+  ['morning', ['굿모닝', '좋은 아침', 'おはよう', 'good morning']],
+];
+
+export function chatMood(text: string): Mood | null {
+  const lower = text.toLowerCase();
+  for (const [mood, words] of MOODS) {
+    if (words.some((word) => lower.includes(word))) return mood;
+  }
+  return null;
+}
