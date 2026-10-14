@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { FlatList, StyleSheet, View } from 'react-native';
 
+import { isJob, JOB_ICON } from '@/features/buddy/jobs';
+
 import { formatTime, runPosition } from '../timeline';
 import type { Member, Message } from '../types';
 import { BuddyEventRow, EventCard } from './buddy-event-row';
@@ -71,6 +73,20 @@ export function MessageList({
                 body={t('chat.maxLevelThanks')}
                 action={onGraduate ? `🎓 ${t('buddy.graduate.button')}` : undefined}
                 onAction={onGraduate}
+              />
+            </View>
+          );
+        }
+        if (item.type === 'BUDDY_EVENT' && item.event === 'JOB' && isJob(item.detail)) {
+          return (
+            <View style={styles.spaced}>
+              <EventCard
+                title={t('buddyEvent.JOB', {
+                  icon: JOB_ICON[item.detail],
+                  buddy: buddyName,
+                  job: t(`buddy.job.${item.detail}`),
+                })}
+                body={t(`buddy.jobWhy.${item.detail}`)}
               />
             </View>
           );

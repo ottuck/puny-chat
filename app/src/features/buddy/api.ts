@@ -2,6 +2,9 @@ import { api } from '@/lib/api';
 
 export type BuddyStage = 'EGG' | 'BABY' | 'CHILD' | 'ADULT';
 
+// What it grows up to be, from how the two raised it (server: buddy/BuddyJob).
+export type BuddyJob = 'CHEF' | 'CLEANER' | 'OWL' | 'COMEDIAN' | 'ROMANTIC' | 'CHATTERBOX';
+
 // Once a day, when both members have sent a message that day. server: BuddyRules.TOGETHER_EXP
 export const TOGETHER_EXP = 10;
 
@@ -23,6 +26,10 @@ export type BuddyView = {
   // Members who sent a message today (Japan time), and whether both have: the day's bonus is in.
   talkedToday: string[];
   togetherToday: boolean;
+  // Fixed when it becomes an adult; null before, and for adults from before jobs existed.
+  job: BuddyJob | null;
+  // As a child, the job it is heading for so far.
+  leaning: BuddyJob | null;
 };
 
 // changed: false when it was not needed, or the other member just did it.

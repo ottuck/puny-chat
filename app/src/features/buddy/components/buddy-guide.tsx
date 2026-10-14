@@ -52,11 +52,13 @@ export function BuddyGuide() {
         t('guide.care.feed'),
         t('guide.care.clean'),
         t('guide.care.pet'),
+        t('guide.care.words'),
       ])}
       {section(t('guide.grow.title'), [
         t('guide.grow.exp'),
         t('guide.grow.together', { exp: TOGETHER_EXP }),
         t('guide.grow.stages'),
+        t('guide.grow.job'),
       ])}
 
       <View style={[styles.card, { backgroundColor: colors.surface }]}>

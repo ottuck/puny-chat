@@ -20,6 +20,7 @@ import { confirm } from '@/lib/confirm';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
 import { type BuddyView, TOGETHER_EXP } from '../api';
+import { isJob, JOB_ICON } from '../jobs';
 import { BuddyAvatar } from './buddy-avatar';
 import { rewardIcon } from './buddy-guide';
 import { nextReward } from './stage-decor';
@@ -137,6 +138,8 @@ export function BuddySheet({
 
             {together ? <TogetherCard buddy={buddy} {...together} /> : null}
 
+            <JobCard buddy={buddy} />
+
             <NextReward level={buddy.level} album={album ?? []} />
 
             <Text style={[styles.hint, { color: colors.textMuted }]}>{t('buddy.growthHint')}</Text>
@@ -182,6 +185,43 @@ function TogetherCard({
       <Text lineBreakStrategyIOS="hangul-word" style={[styles.body, { color: colors.textMuted }]}>
         {t(`buddy.together.${state}`, { name: partnerName, exp: TOGETHER_EXP })}
       </Text>
+    </View>
+  );
+}
+
+// What it grows up to be (docs/fun-improvements.md, 5): the job once an adult, and before that where
+// it is heading, so the way they raise it shows.
+function JobCard({ buddy }: { buddy: BuddyView }) {
+  const colors = useColors();
+  const { t } = useTranslation();
+  const job = buddy.job ?? buddy.leaning;
+  if (!job) return null;
+  const name = t(`buddy.job.${job}`, { defaultValue: job });
+  return (
+    <View style={[styles.card, { backgroundColor: colors.surface }]}>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('buddy.jobCard.title')}</Text>
+      {buddy.job ? (
+        <>
+          <Text style={[styles.body, { color: colors.text }]}>
+            {JOB_ICON[job]} {name}
+          </Text>
+          <Text style={[styles.body, { color: colors.textMuted }]}>
+            {t(`buddy.jobWhy.${job}`, { defaultValue: '' })}
+          </Text>
+        </>
+      ) : (
+        <>
+          <Text lineBreakStrategyIOS="hangul-word" style={[styles.body, { color: colors.text }]}>
+            {t('buddy.jobCard.leaning', { icon: JOB_ICON[job], job: name })}
+          </Text>
+          <Text
+            lineBreakStrategyIOS="hangul-word"
+            style={[styles.body, { color: colors.textMuted }]}
+          >
+            {t('buddy.jobCard.hint')}
+          </Text>
+        </>
+      )}
     </View>
   );
 }
@@ -290,6 +330,7 @@ function AlbumCard({ album }: { album: AlbumEntry[] }) {
     <View style={[styles.card, { backgroundColor: colors.surface }]}>
       <Text style={[styles.sectionTitle, { color: colors.text }]}>📖 {t('buddy.album.title')}</Text>
       {[...album].reverse().map((entry) => {
+        const job = entry.job ?? undefined;
         const born = new Date(entry.bornAt);
         const left = new Date(entry.graduatedAt);
         const days = Math.max(1, Math.ceil((left.getTime() - born.getTime()) / DAY_MS));
@@ -299,7 +340,10 @@ function AlbumCard({ album }: { album: AlbumEntry[] }) {
               <BuddyAvatar stage="ADULT" size={36} />
             </View>
             <View style={styles.albumText}>
-              <Text style={[styles.statLabel, { color: colors.text }]}>{entry.name}</Text>
+              <Text style={[styles.statLabel, { color: colors.text }]}>
+                {entry.name}
+                {isJob(job) ? ` · ${JOB_ICON[job]} ${t(`buddy.job.${job}`)}` : ''}{' '}
+              </Text>
               <Text style={[styles.statValue, { color: colors.textMuted }]}>
                 {t('buddy.album.together', {
                   from: date.format(born),

@@ -46,6 +46,8 @@ function egg(name: string): BuddyView {
     grown: false,
     talkedToday: [],
     togetherToday: false,
+    job: null,
+    leaning: null,
   };
 }
 
@@ -69,6 +71,7 @@ function afterEvent(buddy: BuddyView, event: BuddyEvent): BuddyView | null {
           };
     case 'MAX_LEVEL':
     case 'GRADUATED':
+    case 'JOB':
       return null; // not in the script
     case 'LEVELED_UP':
       return { ...buddy, level: buddy.level + 1, levelProgress: 0.1 };

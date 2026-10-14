@@ -161,6 +161,27 @@
       "none": "When you both send a message today, you get +{{exp}} EXP once a day.",
       "me": "You",
       "badge": "You were both here today"
+    },
+    "job": {
+      "CHEF": "Chef",
+      "CLEANER": "Cleaning Captain",
+      "OWL": "Night Owl",
+      "COMEDIAN": "Comedian",
+      "ROMANTIC": "Romantic",
+      "CHATTERBOX": "Chatterbox"
+    },
+    "jobWhy": {
+      "CHEF": "You fed it well",
+      "CLEANER": "You kept the floor clean",
+      "OWL": "You talked late into the night",
+      "COMEDIAN": "You laughed a lot",
+      "ROMANTIC": "You said \"love you\" a lot",
+      "CHATTERBOX": "A bit of everything"
+    },
+    "jobCard": {
+      "title": "Job",
+      "leaning": "Growing up to be a {{icon}} {{job}}",
+      "hint": "When it grows up, how you raised it decides its job."
     }
   },
   "buddyEvent": {
@@ -172,7 +193,8 @@
     "EVOLVED": "{{buddy}} evolved! ✨",
     "MAX_LEVEL": "🎉 {{buddy}} reached the top level, Lv.{{level}}!",
     "GRADUATED": "🎓 {{name}} went its own way and is in the album now. A new egg arrived!",
-    "TOGETHER": "🤝 You both showed up today! Together bonus +{{exp}} EXP"
+    "TOGETHER": "🤝 You both showed up today! Together bonus +{{exp}} EXP",
+    "JOB": "{{icon}} {{buddy}}'s job: {{job}}!"
   },
   "settings": {
     "title": "Settings",
@@ -281,13 +303,15 @@
       "title": "🍚 Care",
       "feed": "When it is hungry the bowl is empty. Tap the bowl, or send just \"food\" in the chat.",
       "clean": "Each tap cleans up one 💩. Send \"clean\" in the chat to clean them all.",
-      "pet": "Tap your buddy and it cheers, dances or sings."
+      "pet": "Tap your buddy and it cheers, dances or sings.",
+      "words": "Words like \"lol\", \"love you\" or \"good night\" in the chat make the buddy react. It loves it even more when you both pet it."
     },
     "grow": {
       "title": "🌱 Growing",
       "exp": "EXP: +1 per message (up to 50 a day), +2 for a meal, +2 per 💩 cleaned.",
       "stages": "Egg → baby (Lv.3) → child (Lv.10) → adult (Lv.20). From child on, it talks.",
-      "together": "When you both send a message on the same day, you get a together bonus of +{{exp}} EXP once a day. 🤝"
+      "together": "When you both send a message on the same day, you get a together bonus of +{{exp}} EXP once a day. 🤝",
+      "job": "When it grows up, how you raised it decides its job: feed it a lot and it is a chef, talk late into the night and it is a night owl."
     },
     "rewards": {
       "title": "🎁 Level rewards",

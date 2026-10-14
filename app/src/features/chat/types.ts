@@ -7,7 +7,8 @@ export type BuddyEvent =
   | 'EVOLVED'
   | 'MAX_LEVEL'
   | 'GRADUATED'
-  | 'TOGETHER';
+  | 'TOGETHER'
+  | 'JOB';
 export type SystemEvent = 'MEMBER_LEFT';
 
 // As the server sends it (server/src/main/java/com/buddychat/chat/Message.java).
