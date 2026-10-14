@@ -176,6 +176,12 @@ export function useBuddyTalk({
     setLine(next);
     hideTimer.current = setTimeout(() => setLine(null), ms);
   }, []);
+  // Drops what is being said, for a moment that should have the stage to itself.
+  const hush = useCallback(() => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = null;
+    setLine(null);
+  }, []);
   // Counts the chances that passed while the chat was lively, to try again after the next wait.
   const [skipped, setSkipped] = useState(0);
   const lastTalkRef = useRef(lastTalkAt);
@@ -236,5 +242,5 @@ export function useBuddyTalk({
     return () => clearTimeout(timer);
   }, [canTalk, quiet, line, skipped, job, say]);
 
-  return { line: canTalk ? line : null, say };
+  return { line: canTalk ? line : null, say, hush };
 }

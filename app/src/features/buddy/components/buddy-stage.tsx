@@ -63,7 +63,9 @@ type Act = 'dance' | 'sing' | 'refuse' | 'hiccup' | 'startle' | 'lookAround' | '
 // A one-word message for the buddy ("밥", "춤", …, features/buddy/chat-words.ts), or the tour's
 // script asking for a dance or a song.
 // "job": the buddy does its work (only asked for by the art preview, app/preview.tsx).
-export type Cue = { id: string; kind: ChatWord | Mood | 'job' };
+// The happenings can be cued too, but only the preview screen does (app/preview.tsx).
+type Happening = 'hiccup' | 'startle' | 'lookAround' | 'yawn';
+export type Cue = { id: string; kind: ChatWord | Mood | 'job' | Happening };
 // How long a mood from the chat ("사랑해", "ㅋㅋ", …, chat-words.ts) shows, and what the buddy says.
 type StageMood = Mood | 'coPet';
 const MOOD_MS: Record<StageMood, number> = {
@@ -400,13 +402,18 @@ export function BuddyStage({
   const eating = active?.kind === 'fed';
   const settled = sleeping || buddy.hungry || egg || eating || evolving;
   const acting = act !== null;
-  const { line, say } = useBuddyTalk({
+  const { line, say, hush } = useBuddyTalk({
     stage: buddy.stage,
     quiet: sleeping || !!active || acting || !!mood,
     greets,
     lastTalkAt,
     job,
   });
+  // The evolution has the stage to itself: what was being said ("배고파…") goes, and nothing is
+  // shown over the growing and shrinking body until it settles.
+  useEffect(() => {
+    if (evolving) hush();
+  }, [evolving, hush]);
 
   const perform = useCallback(
     (next: Act, replaceCurrent = false) => {
@@ -520,7 +527,15 @@ export function BuddyStage({
   useEffect(() => {
     if (!cue || egg) return;
     const timer = setTimeout(() => {
-      if (cue.kind === 'dance' || cue.kind === 'sing' || cue.kind === 'job')
+      if (
+        cue.kind === 'dance' ||
+        cue.kind === 'sing' ||
+        cue.kind === 'job' ||
+        cue.kind === 'hiccup' ||
+        cue.kind === 'startle' ||
+        cue.kind === 'lookAround' ||
+        cue.kind === 'yawn'
+      )
         perform(cue.kind, true);
       else if (cue.kind !== 'feed' && cue.kind !== 'clean') startMood(cue.kind);
       else if (cue.kind === 'feed' && !canFeed) {
@@ -847,40 +862,44 @@ export function BuddyStage({
           : act === 'job' && job
             ? jobPose(job, tick)
             : act === 'yawn'
-              ? 'sleep'
-              : act === 'refuse' || act === 'hiccup' || act === 'startle' || act === 'lookAround'
-                ? 'idle'
-                : active?.kind === 'cleaned' ||
-                    active?.kind === 'levelUp' ||
-                    active?.kind === 'together' ||
-                    active?.kind === 'here' ||
-                    (active?.kind === 'evolved' && !evolving) ||
-                    petted
-                  ? 'happy'
-                  : sleeping
-                    ? 'sleep'
-                    : buddy.hungry
-                      ? 'hungry'
-                      : walking
-                        ? tick % 2 === 0
-                          ? 'step'
-                          : 'idle'
-                        : tick % 11 === 0
-                          ? 'blink'
-                          : 'idle';
+              ? 'yawn'
+              : act === 'hiccup'
+                ? 'hiccup'
+                : act === 'startle'
+                  ? 'surprised'
+                  : act === 'refuse' || act === 'lookAround'
+                    ? 'idle'
+                    : active?.kind === 'cleaned' ||
+                        active?.kind === 'levelUp' ||
+                        active?.kind === 'together' ||
+                        active?.kind === 'here' ||
+                        (active?.kind === 'evolved' && !evolving) ||
+                        petted
+                      ? 'happy'
+                      : sleeping
+                        ? 'sleep'
+                        : buddy.hungry
+                          ? 'hungry'
+                          : walking
+                            ? tick % 2 === 0
+                              ? 'step'
+                              : 'idle'
+                            : tick % 11 === 0
+                              ? 'blink'
+                              : 'idle';
 
   // A mood from the chat shows on the face unless something bigger (eating, straining) is going on.
   const moodPose: Pose | null =
     mood === 'laugh'
       ? tick % 2 === 0
-        ? 'happy'
-        : 'step'
+        ? 'laugh'
+        : 'happy'
       : mood === 'love' || mood === 'cheer' || mood === 'morning' || mood === 'coPet'
         ? 'happy'
         : mood === 'goodnight'
           ? 'sleep'
           : mood === 'comfort'
-            ? 'idle'
+            ? 'worried'
             : null;
   const pose: Pose =
     moodPose && !eating && active?.kind !== 'pooped' && !acting ? moodPose : basePose;
@@ -1208,7 +1227,7 @@ export function BuddyStage({
             <PixelSprite frame={NOTE} palette={BUDDY_PALETTE} scale={4} />
           </Animated.View>
         ) : null}
-        {line ? (
+        {line && !evolving ? (
           <SpeechBubble
             text={t(`buddy.say.${line}`)}
             side={onRightHalf ? 'left' : 'right'}
