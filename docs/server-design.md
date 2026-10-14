@@ -215,10 +215,10 @@ server → client
   없으면 서버가 실행마다 임시 키를 쓴다(로컬 개발용).
 - 설정: `buddychat.push.grace-period`(3s), `receipt-delay`(15m), `expo-access-token`(Expo의 강화 보안을 켤 때).
 
-## 인프라 (S7, 2026-10 Railway·Atlas·Cloudflare로 이전)
+## 인프라 (S7, 2026-10 Lightsail·Atlas·Cloudflare로 이전)
 
 ```text
-iPhone / Web ──HTTPS·WSS──▶ Railway (Spring WebFlux, Docker, 싱가포르) ──▶ MongoDB Atlas M0 (싱가포르)
+iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, Docker, 시드니) ──▶ MongoDB Atlas M0 (시드니)
 웹 앱: Cloudflare Worker (정적 자산)            DNS·Terraform state: Cloudflare (puny-chat.com, R2)
 외부: Firebase Authentication, Web Push(FCM·Apple·Mozilla 푸시 서비스), Expo 푸시(S8)
 ```
@@ -228,34 +228,45 @@ iPhone / Web ──HTTPS·WSS──▶ Railway (Spring WebFlux, Docker, 싱가�
   이 프로젝트만의 작은 구성으로 옮겼다: Railway Hobby(월 $5, 사용량 $5 포함), Atlas M0(무료), Cloudflare(무료).
   2026-10-01에 전환했다: 서버 health `UP`, `puny-chat.com`에서 게스트 로그인·방·메시지 확인. 그 뒤 Azure 리소스,
   공유 레지스트리의 서버 이미지, 옛 설정(`infra/azure/`)을 지웠다.
-- **서버**: Railway 서비스 1개, 싱가포르(`asia-southeast1-eqsg3a`), 복제 1(연결·presence·typing이 메모리에 있다).
-  항상 켜져 있어 콜드 스타트가 없다(앱의 미리 깨우기 `app/src/lib/warm-up.ts`는 남아 있다). Railway는 사용한 만큼 과금하므로
-  힙을 `-Xmx384m`, SerialGC로 고정한다(`JAVA_TOOL_OPTIONS`). 유휴 연결 타임아웃 때문에 서버가 25초마다 ping을 보낸다.
-  재배포하면 WebSocket이 끊기므로 앱은 재연결을 전제로 한다.
-- **DB**: MongoDB Atlas M0(무료, 512MB, 초당 100 ops), 싱가포르 AWS. 서버와 같은 도시라 쿼리마다 왕복이 짧다.
-  Railway Hobby는 나가는 IP가 고정이 아니어서 Atlas 접근 목록을 0.0.0.0/0으로 두었다. 비밀번호(32자, Terraform이 만들어
-  Railway 변수로만 전달)와 TLS가 막는다. 사용자가 늘면 Railway의 고정 IP(Pro) 또는 Atlas 유료 티어의 private networking을 쓴다.
+  **2026-10-14에 Railway를 떠났다.** 고정비를 줄이려고 서버를 이미 쓰고 있던 AWS Lightsail 인스턴스(`quant-lab-02`,
+  시드니, 2GB, 고정 IP)에 함께 올리고, Atlas M0도 시드니에 새로 만들었다. 데이터는 옮기지 않고 새로 시작했다.
+  Railway 프로젝트와 `infra/`의 Railway 리소스는 전환을 확인한 뒤 지웠다.
+- **서버**: Lightsail 인스턴스(`quant-lab-02`, ap-southeast-2)의 Docker Compose(`server/deploy`, 인스턴스의 `/opt/puny-chat`).
+  컨테이너는 둘이다: 서버(Spring WebFlux, 복제 1: 연결·presence·typing이 메모리에 있다)와 Caddy(80/443, 인증서 자동 발급·갱신,
+  WebSocket 그대로 전달). 항상 켜져 있어 콜드 스타트가 없다(앱의 미리 깨우기 `app/src/lib/warm-up.ts`는 남아 있다).
+  인스턴스를 다른 서비스(quant-lab, ur-check)와 나눠 쓰므로 힙을 `-Xmx384m`, SerialGC로 고정하고(`JAVA_TOOL_OPTIONS`)
+  컨테이너는 640MB로 제한한다. 인스턴스 메모리는 2GB이고 스왑 2GB가 있어 여유가 크지 않다. 유휴 연결 타임아웃 때문에 서버가 25초마다
+  ping을 보낸다. 재배포하면 WebSocket이 끊기므로 앱은 재연결을 전제로 한다. 서버 설정은 인스턴스의 `/opt/puny-chat/.env`
+  (git 제외, 견본 `server/deploy/.env.example`)에 있고, Gmail 값처럼 Terraform이 모르는 것도 여기에만 있다.
+  방화벽(Lightsail 네트워킹)은 80·443만 전체에 열고, SSH(22)는 Lightsail 브라우저 연결(`lightsail-connect`)만 허용한다.
+- **DB**: MongoDB Atlas M0(무료, 512MB, 초당 100 ops), 시드니 AWS(`AP_SOUTHEAST_2`). 서버와 같은 리전이라 쿼리마다 왕복이 짧다.
+  접근 목록은 Lightsail 고정 IP(`54.79.210.198/32`) 하나뿐이다. 비밀번호(32자, Terraform이 만들어 서버 `.env`로만 전달)와
+  TLS도 있다. 인스턴스를 바꾸면 고정 IP를 옮기거나 `var.server_ip`를 바꿔 다시 apply한다.
   DocumentDB 때 정한 대로 트랜잭션·change stream·복잡한 aggregation에 기대지 않는 원칙은 그대로 둔다(단순함).
-  이전 때 데이터는 옮기지 않고 새로 시작했다.
+  M0는 리전을 바꿀 수 없어(바꾸면 클러스터가 삭제 후 재생성된다) 시드니 이전 때도 데이터는 옮기지 않고 새로 시작했다.
 - **웹 앱**: Cloudflare Worker의 정적 자산(스크립트 없음, `app/wrangler.jsonc`). Cloudflare가 새 프로젝트에 Pages보다
   Workers를 권장한다. `pnpm build:web`이 `expo export -p web` 뒤에 `app/scripts/worker-assets.mjs`로 404 페이지와
   `_headers`(서비스 워커 no-cache 등)를 만든다. route마다 생기는 `join.html`은 `html_handling: auto-trailing-slash`가
   `/join`으로 연결한다. 커스텀 도메인 `puny-chat.com`은 wrangler 배포가 붙인다(DNS 레코드와 인증서를 Cloudflare가
   만든다. 같은 이름의 CNAME이 있으면 안 된다). `EXPO_PUBLIC_*`는 빌드에 들어가는 공개 값이라 repo variables로 둔다.
-- **도메인**: 웹 `puny-chat.com`(Worker), 서버 `api.puny-chat.com`(Railway 커스텀 도메인, CNAME + 확인용 TXT를
-  Terraform이 Cloudflare에 만든다, 프록시 없음). puny-chat.com은 Cloudflare Registrar에서 샀다(2026-09-30). 전에 쓰던
+- **도메인**: 웹 `puny-chat.com`(Worker), 서버 `api.puny-chat.com`(Lightsail 고정 IP를 가리키는 A 레코드를
+  Terraform이 Cloudflare에 만든다, 프록시 없음. 인증서는 Caddy가 HTTP-01로 받는다). puny-chat.com은 Cloudflare Registrar에서 샀다(2026-09-30). 전에 쓰던
   buddy.pokepidia.com은 리다이렉트하지 않고 Azure와 함께 정리했다. Firebase 콘솔의
   승인된 도메인에 웹 도메인이 있어야 Google 로그인이 된다. 서버 CORS에는 웹 도메인과 로컬 Expo dev 서버가 들어간다.
-- **Terraform**(`infra/`, 사용법은 `infra/README.md`): Atlas 프로젝트·M0·DB 사용자·접근 목록, Railway 프로젝트·서비스·변수·
-  커스텀 도메인, Cloudflare DNS, VAPID 키. state는 Cloudflare R2(S3 호환 backend)에 둔다. 인증 정보는 `infra/.env`(git 제외)에만
-  있다. Railway provider는 커뮤니티 것(terraform-community-providers/railway)이다.
-- **배포**(`.github/workflows/deploy.yml`): main에서 CI가 통과하면 서버는 `railway up`(server/의 Dockerfile·`railway.json`,
-  health check 뒤 전환), 웹은 `wrangler deploy`. `server/`가 바뀐 push만 서버를 다시 배포한다(새 배포는 모든 WebSocket을
-  끊는다). GitHub secrets: `RAILWAY_TOKEN`(프로젝트 토큰), `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
+- **Terraform**(`infra/`, 사용법은 `infra/README.md`): Atlas 프로젝트·M0·DB 사용자·접근 목록, Cloudflare DNS, VAPID 키(출력은
+  없고 state에만 있다. 운영 값은 서버 `.env`가 쥔다). state는 Cloudflare R2(S3 호환 backend)에 둔다. 인증 정보는 `infra/.env`
+  (git 제외)에만 있다. Lightsail 인스턴스는 다른 서비스와 나눠 쓰므로 Terraform이 만들지 않는다(고정 IP만 변수로 받는다).
+- **배포**(`.github/workflows/deploy.yml`): main에서 CI가 통과하면 서버는 이미지를 빌드해 GHCR
+  (`ghcr.io/ottuck/puny-chat-server`, `latest`와 커밋 sha 태그, 패키지는 처음 한 번 GitHub 설정에서 Public으로 바꾼다)에 올리고, 웹은 `wrangler deploy`한다.
+  인스턴스의 systemd 타이머(`puny-chat-update.timer`)가 1분마다 `server/deploy/update.sh`로 새 이미지를 받아 컨테이너를
+  다시 만든다. CI가 인스턴스에 SSH로 들어가지 않으므로 22번을 열 필요가 없다. 배포 확인은 CI가 한다: `update.sh`가 실행 중인 커밋을
+  Caddy의 `/_revision`에 내놓으면 CI가 그 값이 방금 올린 sha가 될 때까지 기다린 뒤 health를 본다. `server/`가 바뀐 push만 서버를 다시 배포한다(새 배포는 모든 WebSocket을
+  끊는다). 롤백은 인스턴스에서 `compose.yaml`의 이미지 태그를 이전 sha로 바꾸고 타이머를 멈춘 뒤 `docker compose up -d`.
+  GitHub secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
 - **Redis는 쓰지 않는다.** 레플리카가 1개라 세션·presence·typing은 프로세스 메모리로 충분하다. 수평 확장이
   필요해지면 `RoomHub.publish` 뒤에 Redis Pub/Sub을 둔다.
 - **파일 저장소는 쓰지 않는다.** 사진 첨부가 MVP 밖이다. 나중에 넣으면 바이너리는 R2, 메타데이터만 DB.
-- 쓰지 않는 것: VM, self-hosted MongoDB, Kubernetes, Kafka.
+- 쓰지 않는 것: 이 프로젝트만을 위한 VM, self-hosted MongoDB, Kubernetes, Kafka. (서버는 이미 있는 Lightsail 인스턴스에 함께 올린다.)
 
 ## 마일스톤
 
@@ -265,7 +276,7 @@ iPhone / Web ──HTTPS·WSS──▶ Railway (Spring WebFlux, Docker, 싱가�
 4. **S4 앱 연결**: 목업을 서버 데이터로 교체, 재연결
 5. **S5 Buddy**: 서버 규칙, 밥주기·청소(동시성), 타임라인 이벤트, 메시지 EXP 하루 상한
 6. **S6 Presence·Typing·Read**
-7. **S7 배포**: 처음에는 Azure Container Apps, DocumentDB, Terraform(2026-10 Railway·Atlas·Cloudflare로 이전, 위 인프라). 배포 후 확인할 것:
+7. **S7 배포**: 처음에는 Azure Container Apps, DocumentDB, Terraform(2026-10 Railway를 거쳐 Lightsail·Atlas·Cloudflare로 이전, 위 인프라). 배포 후 확인할 것:
    - WebSocket을 15분 이상 유지: 25초 ping이 계속되고, 그 뒤 메시지를 보내고 받는다. 일반 HTTP 요청 timeout(240초)이나
      유휴 timeout이 업그레이드된 연결에 어떻게 적용되는지 문서로 가정하지 않고 실제로 본다.
    - 아이폰 백그라운드 → 포그라운드 → 재연결(2026-09-27 확인: 웹에서 보낸 메시지를 복귀 즉시 받음), 토큰 만료 뒤 재연결
@@ -274,7 +285,7 @@ iPhone / Web ──HTTPS·WSS──▶ Railway (Spring WebFlux, Docker, 싱가�
    - **결과(2026-09-27, PR #4)**: 서버 테스트 58개를 실제 DocumentDB에서 전부 통과. 배포된 서버에서 16분 idle 뒤에도
      WebSocket 유지(240초 요청 timeout은 업그레이드된 연결에 적용되지 않음), 재연결 0.14초, 토큰 만료 시각에
      `TOKEN_EXPIRED` → 새 토큰으로 재연결, 아이폰 백그라운드 복귀 정상. 메시지 전달 30~400ms.
-   - scale-to-zero 뒤 첫 접속은 약 21초였다. 그래서 `minReplicas = 1`로 바꿨다(적용 후 응답 0.1초 이내). 지금 Railway도 항상 1대가 켜져 있다.
+   - scale-to-zero 뒤 첫 접속은 약 21초였다. 그래서 `minReplicas = 1`로 바꿨다(적용 후 응답 0.1초 이내). 지금 Lightsail도 항상 1대가 켜져 있다.
      `main` 자동 배포(CI 안의 deploy job)는 확인 완료.
 8. **S8 Push**: FCM / APNs. 상대가 오프라인일 때 상대 메시지만 알린다(Buddy 알림 없음).
    iOS는 결국 APNs를 거치므로 `expo-notifications`로 할지 FCM으로 할지 이때 정한다. 개발용 빌드와
@@ -395,11 +406,11 @@ iPhone / Web ──HTTPS·WSS──▶ Railway (Spring WebFlux, Docker, 싱가�
 - 완료한 문의·신고의 메일은 운영자에게만 보낸다. 60초마다 최대 10건을 DB에서 원자적으로 임대하고, 실패하면 2~60분 간격으로
   재시도한다. Gmail API(HTTPS)의 토큰 갱신·발송을 `boundedElastic`에서 실행하고 요청 제한 시간을 각각 5초로 둔다. 발송 후 DB 기록 전에 프로세스가
   종료되면 같은 접수 알림이 중복될 수 있으므로 접수 번호로 구분한다. 사용자 개별 이메일 답장은 없다.
-- Railway Hobby의 SMTP 제한 때문에 Gmail OAuth의 `gmail.send` 권한으로 발송한다. Gmail 인증 값 미설정 시 알림은 대기하고 접수·안전 조치는 동작한다. 메일 상태를 전체 health 판정에서 제외해 설정 누락이나
+- 호스팅 쪽 SMTP 제한(AWS 25번 포트 등) 때문에 Gmail OAuth의 `gmail.send` 권한으로 발송한다. Gmail 인증 값 미설정 시 알림은 대기하고 접수·안전 조치는 동작한다. 메일 상태를 전체 health 판정에서 제외해 설정 누락이나
   Gmail 장애가 채팅 서버 배포를 막지 않게 한다. 환경변수와 수동 운영은 `docs/support-operations.md`를 따른다.
 - 공개 연락처는 `support@puny-chat.com`으로, 외부 메일은 Cloudflare Email Routing이 운영자에게 전달한다.
   서버 알림은 `SUPPORT_EMAIL`의 운영자 메일함으로 직접 보내며 `SUPPORT_FROM`은 승인한 Gmail 발송 계정이다.
-  개인 주소는 Railway 환경변수로만 관리하고 저장소에는 기본값을 두지 않는다. 소켓 종료도 일반 이벤트와 같은 직렬화 재시도를 적용해
+  개인 주소는 서버 `.env`로만 관리하고 저장소에는 기본값을 두지 않는다. 소켓 종료도 일반 이벤트와 같은 직렬화 재시도를 적용해
   동시 presence/Buddy 전송 때문에 종료 신호가 버려지지 않게 한다.
 
 ## 계정 삭제
@@ -436,7 +447,7 @@ App Store Guideline 5.1.1(v)(앱에서 만든 계정은 앱에서 지울 수 있
 
 Firebase가 30일 지난 익명 계정을 지워도 서버의 사용자·방·메시지는 남는다. 링크를 공개하면 방문자마다 게스트가 생기므로
 서버가 **매주 월요일 04:00(일본 시간)** 정리한다(`account/GuestCleanup`, Spring `@Scheduled`). 서버가 항상 1대 떠 있어서
-가능하다(인프라: Railway 서비스는 항상 켜져 있다). 배포 중 2대가 겹쳐 두 번 돌아도 삭제는 여러 번 해도 같다.
+가능하다(인프라: Lightsail 서버는 항상 켜져 있다). 배포 중 2대가 겹쳐 두 번 돌아도 삭제는 여러 번 해도 같다.
 
 - **게스트 판단**: 토큰의 `firebase.sign_in_provider`가 `anonymous`이고 `firebase.identities`가 비어 있으면 게스트.
   Google을 연결하면 uid와 로그인 방식은 그대로지만 identity가 생겨서 게스트가 아니다.

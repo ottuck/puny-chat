@@ -25,13 +25,6 @@ variable "api_subdomain" {
   default = "api"
 }
 
-# Railway's Southeast Asia region (Singapore), close to users in Korea and Japan; Atlas is in
-# the same city so every query stays local.
-variable "railway_region" {
-  type    = string
-  default = "asia-southeast1-eqsg3a"
-}
-
 # Sydney, next to the Lightsail instance, so every query stays local. M0 is offered there.
 variable "atlas_region" {
   type    = string
@@ -42,10 +35,4 @@ variable "atlas_region" {
 variable "server_ip" {
   type    = string
   default = "54.79.210.198"
-}
-
-# Launch growth rate, including solo use. Null falls back to the server default (5).
-variable "buddy_exp_per_level" {
-  type    = number
-  default = 5
 }

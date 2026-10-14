@@ -6,10 +6,6 @@ terraform {
       source  = "mongodb/mongodbatlas"
       version = "~> 2.19"
     }
-    railway = {
-      source  = "terraform-community-providers/railway"
-      version = "~> 0.6"
-    }
     cloudflare = {
       source  = "cloudflare/cloudflare"
       version = "~> 5.26"
@@ -41,8 +37,6 @@ terraform {
 }
 
 # Credentials come from the environment (infra/.env): MONGODB_ATLAS_CLIENT_ID and
-# MONGODB_ATLAS_CLIENT_SECRET (an Atlas service account), RAILWAY_TOKEN (an account token), and
-# CLOUDFLARE_API_TOKEN.
+# MONGODB_ATLAS_CLIENT_SECRET (an Atlas service account) and CLOUDFLARE_API_TOKEN.
 provider "mongodbatlas" {}
-provider "railway" {}
 provider "cloudflare" {}

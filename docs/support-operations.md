@@ -1,14 +1,14 @@
 # 문의·신고 운영
 
 공개 연락처는 `support@puny-chat.com`이며 외부에서 보낸 메일은 Cloudflare Email Routing이 운영자에게 전달한다.
-앱의 문의·신고 알림은 Railway의 `SUPPORT_EMAIL`에 설정한 운영자 메일함으로 직접 보낸다.
-개인 발신·수신 주소는 저장소에 기록하지 않고 Railway 환경변수로만 관리한다.
+앱의 문의·신고 알림은 서버 `.env`(Lightsail `/opt/puny-chat/.env`)의 `SUPPORT_EMAIL`에 설정한 운영자 메일함으로 직접 보낸다.
+개인 발신·수신 주소는 저장소에 기록하지 않고 서버 `.env`로만 관리한다.
 이용자는 앱에서 접수 완료·접수 번호를 확인한다. 문의·신고에 개별 이메일 답장을 보내지 않으며
 답장 주소 입력란도 제공하지 않는다. 사용자 자동 회신과 관리자 페이지는 없다.
 
 ## Gmail 연결
 
-현재 Railway Hobby는 SMTP 발송을 차단하므로 Gmail API(HTTPS)를 사용한다. Gmail 앱 비밀번호로는 연결되지 않는다.
+SMTP는 호스팅 쪽에서 막히는 경우가 많아(AWS도 25번 포트를 기본 제한한다. Railway Hobby도 막았다) Gmail API(HTTPS)를 사용한다. Gmail 앱 비밀번호로는 연결되지 않는다.
 운영자 한 계정의 발송 권한만 사용하며 앱 이용자의 Google 로그인에는 Gmail 권한을 추가하지 않는다.
 
 1. Google Cloud 프로젝트에서 Gmail API를 활성화한다. 운영자 발송용 OAuth 웹 클라이언트를 별도로 만들고
@@ -18,7 +18,7 @@
 3. 권한은 `https://www.googleapis.com/auth/gmail.send`만 선택한다. 운영자 발송 계정으로 직접 승인하고
    authorization code를 교환해 refresh token을 발급받는다. 메일 읽기·삭제 권한은 요구하지 않는다.
    OAuth 앱이 External / Testing 상태면 refresh token이 7일 뒤 만료될 수 있다. 장기 운영 전 Google의 운영 상태·검증 요구를 확인한다.
-4. Railway 프로젝트 → production → server → Variables에 아래 다섯 값을 등록하고 적용·재배포한다.
+4. Lightsail 인스턴스의 `/opt/puny-chat/.env`에 아래 다섯 값을 적고 `docker compose up -d`로 컨테이너를 다시 만든다.
    인증 값과 개인 메일 주소를 Git, PR이나 문서에 적지 않는다. 서버가 시작할 때 읽는 환경변수다.
 5. 앱에서 일반 문의 한 건을 접수하고 운영자 Gmail에서 접수 번호와 수신을 확인한다. 사용자에게 답장은 가지 않는다.
 
@@ -37,7 +37,7 @@ DB 기록 전 서버 중단 등으로 같은 알림이 중복될 수 있으므�
 Cloudflare 라우팅 주소는 수신·전달용이며 그 설정만으로 발송 계정이 만들어지지 않는다. 알림 발송에는 위 Gmail API 인증 연결이 별도로 필요하다.
 발신 Gmail과 전달 대상 Gmail이 같으면 라우팅된 메일이 중복으로 처리될 수 있으므로 서버 알림은 메일함에 직접 보낸다.
 실제 발송 계정을 서비스 메일로 바꾸면 발송 변수와 인증 정보도 함께 변경한다.
-Terraform이 Gmail 변수를 관리하지 않으므로 이후 인프라 변경 시 Railway에 직접 등록한 변수가 유지되는지도 확인한다.
+Terraform이 Gmail 변수를 관리하지 않으므로 `.env`는 인스턴스에만 있다. 인스턴스를 다시 만들 때는 이 파일을 옮겨야 한다.
 
 ## 접수 후 직접 대응
 
@@ -58,7 +58,7 @@ Terraform이 Gmail 변수를 관리하지 않으므로 이후 인프라 변경 �
 개인정보처리방침과 연락처는 로그인 없이 공개한다. 별도 관리자 페이지는 없으며 콘텐츠 사전 필터와 영구 이용 제한도 구현하지 않았다.
 현재 구현이 심사 지침 1.2의 모든 요건을 충족한다고 약속하지 않는다.
 
-근거: [Railway 외부 통신 제한](https://docs.railway.com/networking/outbound-networking),
+근거: [Railway 외부 통신 제한](https://docs.railway.com/networking/outbound-networking)(이전 환경),
 [Gmail API 발송](https://developers.google.com/workspace/gmail/api/guides/sending),
 [Google OAuth 토큰 정책](https://developers.google.com/identity/protocols/oauth2),
 [Apple 심사 지침](https://developer.apple.com/app-store/review/guidelines/).

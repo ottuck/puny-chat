@@ -11,10 +11,10 @@
 
 - `app/` — Expo(React Native) + TypeScript + Expo Router. iOS / Web / Android 공용 코드.
 - `server/` — Java 25, Spring Boot 4.1 + WebFlux + Reactive MongoDB. 패키지는 기능 모듈(`auth`, `user`, `room`, `chat`, `buddy`, `realtime`).
-- `infra/` — Terraform: Railway(서버), MongoDB Atlas(DB), Cloudflare(DNS, state는 R2).
+- `infra/` — Terraform: MongoDB Atlas(DB, 시드니), Cloudflare(DNS, state는 R2). 서버는 AWS Lightsail 인스턴스(`quant-lab-02`, 시드니)에서 `server/deploy`의 Docker Compose로 돈다.
 - `docs/` — 기획과 설계 문서, 출시 점검(`release-review.md`)과 App Store 출시 진행(`app-store-release.md`)
 - `.github/workflows/ci.yml` — app(lint / typecheck / test / format), server(spotless / test)
-- `.github/workflows/deploy.yml` — main에서 CI 통과 후 서버(Railway, `railway up`)와 웹(Cloudflare Worker, `wrangler deploy`) 배포
+- `.github/workflows/deploy.yml` — main에서 CI 통과 후 서버 이미지를 GHCR에 올리고(인스턴스가 1분마다 받아 간다) 웹(Cloudflare Worker, `wrangler deploy`)을 배포
 - 로컬 전용(gitignore): `.claude/`(desktop app preview 설정), `.idea/`, `.env*`
 
 ## App commands (`app/`에서 실행)
@@ -88,7 +88,9 @@
 - 인증 정보는 `infra/.env`(git 제외, `.env.example` 참고)에서 읽는다: `set -a; . ./.env; set +a`. state는 Cloudflare R2.
   init·plan·apply와 계정·토큰 준비는 `infra/README.md`.
 - apply 전에 plan을 사용자에게 보여주고 확인받는다. 이미 있는 리소스를 바꾸거나 지우는 plan은 특히.
-- 서버 코드는 Terraform이 아니라 deploy workflow가 배포한다(`railway up`). Terraform은 서비스와 변수만.
+- 서버 코드는 Terraform이 아니라 deploy workflow가 배포한다(GHCR 이미지 + 인스턴스의 update 타이머). Terraform은 Atlas와 DNS만.
+- Lightsail 인스턴스는 다른 서비스(quant-lab, ur-check)와 나눠 쓴다. 메모리가 빠듯하니(2GB) 서버 힙·컨테이너 한도를 함부로 키우지 않고,
+  방화벽·SSH 설정은 사용자에게 먼저 확인한다(SSH는 Lightsail 브라우저 연결만 허용). 서버 설정(`.env`)은 인스턴스의 `/opt/puny-chat`에만 있다.
 
 ## Server principles
 
@@ -143,7 +145,8 @@
   (feat/…, fix/…, chore/… 이름, `dev`로 PR).
 - `main`에는 직접 커밋하지 않는다. 기능 묶음이 끝나거나 릴리스 전에 `dev` → `main` PR을 열고,
   CI 통과 후 **merge commit**으로 합친다(squash하면 `dev`와 `main` 히스토리가 어긋난다).
-- 병합 전 자동 코드 리뷰의 완료 상태·대상 커밋과 개별 리뷰 댓글도 확인한다. CI 통과만으로 리뷰를 확인했다고 보지 않는다.
+- Codex 자동 리뷰는 선택 사항이다(2026-10-14 사용자 지시). 완료를 기다리거나 재리뷰를 요청하지 않는다. 이미 달린 리뷰 댓글은 읽고 타당한 것만 반영한다.
+- (선택) 리뷰가 달렸다면 완료 상태·대상 커밋과 개별 댓글도 확인한다. CI 통과만으로 리뷰를 확인했다고 보지 않는다.
   지적은 최신 코드와 제품 요구에 맞춰 평가하고, 타당한 문제는 수정·검증한다. 리뷰 대상 이후 코드를 고쳤다면 바뀐 부분과
   기존 지적을 다시 확인한다. 반영한 내용과 반영하지 않은 이유는 PR 본문·사용자에게 요약한다.
 - 사용자가 일반 변경의 운영 배포까지 진행하도록 승인했다(2026-10-10). 큰 문제가 없는 변경은

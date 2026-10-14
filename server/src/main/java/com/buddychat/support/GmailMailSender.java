@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
-/** Gmail over HTTPS: Railway Hobby does not allow outbound SMTP. Called on boundedElastic. */
+/** Gmail over HTTPS: hosting providers often block outbound SMTP (AWS port 25, Railway Hobby). Called on boundedElastic. */
 @Component
 class GmailMailSender extends JavaMailSenderImpl {
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
