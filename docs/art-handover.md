@@ -37,9 +37,10 @@
 
 - `BABY`(16×16), `CHILD`(20×20), `ADULT`(24×24)가 단계별 기본 격자다. 알(`EGG`, 16×16)은 따로 있다.
 - `ANATOMY`가 단계마다 **눈·입·발 위치**를 적어 둔다. `makePoses`가 기본 격자에 눈·입·발만 바꿔 자세를 만든다
-  (`Pose` = idle / step / blink / happy / sleep / hungry / eat / strain). 그래서 모든 자세가 같은 얼굴이다.
+  (`Pose` = idle / step / blink / happy / sleep / hungry / eat / strain / laugh / worried / yawn / hiccup / surprised). 그래서 모든 자세가
+  같은 얼굴이다. 볼 위치(`cheeks`)도 적어 두어 볼을 물들이는 표정(딸꾹질)에 쓴다.
 - 얹기 도구: `paint(frame, [[row, col, key], ...])`가 격자 위에 픽셀을 덮어쓴다.
-- 팔레트: 말랑이는 `BUDDY_PALETTE`(k 외곽선, b 몸, l 하이라이트, s 그늘, p 볼, g/G 잎, f 꽃잎, y 꽃술), 소품은 `PROP_PALETTE`
+- 팔레트: 말랑이는 `BUDDY_PALETTE`(k 외곽선, b 몸, l 하이라이트, s 그늘, p 볼, g/G 잎, f 꽃잎, y 꽃술, m 벌린 입 안), 소품은 `PROP_PALETTE`
   (k, c/h 똥, w 흰색, a 그릇, r 하트, y 반짝이, u 레벨업, g/G 식물, o 화분, m/n 러그, f 꽃, S 은, Y 금, e 화분 테두리, B 유약 화분).
   새 색은 **쓰이지 않은 글자**로 추가한다.
 - 무대 크기: 한 픽셀을 `gridScale`(3~5pt)로 그린다. 소품은 `PROP_SCALE = 3`. 어른 격자의 높이를 24에서 바꾸면 이 계산과 걷는 범위
@@ -51,9 +52,10 @@
 pnpm web
 ```
 
-- `http://localhost:8083/preview` — **그림 확인용 화면**(개발 빌드에서만 열린다). 단계(EGG~ADULT), 직업, 동작(`job work`, 춤, 노래),
+- `http://localhost:8083/preview` — **그림 확인용 화면**(개발 빌드에서만 열린다). 단계(EGG~ADULT), 직업, 동작(`job work`, 춤, 노래, 딸꾹질·깜짝·두리번·하품),
   채팅 낱말 반응(웃음·사랑·잘자·응원·위로·아침), 방의 사건(밥·청소·똥·레벨업·진화·함께·같이 있음), 상태(배고픔, 똥), 상대가 쓰다듬기를
-  버튼으로 바로 일으킨다. 그림을 끼우고 이 화면에서 직업을 바꿔 가며 본다. 파일: `app/src/app/preview.tsx`.
+  버튼으로 바로 일으킨다. 그림을 끼우고 이 화면에서 직업을 바꿔 가며 본다. 맨 아래 **poses**는 고른 단계의 모든 자세를 멈춘 채
+  크게 나란히 보여줘 얼굴을 한눈에 비교한다. 파일: `app/src/app/preview.tsx`.
 - `http://localhost:8083/demo` — 구경하기 전체 흐름(어른이 되면 요리사).
 - 화면이 반영되지 않으면 Metro 캐시: `pnpm start --clear`.
 - 한국 시간으로 밤(23~7시)에는 무대의 버디가 자는 모습이다(라디오 DJ는 3~11시). 미리보기에서 동작을 눌러도 Zzz가 뜰 수 있다.
@@ -68,7 +70,7 @@ pnpm web
 | B | **직업 소품**(일할 때 곁에 뜨는 것) | `buddy-stage.tsx`에서 `JOB_ICON` 이모지를 `Text`로 띄움(`styles.jobProp`, 위치는 `JOB_PROP_ABOVE`와 `spriteWidth`·`spriteHeight` 비율) | 6개 소품 스프라이트(`PROP_PALETTE`로). 머리 위(`DJ`=DJ, `POET`=시인)와 손 옆(나머지)이라는 위치 구분은 유지하거나 바꿔도 된다 |
 | C | **직업 모습**(몸에 얹는 것) | 없음. 직업이 있어도 몸은 같다 | 어른 격자 위에 직업별로 얹는 소품·옷. 아래 6절 시안 참고. `buddyFrame(stage, pose)`에 직업을 받는 방식(또는 `paint` 겹치기)으로 `buddy-stage.tsx`의 `frame` 계산(진화 중 깜빡임 바로 위)에 연결 |
 | D | **직업 표시**(무대 모서리) | `JOB_ICON` 이모지를 오른쪽 위에 띄움(`styles.jobBadge`) | 작은 도트 배지나 명패. 또는 **무대 바닥 소품 한 가지**(냄비, 작은 화분, 헤드폰, 마이크, 깃펜과 편지함, 커피잔)로 바꿔도 된다. 바닥에 두면 걷는 범위(`minX`/`maxX`)를 조정할 것 |
-| E | **표정 확장** | 웃음은 `happy`/`step` 번갈아, 위로는 `idle`, 하품은 `sleep`, 딸꾹질·깜짝·두리번은 `idle` (`buddy-stage.tsx`의 `moodPose`, `basePose`) | 웃음(눈 감고 활짝), 걱정하는 얼굴(위로), 하품(입 크게), 딸꾹질, 놀람의 자세. 단계별 `ANATOMY`에 맞춰 `makePoses`에 추가 |
+| E | **표정 확장** — **됨**(2026-10-15) | `makePoses`에 `laugh`(^^ + 활짝 벌린 입), `worried`(안쪽이 올라간 눈썹 + ∩ 입), `yawn`(졸린 눈 + 긴 입), `hiccup`(꼭 감은 눈 + 작은 o + 붉은 볼), `surprised`(세 칸 눈 + o). 아기·어린이·어른 모두 같은 규칙. 웃음 낱말은 `laugh`/`happy` 번갈아, 위로는 `worried`, 하품·딸꾹질·깜짝은 각 표정 | 두리번은 지금처럼 좌우 반전만 쓴다(2026-10-15 결정) |
 | F | **가끔 생기는 사건의 그림** | 없음(딸꾹질·깜짝·두리번·하품은 있음) | 나비가 날아와 앉기, 비 오는 날 우산, 별똥별. 코드 훅: `IDLE_ACTS`에 가중치로 한 줄 추가하고 `Act` 타입·`ACT_MS`·`ACT_LINE`에 넣는다(딸꾹질 구현을 본보기로). 대사 키를 더하면 번역 세 파일에도 넣는다 |
 | G | **기간 한정 모습** | 없음 | 10월 할로윈 모자 등 **버디 몸에만**. 날짜로 켜는 작은 함수를 두고 C와 같은 방식으로 얹는다 |
 | H | **큰 하트** | 기존 `HEART`를 5배로 키워 씀(`bigHeart`, 같이 쓰다듬기와 시인의 사랑 반응) | 전용 `HEART_BIG` 격자 |
