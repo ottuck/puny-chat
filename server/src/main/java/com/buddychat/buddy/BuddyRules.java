@@ -135,6 +135,12 @@ public final class BuddyRules {
         return now.minus(fullToEmpty.multipliedBy(100 - FEEDABLE_BELOW).dividedBy(100));
     }
 
+    // Night for the buddy's job: the app puts it to sleep at 23:00 and wakes it at 7:00 (local time).
+    static boolean isNight(Instant now) {
+        int hour = now.atZone(DAY_ZONE).getHour();
+        return hour >= 23 || hour < 7;
+    }
+
     static String day(Instant now) {
         return LocalDate.ofInstant(now, DAY_ZONE).toString();
     }

@@ -17,6 +17,11 @@ import org.jspecify.annotations.Nullable;
  * @param talkDay the day (Asia/Tokyo) {@code talkers} counts for; null until the first message
  * @param talkers members who sent a message on {@code talkDay}
  * @param togetherDay the last day both members talked (and the buddy got the bonus for it)
+ * @param fedCount meals given, and the next four: poops cleaned up, messages written at night, with a
+ *     laugh, and with a "love you" in them. What the job is made of ({@link BuddyJob}); null on
+ *     buddies from before they were counted, which counts as none
+ * @param job set once, when the buddy becomes an adult; null before that, and on adults from before
+ *     jobs existed
  */
 public record Buddy(
         String name,
@@ -29,12 +34,18 @@ public record Buddy(
         @Nullable Integer poopsCleaned,
         @Nullable String talkDay,
         @Nullable List<String> talkers,
-        @Nullable String togetherDay) {
+        @Nullable String togetherDay,
+        @Nullable Integer fedCount,
+        @Nullable Integer cleanedCount,
+        @Nullable Integer nightCount,
+        @Nullable Integer laughCount,
+        @Nullable Integer loveCount,
+        @Nullable String job) {
 
     public static final int MAX_NAME_LENGTH = 12;
 
     public static Buddy hatch(String name, Instant now) {
-        return new Buddy(name, 0, now, now, now, null, 0, 0, null, null, null);
+        return new Buddy(name, 0, now, now, now, null, 0, 0, null, null, null, 0, 0, 0, 0, 0, null);
     }
 
     Instant fedAt() {
@@ -49,9 +60,29 @@ public record Buddy(
         return poopsCleaned != null ? poopsCleaned : 0;
     }
 
+    int fed() {
+        return fedCount != null ? fedCount : 0;
+    }
+
+    int cleanedUp() {
+        return cleanedCount != null ? cleanedCount : 0;
+    }
+
+    int nights() {
+        return nightCount != null ? nightCount : 0;
+    }
+
+    int laughs() {
+        return laughCount != null ? laughCount : 0;
+    }
+
+    int loves() {
+        return loveCount != null ? loveCount : 0;
+    }
+
     /** The egg that takes this grown buddy's place. Today's talk carries over: one bonus a day. */
     Buddy next(String name, Instant now) {
-        return new Buddy(name, 0, now, now, now, null, 0, 0, talkDay, talkers, togetherDay);
+        return new Buddy(name, 0, now, now, now, null, 0, 0, talkDay, talkers, togetherDay, 0, 0, 0, 0, 0, null);
     }
 
     /** Members who sent a message on that day. */
