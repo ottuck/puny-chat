@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { BuddyStage } from './api';
+import type { BuddyJob, BuddyStage } from './api';
 
 // What a grown buddy says (docs/product.md, Buddy 무대): a greeting when the app opens, a word
 // back when it is fed, petted or cleaned, and now and then a line of its own. Lines are keys under
@@ -48,7 +48,36 @@ export type Line =
   | 'hiccup'
   | 'startle'
   | 'lookAround'
-  | 'yawn';
+  | 'yawn'
+  // A job's own words (JOB_LINES), and what it says at its own moments.
+  | 'chef1'
+  | 'chef2'
+  | 'chef3'
+  | 'chef4'
+  | 'cleaner1'
+  | 'cleaner2'
+  | 'cleaner3'
+  | 'cleaner4'
+  | 'owl1'
+  | 'owl2'
+  | 'owl3'
+  | 'owl4'
+  | 'comedian1'
+  | 'comedian2'
+  | 'comedian3'
+  | 'comedian4'
+  | 'romantic1'
+  | 'romantic2'
+  | 'romantic3'
+  | 'romantic4'
+  | 'chatter1'
+  | 'chatter2'
+  | 'chatter3'
+  | 'chatter4'
+  | 'chefFed'
+  | 'cleanerCleaned'
+  | 'comedianLaugh'
+  | 'romanticLove';
 
 const SAY_MS = 3000;
 const CHATTER_MIN_MS = 60_000;
@@ -70,6 +99,21 @@ const ASKS: Line[] = [
   'favFood',
   'tired',
 ];
+// What an adult says of its own, by job (docs/fun-improvements.md, 6): now and then instead of a
+// question, and when it does its work alone.
+export const JOB_LINES: Record<BuddyJob, Line[]> = {
+  CHEF: ['chef1', 'chef2', 'chef3', 'chef4'],
+  CLEANER: ['cleaner1', 'cleaner2', 'cleaner3', 'cleaner4'],
+  OWL: ['owl1', 'owl2', 'owl3', 'owl4'],
+  COMEDIAN: ['comedian1', 'comedian2', 'comedian3', 'comedian4'],
+  ROMANTIC: ['romantic1', 'romantic2', 'romantic3', 'romantic4'],
+  CHATTERBOX: ['chatter1', 'chatter2', 'chatter3', 'chatter4'],
+};
+// A chatterbox talks this much more often, and also while the two are chatting.
+const CHATTERBOX_PACE = 0.6;
+// How often an adult with a job says one of its own lines instead of a question.
+const OWN_LINE_CHANCE = 0.35;
+
 // A question stays a little longer than a thank-you, so it can be read and answered.
 const ASK_MS = 4500;
 // No text for this long counts as quiet.
@@ -107,6 +151,7 @@ export function useBuddyTalk({
   quiet,
   greets,
   lastTalkAt,
+  job,
 }: {
   stage: BuddyStage;
   quiet: boolean;
@@ -114,6 +159,8 @@ export function useBuddyTalk({
   greets: boolean;
   // When a text last came or went (ms); 0 when none yet.
   lastTalkAt: number;
+  // The adult's job: its own lines, and how much it talks.
+  job: BuddyJob | null;
 }) {
   const [line, setLine] = useState<Line | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -166,24 +213,28 @@ export function useBuddyTalk({
     };
   }, [greets, say]);
 
-  // Now and then a question of its own, when the two have not been writing for a while. While they
-  // are chatting it keeps out of the way.
+  // Now and then a question of its own, when the two have not been writing for a while, or a line
+  // of its job's. While they are chatting it keeps out of the way (a chatterbox does not).
   useEffect(() => {
     if (!canTalk || quiet || line) return;
+    const pace = job === 'CHATTERBOX' ? CHATTERBOX_PACE : 1;
     const timer = setTimeout(
       () => {
-        if (Date.now() - lastTalkRef.current < QUIET_CHAT_MS) {
+        const lively = Date.now() - lastTalkRef.current < QUIET_CHAT_MS;
+        if (lively && job !== 'CHATTERBOX') {
           setSkipped((count) => count + 1);
           return;
         }
-        const next = pick(ASKS.filter((ask) => ask !== lastAsk));
+        const own = job ? JOB_LINES[job] : [];
+        const useOwn = own.length > 0 && (lively || Math.random() < OWN_LINE_CHANCE);
+        const next = pick((useOwn ? own : ASKS).filter((ask) => ask !== lastAsk));
         lastAsk = next;
-        say(next, ASK_MS);
+        say(next, useOwn ? SAY_MS + 1000 : ASK_MS);
       },
-      CHATTER_MIN_MS + Math.random() * (CHATTER_MAX_MS - CHATTER_MIN_MS),
+      pace * (CHATTER_MIN_MS + Math.random() * (CHATTER_MAX_MS - CHATTER_MIN_MS)),
     );
     return () => clearTimeout(timer);
-  }, [canTalk, quiet, line, skipped, say]);
+  }, [canTalk, quiet, line, skipped, job, say]);
 
   return { line: canTalk ? line : null, say };
 }

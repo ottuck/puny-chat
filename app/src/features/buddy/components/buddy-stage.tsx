@@ -18,7 +18,7 @@ import { useColors } from '@/theme';
 
 import type { AlbumEntry } from '@/features/room/api';
 
-import type { BuddyView } from '../api';
+import type { BuddyJob, BuddyView } from '../api';
 import { PixelSprite } from '../pixel/pixel-sprite';
 import {
   bowl,
@@ -38,7 +38,8 @@ import {
 } from '../pixel/sprites';
 import type { Reaction, ReactionKind } from '../reactions';
 import type { ChatWord, Mood } from '../chat-words';
-import { type Line, pick, useBuddyTalk } from '../use-buddy-talk';
+import { JOB_ICON } from '../jobs';
+import { JOB_LINES, type Line, pick, useBuddyTalk } from '../use-buddy-talk';
 import { SpeechBubble } from './speech-bubble';
 import { decorFor, Plant, plantRoom as plantRoomFor, WallDecor } from './stage-decor';
 
@@ -58,10 +59,11 @@ const FAST_TICK_MS = 90;
 const PET_MS = 900;
 // Things the buddy does by itself: a dance, a song, shaking its head at a full bowl, or the small
 // happenings of docs/fun-improvements.md, 4 (a hiccup, a start, a look around, a yawn).
-type Act = 'dance' | 'sing' | 'refuse' | 'hiccup' | 'startle' | 'lookAround' | 'yawn';
+type Act = 'dance' | 'sing' | 'refuse' | 'hiccup' | 'startle' | 'lookAround' | 'yawn' | 'job';
 // A one-word message for the buddy ("밥", "춤", …, features/buddy/chat-words.ts), or the tour's
 // script asking for a dance or a song.
-export type Cue = { id: string; kind: ChatWord | Mood };
+// "job": the buddy does its work (only asked for by the art preview, app/preview.tsx).
+export type Cue = { id: string; kind: ChatWord | Mood | 'job' };
 // How long a mood from the chat ("사랑해", "ㅋㅋ", …, chat-words.ts) shows, and what the buddy says.
 type StageMood = Mood | 'coPet';
 const MOOD_MS: Record<StageMood, number> = {
@@ -93,6 +95,7 @@ const ACT_MS: Record<Act, number> = {
   startle: 900,
   lookAround: 1400,
   yawn: 1500,
+  job: 2000,
 };
 // What it says as it happens, once grown.
 const ACT_LINE: Partial<Record<Act, Line>> = {
@@ -110,9 +113,15 @@ const IDLE_ACTS: readonly (readonly [Act, number])[] = [
   ['lookAround', 10],
   ['yawn', 10],
 ];
-function pickIdleAct(): Act {
-  let roll = Math.random() * IDLE_ACTS.reduce((sum, [, weight]) => sum + weight, 0);
-  for (const [act, weight] of IDLE_ACTS) {
+// A grown buddy with a job also does its work (docs/fun-improvements.md, 6).
+const JOB_ACT_WEIGHT = 30;
+
+function pickIdleAct(job: BuddyJob | null): Act {
+  const acts: readonly (readonly [Act, number])[] = job
+    ? [...IDLE_ACTS, ['job', JOB_ACT_WEIGHT]]
+    : IDLE_ACTS;
+  let roll = Math.random() * acts.reduce((sum, [, weight]) => sum + weight, 0);
+  for (const [act, weight] of acts) {
     roll -= weight;
     if (roll < 0) return act;
   }
@@ -125,6 +134,28 @@ const IDLE_ACT_MAX_MS = 40_000;
 const EGG_ROOM = 72;
 const SLEEP_FROM = 23;
 const SLEEP_UNTIL = 7;
+// An owl keeps the opposite hours: awake in the small hours, asleep through the morning.
+const OWL_SLEEP_FROM = 3;
+const OWL_SLEEP_UNTIL = 11;
+
+// What each job looks like at its work, from the poses there are. A placeholder until the job art
+// (docs/fun-improvements.md, 디자인 인수인계): each job gets its own poses and a prop sprite.
+function jobPose(job: BuddyJob, tick: number): Pose {
+  switch (job) {
+    case 'CHEF': // stirring the pot
+    case 'CLEANER': // sweeping
+      return tick % 2 === 0 ? 'step' : 'idle';
+    case 'OWL': // gazing at the sky
+      return 'idle';
+    case 'COMEDIAN': // doing a bit
+    case 'ROMANTIC': // writing a letter
+      return 'happy';
+    case 'CHATTERBOX': // mouth going
+      return tick % 2 === 0 ? 'eat' : 'happy';
+  }
+}
+// Where the job's prop floats: above the head, or beside the buddy at its hands.
+const JOB_PROP_ABOVE: ReadonlySet<BuddyJob> = new Set(['OWL', 'ROMANTIC']);
 // How long each reaction plays.
 const REACTION_MS: Record<ReactionKind, number> = {
   message: 1400,
@@ -180,12 +211,13 @@ type Props = {
 };
 
 // Local night hours, checked once a minute.
-function useSleeping(): boolean {
+function useSleeping(job: BuddyJob | null): boolean {
   const [hour, setHour] = useState(() => new Date().getHours());
   useEffect(() => {
     const timer = setInterval(() => setHour(new Date().getHours()), 60_000);
     return () => clearInterval(timer);
   }, []);
+  if (job === 'OWL') return hour >= OWL_SLEEP_FROM && hour < OWL_SLEEP_UNTIL;
   return hour >= SLEEP_FROM || hour < SLEEP_UNTIL;
 }
 
@@ -326,7 +358,8 @@ export function BuddyStage({
   const [actRun, setActRun] = useState(0);
   const actTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tick = useTick(evolving || act === 'refuse' ? FAST_TICK_MS : TICK_MS);
-  const night = useSleeping();
+  const job = buddy.job;
+  const night = useSleeping(job);
   const [width, setWidth] = useState(0);
   const [walking, setWalking] = useState(false);
   const [facingLeft, setFacingLeft] = useState(false);
@@ -373,6 +406,7 @@ export function BuddyStage({
     quiet: sleeping || !!active || acting || !!mood,
     greets,
     lastTalkAt,
+    job,
   });
 
   const perform = useCallback(
@@ -386,14 +420,14 @@ export function BuddyStage({
       setAct(next);
       // The same cue must restart the finite animation even when its kind has not changed.
       setActRun((run) => run + 1);
-      const line = ACT_LINE[next];
+      const line = next === 'job' && job ? pick(JOB_LINES[job]) : ACT_LINE[next];
       if (line) say(line);
       actTimer.current = setTimeout(() => {
         actTimer.current = null;
         setAct(null);
       }, ACT_MS[next]);
     },
-    [say],
+    [say, job],
   );
 
   // A word from the chat that moves it: for a moment it shows how it feels, and says so once grown.
@@ -407,13 +441,23 @@ export function BuddyStage({
       setAct(null);
       setPetted(false);
       setMood(next);
-      say(MOOD_LINE[next]);
-      moodTimer.current = setTimeout(() => {
-        moodTimer.current = null;
-        setMood(null);
-      }, MOOD_MS[next]);
+      // A romantic answers "love" in its own words, a comedian a laugh.
+      const own =
+        job === 'ROMANTIC' && next === 'love'
+          ? 'romanticLove'
+          : job === 'COMEDIAN' && next === 'laugh'
+            ? 'comedianLaugh'
+            : null;
+      say(own ?? MOOD_LINE[next]);
+      moodTimer.current = setTimeout(
+        () => {
+          moodTimer.current = null;
+          setMood(null);
+        },
+        MOOD_MS[next] + (job === 'COMEDIAN' && next === 'laugh' ? 800 : 0),
+      );
     },
-    [say],
+    [say, job],
   );
 
   // Wander: walk to a random spot, look around, repeat. A hungry or eating buddy stays by the bowl,
@@ -477,7 +521,8 @@ export function BuddyStage({
   useEffect(() => {
     if (!cue || egg) return;
     const timer = setTimeout(() => {
-      if (cue.kind === 'dance' || cue.kind === 'sing') perform(cue.kind, true);
+      if (cue.kind === 'dance' || cue.kind === 'sing' || cue.kind === 'job')
+        perform(cue.kind, true);
       else if (cue.kind !== 'feed' && cue.kind !== 'clean') startMood(cue.kind);
       else if (cue.kind === 'feed' && !canFeed) {
         perform('refuse', true);
@@ -519,22 +564,25 @@ export function BuddyStage({
 
   // A hiccup is three small hops, a start one big one.
   useEffect(() => {
-    if (act !== 'hiccup' && act !== 'startle') return;
+    const jobHops = act === 'job' && (job === 'COMEDIAN' || job === 'CHEF');
+    if (act !== 'hiccup' && act !== 'startle' && !jobHops) return;
     const jump = (h: number, ms: number) =>
       Animated.sequence([
         Animated.timing(hop, { toValue: -h, duration: ms, useNativeDriver: NATIVE_DRIVER }),
         Animated.timing(hop, { toValue: 0, duration: ms, useNativeDriver: NATIVE_DRIVER }),
       ]);
     const move =
-      act === 'hiccup'
-        ? Animated.sequence([jump(5, 110), jump(5, 110), jump(5, 110)])
-        : jump(18, 200);
+      act === 'startle'
+        ? jump(18, 200)
+        : act === 'job'
+          ? Animated.sequence([jump(6, 150), jump(6, 150), jump(6, 150)])
+          : Animated.sequence([jump(5, 110), jump(5, 110), jump(5, 110)]);
     move.start();
     return () => {
       move.stop();
       hop.setValue(0);
     };
-  }, [act, actRun, hop]);
+  }, [act, actRun, job, hop]);
 
   // Little hops for a mood; a good night sleeps instead.
   useEffect(() => {
@@ -546,7 +594,10 @@ export function BuddyStage({
       ]);
     const moves: Record<StageMood, Animated.CompositeAnimation | null> = {
       coPet: Animated.sequence([jump(16), jump(16)]),
-      laugh: Animated.sequence([jump(6, 90), jump(6, 90), jump(6, 90), jump(6, 90)]),
+      // A comedian laughs at its own best.
+      laugh: Animated.sequence(
+        Array.from({ length: job === 'COMEDIAN' ? 8 : 4 }, () => jump(6, 90)),
+      ),
       love: Animated.sequence([jump(10), jump(6)]),
       goodnight: null,
       cheer: Animated.sequence([jump(16), jump(16)]),
@@ -559,7 +610,7 @@ export function BuddyStage({
       move?.stop();
       hop.setValue(0);
     };
-  }, [mood, hop]);
+  }, [mood, job, hop]);
 
   // Left alone, now and then a dance or a song.
   useEffect(() => {
@@ -567,11 +618,11 @@ export function BuddyStage({
     // With the partner here too it is livelier: twice as often.
     const pace = partnerHere ? 0.5 : 1;
     const timer = setTimeout(
-      () => perform(pickIdleAct()),
+      () => perform(pickIdleAct(job)),
       pace * (IDLE_ACT_MIN_MS + Math.random() * (IDLE_ACT_MAX_MS - IDLE_ACT_MIN_MS)),
     );
     return () => clearTimeout(timer);
-  }, [egg, settled, active, acting, petted, mood, partnerHere, perform]);
+  }, [egg, settled, active, acting, petted, mood, partnerHere, job, perform]);
 
   // Little hops while dancing, notes rising while singing.
   useEffect(() => {
@@ -629,15 +680,16 @@ export function BuddyStage({
   useEffect(() => {
     let next: Line | null = null;
     if (active?.kind === 'fed' && active.phase === 'after')
-      next = pick(['thanks', 'yummy'] as const);
-    else if (active?.kind === 'cleaned') next = pick(['refreshed', 'digestion'] as const);
+      next = job === 'CHEF' ? 'chefFed' : pick(['thanks', 'yummy'] as const);
+    else if (active?.kind === 'cleaned')
+      next = job === 'CLEANER' ? 'cleanerCleaned' : pick(['refreshed', 'digestion'] as const);
     else if (active?.kind === 'together') next = 'together';
     else if (active?.kind === 'here') next = 'bothHere';
     if (!next) return;
     const say_ = next;
     const timer = setTimeout(() => say(say_), 0);
     return () => clearTimeout(timer);
-  }, [active, say]);
+  }, [active, job, say]);
 
   useEffect(() => {
     if (!buddy.hungry || sleeping) return;
@@ -793,28 +845,30 @@ export function BuddyStage({
           ? tick % 2 === 0
             ? 'eat'
             : 'happy'
-          : act === 'yawn'
-            ? 'sleep'
-            : act === 'refuse' || act === 'hiccup' || act === 'startle' || act === 'lookAround'
-              ? 'idle'
-              : active?.kind === 'cleaned' ||
-                  active?.kind === 'levelUp' ||
-                  active?.kind === 'together' ||
-                  active?.kind === 'here' ||
-                  (active?.kind === 'evolved' && !evolving) ||
-                  petted
-                ? 'happy'
-                : sleeping
-                  ? 'sleep'
-                  : buddy.hungry
-                    ? 'hungry'
-                    : walking
-                      ? tick % 2 === 0
-                        ? 'step'
-                        : 'idle'
-                      : tick % 11 === 0
-                        ? 'blink'
-                        : 'idle';
+          : act === 'job' && job
+            ? jobPose(job, tick)
+            : act === 'yawn'
+              ? 'sleep'
+              : act === 'refuse' || act === 'hiccup' || act === 'startle' || act === 'lookAround'
+                ? 'idle'
+                : active?.kind === 'cleaned' ||
+                    active?.kind === 'levelUp' ||
+                    active?.kind === 'together' ||
+                    active?.kind === 'here' ||
+                    (active?.kind === 'evolved' && !evolving) ||
+                    petted
+                  ? 'happy'
+                  : sleeping
+                    ? 'sleep'
+                    : buddy.hungry
+                      ? 'hungry'
+                      : walking
+                        ? tick % 2 === 0
+                          ? 'step'
+                          : 'idle'
+                        : tick % 11 === 0
+                          ? 'blink'
+                          : 'idle';
 
   // A mood from the chat shows on the face unless something bigger (eating, straining) is going on.
   const moodPose: Pose | null =
@@ -837,8 +891,11 @@ export function BuddyStage({
   const frame =
     evolving && tick % 2 === 0 ? buddyFrame(previousStage, 'idle') : buddyFrame(buddy.stage, pose);
 
+  // A romantic's love, and a pet shared by both, show a big heart.
+  const bigHeart = mood === 'coPet' || (mood === 'love' && job === 'ROMANTIC');
   const showHeart =
     petted ||
+    (act === 'job' && job === 'ROMANTIC') ||
     mood === 'love' ||
     mood === 'coPet' ||
     (eating && active?.phase === 'after') ||
@@ -900,7 +957,12 @@ export function BuddyStage({
   );
   // Dancing and head-shaking turn the buddy left and right.
   const flipped =
-    act === 'dance' || act === 'refuse' || act === 'lookAround' ? tick % 2 === 0 : facingLeft;
+    act === 'dance' ||
+    act === 'refuse' ||
+    act === 'lookAround' ||
+    (act === 'job' && job === 'CLEANER')
+      ? tick % 2 === 0
+      : facingLeft;
 
   const feed = () => {
     if (busy) return;
@@ -952,6 +1014,16 @@ export function BuddyStage({
           <ProgressBar progress={buddy.levelProgress} />
         </View>
       </Pressable>
+
+      {/* The job's mark, an emoji until its art exists (docs/fun-improvements.md). */}
+      {job ? (
+        <Text
+          style={[styles.jobBadge, styles.passThrough]}
+          accessibilityLabel={t(`buddy.job.${job}`)}
+        >
+          {JOB_ICON[job]}
+        </Text>
+      ) : null}
 
       <View
         style={[
@@ -1084,8 +1156,8 @@ export function BuddyStage({
             <PixelSprite frame={LEVEL_UP} palette={PROP_PALETTE} scale={3} />
           </View>
         ) : showHeart ? (
-          <View style={[styles.above, mood === 'coPet' ? styles.aboveBig : null]}>
-            <PixelSprite frame={HEART} palette={PROP_PALETTE} scale={mood === 'coPet' ? 5 : 3} />
+          <View style={[styles.above, bigHeart ? styles.aboveBig : null]}>
+            <PixelSprite frame={HEART} palette={PROP_PALETTE} scale={bigHeart ? 5 : 3} />
           </View>
         ) : active?.kind === 'message' || act === 'startle' ? (
           <View style={styles.above}>
@@ -1105,6 +1177,19 @@ export function BuddyStage({
               <PixelSprite frame={SPARKLE} palette={PROP_PALETTE} scale={3} />
             </View>
           </>
+        ) : null}
+        {act === 'job' && job ? (
+          <Text
+            style={[
+              styles.jobProp,
+              styles.passThrough,
+              JOB_PROP_ABOVE.has(job)
+                ? { left: spriteWidth * 0.7, top: -10 - (tick % 2) * 3 }
+                : { left: spriteWidth * 0.85, top: spriteHeight * 0.4 + (tick % 2) * 3 },
+            ]}
+          >
+            {JOB_ICON[job]}
+          </Text>
         ) : null}
         {act === 'sing' ? (
           <Animated.View
@@ -1245,6 +1330,16 @@ const styles = StyleSheet.create({
   above: {
     position: 'absolute',
     top: -24,
+  },
+  jobBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 12,
+    fontSize: 22,
+  },
+  jobProp: {
+    position: 'absolute',
+    fontSize: 22,
   },
   // Room for the big heart of a pet shared by both.
   aboveBig: {

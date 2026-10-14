@@ -16,7 +16,7 @@ import { useGuestDaysLeft } from '@/features/auth/guest-expiry';
 import { BuddySheet } from '@/features/buddy/components/buddy-sheet';
 import { BuddyStage } from '@/features/buddy/components/buddy-stage';
 import { GuideBanner } from '@/features/buddy/components/guide-banner';
-import { graduateBuddy } from '@/features/buddy/api';
+import { changeJob, graduateBuddy } from '@/features/buddy/api';
 import { useBuddy } from '@/features/buddy/use-buddy';
 import { ChatHeader } from '@/features/chat/components/chat-header';
 import { MessageComposer } from '@/features/chat/components/message-composer';
@@ -144,6 +144,9 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
             ? { myId: me.id, partnerId: partner.id, partnerName: partner.displayName ?? '' }
             : undefined
         }
+        onChangeJob={async (job) => {
+          setBuddy(await changeJob(job));
+        }}
         onGraduate={async (newName) => {
           setBuddy(await graduateBuddy(newName));
           setBuddyOpen(false);

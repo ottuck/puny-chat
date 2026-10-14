@@ -48,6 +48,7 @@ function egg(name: string): BuddyView {
     togetherToday: false,
     job: null,
     leaning: null,
+    canChangeJob: false,
   };
 }
 
@@ -58,7 +59,9 @@ function afterEvent(buddy: BuddyView, event: BuddyEvent): BuddyView | null {
     case 'EVOLVED': {
       const stage = STAGE_ORDER[STAGE_ORDER.indexOf(buddy.stage) + 1];
       if (!stage) return null;
-      return { ...buddy, stage, level: LEVEL_OF[stage], levelProgress: 0.1 };
+      // The tour's adult has a job too, to show what it looks like.
+      const job = stage === 'ADULT' ? 'CHEF' : buddy.job;
+      return { ...buddy, stage, level: LEVEL_OF[stage], levelProgress: 0.1, job };
     }
     case 'TOGETHER':
       return buddy.togetherToday
@@ -72,6 +75,7 @@ function afterEvent(buddy: BuddyView, event: BuddyEvent): BuddyView | null {
     case 'MAX_LEVEL':
     case 'GRADUATED':
     case 'JOB':
+    case 'JOB_CHANGED':
       return null; // not in the script
     case 'LEVELED_UP':
       return { ...buddy, level: buddy.level + 1, levelProgress: 0.1 };

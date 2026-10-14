@@ -17,7 +17,10 @@
     "BUDDY_NOT_GROWN": "A new egg is already here.",
     "PARTNER_CHANGED": "The partner or room has changed. Please try again from your current conversation.",
     "SUPPORT_RATE_LIMIT": "Too many submissions. Please try again later.",
-    "ROOM_NOT_FOUND": "This conversation has ended. Please reload your current room."
+    "ROOM_NOT_FOUND": "This conversation has ended. Please reload your current room.",
+    "JOB_CHANGED_TODAY": "The job was already changed today. Try again tomorrow.",
+    "JOB_UNCHANGED": "It already has that job.",
+    "BUDDY_NOT_ADULT": "The job can be changed once it is an adult."
   },
   "signIn": {
     "tagline": "Chat with someone you like, and raise a tiny buddy together.",
@@ -127,7 +130,35 @@
       "hiccup": "*hic*",
       "startle": "Whoa!",
       "lookAround": "Huh?",
-      "yawn": "Yaaawn~"
+      "yawn": "Yaaawn~",
+      "chef1": "Guess today's menu!",
+      "chef2": "Taste this for me?",
+      "chef3": "Bubble, bubble~",
+      "chef4": "Tell me when you're hungry!",
+      "cleaner1": "Spick and span!",
+      "cleaner2": "Dust spotted!",
+      "cleaner3": "Leave cleaning to me",
+      "cleaner4": "Scrub scrub~",
+      "owl1": "Not sleepy yet…",
+      "owl2": "The night is long",
+      "owl3": "The stars are pretty",
+      "owl4": "I love the night!",
+      "comedian1": "Want a joke?",
+      "comedian2": "Laughs loaded!",
+      "comedian3": "Good crowd today",
+      "comedian4": "Did that land?",
+      "romantic1": "You two are nice together",
+      "romantic2": "Shall we share our feelings?",
+      "romantic3": "Full of love",
+      "romantic4": "Writing a letter…",
+      "chatter1": "Hey hey hey!",
+      "chatter2": "So much to say",
+      "chatter3": "Listen to my story",
+      "chatter4": "Yap yap~",
+      "chefFed": "Seasoned just right!",
+      "cleanerCleaned": "Sparkling clean!",
+      "comedianLaugh": "That's my joke!",
+      "romanticLove": "Love you too~"
     },
     "graduate": {
       "title": "Its own way",
@@ -181,7 +212,22 @@
     "jobCard": {
       "title": "Job",
       "leaning": "Growing up to be a {{icon}} {{job}}",
-      "hint": "When it grows up, how you raised it decides its job."
+      "hint": "When it grows up, how you raised it decides its job.",
+      "change": "Change job",
+      "changeTitle": "Change to which job?",
+      "changedToday": "Already changed today. You can change it again tomorrow.",
+      "current": "Now",
+      "confirmTitle": "Change the job?",
+      "confirmMessage": "{{icon}} {{job}} · The job can be changed once a day.",
+      "confirm": "Change"
+    },
+    "jobPerk": {
+      "CHEF": "Gets extra excited at mealtime. Stirs a pot when alone.",
+      "CLEANER": "Is happier when you clean up. Sweeps with a broom when alone.",
+      "OWL": "Upside-down days: awake in the small hours, asleep by day.",
+      "COMEDIAN": "Cracks up at laughing words. Does a bit when alone.",
+      "ROMANTIC": "Shows a big heart at loving words. Writes a letter when alone.",
+      "CHATTERBOX": "Talks a lot, even while you chat."
     }
   },
   "buddyEvent": {
@@ -194,7 +240,8 @@
     "MAX_LEVEL": "🎉 {{buddy}} reached the top level, Lv.{{level}}!",
     "GRADUATED": "🎓 {{name}} went its own way and is in the album now. A new egg arrived!",
     "TOGETHER": "🤝 You both showed up today! Together bonus +{{exp}} EXP",
-    "JOB": "{{icon}} {{buddy}}'s job: {{job}}!"
+    "JOB": "{{icon}} {{buddy}}'s job: {{job}}!",
+    "JOB_CHANGED": "{{icon}} {{actor}} changed {{buddy}}'s job: {{job}}"
   },
   "settings": {
     "title": "Settings",
@@ -311,7 +358,7 @@
       "exp": "EXP: +1 per message (up to 50 a day), +2 for a meal, +2 per 💩 cleaned.",
       "stages": "Egg → baby (Lv.3) → child (Lv.10) → adult (Lv.20). From child on, it talks.",
       "together": "When you both send a message on the same day, you get a together bonus of +{{exp}} EXP once a day. 🤝",
-      "job": "When it grows up, how you raised it decides its job: feed it a lot and it is a chef, talk late into the night and it is a night owl."
+      "job": "When it grows up, how you raised it decides its job: feed it a lot and it is a chef, talk late into the night and it is a night owl. Once grown, you can change it from the buddy details, once a day."
     },
     "rewards": {
       "title": "🎁 Level rewards",

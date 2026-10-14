@@ -573,6 +573,85 @@ class BuddyFlowTest {
     }
 
     @Test
+    void anAdultsJobCanBeChangedOnceADayByEitherMember() {
+        duoRoom("henry", "yuki");
+        String roomId = room("henry").id();
+        setBuddy(roomId, new Update().set("buddy.fedCount", 5));
+        setExp(roomId, BuddyRules.minExp(BuddyRules.ADULT_AT) - 1);
+        buddyService.onMessageSent(roomId).block();
+        assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.CHEF);
+        assertThat(room("henry").buddy().canChangeJob()).isTrue(); // the automatic job used nothing up
+
+        post("henry", "/api/rooms/me/buddy/job", Map.of("job", "OWL"))
+                .expectStatus()
+                .isOk();
+
+        BuddyView changed = room("yuki").buddy();
+        assertThat(changed.job()).isEqualTo(BuddyJob.OWL);
+        assertThat(changed.canChangeJob()).isFalse();
+        assertThat(timeline("henry")).endsWith("JOB", "JOB_CHANGED");
+        post("yuki", "/api/rooms/me/buddy/job", Map.of("job", "COMEDIAN"))
+                .expectStatus()
+                .isEqualTo(409)
+                .expectBody(JsonNode.class)
+                .value(body -> assertThat(body.get("code").asString()).isEqualTo("JOB_CHANGED_TODAY"));
+
+        clock.advance(Duration.ofDays(1));
+        assertThat(room("yuki").buddy().canChangeJob()).isTrue();
+        post("yuki", "/api/rooms/me/buddy/job", Map.of("job", "COMEDIAN"))
+                .expectStatus()
+                .isOk();
+        assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.COMEDIAN);
+    }
+
+    @Test
+    void theJobCannotBeChangedBeforeAdulthoodToNothingKnownOrToItself() {
+        String roomId = createRoom("henry").id();
+        post("henry", "/api/rooms/me/buddy/job", Map.of("job", "CHEF"))
+                .expectStatus()
+                .isEqualTo(409)
+                .expectBody(JsonNode.class)
+                .value(body -> assertThat(body.get("code").asString()).isEqualTo("BUDDY_NOT_ADULT"));
+
+        setExp(roomId, BuddyRules.minExp(BuddyRules.ADULT_AT)); // an adult from before jobs existed: no job yet
+        assertThat(room("henry").buddy().job()).isNull();
+        assertThat(room("henry").buddy().canChangeJob()).isTrue();
+        post("henry", "/api/rooms/me/buddy/job", Map.of("job", "SINGER"))
+                .expectStatus()
+                .isBadRequest();
+        post("henry", "/api/rooms/me/buddy/job", Map.of("job", "CHEF"))
+                .expectStatus()
+                .isOk();
+        clock.advance(Duration.ofDays(1));
+        post("henry", "/api/rooms/me/buddy/job", Map.of("job", "CHEF"))
+                .expectStatus()
+                .isEqualTo(409)
+                .expectBody(JsonNode.class)
+                .value(body -> assertThat(body.get("code").asString()).isEqualTo("JOB_UNCHANGED"));
+    }
+
+    @Test
+    void bothChoosingAtOnceChangesTheJobOnce() {
+        duoRoom("henry", "yuki");
+        String roomId = room("henry").id();
+        setBuddy(roomId, new Update().set("buddy.job", "CHEF"));
+        setExp(roomId, BuddyRules.minExp(BuddyRules.ADULT_AT));
+
+        List<Integer> statuses = race(
+                6,
+                i -> post(
+                                i % 2 == 0 ? "henry" : "yuki",
+                                "/api/rooms/me/buddy/job",
+                                Map.of("job", i % 3 == 0 ? "OWL" : "CLEANER"))
+                        .returnResult(Void.class)
+                        .getStatus()
+                        .value());
+
+        assertThat(statuses).containsOnlyOnce(200);
+        assertThat(timeline("henry")).containsOnlyOnce("JOB_CHANGED");
+    }
+
+    @Test
     void withNothingStandingOutItIsAChatterbox() {
         String roomId = createRoom("henry").id();
         setBuddy(roomId, new Update().set("buddy.fedCount", 4).set("buddy.cleanedCount", 4));
@@ -603,7 +682,8 @@ class BuddyFlowTest {
     private static Buddy counts(int fed, int cleaned, int nights, int laughs, int loves) {
         Instant now = Instant.now();
         return new Buddy(
-                "Mugi", 0, now, now, now, null, 0, 0, null, null, null, fed, cleaned, nights, laughs, loves, null);
+                "Mugi", 0, now, now, now, null, 0, 0, null, null, null, fed, cleaned, nights, laughs, loves, null,
+                null);
     }
 
     private void say(TestSocket socket, String clientMessageId, String text) {

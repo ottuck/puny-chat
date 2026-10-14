@@ -30,6 +30,8 @@ export type BuddyView = {
   job: BuddyJob | null;
   // As a child, the job it is heading for so far.
   leaning: BuddyJob | null;
+  // An adult's job can be changed once a day; false after it was changed today.
+  canChangeJob: boolean;
 };
 
 // changed: false when it was not needed, or the other member just did it.
@@ -38,6 +40,10 @@ type CareResult = { buddy: BuddyView; changed: boolean };
 export const feedBuddy = () => api<CareResult>('/api/rooms/me/buddy/feed', { method: 'POST' });
 
 export const cleanBuddy = () => api<CareResult>('/api/rooms/me/buddy/clean', { method: 'POST' });
+
+// An adult's job, chosen by either of us instead of the one its upbringing gave; once a day.
+export const changeJob = (job: BuddyJob) =>
+  api<BuddyView>('/api/rooms/me/buddy/job', { method: 'POST', body: { job } });
 
 // The grown buddy goes into the album; a new egg with this name takes its place.
 export const graduateBuddy = (buddyName: string) =>

@@ -14,6 +14,9 @@ const KNOWN = [
   'PARTNER_CHANGED',
   'SUPPORT_RATE_LIMIT',
   'ROOM_NOT_FOUND',
+  'JOB_CHANGED_TODAY',
+  'JOB_UNCHANGED',
+  'BUDDY_NOT_ADULT',
 ] as const;
 
 export function errorMessage(t: TFunction, error: unknown): string {
