@@ -1,0 +1,8 @@
+[Unit]
+Description=Update the puny-chat server image
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/flock -n /run/puny-chat-update.lock /opt/puny-chat/update.sh
