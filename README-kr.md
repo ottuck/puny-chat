@@ -8,7 +8,7 @@
 
 *Chat with someone you like, and raise a tiny buddy together.*
 
-**[👀 로그인 없이 구경하기](https://puny-chat.com/demo)** · [웹에서 시작하기](https://puny-chat.com) · [제품 문서](docs/product.md) · [서버 설계](docs/server-design.md)
+**[👀 로그인 없이 구경하기](https://puny-chat.com/demo)** · [웹에서 시작하기](https://puny-chat.com) · [제품·서버 명세](docs/spec.md)
 
 <br>
 
@@ -126,7 +126,7 @@ flowchart LR
 | 인프라 | AWS Lightsail · MongoDB Atlas · Cloudflare Workers, Terraform (state는 R2), GitHub Actions |
 
 작은 서비스에 맞게 **작게** 만들었어요. 서버 한 대가 실시간 연결을 모두 들고 있어서 Redis 같은 중간 저장소가 없고,
-Buddy의 배고픔과 💩은 스케줄러 없이 **볼 때 계산**해요. 자세한 결정과 이유는 [서버 설계](docs/server-design.md)에 있어요.
+Buddy의 배고픔과 💩은 스케줄러 없이 **볼 때 계산**해요. 자세한 결정과 이유는 [명세](docs/spec.md)에 있어요.
 
 <br>
 

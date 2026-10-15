@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { useColors } from '@/theme';
 
-// What the buddy says, next to its head (docs/product.md, Buddy 무대). Drawn like the pixel art:
+// What the buddy says, next to its head (docs/spec.md, Buddy 무대). Drawn like the pixel art:
 // square corners, a thick outline, a small tail toward the buddy. `side` is where it sits from the
 // head, away from the nearer edge of the stage.
 export function SpeechBubble({

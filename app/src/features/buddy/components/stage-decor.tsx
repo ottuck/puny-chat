@@ -14,7 +14,7 @@ import {
   RUG,
 } from '../pixel/sprites';
 
-// The stage's decorations (docs/product.md, 무대 꾸미기). Levels bring a reward every five levels,
+// The stage's decorations (docs/spec.md, 무대 꾸미기). Levels bring a reward every five levels,
 // mostly making what is already there finer, so the stage does not fill up. They belong to the
 // room: once a buddy has gone its own way, everything stays, and its portrait hangs on the wall.
 

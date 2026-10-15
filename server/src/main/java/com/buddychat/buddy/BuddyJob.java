@@ -3,7 +3,7 @@ package com.buddychat.buddy;
 import org.jspecify.annotations.Nullable;
 
 /**
- * What a buddy grows up to be, from how the two raised it (docs/fun-improvements.md, 5). Nobody
+ * What a buddy grows up to be, from how the two raised it (docs/fun-improvements.md, 직업). Nobody
  * picks it: each job has points from what they did, and the highest wins when the buddy becomes an
  * adult. Ties go to the job listed first; with too few points for any it is the barista.
  */

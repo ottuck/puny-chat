@@ -3,16 +3,16 @@
 1~2명이 작은 가상 생명체(Buddy)를 함께 키우며 쓰는 초경량 1:1 실시간 채팅 앱.
 **Chat first. Buddy makes it fun.** iOS가 기준 플랫폼이고 Web은 보조, Android는 나중.
 
-- 제품(원칙, MVP 범위와 진행 상태, 넣지 않는 것): `docs/product.md` — 기능·범위를 바꾸기 전에 읽는다.
-- 서버 설계(컬렉션, API, WebSocket 프로토콜, 규칙, 인프라, 마일스톤): `docs/server-design.md` — 서버 작업 전에 읽는다.
-- 이 두 문서가 기준(source of truth)이다. 결정이 바뀌면 코드와 같은 커밋에서 문서도 고친다.
+- 명세(제품 원칙·범위, Buddy, 컬렉션, API, WebSocket 프로토콜, 규칙, 인프라): `docs/spec.md` — 기능·범위·서버를 바꾸기 전에 읽는다.
+- Buddy의 직업·사건·기간 한정 모습, 그림 작업 규칙, 다음 아이디어: `docs/fun-improvements.md`.
+- 이 문서들이 기준(source of truth)이다. 결정이 바뀌면 코드와 같은 커밋에서 문서도 고친다. 일지처럼 쓰지 않고 지금 상태만 적는다.
 
 ## Repo layout
 
 - `app/` — Expo(React Native) + TypeScript + Expo Router. iOS / Web / Android 공용 코드.
 - `server/` — Java 25, Spring Boot 4.1 + WebFlux + Reactive MongoDB. 패키지는 기능 모듈(`auth`, `user`, `room`, `chat`, `buddy`, `realtime`).
 - `infra/` — Terraform: MongoDB Atlas(DB, 시드니), Cloudflare(DNS, state는 R2). 서버는 AWS Lightsail 인스턴스(`quant-lab-02`, 시드니)에서 `server/deploy`의 Docker Compose로 돈다.
-- `docs/` — 기획과 설계 문서, 출시 점검(`release-review.md`)과 App Store 출시 진행(`app-store-release.md`), 재미 개선의 계획·진행·디자인 대기 목록(`fun-improvements.md`), 도트·그림 인수인계(`art-handover.md`, 확인용 화면은 개발 빌드의 `/preview`)
+- `docs/` — 명세(`spec.md`), Buddy 콘텐츠와 그림 작업(`fun-improvements.md`, 확인용 화면은 개발 빌드의 `/preview`), App Store 출시(`release.md`), 문의 운영(`support-operations.md`)
 - `.github/workflows/ci.yml` — app(lint / typecheck / test / format), server(spotless / test). Actions 무료 분(월 2,000분)을 아끼려고 같은 코드를
   두 번만 돌린다: `dev`로 가는 PR과 `main` push(배포 관문). `dev` push와 `dev` → `main` PR에서는 돌지 않고, 문서·`infra/`만 바뀐 변경도 건너뛴다.
   `changes` 잡이 바뀐 파일을 보고 `app/`이 바뀌었을 때만 app 잡을, `server/`가 바뀌었을 때만 server 잡을 돌린다(그 밖의 파일이 바뀌면 둘 다).
@@ -77,7 +77,7 @@
   주 1회 지운다(`account/GuestCleanup`). 첫 화면과 설정에 안내하고
   마지막 7일은 채팅 위에 안내 줄을 띄운다. 문구는 "회원가입"이 아니라 "계정 연결".
 - 계정 삭제는 설정 맨 아래. 서버(`DELETE /api/me`)를 먼저 지우고 Firebase 계정은 앱이 `deleteUser`로 지운다. Google 연결
-  계정은 그 전에 다시 로그인한다(`features/auth/actions.ts`, 순서와 이유는 `docs/server-design.md` 계정 삭제).
+  계정은 그 전에 다시 로그인한다(`features/auth/actions.ts`, 순서와 이유는 `docs/spec.md` 계정 삭제).
 
 ## Server commands (`server/`에서 실행)
 

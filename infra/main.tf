@@ -1,4 +1,4 @@
-# puny-chat's infrastructure (docs/server-design.md, 인프라): MongoDB on Atlas and DNS on
+# puny-chat's infrastructure (docs/spec.md, 인프라): MongoDB on Atlas and DNS on
 # Cloudflare. The server runs on a shared Lightsail instance (server/deploy), which Terraform does
 # not manage. The web app is a Cloudflare Worker deployed by CI with wrangler; its
 # custom domain comes with that deploy (app/wrangler.jsonc).

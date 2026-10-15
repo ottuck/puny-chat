@@ -11,7 +11,7 @@ export type ReactionKind =
   | 'levelUp'
   | 'evolved'
   | 'together'
-  // The partner is here too (docs/fun-improvements.md, 2): not from a message but from presence.
+  // The partner is here too (docs/fun-improvements.md, 함께 있을 때): not from a message but from presence.
   | 'here';
 export type Reaction = { id: string; kind: ReactionKind };
 
@@ -49,7 +49,7 @@ export function missedEvolution(
   myRead: string | undefined,
 ): Reaction | null {
   if (!myRead) return null;
-  // Hex ids sort by time (docs/server-design.md).
+  // Hex ids sort by time (docs/spec.md).
   const evolved = loaded.find(
     (m) => m.type === 'BUDDY_EVENT' && m.buddyEvent === 'EVOLVED' && m.id > myRead,
   );

@@ -1,7 +1,7 @@
 name: Deploy
 
 # Publishes the server image to GHCR (the Lightsail instance pulls it, see server/deploy) and
-# deploys the web app to a Cloudflare Worker (docs/server-design.md, 인프라). Called by CI after it
+# deploys the web app to a Cloudflare Worker (docs/spec.md, 인프라). Called by CI after it
 # passes on a push to main, or run by hand on main.
 # Secrets: CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID (Workers deploy). Variables:
 # EXPO_PUBLIC_API_URL and the app's public Firebase settings

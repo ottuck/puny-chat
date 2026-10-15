@@ -3,7 +3,7 @@ export type BuddyEvent =
   | 'FED'
   | 'POOPED'
   | 'CLEANED'
-  // A grown-up's work at its station (docs/product.md, 직업 무대 장치).
+  // A grown-up's work at its station (docs/spec.md, 직업 무대 장치).
   | 'WORKED'
   | 'LEVELED_UP'
   | 'EVOLVED'
@@ -45,7 +45,7 @@ export function redactDeletedActor(
 type MessageBase = {
   // Server id; absent while one of my messages is still on its way.
   id?: string;
-  // Generated on the client so a retried send is stored only once (docs/server-design.md).
+  // Generated on the client so a retried send is stored only once (docs/spec.md).
   clientMessageId: string;
   createdAt: string; // ISO 8601
 };

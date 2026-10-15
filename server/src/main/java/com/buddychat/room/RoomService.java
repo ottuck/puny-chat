@@ -83,7 +83,7 @@ public class RoomService {
     }
 
     /**
-     * Leaves the user's room (docs/server-design.md, Room·초대 규칙). The other member keeps the room
+     * Leaves the user's room (docs/spec.md, Room·초대 규칙). The other member keeps the room
      * and its buddy and is told right away; a room left empty is deleted with its history. The user's
      * other devices are disconnected. Separate updates, no transaction: leaving again finishes a leave
      * that failed midway.

@@ -6,7 +6,7 @@
 
 **Chat with someone you like, and raise a tiny buddy together.**
 
-**[👀 Take a look, no sign-up](https://puny-chat.com/demo)** · [Start on the web](https://puny-chat.com) · [Product doc](docs/product.md) · [Server design](docs/server-design.md)
+**[👀 Take a look, no sign-up](https://puny-chat.com/demo)** · [Start on the web](https://puny-chat.com) · [Product and server spec](docs/spec.md)
 
 <br>
 
@@ -125,7 +125,7 @@ flowchart LR
 
 Built **small**, to fit a small service. One server holds every real-time connection, so there is no Redis or other
 broker in between, and the Buddy's hunger and 💩 are **computed when looked at**, with no scheduler. The decisions
-and the reasons behind them are in the [server design](docs/server-design.md) (Korean).
+and the reasons behind them are in the [spec](docs/spec.md) (Korean).
 
 <br>
 

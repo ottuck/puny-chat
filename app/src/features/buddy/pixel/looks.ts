@@ -2,7 +2,7 @@ import type { BuddyJob, BuddyStage } from '../api';
 import type { Frame } from './pixel-sprite';
 import { buddyFrame, type Pose } from './sprites';
 
-// What the buddy wears and what happens around it (docs/art-handover.md, C·F·G·H): a job's look
+// What the buddy wears and what happens around it (docs/fun-improvements.md): a job's look
 // for a grown-up, a week's look for the season, and the pictures of the small happenings. The
 // looks are drawn over the buddy's own grid in BUDDY_PALETTE; the things on the floor and in the
 // air (the season's corner, the umbrella, the butterfly, the big heart) in PROP_PALETTE.
@@ -506,7 +506,7 @@ export const SEASON_CORNER: Partial<Record<Season, { frame: Frame; size: number 
   CHRISTMAS: { frame: TREE, size: 1 },
 };
 
-// --- Happenings (docs/art-handover.md, F) ---
+// --- Happenings (docs/fun-improvements.md, 가끔 생기는 사건) ---
 
 // A butterfly that comes to rest on the head, its wings opening and closing.
 // prettier-ignore

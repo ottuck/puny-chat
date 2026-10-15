@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Words in a message that count towards the buddy's job (docs/fun-improvements.md, 5): a laugh or a
+ * Words in a message that count towards the buddy's job (docs/fun-improvements.md, 직업): a laugh or a
  * "love you" anywhere in it. The app has the same lists, and more moods, for how the buddy reacts
  * (app: features/buddy/chat-words.ts); keep these two in step. A message with both counts as love,
  * as it is the one the buddy feels first.

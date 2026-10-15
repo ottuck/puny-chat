@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BuddyJob, BuddyStage } from './api';
 
-// What a grown buddy says (docs/product.md, Buddy 무대): a greeting when the app opens, a word
+// What a grown buddy says (docs/spec.md, Buddy 무대): a greeting when the app opens, a word
 // back when it is fed, petted or cleaned, and now and then a line of its own. Lines are keys under
 // buddy.say in the translations. Nothing is sent or stored in the chat.
 
@@ -81,7 +81,7 @@ export type Line =
 const SAY_MS = 3000;
 const CHATTER_MIN_MS = 60_000;
 const CHATTER_MAX_MS = 120_000;
-// Questions to start a talk (docs/fun-improvements.md, 3). Said only while the chat is quiet.
+// Questions to start a talk (docs/fun-improvements.md, 질문 말풍선). Said only while the chat is quiet.
 const ASKS: Line[] = [
   'ateYet',
   'whatsUp',
@@ -98,7 +98,7 @@ const ASKS: Line[] = [
   'favFood',
   'tired',
 ];
-// What an adult says of its own, by job (docs/fun-improvements.md, 6): now and then instead of a
+// What an adult says of its own, by job (docs/fun-improvements.md, 직업): now and then instead of a
 // question, and when it does its work alone.
 export const JOB_LINES: Record<BuddyJob, Line[]> = {
   CHEF: ['chef1', 'chef2', 'chef3', 'chef4'],

@@ -8,7 +8,7 @@ import { type Frame, PixelSprite } from '../pixel/pixel-sprite';
 import { bowl, PLANTS, PROP_PALETTE } from '../pixel/sprites';
 import { type Reward, REWARDS } from './stage-decor';
 
-// How the buddy grows and what comes with it (docs/product.md, 도움말): care, growth, the rewards
+// How the buddy grows and what comes with it (docs/spec.md, 도움말): care, growth, the rewards
 // every five levels, and going its own way. Opened from the chat header, settings, and once on
 // arrival, so the goals are known from the start.
 

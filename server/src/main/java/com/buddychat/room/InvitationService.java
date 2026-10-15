@@ -66,7 +66,7 @@ class InvitationService {
 
     /**
      * Joins the invitation's room. A user who already has a solo room must confirm leaving it
-     * ({@code leaveCurrentRoom}); that room and its buddy are deleted (docs/server-design.md).
+     * ({@code leaveCurrentRoom}); that room and its buddy are deleted (docs/spec.md).
      *
      * <p>The steps are separate updates (no transactions). If one fails midway, the same user
      * accepting the same code again picks up where it stopped instead of being told the code is

@@ -2,7 +2,7 @@ import type { BuddyJob, BuddyStage } from '../api';
 import type { Frame, Palette } from './pixel-sprite';
 
 // The buddy's pixel art, in the spirit of GitAnimals: a small grid, few colors, a thick outline
-// and a big head (docs/product.md, Buddy). An original character, a round mochi whose sprout
+// and a big head (docs/spec.md, Buddy). An original character, a round mochi whose sprout
 // shows how far it has grown: a small sprout, then two leaves, then a flower.
 
 export const BUDDY_PALETTE: Palette = {
@@ -408,7 +408,7 @@ export function bowl(full: boolean, tier: BowlTier): Frame {
   ];
 }
 
-// A child or grown-up eats at a low round table instead (docs/product.md, 식사): it shows only
+// A child or grown-up eats at a low round table instead (docs/spec.md, 식사): it shows only
 // for the meal, laid for one with rice in a bowl of the reward's color, soup with steam and a side
 // dish. Once eaten, the rice is gone.
 export function mealTable(full: boolean, tier: BowlTier): Frame {
@@ -516,7 +516,7 @@ export const NOTE: Frame = [
   '.kk..',
 ];
 
-// --- Job props (docs/art-handover.md, 6) ---
+// --- Job props (docs/fun-improvements.md, 직업) ---
 
 // What an adult holds at its work, small and plain: two frames each, swapped every tick (steam
 // drifting, water pouring, a note, a line written).
@@ -673,7 +673,7 @@ export const JOB_PROPS: Record<BuddyJob, [Frame, Frame]> = {
   BARISTA: COFFEE,
 };
 
-// --- Job stations (docs/art-handover.md, A·B) ---
+// --- Job stations (docs/fun-improvements.md, 직업) ---
 
 // What an adult works at, on the left of the stage in the buddy's own pixel size, always drawn in
 // front of it: it walks over and works behind it (a counter or desk, which hides its lower body)
@@ -973,10 +973,10 @@ export const JOB_STATIONS: Record<BuddyJob, Station> = {
   BARISTA: { frames: CAFE_COUNTER, sink: 3, standAt: 3 },
 };
 
-// --- Decorations (docs/product.md, 무대 꾸미기) ---
+// --- Decorations (docs/spec.md, 무대 꾸미기) ---
 
 // The plant in the corner grows finer with levels: a sprout in a clay pot, a flowering cactus in a
-// rimmed pot, then flowers in a glazed pot. (Other plants drawn for later: docs/art-archive.md.)
+// rimmed pot, then flowers in a glazed pot.
 // prettier-ignore
 const PLANT_1: Frame = [
   '.kkk...kkk.',

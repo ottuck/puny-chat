@@ -67,7 +67,7 @@ public sealed interface ServerEvent {
     /** A member has read the room up to {@code messageId}. */
     record Read(String userId, String messageId) implements ServerEvent {}
 
-    /** A member petted the buddy just now (docs/fun-improvements.md, 2). Not stored; only seen live. */
+    /** A member petted the buddy just now (docs/fun-improvements.md, 함께 있을 때). Not stored; only seen live. */
     record Pet(String userId) implements ServerEvent {}
 
     /** {@code clientMessageId} is set when a send failed, so the app can mark that message. */

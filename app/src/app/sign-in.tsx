@@ -62,7 +62,7 @@ export default function SignInScreen() {
         </View>
 
         {/* Guest first: nothing stands between opening the app and meeting the buddy. An account
-            can be linked later from settings, keeping everything (docs/product.md). */}
+            can be linked later from settings, keeping everything (docs/spec.md). */}
         <View style={styles.actions}>
           <Button label={t('signIn.startNow')} onPress={() => run(signInAsGuest)} disabled={busy} />
           {/* A scripted room to watch first, no account needed (app/demo.tsx). */}

@@ -25,7 +25,7 @@ import { DEMO_ME, DEMO_PARTNER } from '@/features/demo/script';
 import { useDemo } from '@/features/demo/use-demo';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
-// "Take a look first" (docs/product.md, 구경하기): the chat screen as it is, playing a scripted
+// "Take a look first" (docs/spec.md, 구경하기): the chat screen as it is, playing a scripted
 // room in which the buddy grows from an egg to an adult in about 55 seconds. No account, no
 // server. The visitor can feed, clean and type along; at the end, starting their own is one tap.
 export default function DemoRoute() {

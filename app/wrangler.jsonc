@@ -1,5 +1,5 @@
 // The web app as a Cloudflare Worker serving static assets (no script), deployed by CI after
-// `pnpm build:web` (docs/server-design.md, 인프라). The custom domain comes with the deploy:
+// `pnpm build:web` (docs/spec.md, 인프라). The custom domain comes with the deploy:
 // Cloudflare makes its DNS record and certificate.
 {
   "name": "puny-chat",

@@ -64,7 +64,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
   const [inviteOpen, setInviteOpen] = useState(false);
   const partner = room.members.find((member) => member.id !== me.id);
 
-  // The buddy's stage takes about a third of the screen and keeps it (docs/product.md, 핵심 경험).
+  // The buddy's stage takes about a third of the screen and keeps it (docs/spec.md, 핵심 경험).
   const { height: windowHeight } = useWindowDimensions();
   const stageHeight = Math.round(Math.min(280, Math.max(180, windowHeight * 0.3)));
 
