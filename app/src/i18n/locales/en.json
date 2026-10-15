@@ -144,17 +144,17 @@
       "dj2": "What should play next?",
       "dj3": "For those who cannot sleep",
       "dj4": "The night is still long",
-      "poet1": "Got a line for today",
-      "poet2": "Writing about you two",
-      "poet3": "A good day",
-      "poet4": "Writing a letter…",
+      "writer1": "Got a line for today",
+      "writer2": "Writing about you two",
+      "writer3": "A good day",
+      "writer4": "Writing a letter…",
       "barista1": "How was your day?",
       "barista2": "Something warm to drink?",
       "barista3": "I'm listening",
       "barista4": "Take your time",
       "chefFed": "Seasoned just right",
       "gardenerCleaned": "Tidy at last",
-      "poetLove": "Me too"
+      "writerLove": "Me too"
     },
     "graduate": {
       "title": "Its own way",
@@ -193,14 +193,14 @@
       "CHEF": "Chef",
       "GARDENER": "Gardener",
       "DJ": "Radio DJ",
-      "POET": "Poet",
+      "WRITER": "Writer",
       "BARISTA": "Barista"
     },
     "jobWhy": {
       "CHEF": "You fed it well",
       "GARDENER": "You kept the floor clean",
       "DJ": "You talked late into the night",
-      "POET": "You said \"love you\" a lot",
+      "WRITER": "You said \"love you\" a lot",
       "BARISTA": "A bit of everything"
     },
     "jobCard": {
@@ -219,7 +219,7 @@
       "CHEF": "Gets extra excited at mealtime. Stirs a pot when alone.",
       "GARDENER": "Says \"All tidy\" when the work is done. Tends the big plant when alone.",
       "DJ": "Upside-down days: on air in the small hours, asleep by day.",
-      "POET": "Shows a big heart at loving words. Writes a poem when alone.",
+      "WRITER": "Shows a big heart at loving words. Writes when alone.",
       "BARISTA": "Talks a lot, chiming in even while you chat."
     }
   },

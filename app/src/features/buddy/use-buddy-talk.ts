@@ -62,17 +62,17 @@ export type Line =
   | 'dj2'
   | 'dj3'
   | 'dj4'
-  | 'poet1'
-  | 'poet2'
-  | 'poet3'
-  | 'poet4'
+  | 'writer1'
+  | 'writer2'
+  | 'writer3'
+  | 'writer4'
   | 'barista1'
   | 'barista2'
   | 'barista3'
   | 'barista4'
   | 'chefFed'
   | 'gardenerCleaned'
-  | 'poetLove';
+  | 'writerLove';
 
 const SAY_MS = 3000;
 const CHATTER_MIN_MS = 60_000;
@@ -100,7 +100,7 @@ export const JOB_LINES: Record<BuddyJob, Line[]> = {
   CHEF: ['chef1', 'chef2', 'chef3', 'chef4'],
   GARDENER: ['gardener1', 'gardener2', 'gardener3', 'gardener4'],
   DJ: ['dj1', 'dj2', 'dj3', 'dj4'],
-  POET: ['poet1', 'poet2', 'poet3', 'poet4'],
+  WRITER: ['writer1', 'writer2', 'writer3', 'writer4'],
   BARISTA: ['barista1', 'barista2', 'barista3', 'barista4'],
 };
 // A barista talks this much more often, and also while the two are chatting.

@@ -170,7 +170,7 @@ function jobPose(job: BuddyJob, tick: number): Pose {
       return 'happy';
     case 'DJ': // on air, nodding to the music
       return tick % 2 === 0 ? 'happy' : 'blink';
-    case 'POET': // writing, and liking it
+    case 'WRITER': // writing, and liking it
       return tick % 3 === 0 ? 'blink' : 'happy';
     case 'BARISTA': // talking over the coffee
       return tick % 2 === 0 ? 'eat' : 'happy';
@@ -483,8 +483,8 @@ export function BuddyStage({
       setAct(null);
       setPetted(false);
       setMood(next);
-      // A poet answers "love" in its own words.
-      say(job === 'POET' && next === 'love' ? 'poetLove' : MOOD_LINE[next]);
+      // A writer answers "love" in its own words.
+      say(job === 'WRITER' && next === 'love' ? 'writerLove' : MOOD_LINE[next]);
       moodTimer.current = setTimeout(() => {
         moodTimer.current = null;
         setMood(null);
@@ -995,11 +995,11 @@ export function BuddyStage({
   const frame =
     evolving && tick % 2 === 0 ? buddyFrame(previousStage, 'idle') : buddyFrame(buddy.stage, pose);
 
-  // A poet's love, and a pet shared by both, show a big heart.
-  const bigHeart = mood === 'coPet' || (mood === 'love' && job === 'POET');
+  // A writer's love, and a pet shared by both, show a big heart.
+  const bigHeart = mood === 'coPet' || (mood === 'love' && job === 'WRITER');
   const showHeart =
     petted ||
-    (act === 'job' && job === 'POET') ||
+    (act === 'job' && job === 'WRITER') ||
     mood === 'love' ||
     mood === 'coPet' ||
     (eating && active?.phase === 'after') ||

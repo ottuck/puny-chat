@@ -584,7 +584,7 @@ export const JOB_PROPS: Record<BuddyJob, [Frame, Frame]> = {
   CHEF: POT,
   GARDENER: WATERING_CAN,
   DJ: HEADPHONES,
-  POET: QUILL,
+  WRITER: QUILL,
   BARISTA: COFFEE,
 };
 
@@ -884,7 +884,7 @@ export const JOB_STATIONS: Record<BuddyJob, Station> = {
     held: { frames: HELD_CAN, row: 12, col: -8, size: 0.6 },
   },
   DJ: { frames: RADIO_DESK, sink: 3, standAt: 3 },
-  POET: { frames: WRITING_DESK, sink: 3, standAt: 3 },
+  WRITER: { frames: WRITING_DESK, sink: 3, standAt: 3 },
   BARISTA: { frames: CAFE_COUNTER, sink: 3, standAt: 3 },
 };
 
