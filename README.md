@@ -65,6 +65,7 @@ at you, no daily missions. Just **having something to raise together** makes the
 - Left alone it dances and sings. Once a child, it talks too: "Long time no see!", "Have you eaten?"
 - **It never dies.** Forget it for a few days and it's fine; a little care and it's back on its feet
 - Grown up, it takes a job from how you two raised it (chef, gardener, radio DJ, writer, barista), each with its own look and spot on the stage. It dresses up for the season (bunny ears in spring, antlers at Christmas) and now and then a butterfly lands on it or a shooting star crosses the sky
+- Every level or two the room gets something: a toy box, a window whose sky follows your clock, a music box, new rugs and floors, a tree that bears fruit, and guests at the window (a snail, a sparrow, a stray cat). From level 20 it can go its own way; keep it to level 40 and the room keeps growing (below)
 - **A hot spring** to send it to, and **a dream** of what it will become before the first egg (below)
 
 **🤝 For two**
@@ -78,13 +79,14 @@ at you, no daily missions. Just **having something to raise together** makes the
 - Built for iPhone first, and the same app runs on the web
 - 한국어 · 日本語 · English, light and dark mode
 
+<br>
+
+### From an egg to its own way
+
+Nothing is pushed out of the room: a spot not used yet fills, or a thing already there gets finer. When the buddy goes its own way it packs its things in a bundle, waves goodbye and walks off, and a new egg arrives in a bare room. Only its portrait stays on the wall.
+
 <div align="center">
-<table>
-  <tr>
-    <td align="center"><img src="docs/images/chat-dark.png" width="220" alt="Chat in dark mode"><br><sub>Dark mode</sub></td>
-    <td align="center"><img src="docs/images/desktop.png" width="560" alt="The chat in a desktop browser, with the mobile layout centered"><br><sub>Web (desktop)</sub></td>
-  </tr>
-</table>
+<img src="docs/images/room-story.png" width="640" alt="The room from level 9 to 40: a toy box, a music box on the windowsill, a snail, a dusk window, a sparrow, a cat's tail, a toy train, fireflies at night; then the buddy moving out with a bundle and a new egg in a bare room">
 </div>
 
 <br>
