@@ -21,7 +21,7 @@ import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 // Not part of the app: it only opens in development builds, and nothing links to it.
 
 const STAGES: BuddyStage[] = ['EGG', 'BABY', 'CHILD', 'ADULT'];
-const LEVEL: Record<BuddyStage, number> = { EGG: 1, BABY: 3, CHILD: 10, ADULT: 20 };
+const LEVEL: Record<BuddyStage, number> = { EGG: 1, BABY: 3, CHILD: 7, ADULT: 12 };
 const HAPPENINGS = [
   'hiccup',
   'startle',
@@ -45,16 +45,20 @@ const REACTIONS: ReactionKind[] = [
   'here',
 ];
 
+// Levels where the room gets something new (the rewards), for looking at each step.
+const LEVELS = [1, 4, 8, 14, 25, 30];
+
 function buddyOf(
   stage: BuddyStage,
   job: BuddyJob | null,
   hungry: boolean,
   poops: number,
+  level: number | null,
 ): BuddyView {
   return {
     name: 'Preview',
     exp: 0,
-    level: LEVEL[stage],
+    level: level ?? LEVEL[stage],
     stage,
     levelProgress: 0.4,
     fullness: hungry ? 10 : 100,
@@ -143,14 +147,22 @@ function PoseSheet({
 }
 
 // A link can open it on a scene, for taking pictures of it (README):
-// /preview?scene=bath, ?scene=bath&season=CHRISTMAS (snowing), ?scene=cut2 (a cut of the dream).
+// /preview?scene=bath, ?scene=bath&season=CHRISTMAS (snowing), ?scene=cut2 (a cut of the dream),
+// ?stage=CHILD&level=8 (the room at that level).
 function Preview() {
   const colors = useColors();
-  const params = useLocalSearchParams<{ scene?: string; season?: string }>();
+  const params = useLocalSearchParams<{
+    scene?: string;
+    season?: string;
+    stage?: string;
+    level?: string;
+  }>();
   const linkedCut = params.scene?.startsWith('cut') ? Number(params.scene.slice(3)) - 1 : null;
   const linkedSeason = SEASONS.find((s) => s === params.season);
   const { height: windowHeight } = useWindowDimensions();
-  const [stage, setStage] = useState<BuddyStage>('ADULT');
+  const [stage, setStage] = useState<BuddyStage>(STAGES.find((s) => s === params.stage) ?? 'ADULT');
+  // Overrides the level the stage implies (null: the stage's first level).
+  const [level, setLevel] = useState<number | null>(params.level ? Number(params.level) : null);
   const [job, setJob] = useState<BuddyJob | null>('CHEF');
   const [hungry, setHungry] = useState(false);
   const [poops, setPoops] = useState(0);
@@ -175,7 +187,7 @@ function Preview() {
         {dreamCut !== null ? (
           <View style={styles.held}>
             <BuddyDream
-              buddy={buddyOf('EGG', null, false, 0)}
+              buddy={buddyOf('EGG', null, false, 0, null)}
               height={stageHeight}
               onEnd={() => {}}
               hold={dreamCut}
@@ -187,7 +199,7 @@ function Preview() {
           key={dreamRun}
           dreams={dreamRun > 0 ? 'always' : false}
           startInBath={params.scene === 'bath'}
-          buddy={buddyOf(stage, job, hungry, poops)}
+          buddy={buddyOf(stage, job, hungry, poops, level)}
           busy={false}
           height={stageHeight}
           onFeed={() => setHungry(false)}
@@ -213,7 +225,7 @@ function Preview() {
             />
           ))}
         </Group>
-        <Group title="plant kind (Lv.15–24)">
+        <Group title="plant kind (Lv.14–24)">
           <Chip
             label="drawn"
             onPress={() => setPlantKind(undefined)}
@@ -230,7 +242,20 @@ function Preview() {
         </Group>
         <Group title="stage">
           {STAGES.map((s) => (
-            <Chip key={s} label={s} onPress={() => setStage(s)} active={s === stage} />
+            <Chip
+              key={s}
+              label={s}
+              onPress={() => {
+                setStage(s);
+                setLevel(null);
+              }}
+              active={s === stage}
+            />
+          ))}
+        </Group>
+        <Group title="level (the room's rewards)">
+          {LEVELS.map((l) => (
+            <Chip key={l} label={`Lv.${l}`} onPress={() => setLevel(l)} active={l === level} />
           ))}
         </Group>
         <Group title="job (ADULT)">

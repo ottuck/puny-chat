@@ -14,7 +14,7 @@ import {
   RUG,
 } from '../pixel/sprites';
 
-// The stage's decorations (docs/spec.md, 무대 꾸미기). Levels bring a reward every five levels,
+// The stage's decorations (docs/spec.md, 무대 꾸미기). Levels bring a reward every few levels,
 // mostly making what is already there finer, so the stage does not fill up. They belong to the
 // room: once a buddy has gone its own way, everything stays, and its portrait hangs on the wall.
 
@@ -22,9 +22,9 @@ export type Reward = 'plant1' | 'bowl1' | 'plant2' | 'plant3' | 'bowl2';
 
 // Shown in the guide and the buddy sheet ("next: Lv.10 silver bowl") as well.
 export const REWARDS: readonly { level: number; reward: Reward }[] = [
-  { level: 5, reward: 'plant1' },
-  { level: 10, reward: 'bowl1' },
-  { level: 15, reward: 'plant2' },
+  { level: 4, reward: 'plant1' },
+  { level: 8, reward: 'bowl1' },
+  { level: 14, reward: 'plant2' },
   { level: 25, reward: 'plant3' },
   { level: 30, reward: 'bowl2' },
 ];
@@ -69,8 +69,8 @@ export function nextReward(level: number, album: AlbumEntry[]) {
 // arrives, full size by the next reward (or the top level).
 const PLANT_SMALLEST = 2.2;
 const PLANT_LARGEST = 3.2;
-const PLANT_FROM: Record<PlantTier, number> = { 1: 5, 2: 15, 3: 25 };
-const PLANT_FULL_AT: Record<PlantTier, number> = { 1: 14, 2: 24, 3: 30 };
+const PLANT_FROM: Record<PlantTier, number> = { 1: 4, 2: 14, 3: 25 };
+const PLANT_FULL_AT: Record<PlantTier, number> = { 1: 13, 2: 24, 3: 30 };
 
 function plantScale(tier: PlantTier | 0, level: number): number {
   if (tier === 0) return 0;

@@ -658,7 +658,9 @@ export function BuddyStage({
     }
     let stopped = false;
     let current: Animated.CompositeAnimation | null = null;
-    const home = buddy.hungry || eating ? maxX : (minX + maxX) / 2;
+    // The egg rests in the middle of the stage, on the rug, not of the strip it could walk.
+    const middle = Math.min(maxX, Math.max(minX, (width - spriteWidth) / 2));
+    const home = buddy.hungry || eating ? maxX : egg ? middle : (minX + maxX) / 2;
     // At the table it eats where it is, and a hungry one waits where it is, thinking of food.
     const stay = atTable && (buddy.hungry || eating);
     const leg = (from: number) => {
@@ -702,7 +704,20 @@ export function BuddyStage({
       stopped = true;
       current?.stop();
     };
-  }, [width, spriteWidth, settled, acting, mood, eating, buddy.hungry, atTable, minX, maxX, x]);
+  }, [
+    width,
+    spriteWidth,
+    settled,
+    acting,
+    mood,
+    eating,
+    buddy.hungry,
+    atTable,
+    egg,
+    minX,
+    maxX,
+    x,
+  ]);
 
   // Work: walk over to the station, then work there for a while. Without one (not grown up yet,
   // or no job) it works where it stands.

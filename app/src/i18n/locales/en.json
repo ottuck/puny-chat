@@ -230,7 +230,9 @@
     },
     "bath": {
       "go": "Go to the hot spring",
-      "home": "Go back home"
+      "home": "Go back home",
+      "bucket": "Bucket",
+      "bucketSound": "Clack"
     },
     "dream": {
       "caption": "In a dream…",
@@ -351,7 +353,7 @@
     "title": "Raising your buddy",
     "banner": {
       "title": "🥚 How to raise your buddy",
-      "body": "It grows as you chat and take care of it, with a bonus when you both talk on the same day. A reward appears on the stage every 5 levels, and at level 30 it can go its own way.",
+      "body": "It grows as you chat and take care of it, with a bonus when you both talk on the same day. A new prop appears in the room every few levels, and at level 30 it can go its own way.",
       "open": "See the guide ›"
     },
     "care": {
@@ -364,13 +366,13 @@
     "grow": {
       "title": "🌱 Growing",
       "exp": "EXP: +1 per message (up to 50 a day), +2 for a meal, +2 per 💩 cleaned.",
-      "stages": "Egg → baby (Lv.3) → child (Lv.10) → adult (Lv.20). From child on, it talks.",
+      "stages": "Egg → baby (Lv.3) → child (Lv.7) → adult (Lv.12). From child on, it talks.",
       "together": "When you both send a message on the same day, you get a together bonus of +{{exp}} EXP once a day. 🤝",
       "job": "When it grows up, how you raised it decides its job: feed it a lot and it is a chef, talk late into the night and it becomes a radio DJ. Once grown, you can change it from the buddy details, once a day."
     },
     "rewards": {
       "title": "🎁 Level rewards",
-      "body": "Every 5 levels the stage gets a little finer."
+      "body": "Every few levels the room gets a new prop, and the ones it has get finer."
     },
     "graduate": {
       "title": "🎓 Its own way",

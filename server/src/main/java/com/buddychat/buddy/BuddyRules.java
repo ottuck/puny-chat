@@ -94,8 +94,8 @@ public final class BuddyRules {
 
     // The level each stage starts at.
     static final int BABY_AT = 3;
-    static final int CHILD_AT = 10;
-    static final int ADULT_AT = 20;
+    static final int CHILD_AT = 7;
+    static final int ADULT_AT = 12;
 
     public static Stage stage(int level) {
         if (level >= ADULT_AT) return Stage.ADULT;
