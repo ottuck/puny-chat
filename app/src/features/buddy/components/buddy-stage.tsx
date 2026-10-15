@@ -19,7 +19,7 @@ import { useColors } from '@/theme';
 
 import type { AlbumEntry } from '@/features/room/api';
 
-import { type BuddyJob, type BuddyView, NEXT_STEP_AT } from '../api';
+import { type BuddyJob, type BuddyView, JOB_CHANGE_LEVELS, NEXT_STEP_AT } from '../api';
 import {
   BUTTERFLY,
   butterflyAt,
@@ -292,8 +292,17 @@ const CHEW_MS = 2400;
 // Of 'evolved', the transformation (rings of light, old and new looks flickering); the rest shows
 // off the new look with a burst of sparkles.
 const EVOLVE_MS = 1400;
-// Just grown into a new stage, the next goal shows for this long ("Lv.5에 꼬마가 돼요").
-const NEXT_STEP_MS = 4500;
+// A note over the stage shows for this long: the next goal after growing ("Lv.5에 꼬마가 돼요"), or
+// when the job can be changed.
+const NOTICE_MS = 4500;
+// After a level up or a job change, the note waits this long for the buddy's new state to arrive.
+const NOTICE_AFTER_MS = 500;
+type Notice = {
+  key:
+    | `nextStage.${BuddyView['stage']}`
+    | `notice.${'jobChangeOpen' | 'jobChangeSoon' | 'jobChangeAt' | 'jobChangeFree'}`;
+  level?: number;
+};
 const GLOW_MS = 450;
 // Where the burst's sparkles fly, from the buddy's middle.
 const BURST = [
@@ -1156,22 +1165,66 @@ export function BuddyStage({
     };
   }, [reaction, hop, flash, glow, burst]);
 
-  // Grown into a new stage: once the new look settles, the next goal for a moment, so there is
-  // always something ahead to look forward to. A grown-up's is its job, until it has one.
-  const [nextStep, setNextStep] = useState(false);
+  // Notes over the stage, so there is always something ahead to look forward to: grown into a new
+  // stage, the next one (a grown-up's is its job, until it has one); and now and then when the job
+  // can be changed: the level before a chance, the chance itself, and after a change, the next one.
+  // Worked out when shown, from the buddy as it is by then (its new state follows the event).
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const noticeTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const latestBuddy = useRef(buddy);
   useEffect(() => {
-    if (reaction?.kind !== 'evolved') return;
-    const timers = [
-      setTimeout(() => setNextStep(true), EVOLVE_MS),
-      setTimeout(() => setNextStep(false), EVOLVE_MS + NEXT_STEP_MS),
+    latestBuddy.current = buddy;
+  });
+  const showNotice = useCallback((pick: (now: BuddyView) => Notice | null, after: number) => {
+    noticeTimers.current.forEach(clearTimeout);
+    noticeTimers.current = [
+      setTimeout(() => {
+        const next = pick(latestBuddy.current);
+        if (!next) return;
+        setNotice(next);
+        noticeTimers.current.push(setTimeout(() => setNotice(null), NOTICE_MS));
+      }, after),
     ];
-    return () => {
-      timers.forEach(clearTimeout);
-      setNextStep(false);
-    };
-  }, [reaction]);
-  const nextStepShown =
-    nextStep && !dream && !leaving && !(buddy.stage === 'ADULT' && buddy.job) ? buddy.stage : null;
+  }, []);
+  useEffect(() => () => noticeTimers.current.forEach(clearTimeout), []);
+  useEffect(() => {
+    if (reaction?.kind === 'evolved') {
+      showNotice(
+        (now) =>
+          now.stage === 'ADULT' && now.job
+            ? null
+            : { key: `nextStage.${now.stage}`, level: NEXT_STEP_AT[now.stage] },
+        EVOLVE_MS,
+      );
+    } else if (reaction?.kind === 'levelUp' || reaction?.kind === 'maxLevel') {
+      showNotice((now) => {
+        if (!now.job) return null;
+        if (reaction.kind === 'maxLevel') return { key: 'notice.jobChangeFree' };
+        if (now.canChangeJob && JOB_CHANGE_LEVELS.includes(now.level))
+          return { key: 'notice.jobChangeOpen' };
+        if (now.jobChangeAt === now.level + 1)
+          return { key: 'notice.jobChangeSoon', level: now.jobChangeAt };
+        return null;
+      }, NOTICE_AFTER_MS);
+    }
+  }, [reaction, showNotice]);
+  // The job settled or changed while the stage is open: when it can be changed next.
+  const jobSeen = useRef(job);
+  useEffect(() => {
+    if (job === jobSeen.current) return;
+    jobSeen.current = job;
+    if (!job) return;
+    showNotice(
+      (now) =>
+        now.jobChangeAt
+          ? { key: 'notice.jobChangeAt', level: now.jobChangeAt }
+          : now.canChangeJob
+            ? { key: 'notice.jobChangeFree' }
+            : null,
+      NOTICE_AFTER_MS + 1500,
+    );
+  }, [job, showNotice]);
+  const noticeShown = notice && !dream && !leaving ? notice : null;
 
   useEffect(
     () => () => {
@@ -1959,15 +2012,15 @@ export function BuddyStage({
         />
       ))}
 
-      {nextStepShown ? (
-        <View style={[styles.nextStep, styles.passThrough]}>
+      {noticeShown ? (
+        <View style={[styles.notice, styles.passThrough]}>
           <Text
             style={[
-              styles.nextStepText,
+              styles.noticeText,
               { color: colors.text, backgroundColor: colors.surface, borderColor: colors.accent },
             ]}
           >
-            {t(`buddy.nextStage.${nextStepShown}`, { level: NEXT_STEP_AT[nextStepShown] })}
+            {t(`buddy.${noticeShown.key}`, { level: noticeShown.level })}
           </Text>
         </View>
       ) : null}
@@ -2111,7 +2164,7 @@ const styles = StyleSheet.create({
   levelUp: {
     fontWeight: '700',
   },
-  nextStep: {
+  notice: {
     position: 'absolute',
     top: 40,
     left: 12,
@@ -2119,7 +2172,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 1,
   },
-  nextStepText: {
+  noticeText: {
     fontSize: 13,
     fontWeight: '700',
     paddingHorizontal: 12,

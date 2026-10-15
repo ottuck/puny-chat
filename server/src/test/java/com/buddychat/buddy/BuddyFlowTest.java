@@ -629,7 +629,7 @@ class BuddyFlowTest {
     @Test
     void theJobStaysWhateverTheyDoLaterAndGoesIntoTheAlbum() {
         String roomId = createRoom("henry").id();
-        setBuddy(roomId, new Update().set("buddy.fedCount", 5));
+        setBuddy(roomId, new Update().set("buddy.fedCount", 7));
         setExp(roomId, BuddyRules.minExp(BuddyRules.JOB_AT) - 1);
         buddyService.onMessageSent(roomId).block();
         assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.CHEF);
@@ -650,10 +650,10 @@ class BuddyFlowTest {
     }
 
     @Test
-    void theJobCanBeChangedOnceAtTwentyAndAtThirtyAndFreelyAtTheTop() {
+    void theJobCanBeChangedOnceAtTwentyThirtyAndFortyAndFreelyAtTheTop() {
         duoRoom("henry", "yuki");
         String roomId = room("henry").id();
-        setBuddy(roomId, new Update().set("buddy.fedCount", 5));
+        setBuddy(roomId, new Update().set("buddy.fedCount", 7));
         setExp(roomId, BuddyRules.minExp(BuddyRules.JOB_AT) - 1);
         buddyService.onMessageSent(roomId).block();
         assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.CHEF);
@@ -672,6 +672,11 @@ class BuddyFlowTest {
         setExp(roomId, BuddyRules.minExp(30));
         changeJob("yuki", "WRITER").isOk();
         changeJob("henry", "CHEF").isEqualTo(409);
+        assertThat(room("henry").buddy().jobChangeAt()).isEqualTo(40);
+
+        setExp(roomId, BuddyRules.minExp(40));
+        changeJob("henry", "GARDENER").isOk();
+        changeJob("yuki", "CHEF").isEqualTo(409);
         assertThat(room("henry").buddy().jobChangeAt()).isEqualTo(BuddyRules.MAX_LEVEL);
 
         setExp(roomId, BuddyRules.minExp(BuddyRules.MAX_LEVEL));
@@ -738,19 +743,28 @@ class BuddyFlowTest {
     }
 
     @Test
-    void jobsGoToTheMostPointsAndTiesToTheFirstListed() {
-        assertThat(BuddyJob.decide(counts(4, 4, 14, 14, 9))).isEqualTo(BuddyJob.BARISTA);
-        assertThat(BuddyJob.decide(counts(5, 0, 0, 0, 0))).isEqualTo(BuddyJob.CHEF);
-        assertThat(BuddyJob.decide(counts(5, 5, 0, 0, 0))).isEqualTo(BuddyJob.CHEF);
-        assertThat(BuddyJob.decide(counts(5, 6, 0, 0, 0))).isEqualTo(BuddyJob.GARDENER);
-        assertThat(BuddyJob.decide(counts(0, 0, 15, 0, 0))).isEqualTo(BuddyJob.DJ);
-        // Laughs are still counted but no job is made of them.
+    void eachHabitCountsAgainstItsUsualAmountAndOneThatStandsOutWins() {
+        // Usual by the job's level: 5 meals, 4 poops, 6 night messages, 3 love messages.
+        assertThat(BuddyJob.decide(counts(7, 0, 0, 0, 0))).isEqualTo(BuddyJob.CHEF);
+        assertThat(BuddyJob.decide(counts(0, 5, 0, 0, 0))).isEqualTo(BuddyJob.GARDENER);
+        assertThat(BuddyJob.decide(counts(0, 0, 8, 0, 0))).isEqualTo(BuddyJob.DJ);
+        assertThat(BuddyJob.decide(counts(0, 0, 0, 0, 4))).isEqualTo(BuddyJob.WRITER);
+        // Measured against the usual: six love messages (twice the usual) beat seven meals.
+        assertThat(BuddyJob.decide(counts(7, 4, 6, 0, 6))).isEqualTo(BuddyJob.WRITER);
+        // Nothing a quarter beyond the usual: the barista. Laughs are counted but make no job.
+        assertThat(BuddyJob.decide(counts(6, 4, 7, 0, 3))).isEqualTo(BuddyJob.BARISTA);
         assertThat(BuddyJob.decide(counts(0, 0, 0, 30, 0))).isEqualTo(BuddyJob.BARISTA);
-        assertThat(BuddyJob.decide(counts(0, 0, 0, 0, 10))).isEqualTo(BuddyJob.WRITER);
         assertThat(BuddyJob.leaning(counts(0, 0, 0, 0, 0))).isNull();
         assertThat(BuddyJob.leaning(counts(1, 0, 0, 0, 0))).isEqualTo(BuddyJob.BARISTA);
-        assertThat(BuddyJob.leaning(counts(3, 1, 0, 0, 0))).isEqualTo(BuddyJob.BARISTA);
         assertThat(BuddyJob.leaning(counts(0, 0, 0, 0, 20))).isEqualTo(BuddyJob.WRITER);
+    }
+
+    @Test
+    void equalHabitsGoByADrawThatStaysTheSameForTheBuddy() {
+        Buddy tied = counts(10, 8, 0, 0, 0); // both twice the usual
+        BuddyJob job = BuddyJob.decide(tied);
+        assertThat(job).isIn(BuddyJob.CHEF, BuddyJob.GARDENER);
+        assertThat(BuddyJob.decide(tied)).isEqualTo(job);
     }
 
     // --- helpers ---

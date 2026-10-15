@@ -291,7 +291,7 @@ export const LAMP: Frame = [
 // At night the shade glows.
 export const LAMP_LIT: Palette = { ...ROOM_PALETTE, l: '#FFF2BF', j: '#FFD166' };
 
-// --- The gold cushion (Lv.40) ---
+// --- The gold cushion (Lv.50) ---
 
 // A square floor cushion seen a little from above: stitched across to a tuft in the middle, its
 // thick front edge below, tassels at the corners.

@@ -73,9 +73,9 @@ export type Reward =
   | 'cushion';
 
 // Shown in the guide and the buddy sheet ("next: Lv.9 window") as well. Thick in the first twenty
-// levels, when it is easiest to lose interest, and every other level after. The levels that bring
-// something of their own (a new stage at 3, 5, 10, the job at 12, a job change at 20 and 30) bring
-// no thing for the room.
+// levels, when it is easiest to lose interest, and every two or three levels after. The levels that
+// bring something of their own (a new stage at 3, 5, 10, the job at 12, a job change at 20, 30 and 40)
+// bring no thing for the room; the top one, 50, ends with the gold cushion.
 export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 2, reward: 'plant1' },
   { level: 4, reward: 'crate' },
@@ -91,17 +91,17 @@ export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 17, reward: 'wood' },
   { level: 18, reward: 'sparrow' },
   { level: 19, reward: 'plant3' },
-  { level: 21, reward: 'firefly' },
-  { level: 23, reward: 'train' },
-  { level: 25, reward: 'bowl2' },
-  { level: 27, reward: 'rug3' },
-  { level: 29, reward: 'plant4' },
-  { level: 31, reward: 'catTail' },
-  { level: 33, reward: 'tatami' },
-  { level: 35, reward: 'lamp' },
-  { level: 37, reward: 'plant5' },
-  { level: 39, reward: 'bowl3' },
-  { level: 40, reward: 'cushion' },
+  { level: 22, reward: 'firefly' },
+  { level: 24, reward: 'train' },
+  { level: 27, reward: 'bowl2' },
+  { level: 29, reward: 'rug3' },
+  { level: 32, reward: 'plant4' },
+  { level: 35, reward: 'catTail' },
+  { level: 37, reward: 'tatami' },
+  { level: 42, reward: 'lamp' },
+  { level: 45, reward: 'plant5' },
+  { level: 48, reward: 'bowl3' },
+  { level: 50, reward: 'cushion' },
 ];
 
 export function rewardLevel(reward: Reward): number {
@@ -168,8 +168,8 @@ export function nextReward(level: number) {
 // arrives, full size by the next reward (or the top level).
 const PLANT_SMALLEST = 2.2;
 const PLANT_LARGEST = 3.2;
-const PLANT_FROM: Record<PlantTier, number> = { 1: 2, 2: 13, 3: 19, 4: 29, 5: 37 };
-const PLANT_FULL_AT: Record<PlantTier, number> = { 1: 12, 2: 18, 3: 28, 4: 36, 5: 40 };
+const PLANT_FROM: Record<PlantTier, number> = { 1: 2, 2: 13, 3: 19, 4: 32, 5: 45 };
+const PLANT_FULL_AT: Record<PlantTier, number> = { 1: 12, 2: 18, 3: 31, 4: 44, 5: 50 };
 
 function plantScale(tier: PlantTier | 0, level: number): number {
   if (tier === 0) return 0;

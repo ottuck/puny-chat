@@ -79,8 +79,10 @@ function buddyOf(
     togetherToday: false,
     job: stage === 'ADULT' ? job : null,
     leaning: null,
-    canChangeJob: false,
-    jobChangeAt: null,
+    // As the server would have it for a job never changed (BuddyRules.canChangeJob), to see the notes.
+    canChangeJob: stage === 'ADULT' && !!job && (level ?? 0) >= 20,
+    jobChangeAt:
+      stage === 'ADULT' && job && (level ?? LEVEL[stage]) >= 12 && (level ?? 0) < 20 ? 20 : null,
   };
 }
 
