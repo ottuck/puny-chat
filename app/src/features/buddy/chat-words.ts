@@ -1,12 +1,14 @@
-// One-word messages the buddy answers (docs/product.md, 채팅으로 돌보기): "밥" and "청소" are care,
+// One-word messages the buddy answers (docs/product.md, 채팅으로 돌보기): "밥", "청소" and "일" are care,
 // done by the server (server: buddy/CareCommand, keep the lists in step); "춤" and "노래" are only
 // on the stage. Only the whole message counts; trailing "!", "~" or "." are fine.
 
-export type ChatWord = 'feed' | 'clean' | 'dance' | 'sing';
+export type ChatWord = 'feed' | 'clean' | 'work' | 'dance' | 'sing';
 
 const WORDS: Record<ChatWord, readonly string[]> = {
   feed: ['밥', '🍚', 'ごはん', 'ご飯', 'food', 'feed'],
   clean: ['청소', '🧹', '똥', '💩', 'そうじ', '掃除', 'うんち', 'clean', 'poop'],
+  // A grown-up's work at its station; "청소" is for the poops before that.
+  work: ['일', '💼', '仕事', 'しごと', 'work'],
   dance: ['춤', '춤춰', '💃', '🕺', 'おどって', '踊って', 'ダンス', 'dance'],
   sing: ['노래', '노래해', '🎵', '🎶', 'うた', '歌', '歌って', 'sing', 'song'],
 };

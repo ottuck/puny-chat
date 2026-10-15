@@ -28,6 +28,7 @@ import {
   HEART,
   JOB_PROPS,
   JOB_STATIONS,
+  type Station,
   LEVEL_UP,
   NOTE,
   POOP,
@@ -107,6 +108,18 @@ const JOB_WALK_MAX_MS = 4000;
 const JOB_WALK_MS = 12;
 // The station's left edge on the stage.
 const STATION_LEFT = 12;
+
+// Where a held tool goes in the buddy's box: smaller than its own size, its right edge (the handle)
+// stays at the hand and its middle at the same height.
+function heldAt(held: NonNullable<Station['held']>, scale: number) {
+  const width = held.frames[0][0].length;
+  const height = held.frames[0].length;
+  const own = scale * (held.size ?? 1);
+  return {
+    left: (held.col + width) * scale - width * own,
+    top: held.row * scale + (height * (scale - own)) / 2,
+  };
+}
 // What it says as it happens, once grown.
 const ACT_LINE: Partial<Record<Act, Line>> = {
   hiccup: 'hiccup',
@@ -169,6 +182,8 @@ const REACTION_MS: Record<ReactionKind, number> = {
   fed: 3200,
   cleaned: 1800,
   pooped: 1400,
+  task: 1400,
+  worked: 1800,
   levelUp: 1600,
   evolved: 2600,
   together: 2400,
@@ -431,7 +446,7 @@ export function BuddyStage({
   }, [evolving, hush]);
 
   const perform = useCallback(
-    (next: Act, replaceCurrent = false) => {
+    (next: Act, replaceCurrent = false, spoken?: Line) => {
       // Only explicit cues replace an action. A queued idle callback must respect the tap lock.
       if (!replaceCurrent && (actTimer.current || petTimer.current)) return;
       if (actTimer.current) clearTimeout(actTimer.current);
@@ -441,7 +456,7 @@ export function BuddyStage({
       setAct(next);
       // The same cue must restart the finite animation even when its kind has not changed.
       setActRun((run) => run + 1);
-      const line = next === 'job' && job ? pick(JOB_LINES[job]) : ACT_LINE[next];
+      const line = spoken ?? (next === 'job' && job ? pick(JOB_LINES[job]) : ACT_LINE[next]);
       if (line) say(line);
       actTimer.current = setTimeout(
         () => {
@@ -593,11 +608,13 @@ export function BuddyStage({
         cue.kind === 'yawn'
       )
         perform(cue.kind, true);
-      else if (cue.kind !== 'feed' && cue.kind !== 'clean') startMood(cue.kind);
+      else if (cue.kind !== 'feed' && cue.kind !== 'clean' && cue.kind !== 'work')
+        startMood(cue.kind);
       else if (cue.kind === 'feed' && !canFeed) {
         perform('refuse', true);
         say('full');
-      } else if (cue.kind === 'clean' && poops === 0) say('alreadyClean');
+      } else if (cue.kind === 'clean' && poops === 0 && !station) say('alreadyClean');
+      else if (cue.kind === 'work' && poops === 0 && station) say('noWork');
     }, 0);
     return () => clearTimeout(timer);
     // Answer each cue once, with the state as it was when it came.
@@ -718,6 +735,18 @@ export function BuddyStage({
       note.setValue(0);
     };
   }, [act, actRun, hop, note]);
+
+  // Work done (by either of them) is shown at the station; the gardener likes the tidy plant.
+  useEffect(() => {
+    if (reaction?.kind !== 'worked' || !station) return;
+    const timer = setTimeout(
+      () => perform('job', true, job === 'GARDENER' ? 'gardenerCleaned' : undefined),
+      0,
+    );
+    return () => clearTimeout(timer);
+    // Once per piece of work done.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reaction?.id]);
 
   // The bowl and the poops bob now and then while they need tapping.
   const wantsFood = buddy.hungry && !eating;
@@ -1048,6 +1077,12 @@ export function BuddyStage({
     if (!buddy.canClean || busy) return;
     onClean();
   };
+  // A grown-up's station: a tap does one piece of the work waiting there, and off it goes to it.
+  const work = () => {
+    if (!buddy.canClean || busy) return;
+    onClean();
+    perform('job', true);
+  };
 
   return (
     <View
@@ -1319,23 +1354,65 @@ export function BuddyStage({
             },
           ]}
         >
-          <View
-            style={[
-              styles.jobProp,
-              { left: station.held.col * scale, top: station.held.row * scale },
-            ]}
-          >
+          <View style={[styles.jobProp, heldAt(station.held, scale)]}>
             <PixelSprite
               frame={station.held.frames[tick % 2]}
               palette={PROP_PALETTE}
-              scale={scale}
+              scale={scale * (station.held.size ?? 1)}
             />
           </View>
         </Animated.View>
       ) : null}
 
-      {/* In front of the buddy, so one by its feet can still be tapped away. */}
-      {Array.from({ length: buddy.poops }, (_, i) => (
+      {/* Work waiting at the station: its tool, once for each piece, bobbing; a tap on the station
+          does one. */}
+      {station && job && buddy.poops > 0 ? (
+        <>
+          <Animated.View
+            style={[
+              styles.taskMarks,
+              styles.passThrough,
+              {
+                left: STATION_LEFT + station.mark.col * scale,
+                bottom:
+                  FLOOR -
+                  station.sink * scale +
+                  (station.frames[0].length - station.mark.row) * scale +
+                  4,
+                transform: [{ translateY: nudge }],
+              },
+            ]}
+          >
+            {Array.from({ length: buddy.poops }, (_, i) => (
+              <PixelSprite
+                key={i}
+                frame={station.mark.frame ?? JOB_PROPS[job][0]}
+                palette={PROP_PALETTE}
+                scale={2}
+              />
+            ))}
+          </Animated.View>
+          <Pressable
+            onPress={work}
+            disabled={busy}
+            accessibilityRole="button"
+            accessibilityLabel={t('buddy.work', { buddy: buddy.name })}
+            style={[
+              styles.station,
+              {
+                left: STATION_LEFT,
+                bottom: FLOOR - station.sink * scale,
+                width: station.frames[0][0].length * scale,
+                height: station.frames[0].length * scale,
+              },
+            ]}
+          />
+        </>
+      ) : null}
+
+      {/* In front of the buddy, so one by its feet can still be tapped away. A grown-up has work at
+          its station instead. */}
+      {Array.from({ length: station ? 0 : buddy.poops }, (_, i) => (
         <Animated.View
           key={i}
           style={[
@@ -1450,6 +1527,11 @@ const styles = StyleSheet.create({
   },
   station: {
     position: 'absolute',
+  },
+  taskMarks: {
+    position: 'absolute',
+    flexDirection: 'row',
+    gap: 4,
   },
   // Room for the big heart of a pet shared by both.
   aboveBig: {

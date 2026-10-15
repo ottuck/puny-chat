@@ -26,6 +26,8 @@ const REACTIONS: ReactionKind[] = [
   'fed',
   'cleaned',
   'pooped',
+  'task',
+  'worked',
   'levelUp',
   'evolved',
   'together',
@@ -186,7 +188,7 @@ function Preview() {
         </Group>
         <Group title="state">
           <Chip label="hungry" onPress={() => setHungry((h) => !h)} active={hungry} />
-          <Chip label="+ poop" onPress={() => setPoops((n) => Math.min(3, n + 1))} />
+          <Chip label="+ poop / task" onPress={() => setPoops((n) => Math.min(3, n + 1))} />
           <Chip
             label="partner here"
             onPress={() => setPartnerHere((h) => !h)}

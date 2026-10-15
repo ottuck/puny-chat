@@ -183,6 +183,44 @@ class BuddyFlowTest {
     }
 
     @Test
+    void aGrownUpHasWorkAtItsStationInsteadOfPoops() {
+        String roomId = duoRoom("henry", "yuki");
+        setExp(roomId, BuddyRules.minExp(BuddyRules.ADULT_AT));
+        clock.advance(BuddyRules.poopEvery().multipliedBy(2).plusMinutes(1)); // two pieces of work
+        assertThat(room("henry").buddy().poops()).isEqualTo(2);
+        assertThat(timeline("henry")).filteredOn("TASK"::equals).hasSize(2);
+        assertThat(timeline("henry")).doesNotContain("POOPED");
+        int before = room("henry").buddy().exp();
+
+        TestSocket henry = connect("henry");
+        henry.send(Map.of("type", "send", "clientMessageId", "w-1", "text", "청소"))
+                .expect("ack");
+        await(() -> room("henry").buddy().exp() == before + 1); // just a message to a grown-up
+        assertThat(room("henry").buddy().poops()).isEqualTo(2);
+
+        henry.send(Map.of("type", "send", "clientMessageId", "w-2", "text", "일!"));
+        await(() -> timeline("henry").contains("WORKED"));
+        BuddyView done = room("henry").buddy();
+        assertThat(done.poops()).isZero();
+        assertThat(done.exp()).isEqualTo(before + 2 + 2 * BuddyRules.CLEAN_EXP);
+        assertThat(timeline("henry")).doesNotContain("CLEANED");
+    }
+
+    @Test
+    void workInTheChatIsJustAMessageBeforeGrowingUp() {
+        duoRoom("henry", "yuki");
+        clock.advance(BuddyRules.poopEvery().plusMinutes(1)); // one poop
+        room("henry");
+        TestSocket henry = connect("henry");
+
+        henry.send(Map.of("type", "send", "clientMessageId", "w-3", "text", "일"))
+                .expect("ack");
+        await(() -> room("henry").buddy().exp() == 1);
+        assertThat(room("henry").buddy().poops()).isEqualTo(1);
+        assertThat(timeline("henry")).doesNotContain("WORKED", "CLEANED");
+    }
+
+    @Test
     void tapsOnTheSamePoopAtOnceCleanItOnce() {
         duoRoom("henry", "yuki");
         clock.advance(BuddyRules.poopEvery().plusMinutes(1)); // one poop
@@ -787,8 +825,8 @@ class BuddyFlowTest {
                 .getResponseBody();
     }
 
-    private void duoRoom(String owner, String friend) {
-        createRoom(owner);
+    private String duoRoom(String owner, String friend) {
+        String roomId = createRoom(owner).id();
         String code = post(owner, "/api/rooms/me/invitations", Map.of())
                 .expectBody(JsonNode.class)
                 .returnResult()
@@ -798,6 +836,7 @@ class BuddyFlowTest {
         post(friend, "/api/invitations/" + code + "/accept", Map.of())
                 .expectStatus()
                 .isOk();
+        return roomId;
     }
 
     private TestSocket connect(String uid) {

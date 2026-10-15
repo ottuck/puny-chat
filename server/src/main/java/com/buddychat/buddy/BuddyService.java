@@ -77,13 +77,16 @@ public class BuddyService {
                 noticed.add(chatService.recordBuddyEvent(
                         roomId, "HUNGRY", null, "buddy:hungry:" + buddy.fedAt().toEpochMilli()));
             }
-            // Keyed by the poop's number in this cycle: one tapped away is not noticed again.
+            // Keyed by the poop's number in this cycle: one tapped away is not noticed again. A
+            // grown-up has a piece of work waiting at its station instead.
+            boolean adult = grownUp(buddy);
             for (int i = 1; i <= BuddyRules.poopsMade(buddy, now); i++) {
                 noticed.add(chatService.recordBuddyEvent(
                         roomId,
-                        "POOPED",
+                        adult ? "TASK" : "POOPED",
                         null,
-                        "buddy:poop:" + buddy.cleanedAt().toEpochMilli() + ":" + i));
+                        (adult ? "buddy:task:" : "buddy:poop:")
+                                + buddy.cleanedAt().toEpochMilli() + ":" + i));
             }
             BuddyView view = BuddyView.of(buddy, now);
             // Newly noticed: the others see the event and, with it, the poop on the floor.
@@ -112,14 +115,26 @@ public class BuddyService {
                 now);
     }
 
-    /** Cleans up one poop (a tap on it). EXP per poop; the last one leaves CLEANED in the timeline. */
+    /**
+     * Cleans up one poop (a tap on it), or for a grown-up does one piece of the work waiting at its
+     * station (a tap on the station). EXP per piece; the last one leaves CLEANED (WORKED) in the
+     * timeline.
+     */
     public Mono<CareResult> clean(String roomId, String actorId) {
-        return cleanUp(roomId, actorId, false);
+        return cleanUp(roomId, actorId, false, null);
     }
 
-    /** Cleans up every poop at once ("청소" in the chat). */
-    public Mono<CareResult> cleanAll(String roomId, String actorId) {
-        return cleanUp(roomId, actorId, true);
+    /**
+     * Everything at once, from the chat: "청소" cleans up the poops of a buddy not yet grown, "일"
+     * does a grown-up's work. The other word does nothing, so it stays a plain message.
+     */
+    public Mono<CareResult> cleanAll(String roomId, String actorId, boolean work) {
+        return cleanUp(roomId, actorId, true, work);
+    }
+
+    // Grown up: no more poops, work at its station instead (docs/product.md, 직업 무대 장치).
+    private static boolean grownUp(Buddy buddy) {
+        return BuddyRules.stage(BuddyRules.level(buddy.exp())) == BuddyRules.Stage.ADULT;
     }
 
     /**
@@ -127,11 +142,13 @@ public class BuddyService {
      * cleans it and the other gets {@code changed: false}. A clean floor starts a new cycle (the
      * clean time moves to now), so poops are counted from there again.
      */
-    private Mono<CareResult> cleanUp(String roomId, String actorId, boolean all) {
+    private Mono<CareResult> cleanUp(String roomId, String actorId, boolean all, @Nullable Boolean work) {
         Instant now = Instant.now(clock);
         return load(roomId).flatMap(buddy -> {
             int poops = BuddyRules.poops(buddy, now);
-            if (poops == 0) return Mono.just(new CareResult(BuddyView.of(buddy, now), false));
+            boolean adult = grownUp(buddy);
+            boolean wrongWord = work != null && work != adult;
+            if (poops == 0 || wrongWord) return Mono.just(new CareResult(BuddyView.of(buddy, now), false));
             int removed = all ? poops : 1;
             boolean floorClean = removed == poops;
             Update update = floorClean
@@ -146,7 +163,10 @@ public class BuddyService {
                     .flatMap(updated -> (floorClean
                                     ? chatService
                                             .recordBuddyEvent(
-                                                    roomId, "CLEANED", actorId, "buddy:CLEANED:" + UUID.randomUUID())
+                                                    roomId,
+                                                    adult ? "WORKED" : "CLEANED",
+                                                    actorId,
+                                                    "buddy:CLEANED:" + UUID.randomUUID())
                                             .doOnNext(message ->
                                                     hub.publish(roomId, new ServerEvent.NewMessage(message), null))
                                     : Mono.<Message>empty())
@@ -261,7 +281,9 @@ public class BuddyService {
      */
     public Mono<Void> onMessageSent(String roomId, String senderId, String text) {
         Mono<?> care = CareCommand.of(text)
-                .map(command -> command == CareCommand.FEED ? feed(roomId, senderId) : cleanAll(roomId, senderId))
+                .map(command -> command == CareCommand.FEED
+                        ? feed(roomId, senderId)
+                        : cleanAll(roomId, senderId, command == CareCommand.WORK))
                 .orElse(Mono.empty());
         return onMessageSent(roomId)
                 .then(noteHabits(roomId, text, Instant.now(clock)))

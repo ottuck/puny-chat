@@ -89,6 +89,7 @@
     "clean": "깨끗해요",
     "feed": "밥주기",
     "cleanUp": "청소하기",
+    "work": "{{buddy}}에게 일 시키기",
     "growthHint": "대화하고 돌봐줄수록 Buddy가 성장해요.",
     "peckish": "조금 출출해요",
     "pet": "{{buddy}} 쓰다듬기",
@@ -108,6 +109,7 @@
       "whatsUp": "무슨 일 있어?",
       "howWasToday": "오늘 어땠어?",
       "alreadyClean": "이미 깨끗해!",
+      "noWork": "지금은 할 일이 없어",
       "together": "둘 다 왔네!",
       "laugh": "ㅋㅋㅋ",
       "love": "에헤헤",
@@ -216,7 +218,7 @@
     },
     "jobPerk": {
       "CHEF": "밥을 먹을 때 더 신나요. 혼자 있을 땐 냄비를 저어요.",
-      "GARDENER": "치워 주면 더 기뻐해요. 혼자 있을 땐 정원을 가꿔요.",
+      "GARDENER": "일을 마치면 \"말끔하네\" 하고 좋아해요. 혼자 있을 땐 큰 화분을 돌봐요.",
       "DJ": "밤낮이 거꾸로예요. 새벽에 깨어 라디오를 하고 낮에 자요.",
       "POET": "사랑 낱말에 큰 하트를 띄워요. 혼자 있을 땐 시를 써요.",
       "BARISTA": "말이 많아요. 대화 중에도 한마디씩 거들어요."
@@ -227,6 +229,8 @@
     "FED": "{{actor}}님이 {{buddy}}에게 밥을 줬어요",
     "POOPED": "{{buddy, 이가}} 💩을 쌌어요",
     "CLEANED": "{{actor}}님이 {{buddy}}의 💩을 치웠어요",
+    "TASK": "{{buddy}}에게 할 일이 생겼어요",
+    "WORKED": "{{actor}}님과 {{buddy}}의 일이 끝났어요",
     "LEVELED_UP": "{{buddy, 이가}} 레벨 업했어요! Lv.{{level}} ⬆️",
     "EVOLVED": "{{buddy, 이가}} 진화했어요! ✨",
     "MAX_LEVEL": "🎉 {{buddy, 이가}} 최고 레벨 Lv.{{level}}에 도달했어요!",

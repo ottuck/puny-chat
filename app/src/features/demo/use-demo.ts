@@ -86,8 +86,10 @@ function afterEvent(buddy: BuddyView, event: BuddyEvent): BuddyView | null {
         ? { ...buddy, hungry: false, canFeed: false, fullness: 100, levelProgress: 0.6 }
         : null;
     case 'POOPED':
+    case 'TASK':
       return { ...buddy, poops: buddy.poops + 1, canClean: true };
     case 'CLEANED':
+    case 'WORKED':
       return buddy.poops > 0 ? { ...buddy, poops: 0, canClean: false } : null;
   }
 }
