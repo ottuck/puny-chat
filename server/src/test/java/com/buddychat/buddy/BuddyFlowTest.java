@@ -422,7 +422,7 @@ class BuddyFlowTest {
         BuddyView buddy = room("henry").buddy();
         assertThat(buddy.exp()).isEqualTo(exp * BuddyRules.expPerLevel() / 3);
         assertThat(buddy.level()).isEqualTo(10);
-        assertThat(buddy.levelProgress()).isBetween(0.5, 0.75);
+        assertThat(buddy.levelProgress()).isBetween(0.6, 0.7);
     }
 
     @Test

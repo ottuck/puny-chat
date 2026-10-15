@@ -11,7 +11,7 @@ import java.time.ZoneId;
  */
 public final class BuddyRules {
 
-    public static final int DEFAULT_EXP_PER_LEVEL = 4;
+    public static final int DEFAULT_EXP_PER_LEVEL = 5;
     // Set once at startup from BuddyProperties.
     private static volatile int expPerLevel = DEFAULT_EXP_PER_LEVEL;
     public static final int FEED_EXP = 2;
@@ -75,7 +75,7 @@ public final class BuddyRules {
     }
 
     // The highest level (docs/spec.md, 최고 레벨). EXP keeps counting past it.
-    public static final int MAX_LEVEL = 100;
+    public static final int MAX_LEVEL = 40;
 
     public static int level(int exp) {
         return Math.min(MAX_LEVEL, exp / expPerLevel + 1);

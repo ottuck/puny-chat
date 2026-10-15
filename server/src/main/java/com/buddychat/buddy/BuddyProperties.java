@@ -13,6 +13,6 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  */
 @ConfigurationProperties("buddychat.buddy")
 record BuddyProperties(
-        @DefaultValue("4") int expPerLevel,
+        @DefaultValue("5") int expPerLevel,
         @DefaultValue("150m") Duration fullToEmpty,
         @DefaultValue("1h") Duration poopEvery) {}
