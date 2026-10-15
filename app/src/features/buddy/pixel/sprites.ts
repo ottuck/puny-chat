@@ -516,163 +516,6 @@ export const NOTE: Frame = [
   '.kk..',
 ];
 
-// --- Job props (docs/fun-improvements.md, 직업) ---
-
-// What an adult holds at its work, small and plain: two frames each, swapped every tick (steam
-// drifting, water pouring, a note, a line written).
-// prettier-ignore
-const POT: [Frame, Frame] = [[
-  '...v....v...',
-  '....v....v..',
-  '...v....v...',
-  '............',
-  '.....kk.....',
-  '...kkkkkk...',
-  '..kzzzzzzk..',
-  '.kkkkkkkkkk.',
-  'kkSwSSSSSSkk',
-  '.kSwSSSSSSk.',
-  '.kSSSSSSSSk.',
-  '..kkkkkkkk..',
-], [
-  '....v....v..',
-  '...v....v...',
-  '....v....v..',
-  '............',
-  '.....kk.....',
-  '...kkkkkk...',
-  '..kzzzzzzk..',
-  '.kkkkkkkkkk.',
-  'kkSwSSSSSSkk',
-  '.kSwSSSSSSk.',
-  '.kSSSSSSSSk.',
-  '..kkkkkkkk..',
-]];
-
-// prettier-ignore
-const WATERING_CAN: [Frame, Frame] = [[
-  '............',
-  '...kkkk.....',
-  '..k....k....',
-  '..k....k..kk',
-  '.kkkkkkk.kak',
-  '.kaaaaaakak.',
-  '.kawaaaaak..',
-  '.kawaaaak...',
-  '.kaaaaaak...',
-  '.kaaaaaak...',
-  '..kkkkkk....',
-  '............',
-], [
-  '............',
-  '...kkkk.....',
-  '..k....k....',
-  '..k....k..kk',
-  '.kkkkkkk.kak',
-  '.kaaaaaakak.',
-  '.kawaaaaak.a',
-  '.kawaaaak...',
-  '.kaaaaaak.a.',
-  '.kaaaaaak..a',
-  '..kkkkkk....',
-  '..........a.',
-]];
-
-// prettier-ignore
-const HEADPHONES: [Frame, Frame] = [[
-  '............',
-  '............',
-  '............',
-  '...kkkkkk...',
-  '..kKKKKKKk..',
-  '.kKk....kKk.',
-  '.kk......kk.',
-  'kBBk....kBBk',
-  'kBwk....kwBk',
-  'kBBk....kBBk',
-  '.kk......kk.',
-  '............',
-], [
-  '...........k',
-  '...........k',
-  '..........kk',
-  '...kkkkkk...',
-  '..kKKKKKKk..',
-  '.kKk....kKk.',
-  '.kk......kk.',
-  'kBBk....kBBk',
-  'kBwk....kwBk',
-  'kBBk....kBBk',
-  '.kk......kk.',
-  '............',
-]];
-
-// prettier-ignore
-const QUILL: [Frame, Frame] = [[
-  '.........kk.',
-  '........kwk.',
-  '.......kwvk.',
-  '......kwvk..',
-  '.....kwvk...',
-  '....kwvk....',
-  '...kkkk.....',
-  'kkkkkkkkkk..',
-  'knnnnnnnnk..',
-  'knKKKnnnnk..',
-  'knnnnnnnnk..',
-  'kkkkkkkkkk..',
-], [
-  '..........kk',
-  '.........kwk',
-  '........kwvk',
-  '.......kwvk.',
-  '......kwvk..',
-  '.....kwvk...',
-  '....kkkk....',
-  'kkkkkkkkkk..',
-  'knnnnnnnnk..',
-  'knKKKKnnnk..',
-  'knnnnnnnnk..',
-  'kkkkkkkkkk..',
-]];
-
-// prettier-ignore
-const COFFEE: [Frame, Frame] = [[
-  '...v..v.....',
-  '..v..v......',
-  '...v..v.....',
-  '............',
-  '.kkkkkkkk...',
-  '.kRRRRRRk...',
-  '.kwwwwwwkkk.',
-  '.kwwwwwwk.k.',
-  '.kwwwwwwkkk.',
-  '..kwwwwk....',
-  'kwwwwwwwwwk.',
-  '.kkkkkkkkk..',
-], [
-  '..v..v......',
-  '...v..v.....',
-  '..v..v......',
-  '............',
-  '.kkkkkkkk...',
-  '.kRRRRRRk...',
-  '.kwwwwwwkkk.',
-  '.kwwwwwwk.k.',
-  '.kwwwwwwkkk.',
-  '..kwwwwk....',
-  'kwwwwwwwwwk.',
-  '.kkkkkkkkk..',
-]];
-
-export const JOB_PROPS: Record<BuddyJob, [Frame, Frame]> = {
-  CHEF: POT,
-  GARDENER: WATERING_CAN,
-  DJ: HEADPHONES,
-  WRITER: QUILL,
-  BARISTA: COFFEE,
-};
-
 // --- Job stations (docs/fun-improvements.md, 직업) ---
 
 // What an adult works at, on the left of the stage in the buddy's own pixel size, always drawn in
@@ -975,8 +818,9 @@ export const JOB_STATIONS: Record<BuddyJob, Station> = {
 
 // --- Decorations (docs/spec.md, 무대 꾸미기) ---
 
-// The plant in the corner grows finer with levels: a sprout in a clay pot, a flowering cactus in a
-// rimmed pot, then flowers in a glazed pot.
+// The plant in the corner grows finer with levels: a sprout in a clay pot, a bigger plant in a
+// rimmed pot (a flowering cactus, a rubber plant, a snake plant or a round-leaved one, whichever the
+// room drew), then flowers in a glazed pot.
 // prettier-ignore
 const PLANT_1: Frame = [
   '.kkk...kkk.',
@@ -1017,6 +861,76 @@ const PLANT_2: Frame = [
   '..kkkkkkkkk..',
 ];
 
+// A rubber plant: glossy oval leaves by turns up the stem.
+// prettier-ignore
+const PLANT_2_RUBBER: Frame = [
+  '....kgggk....',
+  '...kiiiiik...',
+  '...kGGGGGgk..',
+  '...kggqGGigk.',
+  '..kgGiqkGGigk',
+  '.kPiGGqkkkGk.',
+  'kGiGGkqGPgk..',
+  '.kkkggqGGigk.',
+  '.kggiGqkGGiGk',
+  'kgPiGGqkkkGk.',
+  'kGGGkkqk..k..',
+  '.kkk.kqk.....',
+  'kkkkkkkkkkkkk',
+  'kwoooooooooek',
+  'kkkkkkkkkkkkk',
+  '.kooooooooek.',
+  '.kooooooooek.',
+  '..kooooooeek.',
+  '..kkkkkkkkk..',
+];
+
+// A snake plant: tall pointed leaves with stripes across.
+// prettier-ignore
+const PLANT_2_SNAKE: Frame = [
+  '........k....',
+  '.....k.kgk...',
+  '....kgkgjk...',
+  '...kgjkgjk.k.',
+  '..kkgjkPgkkgk',
+  '.kgkPgkgjkgjk',
+  'kgjkgjkgjkgjk',
+  'kgjkgjkPgkPgk',
+  'kPgkPgkgjkgjk',
+  'kgjkgjkgjkgjk',
+  'kgjkgjkPgkPgk',
+  'kPgkPgkgjkgjk',
+  'kkkkkkkkkkkkk',
+  'kwoooooooooek',
+  'kkkkkkkkkkkkk',
+  '.kooooooooek.',
+  '.kooooooooek.',
+  '..kooooooeek.',
+  '..kkkkkkkkk..',
+];
+
+// Round leaves in pairs up a stem.
+// prettier-ignore
+const PLANT_2_ROUND: Frame = [
+  '..kkk...kkk..',
+  '.kPggk.kggPk.',
+  '.kgGGGGGGGgk.',
+  '.kkkkkGkkkkk.',
+  'kPggk.G.kggPk',
+  'kgGGGkGkGGGgk',
+  '.kkkkkGkkkkk.',
+  '..kPggGggPk..',
+  '..kgGkGGGgk..',
+  '...kkkGkkk...',
+  'kkkkkkkkkkkkk',
+  'kwoooooooooek',
+  'kkkkkkkkkkkkk',
+  '.kooooooooek.',
+  '.kooooooooek.',
+  '..kooooooeek.',
+  '..kkkkkkkkk..',
+];
+
 // prettier-ignore
 const PLANT_3: Frame = [
   '.kkk.........',
@@ -1039,7 +953,12 @@ const PLANT_3: Frame = [
 ];
 
 export type PlantTier = 1 | 2 | 3;
-export const PLANTS: Record<PlantTier, Frame> = { 1: PLANT_1, 2: PLANT_2, 3: PLANT_3 };
+// The kinds a pot may grow into at each tier.
+export const PLANTS: Record<PlantTier, readonly Frame[]> = {
+  1: [PLANT_1],
+  2: [PLANT_2, PLANT_2_RUBBER, PLANT_2_SNAKE, PLANT_2_ROUND],
+  3: [PLANT_3],
+};
 
 export const RUG: Frame = [
   '..' + 'm'.repeat(26) + '..',

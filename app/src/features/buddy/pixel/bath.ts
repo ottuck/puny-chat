@@ -26,6 +26,9 @@ export const BATH_PALETTE: Palette = {
   B: '#AEC897', // bamboo
   n: '#8FAE7A', // bamboo, shaded; its knots
   r: '#B09272', // the binding
+  // Clouds in the sky.
+  c: '#FFFFFF', // cloud
+  C: '#C2D7E5', // cloud, shaded underneath
 };
 
 // Where the water comes to on the buddy: two rows under its cheeks.
@@ -151,7 +154,29 @@ export const BUCKET: Frame = [
   'kLxwVvVVvUk',
   '.kLVVvVVUk.',
   '..kkkkkkk..',
-]
+];
+
+// Clouds drifting across the sky: a big one and a small one, soft, with no outline.
+// prettier-ignore
+export const CLOUD_BIG: Frame = [
+  '..........cccc..........',
+  '........cccccccc........',
+  '...cccc.ccccccccc.......',
+  '..cccccccccccccccccccc..',
+  '.cccccccccccccccccccccc.',
+  'cccccccccccccccccccccccc',
+  'CccccccccccccccccccccccC',
+  '..CCCCCCCCCCCCCCCCCCCC..',
+];
+
+// prettier-ignore
+export const CLOUD_SMALL: Frame = [
+  '.....ccc......',
+  '...ccccccc.cc.',
+  '.ccccccccccccc',
+  'cccccccccccccc',
+  '.CCCCCCCCCCCC.',
+];
 
 // A drop of water, splashed up when the buddy is petted in the tub.
 // prettier-ignore

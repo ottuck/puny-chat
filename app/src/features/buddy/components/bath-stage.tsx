@@ -14,12 +14,23 @@ import Svg, { Rect } from 'react-native-svg';
 import { useColors } from '@/theme';
 
 import type { BuddyView } from '../api';
-import { BATH_PALETTE, BUCKET, DROP, fence, STEAM, TUB_SINK, tubFor } from '../pixel/bath';
+import {
+  BATH_PALETTE,
+  BUCKET,
+  CLOUD_BIG,
+  CLOUD_SMALL,
+  DROP,
+  fence,
+  STEAM,
+  TUB_SINK,
+  tubFor,
+} from '../pixel/bath';
 import { bathFrame, type Hatched } from '../pixel/looks';
-import { PixelSprite } from '../pixel/pixel-sprite';
+import { type Frame, PixelSprite } from '../pixel/pixel-sprite';
 import { BUDDY_PALETTE, buddyFrame, type Pose } from '../pixel/sprites';
 import { CORNER_SIZE, FLOOR, gridScale } from './buddy-stage';
 import { SpeechBubble } from './speech-bubble';
+import { Snowfall } from './weather';
 
 // The hot spring (docs/fun-improvements.md, 목욕): the buddy soaks in a wooden tub in the middle of
 // the stage, steam rising, a towel on its head. Nothing happens to it here: it shows the buddy as it
@@ -100,16 +111,88 @@ function Steam({
   );
 }
 
+// Clouds across the sky: where they start (a fraction of the way across), how high (a fraction of
+// the sky), and how long one crossing takes. Slow enough to be noticed only now and then.
+const CLOUDS = [
+  { frame: CLOUD_BIG, from: 0.15, high: 0.12, ms: 70_000 },
+  { frame: CLOUD_SMALL, from: 0.62, high: 0.3, ms: 52_000 },
+  { frame: CLOUD_BIG, from: 0.9, high: 0.42, ms: 90_000 },
+] as const;
+
+// A cloud drifting left to right across `width`, coming back in from the left.
+function Cloud({
+  frame,
+  from,
+  top,
+  ms,
+  width,
+  scale,
+}: {
+  frame: Frame;
+  from: number;
+  top: number;
+  ms: number;
+  width: number;
+  scale: number;
+}) {
+  const [drift] = useState(() => new Animated.Value(from));
+  useEffect(() => {
+    let anim: Animated.CompositeAnimation | null = null;
+    let stopped = false;
+    const cross = (start: number) => {
+      if (stopped) return;
+      drift.setValue(start);
+      anim = Animated.timing(drift, {
+        toValue: 1,
+        duration: ms * (1 - start),
+        easing: Easing.linear,
+        useNativeDriver: NATIVE_DRIVER,
+      });
+      anim.start(({ finished }) => finished && cross(0));
+    };
+    cross(from);
+    return () => {
+      stopped = true;
+      anim?.stop();
+    };
+  }, [drift, from, ms]);
+  const cloudWidth = frame[0].length * scale;
+  return (
+    <Animated.View
+      style={[
+        styles.absolute,
+        {
+          top,
+          left: 0,
+          transform: [
+            {
+              translateX: drift.interpolate({
+                inputRange: [0, 1],
+                outputRange: [-cloudWidth, width],
+              }),
+            },
+          ],
+        },
+      ]}
+    >
+      <PixelSprite frame={frame} palette={BATH_PALETTE} scale={scale} />
+    </Animated.View>
+  );
+}
+
 export function BathStage({
   buddy,
   height,
   corner,
+  snowing = false,
 }: {
   // As it was when it came to the bath.
   buddy: BuddyView;
   height: number;
   // The way back home, in the top right corner.
   corner: React.ReactNode;
+  // Winter: snow falls on the open-air bath (never rain).
+  snowing?: boolean;
 }) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -186,6 +269,7 @@ export function BathStage({
   const grid = buddyFrame(stage, 'idle');
   const scale = gridScale(height, grid.length);
   const tub = tubFor(stage);
+  const fenceHeight = fence(1).length * scale;
   const tubWidth = tub.front[0].length * scale;
   const tubLeft = Math.round((width - tubWidth) / 2);
   const tubBottom = FLOOR - 4;
@@ -214,14 +298,28 @@ export function BathStage({
       onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}
       style={{ height, backgroundColor: colors.bath }}
     >
-      {/* A bamboo fence along the back, and a stone floor in two courses of tiles. */}
+      {/* The sky with clouds drifting by, a bamboo fence along the back (both a shade darker at
+          night), and a stone floor in two courses of tiles. */}
       {width > 0 ? (
-        <View style={[styles.absolute, styles.passThrough, { left: 0, bottom: FLOOR }]}>
-          <PixelSprite
-            frame={fence(Math.ceil(width / scale))}
-            palette={BATH_PALETTE}
-            scale={scale}
-          />
+        <View style={[styles.sky, styles.passThrough, { bottom: FLOOR }]}>
+          {CLOUDS.map((cloud, i) => (
+            <Cloud
+              key={i}
+              frame={cloud.frame}
+              from={cloud.from}
+              top={cloud.high * (height - FLOOR - fenceHeight)}
+              ms={cloud.ms}
+              width={width}
+              scale={scale}
+            />
+          ))}
+          <View style={[styles.absolute, { left: 0, bottom: 0 }]}>
+            <PixelSprite
+              frame={fence(Math.ceil(width / scale))}
+              palette={BATH_PALETTE}
+              scale={scale}
+            />
+          </View>
           <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.bathDim }]} />
         </View>
       ) : null}
@@ -343,6 +441,7 @@ export function BathStage({
         </>
       ) : null}
 
+      {snowing && width > 0 ? <Snowfall width={width} height={height - FLOOR} /> : null}
       <View style={styles.corner}>{corner}</View>
     </View>
   );
@@ -354,6 +453,13 @@ const styles = StyleSheet.create({
   },
   passThrough: {
     pointerEvents: 'none',
+  },
+  sky: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    overflow: 'hidden',
   },
   floor: {
     position: 'absolute',

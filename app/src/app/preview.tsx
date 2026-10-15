@@ -161,6 +161,8 @@ function Preview() {
   const [dreamRun, setDreamRun] = useState(0);
   // One cut of the dream held still, to look at.
   const [dreamCut, setDreamCut] = useState<number | null>(null);
+  // The kind of plant in the pot (undefined: the one the room drew).
+  const [plantKind, setPlantKind] = useState<number | undefined>(undefined);
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
@@ -192,6 +194,7 @@ function Preview() {
           partnerPet={partnerPet}
           partnerHere={partnerHere}
           season={season}
+          plantKind={plantKind}
         />
         <Group title="scene">
           <Chip label="dream" onPress={() => setDreamRun((n) => n + 1)} />
@@ -201,6 +204,21 @@ function Preview() {
               label={`cut ${i + 1}`}
               onPress={() => setDreamCut(dreamCut === i ? null : i)}
               active={dreamCut === i}
+            />
+          ))}
+        </Group>
+        <Group title="plant kind (Lv.15–24)">
+          <Chip
+            label="drawn"
+            onPress={() => setPlantKind(undefined)}
+            active={plantKind === undefined}
+          />
+          {['cactus', 'rubber', 'snake', 'round'].map((name, i) => (
+            <Chip
+              key={name}
+              label={name}
+              onPress={() => setPlantKind(i)}
+              active={plantKind === i}
             />
           ))}
         </Group>

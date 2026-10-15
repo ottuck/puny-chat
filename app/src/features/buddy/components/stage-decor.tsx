@@ -31,14 +31,25 @@ export const REWARDS: readonly { level: number; reward: Reward }[] = [
 
 const FRAMES_SHOWN = 3;
 
-export function decorFor(level: number, album: AlbumEntry[]) {
+// Which kind a pot grows into, drawn once per room and buddy: the same on both phones and every
+// time the app opens (a hash of the buddy's name and the tier, not a fresh random number).
+function kindOf(seed: string, tier: PlantTier, kinds: number): number {
+  let hash = tier * 31;
+  for (const char of seed) hash = (hash * 33 + char.charCodeAt(0)) >>> 0;
+  return hash % kinds;
+}
+
+// `seed`: the buddy's name. `kind`: a kind to show regardless (the art preview).
+export function decorFor(level: number, album: AlbumEntry[], seed = '', kind?: number) {
   const reached = album.length > 0 ? Infinity : level;
   const has = (reward: Reward) =>
     REWARDS.some((entry) => entry.reward === reward && reached >= entry.level);
   const plant: PlantTier | 0 = has('plant3') ? 3 : has('plant2') ? 2 : has('plant1') ? 1 : 0;
   const bowl: BowlTier = has('bowl2') ? 2 : has('bowl1') ? 1 : 0;
+  const kinds = plant === 0 ? 1 : PLANTS[plant].length;
   return {
     plant,
+    plantKind: kind !== undefined ? kind % kinds : plant === 0 ? 0 : kindOf(seed, plant, kinds),
     plantScale: plantScale(plant, reached),
     bowl,
     // The latest ones, newest on the right.
@@ -70,7 +81,9 @@ function plantScale(tier: PlantTier | 0, level: number): number {
 
 // Floor the plant takes in the corner, so poops and the walk stay clear of it.
 export function plantRoom(decor: Decor): number {
-  return decor.plant === 0 ? 0 : Math.ceil(PLANTS[decor.plant][0].length * decor.plantScale) + 8;
+  if (decor.plant === 0) return 0;
+  const frame = PLANTS[decor.plant][decor.plantKind];
+  return Math.ceil(frame[0].length * decor.plantScale) + 8;
 }
 
 // Behind the buddy: portraits of buddies gone their own way, and the rug. The plant and the bowl
@@ -107,8 +120,8 @@ export function WallDecor({ decor, floor, top }: { decor: Decor; floor: number; 
   );
 }
 
-export function Plant({ tier, scale }: { tier: PlantTier; scale: number }) {
-  return <PixelSprite frame={PLANTS[tier]} palette={PROP_PALETTE} scale={scale} />;
+export function Plant({ tier, kind, scale }: { tier: PlantTier; kind: number; scale: number }) {
+  return <PixelSprite frame={PLANTS[tier][kind]} palette={PROP_PALETTE} scale={scale} />;
 }
 
 const styles = StyleSheet.create({

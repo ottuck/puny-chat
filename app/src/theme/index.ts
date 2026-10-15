@@ -24,7 +24,7 @@ const light = {
   stageFloor: '#D6E6C8',
   stageLine: '#B8CFA4',
   // The hot spring: misty, with a stone floor.
-  bath: '#E2EDF1',
+  bath: '#D4E9F4',
   bathFloor: '#CCD7DC',
   bathLine: '#AEBDC4',
   // Over the bamboo fence: it stays in the back at night too.

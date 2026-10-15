@@ -7,6 +7,7 @@ import { useColors } from '@/theme';
 
 import type { BuddyView } from '../api';
 import { BATH_ICON, BATH_PALETTE, HOME_ICON } from '../pixel/bath';
+import { isWinter } from '../pixel/looks';
 import { PixelSprite } from '../pixel/pixel-sprite';
 import { buddyFrame } from '../pixel/sprites';
 import type { Reaction } from '../reactions';
@@ -178,6 +179,8 @@ export function BuddyScene({ dreams = false, onDreaming, ...props }: Props) {
       <BathStage
         buddy={kept}
         height={height}
+        // In winter it snows on the bath; the preview's Christmas stands for winter.
+        snowing={props.season !== undefined ? props.season === 'CHRISTMAS' : isWinter(new Date())}
         corner={<CornerButton icon={HOME_ICON} label={t('buddy.bath.home')} onPress={goHome} />}
       />
     );
