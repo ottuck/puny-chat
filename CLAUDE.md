@@ -135,7 +135,7 @@
   구조를 바꾸면 경계를 넘을 때 앱 전체가 다시 마운트되므로 그렇게 하지 않는다. 모달 시트도 `WebFrame`으로 감싼다.
 - 초대 링크 `join?code=`: 로그인 전이면 `lib/pending-invite`가 코드를 기억했다가 이름을 정한 뒤 참가 화면을 연다.
   복사는 `lib/clipboard`(`expo-clipboard`, 앱·웹 공용).
-- 링크 미리보기(Open Graph, 영어)는 `app/+html.tsx`, 이미지는 `app/public/og.png`(1200×630, 구경하기 화면으로 만듦).
+- 링크 미리보기(Open Graph, 일본어 — 일본 App Store 출시)는 `app/+html.tsx`, 이미지는 `app/public/og.png`(1200×630, 온천 장면 `docs/images/bath.png`에 일본어 문구를 얹음).
 - iOS-first design ≠ iOS-only code. 플랫폼 분기는 정말 다를 때만 `*.ios.ts` / `*.web.ts`로 나눈다.
 - 라이브러리는 구체적인 문제가 생겼을 때만 추가한다.
 - UI 문구는 처음부터 다국어(ja / ko / en). 화면에 문자열을 직접 쓰지 않고 `app/src/i18n/locales/*.json`에 넣고
