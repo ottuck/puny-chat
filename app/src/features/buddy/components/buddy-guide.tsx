@@ -5,7 +5,7 @@ import { useColors } from '@/theme';
 
 import { TOGETHER_EXP } from '../api';
 import { type Frame, PixelSprite } from '../pixel/pixel-sprite';
-import { bowl, PLANTS, PROP_PALETTE, RUG } from '../pixel/sprites';
+import { bowl, PLANTS, PROP_PALETTE } from '../pixel/sprites';
 import { type Reward, REWARDS } from './stage-decor';
 
 // How the buddy grows and what comes with it (docs/product.md, 도움말): care, growth, the rewards
@@ -16,7 +16,6 @@ const REWARD_ICON: Record<Reward, Frame> = {
   plant1: PLANTS[1],
   bowl1: bowl(true, 1),
   plant2: PLANTS[2],
-  rug: RUG,
   plant3: PLANTS[3],
   bowl2: bowl(true, 2),
 };

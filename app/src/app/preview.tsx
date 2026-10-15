@@ -8,8 +8,9 @@ import type { BuddyJob, BuddyStage, BuddyView } from '@/features/buddy/api';
 import type { Mood } from '@/features/buddy/chat-words';
 import { BuddyStage as Stage, type Cue } from '@/features/buddy/components/buddy-stage';
 import { JOB_ICON, JOB_ORDER } from '@/features/buddy/jobs';
+import { dressedFrame, type Season, SEASONS, seasonOn } from '@/features/buddy/pixel/looks';
 import { PixelSprite } from '@/features/buddy/pixel/pixel-sprite';
-import { BUDDY_PALETTE, buddyFrame, POSES_IN_ORDER } from '@/features/buddy/pixel/sprites';
+import { BUDDY_PALETTE, POSES_IN_ORDER } from '@/features/buddy/pixel/sprites';
 import type { Reaction, ReactionKind } from '@/features/buddy/reactions';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
@@ -19,7 +20,16 @@ import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
 const STAGES: BuddyStage[] = ['EGG', 'BABY', 'CHILD', 'ADULT'];
 const LEVEL: Record<BuddyStage, number> = { EGG: 1, BABY: 3, CHILD: 10, ADULT: 20 };
-const HAPPENINGS = ['hiccup', 'startle', 'lookAround', 'yawn'] as const;
+const HAPPENINGS = [
+  'hiccup',
+  'startle',
+  'lookAround',
+  'yawn',
+  'butterfly',
+  'rain',
+  'snow',
+  'shootingStar',
+] as const;
 const MOODS: Mood[] = ['laugh', 'love', 'cheer', 'comfort', 'goodnight', 'morning'];
 const REACTIONS: ReactionKind[] = [
   'message',
@@ -100,8 +110,16 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
 }
 
 // Every pose of the chosen stage side by side, still and large, so the faces can be compared at a
-// glance.
-function PoseSheet({ stage }: { stage: BuddyStage }) {
+// glance, dressed as on the stage (the job's or the season's look).
+function PoseSheet({
+  stage,
+  job,
+  season,
+}: {
+  stage: BuddyStage;
+  job: BuddyJob | null;
+  season: Season | null;
+}) {
   const colors = useColors();
   return (
     <View style={styles.group}>
@@ -110,7 +128,7 @@ function PoseSheet({ stage }: { stage: BuddyStage }) {
         {POSES_IN_ORDER.map((pose) => (
           <View key={pose} style={[styles.pose, { backgroundColor: colors.stage }]}>
             <PixelSprite
-              frame={buddyFrame(stage, pose)}
+              frame={dressedFrame(stage, pose, stage === 'ADULT' ? job : null, season)}
               palette={BUDDY_PALETTE}
               scale={stage === 'ADULT' ? 4 : 5}
             />
@@ -133,6 +151,9 @@ function Preview() {
   const [reaction, setReaction] = useState<Reaction | null>(null);
   const [partnerPet, setPartnerPet] = useState<{ id: string } | null>(null);
   const [partnerHere, setPartnerHere] = useState(false);
+  // undefined: by today's date, as in the app.
+  const [season, setSeason] = useState<Season | null | undefined>(undefined);
+  const shownSeason = season === undefined ? seasonOn(new Date()) : season;
   const stageHeight = Math.round(Math.min(280, Math.max(180, windowHeight * 0.3)));
 
   return (
@@ -151,6 +172,7 @@ function Preview() {
           greets={false}
           partnerPet={partnerPet}
           partnerHere={partnerHere}
+          season={season}
         />
         <Group title="stage">
           {STAGES.map((s) => (
@@ -165,6 +187,17 @@ function Preview() {
               onPress={() => setJob(j)}
               active={j === job}
             />
+          ))}
+        </Group>
+        <Group title="season">
+          <Chip
+            label="by date"
+            onPress={() => setSeason(undefined)}
+            active={season === undefined}
+          />
+          <Chip label="none" onPress={() => setSeason(null)} active={season === null} />
+          {SEASONS.map((s) => (
+            <Chip key={s} label={s} onPress={() => setSeason(s)} active={s === season} />
           ))}
         </Group>
         {/* A new id for every press, or the stage takes it for the one it already played. */}
@@ -196,7 +229,7 @@ function Preview() {
           />
           <Chip label="partner pets" onPress={() => setPartnerPet({ id: randomUUID() })} />
         </Group>
-        {stage !== 'EGG' && <PoseSheet stage={stage} />}
+        {stage !== 'EGG' && <PoseSheet stage={stage} job={job} season={shownSeason} />}
       </ScrollView>
     </SafeAreaView>
   );

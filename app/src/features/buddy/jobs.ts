@@ -8,12 +8,12 @@ export const JOB_ICON: Record<BuddyJob, string> = {
   CHEF: '🍳',
   GARDENER: '🌱',
   DJ: '🎧',
-  POET: '✒️',
+  WRITER: '✒️',
   BARISTA: '☕',
 };
 
 // The order they are listed in when choosing: the same as the server's tie order (server: BuddyJob).
-export const JOB_ORDER: readonly BuddyJob[] = ['CHEF', 'GARDENER', 'DJ', 'POET', 'BARISTA'];
+export const JOB_ORDER: readonly BuddyJob[] = ['CHEF', 'GARDENER', 'DJ', 'WRITER', 'BARISTA'];
 
 // A job from a version of the server this app does not know is not shown.
 export function isJob(value: string | undefined): value is BuddyJob {

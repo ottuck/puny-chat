@@ -22,6 +22,30 @@ export const BUDDY_PALETTE: Palette = {
   F: '#F27A9B', // petal shade
   y: '#FFD166', // flower center
   m: '#D9576B', // inside of an open mouth
+  // What it wears (looks.ts): a job's look, the season's.
+  w: '#FFFFFF', // cook's hat, swim ring stripes
+  x: '#DCE1E7', // cook's hat shade
+  t: '#F4D27C', // straw
+  T: '#D3A64C', // straw shade
+  n: '#C2564B', // hat band
+  K: '#4A4550', // headphones
+  r: '#E8575A', // headphone cups
+  M: '#8C3F5A', // beret
+  S: '#B35C7C', // beret, lit
+  D: '#6A2C43', // beret shade
+  c: '#4E9A73', // bandana
+  C: '#3A7457', // bandana shade
+  a: '#4B3B5C', // bat wings
+  A: '#7A6699', // bat wings, lit
+  j: '#9C6B43', // antlers
+  z: '#FF8080', // swim ring
+  Z: '#E05A5A', // swim ring shade
+  R: '#E0533D', // maple leaf
+  O: '#F49A3C', // maple leaf, lit
+  u: '#B83A2B', // maple leaf shade
+  N: '#2B2730', // black bow
+  B: '#55505E', // black bow, lit
+  Y: '#F2C14E', // the bow's gold knot
 };
 
 // prettier-ignore
@@ -336,6 +360,18 @@ export const PROP_PALETTE: Palette = {
   x: '#99A2AD', // metal shade
   N: '#3A6A96', // glazed pot shade
   Z: '#33413B', // chalkboard
+  // The season's corner and the happenings (looks.ts).
+  O: '#F48C3C', // pumpkin
+  l: '#FFB061', // pumpkin, lit
+  d: '#D66A28', // pumpkin shade
+  V: '#C9961E', // the pumpkin's glow, shaded
+  i: '#2F7A43', // dark green: tree shade, pumpkin leaf
+  Q: '#E8575A', // red: tree pot, baubles, heart shade
+  E: '#C0404A', // tree pot shade
+  H: '#FFC2CC', // heart shine
+  I: '#BFE3FF', // pale blue: butterfly, umbrella shine
+  M: '#D9577F', // cherry blossom shade
+  b: '#2E2A33', // black shopping bag
 };
 
 // prettier-ignore
@@ -371,6 +407,49 @@ export function bowl(full: boolean, tier: BowlTier): Frame {
     '...kkkkkk...',
   ];
 }
+
+// A child or grown-up eats at a low round table instead (docs/product.md, 식사): it shows only
+// for the meal, laid for one with rice in a bowl of the reward's color, soup with steam and a side
+// dish. Once eaten, the rice is gone.
+export function mealTable(full: boolean, tier: BowlTier): Frame {
+  const c = BOWL_COLOR[tier];
+  const shine = tier > 0 ? 'w' : c;
+  return [
+    '................v.v........',
+    full ? '.....kkkk........v.........' : '.................v.........',
+    full ? '....kwwwwk.....kkkkkk......' : '...............kkkkkk......',
+    full ? '...kwwwwwwk...kQQQQQQk.....' : '...kkkkkkkk...kQQQQQQk.....',
+    '...k' + c + shine + c.repeat(5) + 'k..kEQQQQEk.kkk.',
+    '....k' + c.repeat(5) + 'k....kEEEEk.kgGk.',
+    'kkkkkkkkkkkkkkkkkkkkkkkkkkk',
+    'kLLLLLLLLLLLLLLLLLLLLLLLLLk',
+    'kDDDDDDDDDDDDDDDDDDDDDDDDDk',
+    '.kkkkkkkkkkkkkkkkkkkkkkkkk.',
+    '...kqk...............kqk...',
+    '...kqk...............kqk...',
+    '...kkk...............kkk...',
+  ];
+}
+
+// What a hungry child or grown-up thinks of: a bowl of rice, steaming, in a cloud.
+// prettier-ignore
+export const THOUGHT_FOOD: Frame = [
+  '.....kkk.kkwkk.....',
+  '....kwwwvwvwwwk....',
+  '...kwwwwwvwwwwwk...',
+  '..kwwwwwkkkkwwwkk..',
+  '..kwwwwkwwwwkwwwwk.',
+  '.kwwwwkkkkkkkkwwwwk',
+  'kwwwwwkaaaaaakwwwwk',
+  'kwwwwwwkaaaakwwwwzk',
+  'kzwwwwwwkkkkwwwwzk.',
+  '.kzzzzzwwwwwwwwzk..',
+  '..kkkkkzwwwzzzzk...',
+  '..kwzk.kzzzkkkk....',
+  '..kwwk..kkk........',
+  '.k.kk..............',
+  'kwk................',
+];
 
 // prettier-ignore
 export const HEART: Frame = [
@@ -584,7 +663,7 @@ export const JOB_PROPS: Record<BuddyJob, [Frame, Frame]> = {
   CHEF: POT,
   GARDENER: WATERING_CAN,
   DJ: HEADPHONES,
-  POET: QUILL,
+  WRITER: QUILL,
   BARISTA: COFFEE,
 };
 
@@ -884,14 +963,14 @@ export const JOB_STATIONS: Record<BuddyJob, Station> = {
     held: { frames: HELD_CAN, row: 12, col: -8, size: 0.6 },
   },
   DJ: { frames: RADIO_DESK, sink: 3, standAt: 3 },
-  POET: { frames: WRITING_DESK, sink: 3, standAt: 3 },
+  WRITER: { frames: WRITING_DESK, sink: 3, standAt: 3 },
   BARISTA: { frames: CAFE_COUNTER, sink: 3, standAt: 3 },
 };
 
 // --- Decorations (docs/product.md, 무대 꾸미기) ---
 
-// The plant in the corner grows finer with levels: a sprout in a clay pot, a leafy plant in a
-// rimmed pot, then flowers in a glazed pot.
+// The plant in the corner grows finer with levels: a sprout in a clay pot, a flowering cactus in a
+// rimmed pot, then flowers in a glazed pot. (Other plants drawn for later: docs/art-archive.md.)
 // prettier-ignore
 const PLANT_1: Frame = [
   '.kkk...kkk.',
@@ -911,16 +990,18 @@ const PLANT_1: Frame = [
 
 // prettier-ignore
 const PLANT_2: Frame = [
-  '..kkk...kkk..',
-  '.kPggk.kggPk.',
-  '.kgGGGGGGGgk.',
-  '.kkkkkGkkkkk.',
-  'kPggk.G.kggPk',
-  'kgGGGkGkGGGgk',
-  '.kkkkkGkkkkk.',
-  '..kPggGggPk..',
-  '..kgGkGGGgk..',
-  '...kkkGkkk...',
+  '.....kkk.....',
+  '....kfyfk....',
+  '....kPgGk....',
+  '....kPwGk.kk.',
+  '.kk.kPgGk.kgk',
+  'kgk.kwgGk.kwk',
+  'kwk.kPgGkkkgk',
+  'kgkkkPgwGgggk',
+  'kggggPgGkkkk.',
+  '.kkkkPwGk....',
+  '....kPgGk....',
+  '....kPgGk....',
   'kkkkkkkkkkkkk',
   'kwoooooooooek',
   'kkkkkkkkkkkkk',
