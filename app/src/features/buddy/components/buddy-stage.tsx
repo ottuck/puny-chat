@@ -41,7 +41,7 @@ import {
   buddyFrame,
   EXCLAIM,
   HEART,
-  JOB_BADGES,
+  JOB_PROPS,
   JOB_STATIONS,
   type Station,
   LEVEL_UP,
@@ -1333,7 +1333,7 @@ export function BuddyStage({
         </View>
       </Pressable>
 
-      {/* The job's mark: its round badge, in the corner. */}
+      {/* The job's mark: its tool, small, in the corner. */}
       {job ? (
         <View
           style={[styles.jobBadge, styles.passThrough]}
@@ -1341,7 +1341,7 @@ export function BuddyStage({
           accessibilityRole="image"
           accessibilityLabel={t(`buddy.job.${job}`)}
         >
-          <PixelSprite frame={JOB_BADGES[job]} palette={PROP_PALETTE} scale={2} />
+          <PixelSprite frame={JOB_PROPS[job][0]} palette={PROP_PALETTE} scale={2} />
         </View>
       ) : null}
 

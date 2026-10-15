@@ -54,14 +54,14 @@ const BERET: Frame = [
   '.kDDDMMMMMMMMMMMDk....',
   '..kk.DDDDDDDDDDDk.....',
 ];
-// A green café apron, darker at the sides as it goes round the body, with a small brown pocket.
+// A green bandana with white dots tied round the head, the knot and its ends out at one side.
 // prettier-ignore
-const APRON: Frame = [
-  '.......kEEEEEEk.......',
-  '.....kkCccccccCkk.....',
-  '....kCCccccckJJkCC....',
-  '.....CCccccckqqkCCk...',
-  '.......CCCCCCkkC.k....',
+const BANDANA: Frame = [
+  '.....kkkkkkkkkkkk.....',
+  '....kccwcccwcccwck.k..',
+  '...kCcccwcccwccccCkck.',
+  '...kkkkkkkkkkkkkkkkCk.',
+  '...................kk.',
 ];
 
 const JOB_LOOKS: Record<BuddyJob, readonly [row: number, look: Frame]> = {
@@ -69,7 +69,7 @@ const JOB_LOOKS: Record<BuddyJob, readonly [row: number, look: Frame]> = {
   GARDENER: [5, STRAW_HAT],
   DJ: [7, HEADPHONES],
   WRITER: [5, BERET],
-  BARISTA: [16, APRON],
+  BARISTA: [7, BANDANA],
 };
 
 // --- A week's look for the season ---
