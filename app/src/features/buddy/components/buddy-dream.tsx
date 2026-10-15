@@ -137,6 +137,7 @@ export function BuddyDream({
       job: cut.job,
       leaning: null,
       canChangeJob: false,
+      jobChangeAt: null,
     }),
     [buddy, cut.job],
   );

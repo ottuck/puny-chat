@@ -23,10 +23,13 @@ public record BuddyView(
         boolean togetherToday,
         // What it grew up to be (docs/fun-improvements.md, 직업): set once it is an adult.
         @Nullable BuddyJob job,
-        // As a child, the job it is heading for so far.
+        // Until the job is settled (a child, or a new grown-up), the job it is heading for so far.
         @Nullable BuddyJob leaning,
-        // An adult's job can be changed once a day (BuddyService.changeJob).
-        boolean canChangeJob) {
+        // The members may change the job now (BuddyRules.canChangeJob): once at 20 and at 30, freely from
+        // the top level.
+        boolean canChangeJob,
+        // While it cannot be changed: the level the next change opens at.
+        @Nullable Integer jobChangeAt) {
 
     public static BuddyView of(Buddy buddy, Instant now) {
         int level = BuddyRules.level(buddy.exp());
@@ -42,11 +45,19 @@ public record BuddyView(
                 BuddyRules.isHungry(buddy, now),
                 BuddyRules.canFeed(buddy, now),
                 BuddyRules.canClean(buddy, now),
-                level == BuddyRules.MAX_LEVEL,
+                level >= BuddyRules.GRADUATE_AT,
                 buddy.talkedOn(today),
                 today.equals(buddy.togetherDay()),
                 BuddyJob.of(buddy.job()),
-                BuddyRules.stage(level) == BuddyRules.Stage.CHILD ? BuddyJob.leaning(buddy) : null,
-                BuddyRules.stage(level) == BuddyRules.Stage.ADULT && !today.equals(buddy.jobChangedDay()));
+                leaning(buddy, level),
+                BuddyRules.canChangeJob(level, buddy.job(), buddy.jobChangedLevel()),
+                BuddyRules.jobChangeAt(level, buddy.job(), buddy.jobChangedLevel()));
+    }
+
+    private static @Nullable BuddyJob leaning(Buddy buddy, int level) {
+        BuddyRules.Stage stage = BuddyRules.stage(level);
+        boolean settling = stage == BuddyRules.Stage.CHILD
+                || (stage == BuddyRules.Stage.ADULT && level < BuddyRules.JOB_AT && buddy.job() == null);
+        return settling ? BuddyJob.leaning(buddy) : null;
     }
 }

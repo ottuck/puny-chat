@@ -1,9 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { FlatList, StyleSheet, View } from 'react-native';
 
+import { GROWN_LEVEL, JOB_CHANGE_LEVELS } from '@/features/buddy/api';
+import { rewardAt } from '@/features/buddy/components/stage-decor';
 import { isJob, JOB_ICON } from '@/features/buddy/jobs';
 
-import { formatTime, runPosition } from '../timeline';
+import { foldLevelUps, formatTime, runPosition } from '../timeline';
 import type { Member, Message } from '../types';
 import { BuddyEventRow, EventCard } from './buddy-event-row';
 import { MessageBubble } from './message-bubble';
@@ -41,12 +43,14 @@ export function MessageList({
       )
     : undefined;
 
+  const shown = foldLevelUps(messages, GROWN_LEVEL);
+
   return (
     // Inverted: the newest message sits at the bottom and new ones stay in view. The list's
     // "end" is the top, so reaching it loads older history.
     <FlatList
       inverted
-      data={messages}
+      data={shown}
       keyExtractor={(message) => message.clientMessageId}
       keyboardDismissMode="interactive"
       keyboardShouldPersistTaps="handled"
@@ -65,12 +69,24 @@ export function MessageList({
             </View>
           );
         }
+        if (item.type === 'BUDDY_EVENT' && item.event === 'GROWN') {
+          return (
+            <View style={styles.spaced}>
+              <EventCard
+                title={t('buddyEvent.GROWN', { buddy: buddyName })}
+                body={t('chat.grownBody')}
+                action={onGraduate ? `🎓 ${t('buddy.graduate.button')}` : undefined}
+                onAction={onGraduate}
+              />
+            </View>
+          );
+        }
         if (item.type === 'BUDDY_EVENT' && item.event === 'MAX_LEVEL') {
           return (
             <View style={styles.spaced}>
               <EventCard
                 title={t('buddyEvent.MAX_LEVEL', { buddy: buddyName, level: item.level })}
-                body={t('chat.maxLevelThanks')}
+                body={`${t('chat.maxLevelThanks')} ${t('chat.maxLevelJob')}`}
                 action={onGraduate ? `🎓 ${t('buddy.graduate.button')}` : undefined}
                 onAction={onGraduate}
               />
@@ -115,6 +131,29 @@ export function MessageList({
             </View>
           );
         }
+        // A level that brings something new to the room says what, and one that lets the job be
+        // changed says so.
+        if (item.type === 'BUDDY_EVENT' && item.event === 'LEVELED_UP' && item.level) {
+          const reward = rewardAt(item.level);
+          const line = reward
+            ? t('buddyEvent.LEVELED_UP_REWARD', {
+                buddy: buddyName,
+                level: item.level,
+                reward: t(`buddy.reward.${reward}`),
+              })
+            : t('buddyEvent.LEVELED_UP', { buddy: buddyName, level: item.level });
+          return (
+            <View style={styles.spaced}>
+              <BuddyEventRow
+                label={
+                  JOB_CHANGE_LEVELS.includes(item.level)
+                    ? `${line} · ${t('chat.jobChangeOpen')}`
+                    : line
+                }
+              />
+            </View>
+          );
+        }
         if (item.type === 'BUDDY_EVENT') {
           return (
             <View style={styles.spaced}>
@@ -129,7 +168,7 @@ export function MessageList({
             </View>
           );
         }
-        const { continuesOlder, showTime } = runPosition(messages, index);
+        const { continuesOlder, showTime } = runPosition(shown, index);
         return (
           <View style={continuesOlder ? styles.grouped : styles.spaced}>
             <MessageBubble

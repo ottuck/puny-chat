@@ -7,6 +7,7 @@ import {
   Platform,
   Pressable,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
 import Svg, { Rect } from 'react-native-svg';
@@ -43,6 +44,7 @@ const TICK_MS = 450;
 const BLISS_TICKS = 7;
 const AWAKE_TICKS = 5;
 const SPLASH_MS = 700;
+const RATTLE_MS = 650;
 const TALK_EVERY_MS = 9000;
 const TALK_MS = 3000;
 const LINES = ['bath1', 'bath2', 'bath3'] as const;
@@ -203,6 +205,9 @@ export function BathStage({
   const [bob] = useState(() => new Animated.Value(0));
   const [splashing, setSplashing] = useState(false);
   const splashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [rattle] = useState(() => new Animated.Value(0));
+  const [rattling, setRattling] = useState(false);
+  const rattleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [line, setLine] = useState<(typeof LINES)[number] | null>(null);
 
   // It sways a little in the water.
@@ -246,9 +251,27 @@ export function BathStage({
   useEffect(
     () => () => {
       if (splashTimer.current) clearTimeout(splashTimer.current);
+      if (rattleTimer.current) clearTimeout(rattleTimer.current);
     },
     [],
   );
+
+  // The bucket by the tub: a tap knocks it about on the stone, a clatter of small shakes.
+  const knock = () => {
+    if (rattleTimer.current) clearTimeout(rattleTimer.current);
+    setRattling(true);
+    rattle.setValue(0);
+    Animated.timing(rattle, {
+      toValue: 1,
+      duration: RATTLE_MS,
+      easing: Easing.linear,
+      useNativeDriver: NATIVE_DRIVER,
+    }).start();
+    rattleTimer.current = setTimeout(() => {
+      rattleTimer.current = null;
+      setRattling(false);
+    }, RATTLE_MS + 250);
+  };
 
   const pet = () => {
     if (splashTimer.current) clearTimeout(splashTimer.current);
@@ -385,15 +408,54 @@ export function BathStage({
           <View style={[styles.absolute, styles.passThrough, { left: tubLeft, bottom: tubBottom }]}>
             <PixelSprite frame={tub.front} palette={BATH_PALETTE} scale={scale} />
           </View>
-          <View
+          <Pressable
+            onPress={knock}
+            accessibilityRole="button"
+            accessibilityLabel={t('buddy.bath.bucket')}
+            hitSlop={8}
             style={[
               styles.absolute,
-              styles.passThrough,
               { left: tubLeft - (BUCKET[0].length + 3) * scale, bottom: FLOOR - 2 },
             ]}
           >
-            <PixelSprite frame={BUCKET} palette={BATH_PALETTE} scale={scale} />
-          </View>
+            <Animated.View
+              style={{
+                transform: [
+                  {
+                    rotate: rattle.interpolate({
+                      inputRange: [0, 0.1, 0.22, 0.34, 0.46, 0.58, 0.7, 0.82, 1],
+                      outputRange: [
+                        '0deg',
+                        '-10deg',
+                        '9deg',
+                        '-8deg',
+                        '7deg',
+                        '-5deg',
+                        '3deg',
+                        '-1deg',
+                        '0deg',
+                      ],
+                    }),
+                  },
+                  {
+                    translateY: rattle.interpolate({
+                      inputRange: [0, 0.1, 0.22, 0.34, 0.46, 0.58, 0.7, 1],
+                      outputRange: [0, -scale, 0, -scale, 0, -scale / 2, 0, 0],
+                    }),
+                  },
+                ],
+              }}
+            >
+              <PixelSprite frame={BUCKET} palette={BATH_PALETTE} scale={scale} />
+            </Animated.View>
+            {rattling ? (
+              <Text
+                style={[styles.sound, { color: colors.text, bottom: BUCKET.length * scale + 6 }]}
+              >
+                {t('buddy.bath.bucketSound')}
+              </Text>
+            ) : null}
+          </Pressable>
           {[0.05, 0.88, 0.13].map((at, i) => (
             <Steam
               key={at}
@@ -467,6 +529,14 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderTopWidth: 2,
+  },
+  sound: {
+    position: 'absolute',
+    left: -6,
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 1,
+    minWidth: 60,
   },
   corner: {
     position: 'absolute',

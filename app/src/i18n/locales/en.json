@@ -18,9 +18,9 @@
     "PARTNER_CHANGED": "The partner or room has changed. Please try again from your current conversation.",
     "SUPPORT_RATE_LIMIT": "Too many submissions. Please try again later.",
     "ROOM_NOT_FOUND": "This conversation has ended. Please reload your current room.",
-    "JOB_CHANGED_TODAY": "The job was already changed today. Try again tomorrow.",
+    "JOB_CHANGE_LOCKED": "The job can't be changed right now. You can change it once at level 20 and once at 30, and any time from 40.",
     "JOB_UNCHANGED": "It already has that job.",
-    "BUDDY_NOT_ADULT": "The job can be changed once it is an adult."
+    "BUDDY_NOT_ADULT": "The job can be changed once it is settled at Lv.12."
   },
   "signIn": {
     "tagline": "Chat with someone you like, and raise a tiny buddy together.",
@@ -59,7 +59,10 @@
     "emptySolo": "{{buddy}} has hatched!\nInvite a friend to raise it together.",
     "emptySoloHint": "While you wait for a friend, try sending a message.\n{{buddy}} grows as you chat.",
     "emptyDuo": "You and {{partner}} are together now.\nSay hello!",
+    "grownBody": "If it goes its own way it stays in the album and a new egg comes. Keep raising it to the top level (Lv.40) instead and the room keeps getting new and better things every level: visitors, new floors, a fruit tree. You can also change its job once now, in the buddy details.",
     "maxLevelThanks": "Thank you so much! New characters, a collection and more are on the way. Stay tuned!",
+    "maxLevelJob": "From now on you can change its job any time in the buddy details.",
+    "jobChangeOpen": "🔄 the job can be changed once",
     "togetherBody": "{{buddy}} is thrilled. When you both send a message on the same day, you get it once a day."
   },
   "invite": {
@@ -78,7 +81,7 @@
     "stage": {
       "EGG": "Egg",
       "BABY": "Baby",
-      "CHILD": "Child",
+      "CHILD": "Kid",
       "ADULT": "Adult"
     },
     "exp": "EXP",
@@ -161,11 +164,16 @@
       "writerLove": "Me too",
       "bath1": "Ahh, nice",
       "bath2": "So warm",
-      "bath3": "I could live here"
+      "bath3": "I could live here",
+      "snail": "A snail came by",
+      "sparrow": "Tweet tweet, hi!",
+      "catTail": "…a cat?",
+      "train": "Choo choo!",
+      "farewell": "Thanks for everything!"
     },
     "graduate": {
       "title": "Its own way",
-      "body": "{{buddy}} is all grown up. Let it go its own way: it stays in the album, and a new egg comes to the stage. Your decorations stay.",
+      "body": "{{buddy}} is all grown up. Let it go its own way: it stays in the album, and a new egg comes to the stage. It takes its things when it moves out, so the room is decorated again from scratch. Keep raising it to Lv.40 instead and the room keeps getting new and better things every level.",
       "namePlaceholder": "Name for the new egg",
       "button": "Let it go its own way",
       "confirmTitle": "Let {{buddy}} go its own way?",
@@ -179,10 +187,30 @@
     },
     "reward": {
       "plant1": "Sprout pot",
+      "crate": "Wooden crate",
       "bowl1": "Silver bowl",
+      "toys": "Toy box",
+      "window": "Window",
       "plant2": "Leafy plant",
+      "rug1": "Spotted rug",
+      "clock": "Wall clock",
+      "musicBox": "Music box",
+      "snail": "A snail drops by",
+      "rug2": "Striped rug",
       "plant3": "Flowers in a glazed pot",
-      "bowl2": "Gold bowl"
+      "wood": "Wooden floor",
+      "firefly": "Fireflies drop by",
+      "bowl2": "Gold bowl",
+      "rug3": "Round flower rug",
+      "plant4": "Little tree",
+      "train": "Toy train",
+      "sparrow": "A sparrow drops by",
+      "tatami": "Tatami floor",
+      "lamp": "Floor lamp",
+      "catTail": "A stray cat drops by",
+      "plant5": "Fruit tree",
+      "bowl3": "Porcelain bowls",
+      "cushion": "Gold cushion"
     },
     "nextReward_one": "Next reward: Lv.{{level}} {{reward}} · {{count}} level to go",
     "nextReward_other": "Next reward: Lv.{{level}} {{reward}} · {{count}} levels to go",
@@ -212,14 +240,20 @@
     "jobCard": {
       "title": "Job",
       "leaning": "Growing up to be a {{icon}} {{job}}",
-      "hint": "When it grows up, how you raised it decides its job.",
+      "hint": "At Lv.12, how you raised it decides its job: feed it often and it's a chef, talk late at night and it's a radio DJ. It depends on what you two do.",
       "change": "Change job",
       "changeTitle": "Change to which job?",
-      "changedToday": "Already changed today. You can change it again tomorrow.",
+      "changeAt": "You can change it again at Lv.{{level}}.",
       "current": "Now",
       "confirmTitle": "Change the job?",
-      "confirmMessage": "{{icon}} {{job}} · The job can be changed once a day.",
+      "confirmMessage": "{{icon}} {{job}} · The job can be changed once at level 20 and once at 30, and any time from 40.",
       "confirm": "Change"
+    },
+    "nextStage": {
+      "EGG": "It hatches at Lv.{{level}}",
+      "BABY": "It becomes a kid at Lv.{{level}}",
+      "CHILD": "It grows up at Lv.{{level}}",
+      "ADULT": "Its job comes at Lv.{{level}}. It depends on what you two do!"
     },
     "jobPerk": {
       "CHEF": "Gets extra excited at mealtime. Stirs a pot when alone.",
@@ -230,11 +264,17 @@
     },
     "bath": {
       "go": "Go to the hot spring",
-      "home": "Go back home"
+      "home": "Go back home",
+      "bucket": "Bucket",
+      "bucketSound": "Clack"
     },
     "dream": {
       "caption": "In a dream…",
       "skip": "Skip the dream"
+    },
+    "room": {
+      "toys": "Toy box",
+      "music": "Music box"
     }
   },
   "buddyEvent": {
@@ -244,7 +284,9 @@
     "CLEANED": "{{actor}} cleaned up after {{buddy}}",
     "WORKED": "{{actor}} and {{buddy}} finished the work",
     "LEVELED_UP": "{{buddy}} leveled up! Lv.{{level}} ⬆️",
+    "LEVELED_UP_REWARD": "{{buddy}} leveled up! Lv.{{level}} ⬆️ 🎁 {{reward}}",
     "EVOLVED": "{{buddy}} evolved! ✨",
+    "GROWN": "🎓 {{buddy}} is all grown up! It can go its own way now.",
     "MAX_LEVEL": "🎉 {{buddy}} reached the top level, Lv.{{level}}!",
     "GRADUATED": "🎓 {{name}} went its own way and is in the album now. A new egg arrived!",
     "TOGETHER": "🤝 You both showed up today! Together bonus +{{exp}} EXP",
@@ -351,7 +393,7 @@
     "title": "Raising your buddy",
     "banner": {
       "title": "🥚 How to raise your buddy",
-      "body": "It grows as you chat and take care of it, with a bonus when you both talk on the same day. A reward appears on the stage every 5 levels, and at level 30 it can go its own way.",
+      "body": "It grows as you chat and take care of it, with a bonus when you both talk on the same day. A new prop appears in the room every few levels, and from level 20 it can go its own way.",
       "open": "See the guide ›"
     },
     "care": {
@@ -364,19 +406,19 @@
     "grow": {
       "title": "🌱 Growing",
       "exp": "EXP: +1 per message (up to 50 a day), +2 for a meal, +2 per 💩 cleaned.",
-      "stages": "Egg → baby (Lv.3) → child (Lv.10) → adult (Lv.20). From child on, it talks.",
+      "stages": "Egg → baby (Lv.3) → kid (Lv.5) → adult (Lv.10), and its job comes at Lv.12. From kid on, it talks.",
       "together": "When you both send a message on the same day, you get a together bonus of +{{exp}} EXP once a day. 🤝",
-      "job": "When it grows up, how you raised it decides its job: feed it a lot and it is a chef, talk late into the night and it becomes a radio DJ. Once grown, you can change it from the buddy details, once a day."
+      "job": "At Lv.12, how you raised it decides its job: feed it a lot and it is a chef, talk late into the night and it becomes a radio DJ. You can change it in the buddy details once at level 20 and once at 30, and any time from 40."
     },
     "rewards": {
       "title": "🎁 Level rewards",
-      "body": "Every 5 levels the stage gets a little finer."
+      "body": "Every few levels the room gets a new prop, and the ones it has get finer."
     },
     "graduate": {
       "title": "🎓 Its own way",
-      "top": "The top level is 30. Then you can let your buddy go its own way from its details.",
+      "top": "From level 20 you can let your buddy go its own way from its details. It is your choice, you can keep raising it: up to the top level, 40, the room gets new and better things every level, and EXP keeps counting after it.",
       "album": "It stays in the album and hangs on the wall in a frame. A new egg comes to the stage.",
-      "keep": "The rewards you collected stay with the new egg."
+      "keep": "It takes its things when it moves out. The new egg’s room starts bare and fills up again."
     }
   },
   "support": {

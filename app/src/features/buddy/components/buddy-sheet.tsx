@@ -143,7 +143,7 @@ export function BuddySheet({
 
             <JobCard buddy={buddy} onChangeJob={onChangeJob} />
 
-            <NextReward level={buddy.level} album={album ?? []} />
+            <NextReward level={buddy.level} />
 
             <Text style={[styles.hint, { color: colors.textMuted }]}>{t('buddy.growthHint')}</Text>
 
@@ -313,11 +313,11 @@ function JobCard({
               </View>
             ) : null}
           </>
-        ) : (
+        ) : buddy.jobChangeAt ? (
           <Text style={[styles.body, { color: colors.textMuted }]}>
-            {t('buddy.jobCard.changedToday')}
+            {t('buddy.jobCard.changeAt', { level: buddy.jobChangeAt })}
           </Text>
-        )
+        ) : null
       ) : null}
       {error ? <Text style={[styles.body, { color: colors.accent }]}>{error}</Text> : null}
     </View>
@@ -325,10 +325,10 @@ function JobCard({
 }
 
 // Something to look forward to: the next reward and how far it is.
-function NextReward({ level, album }: { level: number; album: AlbumEntry[] }) {
+function NextReward({ level }: { level: number }) {
   const colors = useColors();
   const { t } = useTranslation();
-  const next = nextReward(level, album);
+  const next = nextReward(level);
   if (!next) return null;
   return (
     <View style={[styles.card, styles.nextReward, { backgroundColor: colors.surface }]}>

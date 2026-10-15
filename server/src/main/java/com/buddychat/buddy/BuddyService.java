@@ -187,21 +187,21 @@ public class BuddyService {
 
     /**
      * The grown buddy goes its own way (docs/spec.md, 독립과 앨범): it is kept in the room's album
-     * and a new egg takes its place, in one update so neither happens without the other. Only at
-     * the top level; of two members doing it at once, one does (the other gets BUDDY_NOT_GROWN, as
-     * there is only an egg now).
+     * and a new egg takes its place, in one update so neither happens without the other. Only from
+     * {@link BuddyRules#GRADUATE_AT}; of two members doing it at once, one does (the other gets
+     * BUDDY_NOT_GROWN, as there is only an egg now).
      */
     public Mono<BuddyView> graduate(String roomId, String actorId, String newName) {
         Instant now = Instant.now(clock);
         return load(roomId).flatMap(buddy -> {
-            if (BuddyRules.level(buddy.exp()) < BuddyRules.MAX_LEVEL) return Mono.error(notGrown());
+            if (BuddyRules.level(buddy.exp()) < BuddyRules.GRADUATE_AT) return Mono.error(notGrown());
             // Still this buddy, still grown: a new egg (EXP 0) never matches, even if born the same moment.
             Query same = query(where("_id")
                     .is(roomId)
                     .and("buddy.bornAt")
                     .is(buddy.bornAt())
                     .and("buddy.exp")
-                    .gte(BuddyRules.minExp(BuddyRules.MAX_LEVEL)));
+                    .gte(BuddyRules.minExp(BuddyRules.GRADUATE_AT)));
             Update update = new Update()
                     .push("album", new AlbumEntry(buddy.name(), buddy.bornAt(), now, buddy.job()))
                     .set("buddy", buddy.next(newName, now));
@@ -219,34 +219,43 @@ public class BuddyService {
     }
 
     /**
-     * An adult's job, chosen by either member instead of the one its upbringing gave (docs/fun-improvements.md,
-     * 직업): once a day, for the day the buddy is in (Asia/Tokyo). One conditional update on the job as read
-     * and the day, so two members choosing at once change it once; the other gets JOB_CHANGED_TODAY.
-     * The automatic first job does not use up the day.
+     * The job, chosen by either member instead of the one its upbringing gave (docs/fun-improvements.md, 직업):
+     * once at 20 and once at 30, as they like from the top level; a buddy past JOB_AT without a job picks one
+     * any time. One conditional update on the job as read (and, inside a window, on no change made in it yet),
+     * so two members choosing at once change it once; the other gets JOB_CHANGE_LOCKED.
      */
     public Mono<BuddyView> changeJob(String roomId, String actorId, BuddyJob job) {
         Instant now = Instant.now(clock);
-        String today = BuddyRules.day(now);
         return load(roomId).flatMap(buddy -> {
-            if (BuddyRules.stage(BuddyRules.level(buddy.exp())) != BuddyRules.Stage.ADULT) {
+            int level = BuddyRules.level(buddy.exp());
+            if (level < BuddyRules.JOB_AT) {
                 return Mono.error(new ApiException(HttpStatus.CONFLICT, "BUDDY_NOT_ADULT"));
             }
             if (job == BuddyJob.of(buddy.job())) {
                 return Mono.error(new ApiException(HttpStatus.CONFLICT, "JOB_UNCHANGED"));
             }
-            if (today.equals(buddy.jobChangedDay())) return Mono.error(changedToday());
+            if (!BuddyRules.canChangeJob(level, buddy.job(), buddy.jobChangedLevel())) {
+                return Mono.error(changeLocked());
+            }
             Query asRead = query(where("_id")
                             .is(roomId)
                             .and("buddy.bornAt")
                             .is(buddy.bornAt())
                             .and("buddy.exp")
-                            .gte(BuddyRules.minExp(BuddyRules.ADULT_AT))
-                            .and("buddy.jobChangedDay")
-                            .ne(today))
+                            .gte(BuddyRules.minExp(BuddyRules.JOB_AT)))
                     .addCriteria(sameOrMissing("buddy.job", buddy.job()));
-            Update update = new Update().set("buddy.job", job.name()).set("buddy.jobChangedDay", today);
+            Update update = new Update().set("buddy.job", job.name());
+            // A first pick is free; a change counts for the window it is made in.
+            if (buddy.job() != null) {
+                update.set("buddy.jobChangedLevel", level);
+                if (level < BuddyRules.MAX_LEVEL) {
+                    asRead.addCriteria(orMissing(
+                            "buddy.jobChangedLevel",
+                            where("buddy.jobChangedLevel").lt(BuddyRules.windowStart(level))));
+                }
+            }
             return mongo.findAndModify(asRead, update, RETURN_NEW, RoomBuddy.class, ROOMS)
-                    .switchIfEmpty(Mono.error(changedToday()))
+                    .switchIfEmpty(Mono.error(changeLocked()))
                     .flatMap(updated -> chatService
                             .recordBuddyEvent(
                                     roomId,
@@ -263,8 +272,8 @@ public class BuddyService {
         });
     }
 
-    private static ApiException changedToday() {
-        return new ApiException(HttpStatus.CONFLICT, "JOB_CHANGED_TODAY");
+    private static ApiException changeLocked() {
+        return new ApiException(HttpStatus.CONFLICT, "JOB_CHANGE_LOCKED");
     }
 
     private static ApiException notGrown() {
@@ -446,7 +455,10 @@ public class BuddyService {
         Mono<Message> event;
         if (stage != BuddyRules.stage(levelBefore)) {
             event = chatService.recordBuddyEvent(roomId, "EVOLVED", null, eventKey(after, "evolved:" + stage));
-            if (stage == BuddyRules.Stage.ADULT) return becameAdult(roomId, after, event, now);
+        } else if (level == BuddyRules.GRADUATE_AT && levelBefore < level) {
+            // Grown: it may go its own way now, or keep growing. A card with the way to do it.
+            event = chatService.recordBuddyEvent(
+                    roomId, "GROWN", String.valueOf(level), null, eventKey(after, "grown:" + BuddyRules.expPerLevel()));
         } else if (level == BuddyRules.MAX_LEVEL && levelBefore < level) {
             // The top: a thank-you in the timeline instead of one more level.
             event = chatService.recordBuddyEvent(
@@ -467,6 +479,7 @@ public class BuddyService {
         } else {
             event = Mono.empty();
         }
+        if (levelBefore < BuddyRules.JOB_AT && level >= BuddyRules.JOB_AT) return settleJob(roomId, after, event, now);
         BuddyView view = BuddyView.of(after, now);
         return event.doOnNext(message -> hub.publish(roomId, new ServerEvent.NewMessage(message), null))
                 .then(Mono.fromRunnable(() -> hub.publish(roomId, new ServerEvent.BuddyUpdated(view), null)))
@@ -474,11 +487,10 @@ public class BuddyService {
     }
 
     /**
-     * Growing up fixes the job (docs/fun-improvements.md, 직업): from what the two did so far, once. The
-     * update only goes through for this buddy while it has none, so the job never changes after.
-     * The timeline gets the evolution, then the job.
+     * At JOB_AT the job is settled (docs/fun-improvements.md, 직업): from what the two did so far, once. The
+     * update only goes through for this buddy while it has none. The timeline gets the level, then the job.
      */
-    private Mono<BuddyView> becameAdult(String roomId, Buddy after, Mono<Message> evolved, Instant now) {
+    private Mono<BuddyView> settleJob(String roomId, Buddy after, Mono<Message> leveled, Instant now) {
         BuddyJob job = BuddyJob.decide(after);
         Query unsettled = query(where("_id")
                 .is(roomId)
@@ -486,7 +498,7 @@ public class BuddyService {
                 .is(after.bornAt())
                 .and("buddy.job")
                 .exists(false));
-        return evolved.doOnNext(message -> hub.publish(roomId, new ServerEvent.NewMessage(message), null))
+        return leveled.doOnNext(message -> hub.publish(roomId, new ServerEvent.NewMessage(message), null))
                 .then(mongo.findAndModify(
                                 unsettled,
                                 new Update().set("buddy.job", job.name()),

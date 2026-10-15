@@ -4,7 +4,7 @@
 **Chat first. Buddy makes it fun.** iOS가 기준 플랫폼이고 Web은 보조, Android는 나중.
 
 - 명세(제품 원칙·범위, Buddy, 컬렉션, API, WebSocket 프로토콜, 규칙, 인프라): `docs/spec.md` — 기능·범위·서버를 바꾸기 전에 읽는다.
-- Buddy의 직업·사건·기간 한정 모습·온천·꿈, 그림 작업 규칙: `docs/fun-improvements.md`.
+- Buddy의 직업·사건·기간 한정 모습·온천·방 소품·꿈, 그림 작업 규칙: `docs/fun-improvements.md`.
 - 이 문서들이 기준(source of truth)이다. 결정이 바뀌면 코드와 같은 커밋에서 문서도 고친다. 일지처럼 쓰지 않고 지금 상태만 적는다.
 
 ## Repo layout
@@ -52,7 +52,7 @@
   예외는 로그인 전 "구경하기"(`app/demo.tsx`, `features/demo`)뿐이다. 대본으로 채팅 화면 부품을 그대로 재생하고 서버를 쓰지 않는다.
 - Buddy 무대(`features/buddy/components/buddy-stage.tsx`): 채팅 화면 위쪽 약 1/3, 접히지 않는다(접었다 펴면 스크롤이 튐).
   마운트 전에 받은 반응은 재생하지 않는다. 한 단어 메시지("밥", "똥", "춤", "노래" 등, `chat-words.ts`)에 답한다.
-  잠(밤 시간), 기쁨(쓰다듬기), 춤·노래, 말풍선(`use-buddy-talk.ts`, 어린이부터)처럼 서버에 없는 모습은 앱이 정한다. 먹기·💩·청소·진화·상대 메시지 반응은 실시간으로 받은
+  잠(밤 시간), 기쁨(쓰다듬기), 춤·노래, 말풍선(`use-buddy-talk.ts`, 꼬마부터)처럼 서버에 없는 모습은 앱이 정한다. 먹기·💩·청소·진화·상대 메시지 반응은 실시간으로 받은
   메시지(`features/buddy/reactions.ts`)로 시작한다. 앱을 다시 열거나 재연결해서 채운 메시지에는 반응하지 않고, 진화만
   내 읽음 위치보다 새로우면 한 번 보여준다.
 - 도트는 문자열 격자 → SVG 사각형(`features/buddy/pixel`). 비트맵을 쓰지 않아 iOS·웹 모두 선명하다. 격자 행 길이가 모두 같아야 하고,

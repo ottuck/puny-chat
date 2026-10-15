@@ -9,6 +9,8 @@ export type ReactionKind =
   // A grown-up's work at its station, earning EXP.
   | 'worked'
   | 'levelUp'
+  // The top level: the room sparkles.
+  | 'maxLevel'
   | 'evolved'
   | 'together'
   // The partner is here too (docs/fun-improvements.md, 함께 있을 때): not from a message but from presence.
@@ -21,7 +23,8 @@ const BY_EVENT: Partial<Record<string, ReactionKind>> = {
   POOPED: 'pooped',
   WORKED: 'worked',
   LEVELED_UP: 'levelUp',
-  MAX_LEVEL: 'levelUp',
+  GROWN: 'levelUp',
+  MAX_LEVEL: 'maxLevel',
   // The new egg arrives with the same rings of light as an evolution.
   GRADUATED: 'evolved',
   EVOLVED: 'evolved',

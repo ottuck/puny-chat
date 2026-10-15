@@ -19,7 +19,7 @@ import { useColors } from '@/theme';
 
 import type { AlbumEntry } from '@/features/room/api';
 
-import type { BuddyJob, BuddyView } from '../api';
+import { type BuddyJob, type BuddyView, NEXT_STEP_AT } from '../api';
 import {
   BUTTERFLY,
   butterflyAt,
@@ -35,6 +35,7 @@ import {
   umbrellaFor,
 } from '../pixel/looks';
 import { type Palette, PixelSprite } from '../pixel/pixel-sprite';
+import { BUNDLE, ROOM_PALETTE } from '../pixel/room';
 import {
   bowl,
   BUDDY_PALETTE,
@@ -59,7 +60,8 @@ import type { Reaction, ReactionKind } from '../reactions';
 import type { ChatWord, Mood } from '../chat-words';
 import { JOB_LINES, type Line, pick, useBuddyTalk } from '../use-buddy-talk';
 import { SpeechBubble } from './speech-bubble';
-import { decorFor, Plant, plantRoom as plantRoomFor, WallDecor } from './stage-decor';
+import { Arrive, GUEST_MS, type Guest, RoomSparkle, Train } from './room-props';
+import { decorFor, LAMP_ROOM, Plant, plantRoom as plantRoomFor, WallDecor } from './stage-decor';
 import { RAIN_GAP, rainDrops, Snowfall } from './weather';
 
 // The buddy's stage above the chat (docs/spec.md, 핵심 경험): the buddy walks around, waits by
@@ -96,6 +98,8 @@ type Act =
   | 'rain'
   | 'snow'
   | 'shootingStar'
+  // Guests the room has grown into (stage-decor.tsx): at the window, or a toy train on the floor.
+  | Guest
   | 'job';
 // A one-word message for the buddy ("밥", "춤", …, features/buddy/chat-words.ts), or the tour's
 // script asking for a dance or a song.
@@ -110,10 +114,16 @@ const HAPPENINGS = [
   'rain',
   'snow',
   'shootingStar',
+  'snail',
+  'sparrow',
+  'catTail',
+  'train',
 ] as const;
 type Happening = (typeof HAPPENINGS)[number];
 const isHappening = (kind: string): kind is Happening =>
   (HAPPENINGS as readonly string[]).includes(kind);
+const isGuest = (act: Act | null): act is Guest =>
+  act === 'snail' || act === 'sparrow' || act === 'catTail' || act === 'train';
 export type Cue = { id: string; kind: ChatWord | Mood | 'job' | Happening };
 // How long a mood from the chat ("사랑해", "ㅋㅋ", …, chat-words.ts) shows, and what the buddy says.
 type StageMood = Mood | 'coPet';
@@ -150,6 +160,7 @@ const ACT_MS: Record<Act, number> = {
   rain: 5000,
   snow: 5000,
   shootingStar: 2800,
+  ...GUEST_MS,
   // At the station, once there.
   job: 2400,
 };
@@ -198,6 +209,10 @@ const ACT_LINE: Partial<Record<Act, Line>> = {
   rain: 'rain',
   snow: 'snow',
   shootingStar: 'shootingStar',
+  snail: 'snail',
+  sparrow: 'sparrow',
+  catTail: 'catTail',
+  train: 'train',
 };
 // What it does when left alone, by weight: dancing and singing most, the small happenings between.
 const IDLE_ACTS: readonly (readonly [Act, number])[] = [
@@ -213,11 +228,15 @@ const IDLE_ACTS: readonly (readonly [Act, number])[] = [
 ];
 // A grown buddy with a job also does its work (docs/fun-improvements.md, 직업).
 const JOB_ACT_WEIGHT = 30;
+// The room's guests, once it has them, as often as a butterfly.
+const GUEST_WEIGHT = 8;
 
-function pickIdleAct(job: BuddyJob | null): Act {
-  const acts: readonly (readonly [Act, number])[] = job
-    ? [...IDLE_ACTS, ['job', JOB_ACT_WEIGHT]]
-    : IDLE_ACTS;
+function pickIdleAct(job: BuddyJob | null, guests: readonly Guest[]): Act {
+  const acts: readonly (readonly [Act, number])[] = [
+    ...IDLE_ACTS,
+    ...guests.map((guest) => [guest, GUEST_WEIGHT] as const),
+    ...(job ? [['job', JOB_ACT_WEIGHT] as const] : []),
+  ];
   let roll = Math.random() * acts.reduce((sum, [, weight]) => sum + weight, 0);
   for (const [act, weight] of acts) {
     roll -= weight;
@@ -226,6 +245,9 @@ function pickIdleAct(job: BuddyJob | null): Act {
   }
   return 'dance';
 }
+// Leaving home: how long it waves before setting off, and how long each point of the walk takes.
+export const LEAVE_WAVE_MS = 1100;
+const LEAVE_WALK_MS = 7;
 // How often, left alone, it dances or sings.
 const IDLE_ACT_MIN_MS = 20_000;
 const IDLE_ACT_MAX_MS = 40_000;
@@ -260,6 +282,7 @@ const REACTION_MS: Record<ReactionKind, number> = {
   pooped: 1400,
   worked: 1800,
   levelUp: 1600,
+  maxLevel: 2600,
   evolved: 2600,
   together: 2400,
   here: 2000,
@@ -269,6 +292,8 @@ const CHEW_MS = 2400;
 // Of 'evolved', the transformation (rings of light, old and new looks flickering); the rest shows
 // off the new look with a burst of sparkles.
 const EVOLVE_MS = 1400;
+// Just grown into a new stage, the next goal shows for this long ("Lv.5에 꼬마가 돼요").
+const NEXT_STEP_MS = 4500;
 const GLOW_MS = 450;
 // Where the burst's sparkles fly, from the buddy's middle.
 const BURST = [
@@ -320,6 +345,11 @@ type Props = {
   // Told where the buddy's middle is across the stage as it walks (buddy-scene.tsx closes the iris
   // on it).
   onWalk?: (middle: number) => void;
+  // Going its own way (buddy-scene.tsx): it waves goodbye with its things in a bundle on its back,
+  // then walks off to the right.
+  leaving?: boolean;
+  // The hour the room's window, clock and lamp show instead of the device's (the art preview).
+  hour?: number;
 };
 
 // Local night hours, checked once a minute.
@@ -495,6 +525,8 @@ export function BuddyStage({
   dream = false,
   plantKind,
   onWalk,
+  leaving = false,
+  hour,
 }: Props) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -543,7 +575,7 @@ export function BuddyStage({
 
   const egg = buddy.stage === 'EGG';
   // A reaction wakes a sleeping buddy for a moment, "good night" puts it to sleep by day too.
-  const sleeping = ((night && !mood) || mood === 'goodnight') && !active && !petted;
+  const sleeping = ((night && !mood) || mood === 'goodnight') && !active && !petted && !leaving;
   const idleFrame = buddyFrame(buddy.stage, 'idle');
   const scale = gridScale(height, idleFrame.length);
   const spriteWidth = idleFrame[0].length * scale;
@@ -558,8 +590,9 @@ export function BuddyStage({
   const plantRoom = corner
     ? Math.ceil(corner.frame[0].length * corner.size * scale) + 8
     : plantRoomFor(decor);
-  // The bowl stands by the plant on the right; the poops land left of it.
-  const bowlRight = 16 + plantRoom;
+  // The bowl stands by the plant (and the lamp) on the right; the poops land left of it.
+  const bowlRight = 16 + plantRoom + (decor.lamp ? LAMP_ROOM : 0);
+  const guests = decor.guests.join(',');
   const poopRight = atTable ? bowlRight : bowlRight + bowlWidth + 12;
   // The walkable strip: from the left (in front of a job's station) up to the bowl.
   // Wings stick out on both sides: the walk keeps them on the stage and off the bowl.
@@ -578,9 +611,11 @@ export function BuddyStage({
   );
   // A grown-up's station on the left, where it goes to work.
   const station = buddy.stage === 'ADULT' && job ? JOB_STATIONS[job] : null;
+  // A station that comes while the stage is open (the job settled at Lv.12, or changed) pops in.
+  const [jobAtMount] = useState(job);
   const stationX = station ? STATION_LEFT + station.standAt * scale : 0;
   const eating = active?.kind === 'fed';
-  const settled = sleeping || buddy.hungry || egg || eating || evolving || dream;
+  const settled = sleeping || buddy.hungry || egg || eating || evolving || dream || leaving;
   const acting = act !== null;
   const { line, say, hush } = useBuddyTalk({
     stage: buddy.stage,
@@ -650,7 +685,7 @@ export function BuddyStage({
   // Wander: walk to a random spot, look around, repeat. A hungry or eating buddy stays by the bowl,
   // a sleeping one stays put, and an egg only wobbles.
   useEffect(() => {
-    if (width === 0) return;
+    if (width === 0 || leaving) return;
     // Dancing, singing or feeling something on the spot.
     if (acting || mood) {
       x.stopAnimation();
@@ -658,7 +693,9 @@ export function BuddyStage({
     }
     let stopped = false;
     let current: Animated.CompositeAnimation | null = null;
-    const home = buddy.hungry || eating ? maxX : (minX + maxX) / 2;
+    // The egg rests in the middle of the stage, on the rug, not of the strip it could walk.
+    const middle = Math.min(maxX, Math.max(minX, (width - spriteWidth) / 2));
+    const home = buddy.hungry || eating ? maxX : egg ? middle : (minX + maxX) / 2;
     // At the table it eats where it is, and a hungry one waits where it is, thinking of food.
     const stay = atTable && (buddy.hungry || eating);
     const leg = (from: number) => {
@@ -702,7 +739,50 @@ export function BuddyStage({
       stopped = true;
       current?.stop();
     };
-  }, [width, spriteWidth, settled, acting, mood, eating, buddy.hungry, atTable, minX, maxX, x]);
+  }, [
+    width,
+    spriteWidth,
+    settled,
+    acting,
+    mood,
+    eating,
+    buddy.hungry,
+    atTable,
+    egg,
+    minX,
+    maxX,
+    x,
+    leaving,
+  ]);
+
+  // Leaving home: a wave and a goodbye where it stands, then off to the right and out of the room.
+  useEffect(() => {
+    if (!leaving || width === 0) return;
+    let stopped = false;
+    let walk: Animated.CompositeAnimation | null = null;
+    say('farewell');
+    const timer = setTimeout(() => {
+      x.stopAnimation((from) => {
+        if (stopped) return;
+        setFacingLeft(false);
+        setWalking(true);
+        walk = Animated.timing(x, {
+          toValue: width + 10,
+          duration: Math.max(600, (width + 10 - from) * LEAVE_WALK_MS),
+          easing: Easing.linear,
+          useNativeDriver: NATIVE_DRIVER,
+        });
+        walk.start();
+      });
+    }, LEAVE_WAVE_MS);
+    return () => {
+      stopped = true;
+      clearTimeout(timer);
+      walk?.stop();
+    };
+    // Once, as it sets off.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leaving, width]);
 
   // Work: walk over to the station, then work there for a while. Without one (not grown up yet,
   // or no job) it works where it stands.
@@ -855,11 +935,11 @@ export function BuddyStage({
     // With the partner here too it is livelier: twice as often.
     const pace = partnerHere ? 0.5 : 1;
     const timer = setTimeout(
-      () => perform(pickIdleAct(job)),
+      () => perform(pickIdleAct(job, guests ? (guests.split(',') as Guest[]) : [])),
       pace * (IDLE_ACT_MIN_MS + Math.random() * (IDLE_ACT_MAX_MS - IDLE_ACT_MIN_MS)),
     );
     return () => clearTimeout(timer);
-  }, [egg, settled, active, acting, petted, mood, partnerHere, job, perform]);
+  }, [egg, settled, active, acting, petted, mood, partnerHere, job, guests, perform]);
 
   // Little hops while dancing, notes rising while singing.
   useEffect(() => {
@@ -1058,6 +1138,8 @@ export function BuddyStage({
       cleaned: jump(10),
       pooped: shake,
       levelUp: Animated.sequence([jump(10), jump(6)]),
+      // The top level: three hops while the room sparkles.
+      maxLevel: Animated.sequence([jump(12), jump(8), jump(12)]),
       evolved: transform,
       // Both came today: two big happy jumps.
       together: Animated.sequence([jump(16), jump(16)]),
@@ -1073,6 +1155,23 @@ export function BuddyStage({
       flash.setValue(0);
     };
   }, [reaction, hop, flash, glow, burst]);
+
+  // Grown into a new stage: once the new look settles, the next goal for a moment, so there is
+  // always something ahead to look forward to. A grown-up's is its job, until it has one.
+  const [nextStep, setNextStep] = useState(false);
+  useEffect(() => {
+    if (reaction?.kind !== 'evolved') return;
+    const timers = [
+      setTimeout(() => setNextStep(true), EVOLVE_MS),
+      setTimeout(() => setNextStep(false), EVOLVE_MS + NEXT_STEP_MS),
+    ];
+    return () => {
+      timers.forEach(clearTimeout);
+      setNextStep(false);
+    };
+  }, [reaction]);
+  const nextStepShown =
+    nextStep && !dream && !leaving && !(buddy.stage === 'ADULT' && buddy.job) ? buddy.stage : null;
 
   useEffect(
     () => () => {
@@ -1115,58 +1214,65 @@ export function BuddyStage({
     }, PET_MS);
   };
 
-  const basePose: Pose = eating
-    ? active?.phase === 'main'
+  const basePose: Pose = leaving
+    ? walking
       ? tick % 2 === 0
-        ? 'eat'
+        ? 'step'
         : 'idle'
       : 'happy'
-    : active?.kind === 'pooped'
-      ? 'strain'
-      : act === 'dance'
+    : eating
+      ? active?.phase === 'main'
         ? tick % 2 === 0
-          ? 'happy'
-          : 'step'
-        : act === 'sing'
+          ? 'eat'
+          : 'idle'
+        : 'happy'
+      : active?.kind === 'pooped'
+        ? 'strain'
+        : act === 'dance'
           ? tick % 2 === 0
-            ? 'eat'
-            : 'happy'
-          : act === 'job' && job
-            ? atWork
-              ? jobPose(job, tick)
-              : tick % 2 === 0
-                ? 'step'
-                : 'idle'
-            : act === 'yawn'
-              ? 'yawn'
-              : act === 'hiccup'
-                ? 'hiccup'
-                : act === 'startle' || act === 'shootingStar'
-                  ? 'surprised'
-                  : act === 'butterfly' || act === 'snow'
-                    ? tick % 2 === 0
-                      ? 'happy'
-                      : 'idle'
-                    : act === 'refuse' || act === 'lookAround'
-                      ? 'idle'
-                      : active?.kind === 'cleaned' ||
-                          active?.kind === 'levelUp' ||
-                          active?.kind === 'together' ||
-                          active?.kind === 'here' ||
-                          (active?.kind === 'evolved' && !evolving) ||
-                          petted
+            ? 'happy'
+            : 'step'
+          : act === 'sing'
+            ? tick % 2 === 0
+              ? 'eat'
+              : 'happy'
+            : act === 'job' && job
+              ? atWork
+                ? jobPose(job, tick)
+                : tick % 2 === 0
+                  ? 'step'
+                  : 'idle'
+              : act === 'yawn'
+                ? 'yawn'
+                : act === 'hiccup'
+                  ? 'hiccup'
+                  : act === 'startle' || act === 'shootingStar'
+                    ? 'surprised'
+                    : act === 'butterfly' || act === 'snow' || isGuest(act)
+                      ? tick % 2 === 0
                         ? 'happy'
-                        : sleeping
-                          ? 'sleep'
-                          : buddy.hungry
-                            ? 'hungry'
-                            : walking
-                              ? tick % 2 === 0
-                                ? 'step'
-                                : 'idle'
-                              : tick % 11 === 0
-                                ? 'blink'
-                                : 'idle';
+                        : 'idle'
+                      : act === 'refuse' || act === 'lookAround'
+                        ? 'idle'
+                        : active?.kind === 'cleaned' ||
+                            active?.kind === 'levelUp' ||
+                            active?.kind === 'maxLevel' ||
+                            active?.kind === 'together' ||
+                            active?.kind === 'here' ||
+                            (active?.kind === 'evolved' && !evolving) ||
+                            petted
+                          ? 'happy'
+                          : sleeping
+                            ? 'sleep'
+                            : buddy.hungry
+                              ? 'hungry'
+                              : walking
+                                ? tick % 2 === 0
+                                  ? 'step'
+                                  : 'idle'
+                                : tick % 11 === 0
+                                  ? 'blink'
+                                  : 'idle';
 
   // A mood from the chat shows on the face unless something bigger (eating, straining) is going on.
   const moodPose: Pose | null =
@@ -1207,7 +1313,7 @@ export function BuddyStage({
     active?.kind === 'here';
   const sparkling = active?.kind === 'cleaned';
   const bursting = active?.kind === 'evolved' && active.phase === 'after';
-  const levelingUp = active?.kind === 'levelUp';
+  const levelingUp = active?.kind === 'levelUp' || active?.kind === 'maxLevel';
 
   // Rice in the bowl, but for when the buddy is hungry: then it is empty and asks to be filled.
   const bowlFull = !buddy.hungry || eating;
@@ -1243,20 +1349,20 @@ export function BuddyStage({
   // Poops tapped away fly up and fade; the ones still there stay in place.
   const [seenPoops, setSeenPoops] = useState(buddy.poops);
   const [poopRound, setPoopRound] = useState(0);
-  const [leaving, setLeaving] = useState<{ key: string; index: number }[]>([]);
+  const [flyingOff, setFlyingOff] = useState<{ key: string; index: number }[]>([]);
   if (buddy.poops !== seenPoops) {
     if (buddy.poops < seenPoops) {
       const gone = Array.from({ length: seenPoops - buddy.poops }, (_, k) => ({
         key: `${poopRound}-${buddy.poops + k}`,
         index: buddy.poops + k,
       }));
-      setLeaving((prev) => [...prev, ...gone]);
+      setFlyingOff((prev) => [...prev, ...gone]);
     }
     setPoopRound(poopRound + 1);
     setSeenPoops(buddy.poops);
   }
   const doneLeaving = useCallback(
-    (key: string) => setLeaving((prev) => prev.filter((poop) => poop.key !== key)),
+    (key: string) => setFlyingOff((prev) => prev.filter((poop) => poop.key !== key)),
     [],
   );
   // At work the cook sways to the pot and the DJ nods.
@@ -1291,6 +1397,11 @@ export function BuddyStage({
   const clean = () => {
     if (!buddy.canClean || busy) return;
     onClean();
+  };
+  // The room's toys: the ball bounces out and it dances; the music box plays and it sings along.
+  const play = (next: 'dance' | 'sing') => {
+    if (egg || leaving || active) return;
+    perform(next, true);
   };
   // A grown-up's station: a tap sends it off to work there (EXP once an hour, the server decides).
   const work = () => {
@@ -1347,7 +1458,22 @@ export function BuddyStage({
         ]}
       />
 
-      <WallDecor decor={decor} floor={FLOOR} top={34} />
+      <WallDecor
+        decor={decor}
+        floor={FLOOR}
+        top={34}
+        width={width}
+        height={height}
+        hasStation={!!station}
+        plantRoom={plantRoom}
+        guest={isGuest(act) ? act : null}
+        run={actRun}
+        tick={tick}
+        playing={act === 'sing'}
+        onToy={() => play('dance')}
+        onMusic={() => play('sing')}
+        hour={hour}
+      />
       {corner ? (
         <View style={[styles.poop, { bottom: FLOOR - 2, right: 8 }]} pointerEvents="none">
           <PixelSprite frame={corner.frame} palette={PROP_PALETTE} scale={scale * corner.size} />
@@ -1626,6 +1752,15 @@ export function BuddyStage({
               </Animated.View>
             ))
           : null}
+        {leaving ? (
+          <LayerSprite
+            layer={{ frame: BUNDLE, row: 9, col: -3 }}
+            gridWidth={gridWidth}
+            palette={ROOM_PALETTE}
+            scale={scale}
+            flipped={flipped}
+          />
+        ) : null}
         {behind && !evolving ? (
           <LayerSprite
             layer={behind}
@@ -1702,17 +1837,20 @@ export function BuddyStage({
       {/* The station stands in front of the buddy, whether it is working there or walking by. */}
       {station ? (
         <View
+          key={job}
           style={[
             styles.station,
             styles.passThrough,
             { left: STATION_LEFT, bottom: FLOOR - station.sink * scale },
           ]}
         >
-          <PixelSprite
-            frame={station.frames[atWork ? tick % 2 : 0]}
-            palette={PROP_PALETTE}
-            scale={scale}
-          />
+          <Arrive fresh={job !== jobAtMount} width={station.frames[0][0].length * scale}>
+            <PixelSprite
+              frame={station.frames[atWork ? tick % 2 : 0]}
+              palette={PROP_PALETTE}
+              scale={scale}
+            />
+          </Arrive>
         </View>
       ) : null}
       {/* What it holds at work goes in front of the station too (the can over the plant's pot). */}
@@ -1780,6 +1918,13 @@ export function BuddyStage({
         />
       ) : null}
 
+      {act === 'train' && width > 0 ? (
+        <Train key={actRun} width={width} scale={3} tick={tick} />
+      ) : null}
+      {active?.kind === 'maxLevel' && width > 0 ? (
+        <RoomSparkle width={width} height={height - FLOOR} tick={tick} />
+      ) : null}
+
       {/* In front of the buddy, so one by its feet can still be tapped away. */}
       {Array.from({ length: buddy.poops }, (_, i) => (
         <Animated.View
@@ -1805,7 +1950,7 @@ export function BuddyStage({
           </Pressable>
         </Animated.View>
       ))}
-      {leaving.map((poop) => (
+      {flyingOff.map((poop) => (
         <FlyingAway
           key={poop.key}
           id={poop.key}
@@ -1813,6 +1958,19 @@ export function BuddyStage({
           style={[styles.poop, { bottom: FLOOR - 2, right: poopRight + poop.index * 30 }]}
         />
       ))}
+
+      {nextStepShown ? (
+        <View style={[styles.nextStep, styles.passThrough]}>
+          <Text
+            style={[
+              styles.nextStepText,
+              { color: colors.text, backgroundColor: colors.surface, borderColor: colors.accent },
+            ]}
+          >
+            {t(`buddy.nextStage.${nextStepShown}`, { level: NEXT_STEP_AT[nextStepShown] })}
+          </Text>
+        </View>
+      ) : null}
 
       {/* The evolution's quick flash as the new look settles, over the whole stage. */}
       <Animated.View style={[StyleSheet.absoluteFill, styles.flash, { opacity: flash }]} />
@@ -1952,6 +2110,23 @@ const styles = StyleSheet.create({
   },
   levelUp: {
     fontWeight: '700',
+  },
+  nextStep: {
+    position: 'absolute',
+    top: 40,
+    left: 12,
+    right: 12,
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  nextStepText: {
+    fontSize: 13,
+    fontWeight: '700',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    borderWidth: 2,
+    overflow: 'hidden',
   },
   flash: {
     backgroundColor: '#FFFFFF',

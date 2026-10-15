@@ -13,7 +13,14 @@ import { buddyFrame } from '../pixel/sprites';
 import type { Reaction } from '../reactions';
 import { BathStage } from './bath-stage';
 import { BuddyDream } from './buddy-dream';
-import { BuddyStage, CORNER_SIZE, FLOOR, gridScale, useSleeping } from './buddy-stage';
+import {
+  BuddyStage,
+  CORNER_SIZE,
+  FLOOR,
+  gridScale,
+  LEAVE_WAVE_MS,
+  useSleeping,
+} from './buddy-stage';
 import { Iris, type IrisRun } from './iris';
 
 // The buddy's stage with its other scenes (docs/fun-improvements.md, 목욕·미래의 꿈), changed with an
@@ -23,9 +30,14 @@ import { Iris, type IrisRun } from './iris';
 // when asked or after ten minutes, never because of something in the room: meanwhile the bath shows
 // the buddy as it came, and what happened is in the chat. Back home it catches up: a level up, or the
 // evolution, plays there once the iris opens.
+//
+// When the buddy goes its own way it moves out: it waves with its things in a bundle on its back and
+// walks off, the iris closes, and it opens on the bare room with the new egg.
 
 const BATH_MAX_MS = 10 * 60_000;
 const DREAM_SEEN_KEY = 'buddy-dream-seen';
+// The wave, and the walk out of the room.
+const MOVE_OUT_MS = LEAVE_WAVE_MS + 1600;
 
 type Props = ComponentProps<typeof BuddyStage> & {
   // Plays the dream before the first egg (the real room only, not the tour). 'always': right away,
@@ -99,6 +111,19 @@ export function BuddyScene({ dreams = false, onDreaming, startInBath = false, ..
     };
   }, [dream]);
   const dreaming = dream !== 'over';
+
+  // Moving out: an egg in place of a hatched buddy means it went its own way.
+  const [seen, setSeen] = useState(buddy);
+  const [moving, setMoving] = useState<BuddyView | null>(null);
+  if (
+    buddy.stage !== seen.stage ||
+    buddy.level !== seen.level ||
+    buddy.job !== seen.job ||
+    buddy.name !== seen.name
+  ) {
+    if (seen.stage !== 'EGG' && egg && place === 'home' && !dreaming) setMoving(seen);
+    setSeen(buddy);
+  }
   useEffect(() => {
     onDreaming?.(dreaming);
   }, [dreaming, onDreaming]);
@@ -171,6 +196,28 @@ export function BuddyScene({ dreams = false, onDreaming, startInBath = false, ..
     return () => clearTimeout(timer);
   }, [place]);
 
+  const moveIn = () => {
+    setFocusX(null);
+    run(
+      () => setMoving(null),
+      // The new egg arrives in its rings of light.
+      () =>
+        setCaughtUp({
+          reaction: { id: `moved-${runs.current}`, kind: 'evolved' },
+          after: latest?.id,
+        }),
+    );
+  };
+  const movedOut = useRef(moveIn);
+  useEffect(() => {
+    movedOut.current = moveIn;
+  });
+  useEffect(() => {
+    if (!moving) return;
+    const timer = setTimeout(() => movedOut.current(), MOVE_OUT_MS);
+    return () => clearTimeout(timer);
+  }, [moving]);
+
   // The catch-up plays until something newer comes from the room.
   const reaction = caughtUp && latest?.id === caughtUp.after ? caughtUp.reaction : latest;
   const shown = kept ?? buddy;
@@ -178,13 +225,29 @@ export function BuddyScene({ dreams = false, onDreaming, startInBath = false, ..
   const grid = buddyFrame(shown.stage, 'idle');
   const spriteHeight = grid.length * gridScale(height, grid.length);
   const focus = { x: focusX ?? width / 2, y: height - FLOOR - spriteHeight / 2 };
-  const canBathe = !egg && !night && !dreaming;
+  const canBathe = !egg && !night && !dreaming && !moving;
 
   let scene;
   if (dream === 'checking') {
     scene = <View style={{ height, backgroundColor: colors.stage }} />;
   } else if (dream === 'playing') {
     scene = <BuddyDream buddy={buddy} height={height} onEnd={wakeUp} />;
+  } else if (moving) {
+    // Its portrait is already on the wall of the new room; not yet in the one it is leaving.
+    const album =
+      props.album?.at(-1)?.name === moving.name ? props.album.slice(0, -1) : props.album;
+    scene = (
+      <BuddyStage
+        {...props}
+        key="moving"
+        bare
+        leaving
+        buddy={moving}
+        album={album}
+        reaction={null}
+        corner={undefined}
+      />
+    );
   } else if (place === 'bath' && kept) {
     scene = (
       <BathStage
@@ -199,6 +262,7 @@ export function BuddyScene({ dreams = false, onDreaming, startInBath = false, ..
     scene = (
       <BuddyStage
         {...props}
+        key="home"
         bare
         onWalk={onWalk}
         buddy={shown}
