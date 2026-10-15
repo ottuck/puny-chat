@@ -80,6 +80,7 @@ function buddyOf(
     job: stage === 'ADULT' ? job : null,
     leaning: null,
     canChangeJob: false,
+    jobChangeAt: null,
   };
 }
 
@@ -156,7 +157,8 @@ function PoseSheet({
 
 // A link can open it on a scene, for taking pictures of it (README):
 // /preview?scene=bath, ?scene=bath&season=CHRISTMAS (snowing), ?scene=cut2 (a cut of the dream),
-// ?stage=CHILD&level=8 (the room at that level), &hour=22 (the room at night).
+// ?stage=CHILD&level=8 (the room at that level), &hour=22 (the room at night), &job=none (a grown-up
+// before its job).
 function Preview() {
   const colors = useColors();
   const params = useLocalSearchParams<{
@@ -165,6 +167,7 @@ function Preview() {
     stage?: string;
     level?: string;
     hour?: string;
+    job?: string;
   }>();
   const linkedCut = params.scene?.startsWith('cut') ? Number(params.scene.slice(3)) - 1 : null;
   const linkedSeason = SEASONS.find((s) => s === params.season);
@@ -172,7 +175,9 @@ function Preview() {
   const [stage, setStage] = useState<BuddyStage>(STAGES.find((s) => s === params.stage) ?? 'ADULT');
   // Overrides the level the stage implies (null: the stage's first level).
   const [level, setLevel] = useState<number | null>(params.level ? Number(params.level) : null);
-  const [job, setJob] = useState<BuddyJob | null>('CHEF');
+  const [job, setJob] = useState<BuddyJob | null>(
+    params.job === 'none' ? null : (JOB_ORDER.find((j) => j === params.job) ?? 'CHEF'),
+  );
   const [hungry, setHungry] = useState(false);
   const [poops, setPoops] = useState(0);
   const [cue, setCue] = useState<Cue | null>(null);

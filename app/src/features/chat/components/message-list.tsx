@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { FlatList, StyleSheet, View } from 'react-native';
 
-import { GROWN_LEVEL } from '@/features/buddy/api';
+import { GROWN_LEVEL, JOB_CHANGE_LEVELS } from '@/features/buddy/api';
 import { rewardAt } from '@/features/buddy/components/stage-decor';
 import { isJob, JOB_ICON } from '@/features/buddy/jobs';
 
@@ -86,7 +86,7 @@ export function MessageList({
             <View style={styles.spaced}>
               <EventCard
                 title={t('buddyEvent.MAX_LEVEL', { buddy: buddyName, level: item.level })}
-                body={t('chat.maxLevelThanks')}
+                body={`${t('chat.maxLevelThanks')} ${t('chat.maxLevelJob')}`}
                 action={onGraduate ? `🎓 ${t('buddy.graduate.button')}` : undefined}
                 onAction={onGraduate}
               />
@@ -131,20 +131,25 @@ export function MessageList({
             </View>
           );
         }
-        // A level that brings something new to the room says what.
-        const reward =
-          item.type === 'BUDDY_EVENT' && item.event === 'LEVELED_UP' && item.level
-            ? rewardAt(item.level)
-            : null;
-        if (item.type === 'BUDDY_EVENT' && reward) {
+        // A level that brings something new to the room says what, and one that lets the job be
+        // changed says so.
+        if (item.type === 'BUDDY_EVENT' && item.event === 'LEVELED_UP' && item.level) {
+          const reward = rewardAt(item.level);
+          const line = reward
+            ? t('buddyEvent.LEVELED_UP_REWARD', {
+                buddy: buddyName,
+                level: item.level,
+                reward: t(`buddy.reward.${reward}`),
+              })
+            : t('buddyEvent.LEVELED_UP', { buddy: buddyName, level: item.level });
           return (
             <View style={styles.spaced}>
               <BuddyEventRow
-                label={t('buddyEvent.LEVELED_UP_REWARD', {
-                  buddy: buddyName,
-                  level: item.level,
-                  reward: t(`buddy.reward.${reward}`),
-                })}
+                label={
+                  JOB_CHANGE_LEVELS.includes(item.level)
+                    ? `${line} · ${t('chat.jobChangeOpen')}`
+                    : line
+                }
               />
             </View>
           );

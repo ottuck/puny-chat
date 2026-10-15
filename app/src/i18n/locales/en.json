@@ -18,9 +18,9 @@
     "PARTNER_CHANGED": "The partner or room has changed. Please try again from your current conversation.",
     "SUPPORT_RATE_LIMIT": "Too many submissions. Please try again later.",
     "ROOM_NOT_FOUND": "This conversation has ended. Please reload your current room.",
-    "JOB_CHANGED_TODAY": "The job was already changed today. Try again tomorrow.",
+    "JOB_CHANGE_LOCKED": "The job can't be changed right now. You can change it once at level 20 and once at 30, and any time from 40.",
     "JOB_UNCHANGED": "It already has that job.",
-    "BUDDY_NOT_ADULT": "The job can be changed once it is an adult."
+    "BUDDY_NOT_ADULT": "The job can be changed once it is settled at Lv.12."
   },
   "signIn": {
     "tagline": "Chat with someone you like, and raise a tiny buddy together.",
@@ -59,8 +59,10 @@
     "emptySolo": "{{buddy}} has hatched!\nInvite a friend to raise it together.",
     "emptySoloHint": "While you wait for a friend, try sending a message.\n{{buddy}} grows as you chat.",
     "emptyDuo": "You and {{partner}} are together now.\nSay hello!",
-    "grownBody": "If it goes its own way it stays in the album and a new egg comes. Keep raising it to the top level (Lv.40) instead and the room keeps getting new and better things every level: visitors, new floors, a fruit tree.",
+    "grownBody": "If it goes its own way it stays in the album and a new egg comes. Keep raising it to the top level (Lv.40) instead and the room keeps getting new and better things every level: visitors, new floors, a fruit tree. You can also change its job once now, in the buddy details.",
     "maxLevelThanks": "Thank you so much! New characters, a collection and more are on the way. Stay tuned!",
+    "maxLevelJob": "From now on you can change its job any time in the buddy details.",
+    "jobChangeOpen": "🔄 the job can be changed once",
     "togetherBody": "{{buddy}} is thrilled. When you both send a message on the same day, you get it once a day."
   },
   "invite": {
@@ -238,14 +240,20 @@
     "jobCard": {
       "title": "Job",
       "leaning": "Growing up to be a {{icon}} {{job}}",
-      "hint": "When it grows up, how you raised it decides its job.",
+      "hint": "At Lv.12, how you raised it decides its job: feed it often and it's a chef, talk late at night and it's a radio DJ. It depends on what you two do.",
       "change": "Change job",
       "changeTitle": "Change to which job?",
-      "changedToday": "Already changed today. You can change it again tomorrow.",
+      "changeAt": "You can change it again at Lv.{{level}}.",
       "current": "Now",
       "confirmTitle": "Change the job?",
-      "confirmMessage": "{{icon}} {{job}} · The job can be changed once a day.",
+      "confirmMessage": "{{icon}} {{job}} · The job can be changed once at level 20 and once at 30, and any time from 40.",
       "confirm": "Change"
+    },
+    "nextStage": {
+      "EGG": "It hatches at Lv.{{level}}",
+      "BABY": "It grows into a child at Lv.{{level}}",
+      "CHILD": "It grows up at Lv.{{level}}",
+      "ADULT": "Its job comes at Lv.{{level}}. It depends on what you two do!"
     },
     "jobPerk": {
       "CHEF": "Gets extra excited at mealtime. Stirs a pot when alone.",
@@ -398,9 +406,9 @@
     "grow": {
       "title": "🌱 Growing",
       "exp": "EXP: +1 per message (up to 50 a day), +2 for a meal, +2 per 💩 cleaned.",
-      "stages": "Egg → baby (Lv.3) → child (Lv.5) → adult (Lv.10). From child on, it talks.",
+      "stages": "Egg → baby (Lv.3) → child (Lv.5) → adult (Lv.10), and its job comes at Lv.12. From child on, it talks.",
       "together": "When you both send a message on the same day, you get a together bonus of +{{exp}} EXP once a day. 🤝",
-      "job": "When it grows up, how you raised it decides its job: feed it a lot and it is a chef, talk late into the night and it becomes a radio DJ. Once grown, you can change it from the buddy details, once a day."
+      "job": "At Lv.12, how you raised it decides its job: feed it a lot and it is a chef, talk late into the night and it becomes a radio DJ. You can change it in the buddy details once at level 20 and once at 30, and any time from 40."
     },
     "rewards": {
       "title": "🎁 Level rewards",

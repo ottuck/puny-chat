@@ -49,6 +49,7 @@ function egg(name: string): BuddyView {
     job: null,
     leaning: null,
     canChangeJob: false,
+    jobChangeAt: null,
   };
 }
 

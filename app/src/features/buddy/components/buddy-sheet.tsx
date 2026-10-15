@@ -313,11 +313,11 @@ function JobCard({
               </View>
             ) : null}
           </>
-        ) : (
+        ) : buddy.jobChangeAt ? (
           <Text style={[styles.body, { color: colors.textMuted }]}>
-            {t('buddy.jobCard.changedToday')}
+            {t('buddy.jobCard.changeAt', { level: buddy.jobChangeAt })}
           </Text>
-        )
+        ) : null
       ) : null}
       {error ? <Text style={[styles.body, { color: colors.accent }]}>{error}</Text> : null}
     </View>

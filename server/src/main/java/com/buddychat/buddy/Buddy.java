@@ -21,10 +21,10 @@ import org.jspecify.annotations.Nullable;
  *     laugh, and with a "love you" in them. What the job is made of ({@link BuddyJob}), except the
  *     laughs: no job uses them since the comedian was dropped, but they are still counted. Null on
  *     buddies from before they were counted, which counts as none
- * @param job decided when the buddy becomes an adult; null before that, and on adults from before
- *     jobs existed. An adult's members may change it, once a day
- * @param jobChangedDay the last day (Asia/Tokyo) the members changed the job; null if never. The
- *     first, automatic job does not count
+ * @param job settled at {@link BuddyRules#JOB_AT}; null before that, and on adults from before jobs
+ *     existed (who may pick one). The members may change it once at 20 and at 30, freely from the top
+ * @param jobChangedLevel the level the members last changed the job at; null if never. The settled
+ *     job, and a first pick, do not count
  * @param lastWorkedAt when a grown-up last earned EXP for work at its station; null if never
  */
 public record Buddy(
@@ -45,7 +45,7 @@ public record Buddy(
         @Nullable Integer laughCount,
         @Nullable Integer loveCount,
         @Nullable String job,
-        @Nullable String jobChangedDay,
+        @Nullable Integer jobChangedLevel,
         @Nullable Instant lastWorkedAt) {
 
     public static final int MAX_NAME_LENGTH = 12;

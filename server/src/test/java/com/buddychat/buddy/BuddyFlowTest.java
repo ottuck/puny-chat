@@ -599,28 +599,38 @@ class BuddyFlowTest {
     }
 
     @Test
-    void growingUpFixesTheJobFromHowTheyRaisedIt() {
+    void theJobIsSettledAtTwelveFromHowTheyRaisedIt() {
         String roomId = createRoom("henry").id();
         setBuddy(roomId, new Update().set("buddy.fedCount", 7).set("buddy.cleanedCount", 3));
         setExp(roomId, BuddyRules.minExp(BuddyRules.CHILD_AT));
         assertThat(room("henry").buddy().job()).isNull();
         assertThat(room("henry").buddy().leaning()).isEqualTo(BuddyJob.CHEF);
 
+        // Grown up: the new look first, the job not yet.
         setExp(roomId, BuddyRules.minExp(BuddyRules.ADULT_AT) - 1);
         buddyService.onMessageSent(roomId).block();
-
         BuddyView adult = room("henry").buddy();
         assertThat(adult.stage()).isEqualTo(BuddyRules.Stage.ADULT);
-        assertThat(adult.job()).isEqualTo(BuddyJob.CHEF);
-        assertThat(adult.leaning()).isNull();
-        assertThat(timeline("henry")).endsWith("EVOLVED", "JOB");
+        assertThat(adult.job()).isNull();
+        assertThat(adult.leaning()).isEqualTo(BuddyJob.CHEF);
+        assertThat(adult.canChangeJob()).isFalse();
+        assertThat(timeline("henry")).endsWith("EVOLVED");
+
+        setExp(roomId, BuddyRules.minExp(BuddyRules.JOB_AT) - 1);
+        buddyService.onMessageSent(roomId).block();
+        BuddyView working = room("henry").buddy();
+        assertThat(working.job()).isEqualTo(BuddyJob.CHEF);
+        assertThat(working.leaning()).isNull();
+        assertThat(working.canChangeJob()).isFalse();
+        assertThat(working.jobChangeAt()).isEqualTo(BuddyRules.JOB_CHANGE_FROM);
+        assertThat(timeline("henry")).endsWith("LEVELED_UP", "JOB");
     }
 
     @Test
     void theJobStaysWhateverTheyDoLaterAndGoesIntoTheAlbum() {
         String roomId = createRoom("henry").id();
         setBuddy(roomId, new Update().set("buddy.fedCount", 5));
-        setExp(roomId, BuddyRules.minExp(BuddyRules.ADULT_AT) - 1);
+        setExp(roomId, BuddyRules.minExp(BuddyRules.JOB_AT) - 1);
         buddyService.onMessageSent(roomId).block();
         assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.CHEF);
 
@@ -640,39 +650,39 @@ class BuddyFlowTest {
     }
 
     @Test
-    void anAdultsJobCanBeChangedOnceADayByEitherMember() {
+    void theJobCanBeChangedOnceAtTwentyAndAtThirtyAndFreelyAtTheTop() {
         duoRoom("henry", "yuki");
         String roomId = room("henry").id();
         setBuddy(roomId, new Update().set("buddy.fedCount", 5));
-        setExp(roomId, BuddyRules.minExp(BuddyRules.ADULT_AT) - 1);
+        setExp(roomId, BuddyRules.minExp(BuddyRules.JOB_AT) - 1);
         buddyService.onMessageSent(roomId).block();
         assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.CHEF);
-        assertThat(room("henry").buddy().canChangeJob()).isTrue(); // the automatic job used nothing up
+        changeJob("henry", "DJ").isEqualTo(409).expectBody(JsonNode.class).value(locked());
 
-        post("henry", "/api/rooms/me/buddy/job", Map.of("job", "DJ"))
-                .expectStatus()
-                .isOk();
-
+        setExp(roomId, BuddyRules.minExp(BuddyRules.JOB_CHANGE_FROM));
+        assertThat(room("henry").buddy().canChangeJob()).isTrue();
+        changeJob("henry", "DJ").isOk();
         BuddyView changed = room("yuki").buddy();
         assertThat(changed.job()).isEqualTo(BuddyJob.DJ);
         assertThat(changed.canChangeJob()).isFalse();
-        assertThat(timeline("henry")).endsWith("JOB", "JOB_CHANGED");
-        post("yuki", "/api/rooms/me/buddy/job", Map.of("job", "WRITER"))
-                .expectStatus()
-                .isEqualTo(409)
-                .expectBody(JsonNode.class)
-                .value(body -> assertThat(body.get("code").asString()).isEqualTo("JOB_CHANGED_TODAY"));
+        assertThat(changed.jobChangeAt()).isEqualTo(30);
+        assertThat(timeline("henry")).endsWith("JOB_CHANGED");
+        changeJob("yuki", "WRITER").isEqualTo(409).expectBody(JsonNode.class).value(locked());
 
-        clock.advance(Duration.ofDays(1));
-        assertThat(room("yuki").buddy().canChangeJob()).isTrue();
-        post("yuki", "/api/rooms/me/buddy/job", Map.of("job", "WRITER"))
-                .expectStatus()
-                .isOk();
-        assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.WRITER);
+        setExp(roomId, BuddyRules.minExp(30));
+        changeJob("yuki", "WRITER").isOk();
+        changeJob("henry", "CHEF").isEqualTo(409);
+        assertThat(room("henry").buddy().jobChangeAt()).isEqualTo(BuddyRules.MAX_LEVEL);
+
+        setExp(roomId, BuddyRules.minExp(BuddyRules.MAX_LEVEL));
+        changeJob("henry", "CHEF").isOk();
+        changeJob("yuki", "BARISTA").isOk();
+        assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.BARISTA);
+        assertThat(room("henry").buddy().canChangeJob()).isTrue();
     }
 
     @Test
-    void theJobCannotBeChangedBeforeAdulthoodToNothingKnownOrToItself() {
+    void theJobCannotBeChangedBeforeItIsSettledToNothingKnownOrToItself() {
         String roomId = createRoom("henry").id();
         post("henry", "/api/rooms/me/buddy/job", Map.of("job", "CHEF"))
                 .expectStatus()
@@ -680,16 +690,14 @@ class BuddyFlowTest {
                 .expectBody(JsonNode.class)
                 .value(body -> assertThat(body.get("code").asString()).isEqualTo("BUDDY_NOT_ADULT"));
 
-        setExp(roomId, BuddyRules.minExp(BuddyRules.ADULT_AT)); // an adult from before jobs existed: no job yet
+        // Past the job's level without one (from before jobs, or a later update): it picks one any time.
+        setExp(roomId, BuddyRules.minExp(BuddyRules.JOB_AT));
         assertThat(room("henry").buddy().job()).isNull();
         assertThat(room("henry").buddy().canChangeJob()).isTrue();
         post("henry", "/api/rooms/me/buddy/job", Map.of("job", "SINGER"))
                 .expectStatus()
                 .isBadRequest();
-        post("henry", "/api/rooms/me/buddy/job", Map.of("job", "CHEF"))
-                .expectStatus()
-                .isOk();
-        clock.advance(Duration.ofDays(1));
+        changeJob("henry", "CHEF").isOk();
         post("henry", "/api/rooms/me/buddy/job", Map.of("job", "CHEF"))
                 .expectStatus()
                 .isEqualTo(409)
@@ -702,7 +710,7 @@ class BuddyFlowTest {
         duoRoom("henry", "yuki");
         String roomId = room("henry").id();
         setBuddy(roomId, new Update().set("buddy.job", "CHEF"));
-        setExp(roomId, BuddyRules.minExp(BuddyRules.ADULT_AT));
+        setExp(roomId, BuddyRules.minExp(BuddyRules.JOB_CHANGE_FROM));
 
         List<Integer> statuses = race(
                 6,
@@ -722,7 +730,7 @@ class BuddyFlowTest {
     void withNothingStandingOutItIsABarista() {
         String roomId = createRoom("henry").id();
         setBuddy(roomId, new Update().set("buddy.fedCount", 4).set("buddy.cleanedCount", 4));
-        setExp(roomId, BuddyRules.minExp(BuddyRules.ADULT_AT) - 1);
+        setExp(roomId, BuddyRules.minExp(BuddyRules.JOB_AT) - 1);
 
         buddyService.onMessageSent(roomId).block();
 
@@ -746,6 +754,14 @@ class BuddyFlowTest {
     }
 
     // --- helpers ---
+
+    private org.springframework.test.web.reactive.server.StatusAssertions changeJob(String user, String job) {
+        return post(user, "/api/rooms/me/buddy/job", Map.of("job", job)).expectStatus();
+    }
+
+    private static java.util.function.Consumer<JsonNode> locked() {
+        return body -> assertThat(body.get("code").asString()).isEqualTo("JOB_CHANGE_LOCKED");
+    }
 
     private static Buddy counts(int fed, int cleaned, int nights, int laughs, int loves) {
         Instant now = Instant.now();

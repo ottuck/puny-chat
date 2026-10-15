@@ -19,7 +19,7 @@ import { useColors } from '@/theme';
 
 import type { AlbumEntry } from '@/features/room/api';
 
-import type { BuddyJob, BuddyView } from '../api';
+import { type BuddyJob, type BuddyView, NEXT_STEP_AT } from '../api';
 import {
   BUTTERFLY,
   butterflyAt,
@@ -60,7 +60,7 @@ import type { Reaction, ReactionKind } from '../reactions';
 import type { ChatWord, Mood } from '../chat-words';
 import { JOB_LINES, type Line, pick, useBuddyTalk } from '../use-buddy-talk';
 import { SpeechBubble } from './speech-bubble';
-import { GUEST_MS, type Guest, RoomSparkle, Train } from './room-props';
+import { Arrive, GUEST_MS, type Guest, RoomSparkle, Train } from './room-props';
 import { decorFor, LAMP_ROOM, Plant, plantRoom as plantRoomFor, WallDecor } from './stage-decor';
 import { RAIN_GAP, rainDrops, Snowfall } from './weather';
 
@@ -292,6 +292,8 @@ const CHEW_MS = 2400;
 // Of 'evolved', the transformation (rings of light, old and new looks flickering); the rest shows
 // off the new look with a burst of sparkles.
 const EVOLVE_MS = 1400;
+// Just grown into a new stage, the next goal shows for this long ("Lv.5에 어린이로 자라요").
+const NEXT_STEP_MS = 4500;
 const GLOW_MS = 450;
 // Where the burst's sparkles fly, from the buddy's middle.
 const BURST = [
@@ -609,6 +611,8 @@ export function BuddyStage({
   );
   // A grown-up's station on the left, where it goes to work.
   const station = buddy.stage === 'ADULT' && job ? JOB_STATIONS[job] : null;
+  // A station that comes while the stage is open (the job settled at Lv.12, or changed) pops in.
+  const [jobAtMount] = useState(job);
   const stationX = station ? STATION_LEFT + station.standAt * scale : 0;
   const eating = active?.kind === 'fed';
   const settled = sleeping || buddy.hungry || egg || eating || evolving || dream || leaving;
@@ -1151,6 +1155,23 @@ export function BuddyStage({
       flash.setValue(0);
     };
   }, [reaction, hop, flash, glow, burst]);
+
+  // Grown into a new stage: once the new look settles, the next goal for a moment, so there is
+  // always something ahead to look forward to. A grown-up's is its job, until it has one.
+  const [nextStep, setNextStep] = useState(false);
+  useEffect(() => {
+    if (reaction?.kind !== 'evolved') return;
+    const timers = [
+      setTimeout(() => setNextStep(true), EVOLVE_MS),
+      setTimeout(() => setNextStep(false), EVOLVE_MS + NEXT_STEP_MS),
+    ];
+    return () => {
+      timers.forEach(clearTimeout);
+      setNextStep(false);
+    };
+  }, [reaction]);
+  const nextStepShown =
+    nextStep && !dream && !leaving && !(buddy.stage === 'ADULT' && buddy.job) ? buddy.stage : null;
 
   useEffect(
     () => () => {
@@ -1816,17 +1837,20 @@ export function BuddyStage({
       {/* The station stands in front of the buddy, whether it is working there or walking by. */}
       {station ? (
         <View
+          key={job}
           style={[
             styles.station,
             styles.passThrough,
             { left: STATION_LEFT, bottom: FLOOR - station.sink * scale },
           ]}
         >
-          <PixelSprite
-            frame={station.frames[atWork ? tick % 2 : 0]}
-            palette={PROP_PALETTE}
-            scale={scale}
-          />
+          <Arrive fresh={job !== jobAtMount} width={station.frames[0][0].length * scale}>
+            <PixelSprite
+              frame={station.frames[atWork ? tick % 2 : 0]}
+              palette={PROP_PALETTE}
+              scale={scale}
+            />
+          </Arrive>
         </View>
       ) : null}
       {/* What it holds at work goes in front of the station too (the can over the plant's pot). */}
@@ -1934,6 +1958,19 @@ export function BuddyStage({
           style={[styles.poop, { bottom: FLOOR - 2, right: poopRight + poop.index * 30 }]}
         />
       ))}
+
+      {nextStepShown ? (
+        <View style={[styles.nextStep, styles.passThrough]}>
+          <Text
+            style={[
+              styles.nextStepText,
+              { color: colors.text, backgroundColor: colors.surface, borderColor: colors.accent },
+            ]}
+          >
+            {t(`buddy.nextStage.${nextStepShown}`, { level: NEXT_STEP_AT[nextStepShown] })}
+          </Text>
+        </View>
+      ) : null}
 
       {/* The evolution's quick flash as the new look settles, over the whole stage. */}
       <Animated.View style={[StyleSheet.absoluteFill, styles.flash, { opacity: flash }]} />
@@ -2073,6 +2110,23 @@ const styles = StyleSheet.create({
   },
   levelUp: {
     fontWeight: '700',
+  },
+  nextStep: {
+    position: 'absolute',
+    top: 40,
+    left: 12,
+    right: 12,
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  nextStepText: {
+    fontSize: 13,
+    fontWeight: '700',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    borderWidth: 2,
+    overflow: 'hidden',
   },
   flash: {
     backgroundColor: '#FFFFFF',

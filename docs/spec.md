@@ -156,7 +156,7 @@ Buddy 상태(레벨, 배고픔, 💩, 돌볼 수 있는지)는 서버가 계산�
 
 ## 성장
 
-- 경험치(레벨)로만 진화한다: 알 → 아기(Lv.3) → 어린이(Lv.5) → 어른(Lv.10), 독립은 Lv.20부터 고를 수 있고, 최고 Lv.40. 레벨당 **5 EXP**. 공식은 사용자에게 보여주지 않고
+- 경험치(레벨)로만 진화한다: 알 → 아기(Lv.3) → 어린이(Lv.5) → 어른(Lv.10), 직업은 Lv.12, 독립은 Lv.20부터 고를 수 있고, 최고 Lv.40. 레벨당 **5 EXP**. 공식은 사용자에게 보여주지 않고
   "대화하고 돌봐줄수록 Buddy가 성장해요" 정도로만 말한다.
 - 메시지 하루 10개(혼자) 또는 방 전체 20~30개와 함께 보너스(둘이)를 가정한 대략의 기간. 밥·청소를 더하면 더 빠르다.
 
@@ -172,6 +172,8 @@ Buddy 상태(레벨, 배고픔, 💩, 돌볼 수 있는지)는 서버가 계산�
 
 - **둘이 함께.** 같은 날 두 사람이 모두 메시지를 보내면 하루 한 번 +10 EXP. 대화에 "🤝 오늘은 둘 다 왔어요!" 카드, 무대에서 하트와 두 번 크게 뛰기,
   그날은 레벨 옆에 🤝. Buddy 상세에 "나 ✅ · 상대 ⏳"와 남은 일. 상대에게 메시지를 보내라는 알림은 보내지 않는다.
+- **다음 목표.** 진화해서 새 모습이 자리 잡으면 무대 위쪽에 다음 목표가 4.5초쯤 뜬다: "Lv.3에 알이 깨어나요", "Lv.5에 어린이로 자라요",
+  "Lv.10에 어른으로 자라요", 어른이 되면 "Lv.12에 직업이 정해져요. 둘이 한 일에 따라 달라져요!"(`buddy.nextStage.*`, 레벨은 앱 `api.ts`의 `NEXT_STEP_AT`).
 - **다 자람과 최고 레벨.** 20레벨이 되면 대화에 "다 자랐어요" 카드(`GROWN`)가 남고 독립시킬 수 있다. 독립은 **선택**이라 계속 키워도 된다. 카드와 Buddy 상세의 독립 안내, 도움말은 독립시키지 않고 40까지 키워도 방 소품이 레벨마다 계속 생기고 좋아진다고 알려준다.
   40이 되면 감사 카드(`MAX_LEVEL`)가 남는다. EXP는 계속 쌓여 기록되지만 레벨과 바는 멈춘다.
 - **독립과 앨범.** 20레벨 이상의 버디는 Buddy 상세(무대 이름 옆 🎓, 카드 버튼으로도 연다)에서 두 사람 중 누구든 확인 후 독립시킨다. 새 알의 이름을
@@ -187,9 +189,9 @@ Buddy 상태(레벨, 배고픔, 💩, 돌볼 수 있는지)는 서버가 계산�
 - 화분은 새싹(4) → 무성한 화분(14) → 꽃 핀 도자기(25) → 작은 나무(32) → 열매 달린 나무(38). 다음 화분이 오기 전까지 레벨마다 조금씩 커진다.
   Lv.14 화분은 꽃 핀 선인장·고무나무·산세베리아·둥근 잎 화분 중 하나로 자란다. 버디 이름으로 정해서 두 사람 화면이 같고 다시 열어도 그대로다.
 - 밥그릇은 은(8) → 금(30) → 도자기(39). 어린이부터는 밥상의 그릇이 같은 색이다.
-- Lv.10(어른)에는 직업과 **직업 무대 장치**가 온다: 무대 왼쪽에 요리사 조리대, 정원사 큰 식물, 라디오 DJ 방송 책상, 작가 나무 책상, 바리스타 카페 카운터.
+- Lv.12에 직업이 정해지면 **직업 무대 장치**가 온다: 무대 왼쪽에 요리사 조리대, 정원사 큰 식물, 라디오 DJ 방송 책상, 작가 나무 책상, 바리스타 카페 카운터.
   장치는 늘 버디 앞에 있고 높이는 버디 입 바로 아래까지라 얼굴이 가려지지 않는다.
-- 어린이까지 비어 있는 왼쪽 바닥에는 나무 상자(6)가 오고 장난감 상자(9)가 된다. 어른이 되면 진화의 빛 속에서 직업 장치로 바뀐다(직업이 없는 어른은 장난감 상자 그대로).
+- 어린이까지 비어 있는 왼쪽 바닥에는 나무 상자(6)가 오고 장난감 상자(9)가 된다. Lv.12에 직업이 정해지면 직업 장치가 반짝이며 그 자리에 온다(직업이 없는 어른은 장난감 상자 그대로).
 - 무대 가운데의 러그는 알일 때부터 깔려 있고 무늬가 바뀐다. 바닥은 마루, 다다미로 바뀐다. 벽에는 창문(하늘이 기기 시각을 따른다)과 벽시계가 온다.
 - 새로 온 소품은 그 자리에서 반짝이며 나타난다(무대를 연 뒤 오른 레벨의 것만).
 - 독립하면 소품은 버디가 가지고 이사간다: 버디가 보따리를 메고 인사한 뒤 오른쪽으로 걸어 나가고, 원이 닫혔다 열리면 러그만 있는 빈 방에 새 알이 있다
@@ -231,7 +233,7 @@ users          { _id, firebaseUid (unique), displayName, roomId?, createdAt, gue
 rooms          { _id, memberIds [1..2], memberCount, createdAt, closureId?, historyVersion?, album? [{ name, bornAt, graduatedAt, job? }],
                  buddy { name, exp, bornAt, lastFedAt?, lastCleanedAt?, poopsCleaned?, lastWorkedAt?, expDay?, messageExpToday?,
                          talkDay?, talkers?, togetherDay?, fedCount?, cleanedCount?, nightCount?, laughCount?, loveCount?,
-                         job?, jobChangedDay? } }
+                         job?, jobChangedLevel? } }
 messages       { _id, roomId, senderId?, type (TEXT | SYSTEM | BUDDY_EVENT), text?, buddyEvent?, systemEvent?, actorId?,
                  clientMessageId, createdAt }
 invitations    { _id, roomId, code (unique), createdBy, createdAt, expiresAt, usedAt?, usedBy?, previousRoomId? }
@@ -295,7 +297,7 @@ history_deletions  계정 삭제 중 영향받는 방 id(삭제 진행 표식)
 | `ALREADY_IN_ROOM` | 409 | 2명 room의 멤버가 다른 room에 참가 |
 | `LEAVE_CONFIRMATION_REQUIRED` | 409 | solo room을 두고 참가하려면 확인 필요 |
 | `BUDDY_NOT_GROWN` | 409 | 20레벨이 안 됐는데 독립 |
-| `BUDDY_NOT_ADULT` / `JOB_UNCHANGED` / `JOB_CHANGED_TODAY` | 409 | 직업 바꾸기 불가 |
+| `BUDDY_NOT_ADULT` / `JOB_UNCHANGED` / `JOB_CHANGE_LOCKED` | 409 | 직업 바꾸기 불가(직업이 정해지기 전, 같은 직업, 바꿀 수 있는 레벨이 아님) |
 | `PARTNER_CHANGED` | 409 | 같은 `requestId`로 다른 신고 |
 | `SUPPORT_RATE_LIMIT` | 429 | 1시간에 문의 5개 이상 |
 
@@ -346,7 +348,7 @@ server → client
 
 수치는 `buddy/BuddyRules.java`, 주기는 서버 설정(`buddychat.buddy.full-to-empty`, `poop-every`, `exp-per-level`). 테스트는 숫자 대신
 `BuddyRules.hungryAfter()`, `poopEvery()`로 시간을 보낸다. 앱은 `BuddyView`(level, stage, fullness, poops, canFeed, canClean, talkedToday,
-togetherToday, job, leaning, canChangeJob, grown)를 그대로 보여준다.
+togetherToday, job, leaning, canChangeJob, jobChangeAt, grown)를 그대로 보여준다.
 
 - **배고픔**: 밥을 먹은 뒤 2시간 30분에 걸쳐 100 → 0. 80 미만(30분 뒤)이면 밥을 줄 수 있고, 30 이하(1시간 45분 뒤)면 배고프다.
 - **💩**: 바닥이 깨끗해진 뒤(`lastCleanedAt`) 1시간마다 하나, 최대 3개. 누를 때마다 하나씩 치운다(`poopsCleaned` 증가, 마지막 하나면
@@ -370,10 +372,15 @@ togetherToday, job, leaning, canChangeJob, grown)를 그대로 보여준다.
   (`nightCount`), 웃음·사랑 낱말이 든 메시지(`laughCount`·`loveCount`, 둘 다면 사랑만, 낱말은 `buddy/MoodWords`와 앱 `chat-words.ts`를 같이 고친다).
   점수는 `BuddyJob`에 있다: 요리사 `CHEF` = 밥, 정원사 `GARDENER` = 💩, 라디오 DJ `DJ` = 밤 ÷ 3, 작가 `WRITER` = 사랑 ÷ 2. 가장 높은 쪽,
   동점이면 먼저 적힌 쪽, 모두 5 미만이면 바리스타 `BARISTA`. 웃음은 세기만 하고 직업에 쓰지 않는다.
-  - 어른이 될 때 한 번 `job`을 정한다(`bornAt`이 같고 `job`이 없을 때만). 타임라인은 `EVOLVED` 다음에 `JOB`.
-  - 어린이에게는 지금까지의 점수로 기울기(`leaning`)만 준다.
-  - **바꾸기**(`POST …/buddy/job`): 어른이 된 뒤 두 멤버 누구든 **하루에 한 번**(`jobChangedDay`, 일본 시간, 둘이 합쳐서). 처음 자동으로
-    정해진 직업은 치지 않는다. 조건부 update 하나라 동시에 해도 한 번. 타임라인 `JOB_CHANGED`(`actorId` = 바꾼 사람). 점수는 계속 센다.
+  - 어른(Lv.10)이 되고 조금 뒤 **Lv.12**(`JOB_AT`)에 한 번 `job`을 정한다(`bornAt`이 같고 `job`이 없을 때만). 막 어른이 된 모습(머리의 꽃)을
+    먼저 즐기게 하려고 나눴다. 타임라인은 `LEVELED_UP`(12) 다음에 `JOB`.
+  - 직업이 정해지기 전(어린이, Lv.10~11의 어른)에는 지금까지의 점수로 기울기(`leaning`)만 준다.
+  - **바꾸기**(`POST …/buddy/job`): 두 멤버 누구든 **Lv.20과 Lv.30에 한 번씩**(20~29, 30~39 구간마다 한 번, `jobChangedLevel`에 바꾼 레벨),
+    **Lv.40부터는 언제든**. 한 직업에 질리지 않게 10레벨마다 기회를 준다. 바꿀 수 없을 때 `jobChangeAt`이 다음 기회의 레벨이다.
+    정해진 직업은 치지 않는다. Lv.12가 지났는데 직업이 없는 버디(직업이 생기기 전의 버디, 나중 업데이트로 생기는 경우)는 언제든 첫 직업을 고르고,
+    그것도 치지 않는다. 조건부 update 하나(읽은 직업, 구간 안이면 그 구간에 바꾼 적 없음)라 동시에 해도 한 번. 타임라인 `JOB_CHANGED`
+    (`actorId` = 바꾼 사람). 점수는 계속 센다.
+  - 바꿀 기회가 오면 알린다: Lv.20의 "다 자랐어요" 카드, Lv.30의 레벨 업 줄("🔄 직업을 한 번 바꿀 수 있어요"), Lv.40 카드("이제 언제든").
   - 직업 값을 바꾸려면 저장된 곳(`buddy.job`, 앨범의 `job`, 타임라인 `JOB`·`JOB_CHANGED`의 `text`)을 함께 옮겨야 한다.
 - **독립**(`POST …/buddy/graduate`): `grown`(20레벨 이상)일 때만. 지금 버디를 `album`에 push하고 `buddy`를 새 알로 바꾸는 것을 조건부 update 하나로
   한다(같은 `bornAt`이고 20레벨 이상일 때만). 진 쪽은 `BUDDY_NOT_GROWN`. 타임라인 `GRADUATED`, 상대 앱은 room을 다시 읽는다.
