@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Svg, { G, Rect } from 'react-native-svg';
 import {
@@ -70,7 +70,9 @@ import { decorFor, Plant, plantRoom as plantRoomFor, WallDecor } from './stage-d
 // size while typing and reading back: a stage that folds and unfolds moved the chat under the
 // finger and broke scrolling.
 
-const FLOOR = 22;
+export const FLOOR = 22;
+// The corner button's square (buddy-scene.tsx).
+export const CORNER_SIZE = 36;
 const PROP_SCALE = 3;
 // How wide the meal table is, in its pixels (sprites.ts, mealTable).
 const TABLE_CELLS = 27;
@@ -329,10 +331,16 @@ type Props = {
   album?: AlbumEntry[];
   // The season's look (pixel/looks.ts): by the date unless given (the art preview picks one).
   season?: Season | null;
+  // A button in the top right corner (the way to the hot spring, buddy-scene.tsx).
+  corner?: ReactNode;
+  // Without its own margins and rounded frame: buddy-scene.tsx draws them around the scenes.
+  bare?: boolean;
+  // A cut of the dream (buddy-dream.tsx): no name or level, and the buddy stays in the middle.
+  dream?: boolean;
 };
 
 // Local night hours, checked once a minute.
-function useSleeping(job: BuddyJob | null): boolean {
+export function useSleeping(job: BuddyJob | null): boolean {
   const [hour, setHour] = useState(() => new Date().getHours());
   useEffect(() => {
     const timer = setInterval(() => setHour(new Date().getHours()), 60_000);
@@ -476,7 +484,7 @@ function FlyingAway({
   );
 }
 
-function gridScale(height: number, gridHeight: number): number {
+export function gridScale(height: number, gridHeight: number): number {
   // Up to 5 points per pixel, smaller on short screens so the grown-up buddy still fits.
   return Math.max(3, Math.min(5, Math.floor((height - 84) / gridHeight)));
 }
@@ -499,6 +507,9 @@ export function BuddyStage({
   partnerHere = false,
   album,
   season: chosenSeason,
+  corner: cornerButton,
+  bare = false,
+  dream = false,
 }: Props) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -584,7 +595,7 @@ export function BuddyStage({
   const station = buddy.stage === 'ADULT' && job ? JOB_STATIONS[job] : null;
   const stationX = station ? STATION_LEFT + station.standAt * scale : 0;
   const eating = active?.kind === 'fed';
-  const settled = sleeping || buddy.hungry || egg || eating || evolving;
+  const settled = sleeping || buddy.hungry || egg || eating || evolving || dream;
   const acting = act !== null;
   const { line, say, hush } = useBuddyTalk({
     stage: buddy.stage,
@@ -1300,13 +1311,18 @@ export function BuddyStage({
   return (
     <View
       onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}
-      style={[styles.stage, { height, backgroundColor: colors.stage }]}
+      style={[bare ? null : styles.stage, { height, backgroundColor: colors.stage }]}
     >
       <Pressable
         onPress={onOpenDetail}
+        disabled={dream}
         accessibilityRole="button"
         accessibilityLabel={t('buddy.open', { buddy: buddy.name })}
-        style={styles.info}
+        style={[
+          styles.info,
+          cornerButton ? styles.infoBesideCorner : null,
+          dream ? styles.hidden : null,
+        ]}
       >
         <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
           {buddy.name}
@@ -1336,7 +1352,11 @@ export function BuddyStage({
       {/* The job's mark: its tool, small, in the corner. */}
       {job ? (
         <View
-          style={[styles.jobBadge, styles.passThrough]}
+          style={[
+            styles.jobBadge,
+            cornerButton ? styles.jobBadgeBesideCorner : null,
+            styles.passThrough,
+          ]}
           accessible
           accessibilityRole="image"
           accessibilityLabel={t(`buddy.job.${job}`)}
@@ -1827,6 +1847,7 @@ export function BuddyStage({
 
       {/* The evolution's quick flash as the new look settles, over the whole stage. */}
       <Animated.View style={[StyleSheet.absoluteFill, styles.flash, { opacity: flash }]} />
+      {cornerButton ? <View style={styles.corner}>{cornerButton}</View> : null}
     </View>
   );
 }
@@ -1902,6 +1923,18 @@ const styles = StyleSheet.create({
     top: 10,
     right: 12,
   },
+  jobBadgeBesideCorner: {
+    right: 12 + CORNER_SIZE + 6,
+  },
+  infoBesideCorner: {
+    right: 14 + CORNER_SIZE + 6,
+  },
+  corner: {
+    position: 'absolute',
+    top: 4,
+    right: 6,
+    zIndex: 2,
+  },
   jobProp: {
     position: 'absolute',
   },
@@ -1944,6 +1977,9 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: '#FFD166',
     pointerEvents: 'none',
+  },
+  hidden: {
+    opacity: 0,
   },
   passThrough: {
     pointerEvents: 'none',

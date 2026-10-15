@@ -9,7 +9,8 @@ import { useColors } from '@/theme';
 // levels bring rewards, so there is something to look forward to from the first day.
 const SEEN_KEY = 'buddy-guide-seen';
 
-export function GuideBanner({ onOpen }: { onOpen: () => void }) {
+// `hold`: not yet (the dream before the first egg is on).
+export function GuideBanner({ onOpen, hold = false }: { onOpen: () => void; hold?: boolean }) {
   const colors = useColors();
   const { t } = useTranslation();
   const [show, setShow] = useState(false);
@@ -29,7 +30,7 @@ export function GuideBanner({ onOpen }: { onOpen: () => void }) {
     AsyncStorage.setItem(SEEN_KEY, '1').catch(() => {});
   };
 
-  if (!show) return null;
+  if (!show || hold) return null;
   return (
     <View style={[styles.banner, { backgroundColor: colors.surface, borderColor: colors.accent }]}>
       <Pressable

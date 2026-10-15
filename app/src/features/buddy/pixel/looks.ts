@@ -7,7 +7,7 @@ import { buddyFrame, type Pose } from './sprites';
 // looks are drawn over the buddy's own grid in BUDDY_PALETTE; the things on the floor and in the
 // air (the season's corner, the umbrella, the butterfly, the big heart) in PROP_PALETTE.
 
-type Hatched = Exclude<BuddyStage, 'EGG'>;
+export type Hatched = Exclude<BuddyStage, 'EGG'>;
 
 // --- A grown-up's look for its job ---
 
@@ -304,6 +304,44 @@ export function dressedFrame(
 }
 
 // Something drawn with the buddy, in its grid's cells (it may reach outside the grid).
+// --- In the bath (docs/fun-improvements.md, 목욕) ---
+
+// A white towel round the head, its plant poking through: the bath has it in place of the job's or
+// the season's look.
+// prettier-ignore
+const TOWEL: Record<Hatched, readonly [row: number, look: Frame]> = {
+  BABY: [2, [
+    '..kwwww..wwwwk..',
+    '.kwwxwwxxwwxwwk.',
+    '.kxxxxxxxxxxxxk.',
+  ]],
+  CHILD: [4, [
+    '...kwwwww..wwwwwk...',
+    '..kwwwwwwwwwwwwwwk..',
+    '..kwwxwwwxxwwwxwwk..',
+    '...kxxxxxxxxxxxxk...',
+  ]],
+  ADULT: [5, [
+    '....kwww......wwwk....',
+    '...kwwwwwwwwwwwwwwk...',
+    '...kwwxwwwxwwwxwwwk...',
+    '....kxxxxxxxxxxxxk....',
+  ]],
+};
+
+const bathed = new Map<string, Frame>();
+
+// The buddy in the bath: a towel on its head and nothing else.
+export function bathFrame(stage: Hatched, pose: Pose): Frame {
+  const key = `${stage}:${pose}`;
+  const known = bathed.get(key);
+  if (known) return known;
+  const [row, towel] = TOWEL[stage];
+  const look = wear(buddyFrame(stage, pose), buddyFrame(stage, 'idle'), row, 0, towel);
+  bathed.set(key, look);
+  return look;
+}
+
 export type Layer = { frame: Frame; row: number; col: number };
 
 // A pair, mirrored about the middle of a grid `width` wide, the left one starting at `col`.

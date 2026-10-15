@@ -6,7 +6,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { BuddyJob, BuddyStage, BuddyView } from '@/features/buddy/api';
 import type { Mood } from '@/features/buddy/chat-words';
-import { BuddyStage as Stage, type Cue } from '@/features/buddy/components/buddy-stage';
+import { BuddyDream, DREAM_CUTS } from '@/features/buddy/components/buddy-dream';
+import { BuddyScene } from '@/features/buddy/components/buddy-scene';
+import type { Cue } from '@/features/buddy/components/buddy-stage';
 import { JOB_ICON, JOB_ORDER } from '@/features/buddy/jobs';
 import { dressedFrame, type Season, SEASONS, seasonOn } from '@/features/buddy/pixel/looks';
 import { PixelSprite } from '@/features/buddy/pixel/pixel-sprite';
@@ -155,11 +157,28 @@ function Preview() {
   const [season, setSeason] = useState<Season | null | undefined>(undefined);
   const shownSeason = season === undefined ? seasonOn(new Date()) : season;
   const stageHeight = Math.round(Math.min(280, Math.max(180, windowHeight * 0.3)));
+  // Each press plays the dream again (a new scene).
+  const [dreamRun, setDreamRun] = useState(0);
+  // One cut of the dream held still, to look at.
+  const [dreamCut, setDreamCut] = useState<number | null>(null);
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
       <ScrollView style={styles.column} contentContainerStyle={styles.content}>
-        <Stage
+        {dreamCut !== null ? (
+          <View style={styles.held}>
+            <BuddyDream
+              buddy={buddyOf('EGG', null, false, 0)}
+              height={stageHeight}
+              onEnd={() => {}}
+              hold={dreamCut}
+            />
+          </View>
+        ) : null}
+        {/* The bath is the button in the corner, as in the app. */}
+        <BuddyScene
+          key={dreamRun}
+          dreams={dreamRun > 0 ? 'always' : false}
           buddy={buddyOf(stage, job, hungry, poops)}
           busy={false}
           height={stageHeight}
@@ -174,6 +193,17 @@ function Preview() {
           partnerHere={partnerHere}
           season={season}
         />
+        <Group title="scene">
+          <Chip label="dream" onPress={() => setDreamRun((n) => n + 1)} />
+          {[...Array(DREAM_CUTS)].map((_, i) => (
+            <Chip
+              key={i}
+              label={`cut ${i + 1}`}
+              onPress={() => setDreamCut(dreamCut === i ? null : i)}
+              active={dreamCut === i}
+            />
+          ))}
+        </Group>
         <Group title="stage">
           {STAGES.map((s) => (
             <Chip key={s} label={s} onPress={() => setStage(s)} active={s === stage} />
@@ -244,5 +274,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   pose: { alignItems: 'center', justifyContent: 'flex-end', padding: 4, borderRadius: 6 },
   poseName: { fontSize: 10 },
+  held: { marginHorizontal: 12, borderRadius: 20, overflow: 'hidden' },
   chip: { borderWidth: 1, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6 },
 });
