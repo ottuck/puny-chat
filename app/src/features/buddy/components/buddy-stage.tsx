@@ -292,7 +292,7 @@ const CHEW_MS = 2400;
 // Of 'evolved', the transformation (rings of light, old and new looks flickering); the rest shows
 // off the new look with a burst of sparkles.
 const EVOLVE_MS = 1400;
-// Just grown into a new stage, the next goal shows for this long ("Lv.5에 어린이로 자라요").
+// Just grown into a new stage, the next goal shows for this long ("Lv.5에 꼬마가 돼요").
 const NEXT_STEP_MS = 4500;
 const GLOW_MS = 450;
 // Where the burst's sparkles fly, from the buddy's middle.

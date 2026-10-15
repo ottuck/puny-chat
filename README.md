@@ -10,7 +10,7 @@
 
 <br>
 
-<img src="docs/images/demo.gif" width="300" alt="The tour: an egg hatches, eats, poops, a friend cleans up, and it grows through a child into a flowering adult">
+<img src="docs/images/demo.gif" width="300" alt="The tour: an egg hatches, eats, poops, a friend cleans up, and it grows through a kid into a flowering adult">
 
 <sub>The tour: from egg to adult in 55 seconds</sub>
 
@@ -60,9 +60,9 @@ at you, no daily missions. Just **having something to raise together** makes the
 
 **🐣 Buddy**
 - A pixel Buddy wanders a small stage above the chat. Feed it and it munches; a message from your partner makes it hop
-- It grows from egg → baby → child → adult. The more you talk and care for it, the faster
+- It grows from egg → baby → kid → adult. The more you talk and care for it, the faster
 - Over time it gets hungry and poops. Tap the bowl or the 💩, or just send "food" in the chat, and the chat notes who did it
-- Left alone it dances and sings. Once a child, it talks too: "Long time no see!", "Have you eaten?"
+- Left alone it dances and sings. Once a kid, it talks too: "Long time no see!", "Have you eaten?"
 - **It never dies.** Forget it for a few days and it's fine; a little care and it's back on its feet
 - A little after it grows up (Lv.12), it takes a job from how you two raised it (chef, gardener, radio DJ, writer, barista), each with its own look and spot on the stage. You can change it once at level 20 and at 30, and any time from 40. It dresses up for the season (bunny ears in spring, antlers at Christmas) and now and then a butterfly lands on it or a shooting star crosses the sky
 - Every level or two the room gets something: a toy box, a window whose sky follows your clock, a music box, new rugs and floors, a tree that bears fruit, and guests at the window (a snail, a sparrow, a stray cat). From level 20 it can go its own way; keep it to level 40 and the room keeps growing (below)
