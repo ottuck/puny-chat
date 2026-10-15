@@ -556,8 +556,8 @@ export function BuddyStage({
     x.stopAnimation((from) => {
       if (stopped) return;
       const distance = Math.abs(stationX - from);
-      // The plant is watered from its right, looking left; behind a counter it faces the front.
-      setFacingLeft(station.behind ? stationX < from : true);
+      // The plant is watered from its right, looking left.
+      setFacingLeft(station.held ? true : stationX < from);
       setOnRightHalf(false);
       setWalking(distance > 2);
       Animated.timing(x, {
@@ -1027,8 +1027,7 @@ export function BuddyStage({
     (key: string) => setLeaving((prev) => prev.filter((poop) => poop.key !== key)),
     [],
   );
-  // Behind a counter it stands a little further back; the cook sways to the pot, the DJ nods.
-  const workLift = atWork && station?.behind ? station.lift * scale : 0;
+  // At work the cook sways to the pot and the DJ nods.
   const workSway = atWork && job === 'CHEF' ? (tick % 2 === 0 ? -scale : 0) : 0;
   const workNod = atWork && job === 'DJ' && tick % 2 === 0 ? scale : 0;
   // Dancing and head-shaking turn the buddy left and right.
@@ -1162,27 +1161,11 @@ export function BuddyStage({
         </View>
       ) : null}
 
-      {station && !(atWork && station.behind) ? (
-        <View
-          style={[
-            styles.station,
-            styles.passThrough,
-            { left: STATION_LEFT, bottom: FLOOR - station.sink * scale },
-          ]}
-        >
-          <PixelSprite
-            frame={station.frames[atWork ? tick % 2 : 0]}
-            palette={PROP_PALETTE}
-            scale={scale}
-          />
-        </View>
-      ) : null}
-
       <Animated.View
         style={[
           styles.buddy,
           {
-            bottom: FLOOR - scale + workLift - workNod,
+            bottom: FLOOR - scale - workNod,
             left: workSway,
             transform: [
               { translateX: x },
@@ -1238,21 +1221,6 @@ export function BuddyStage({
               <PixelSprite frame={SPARKLE} palette={PROP_PALETTE} scale={3} />
             </View>
           </>
-        ) : null}
-        {atWork && station?.held ? (
-          <View
-            style={[
-              styles.jobProp,
-              styles.passThrough,
-              { left: station.held.col * scale, top: station.held.row * scale },
-            ]}
-          >
-            <PixelSprite
-              frame={station.held.frames[tick % 2]}
-              palette={PROP_PALETTE}
-              scale={scale}
-            />
-          </View>
         ) : null}
         {act === 'sing' ? (
           <Animated.View
@@ -1320,7 +1288,8 @@ export function BuddyStage({
           <PixelSprite frame={frame} palette={BUDDY_PALETTE} scale={scale} flipped={flipped} />
         </Pressable>
       </Animated.View>
-      {station && atWork && station.behind ? (
+      {/* The station stands in front of the buddy, whether it is working there or walking by. */}
+      {station ? (
         <View
           style={[
             styles.station,
@@ -1334,6 +1303,35 @@ export function BuddyStage({
             scale={scale}
           />
         </View>
+      ) : null}
+      {/* What it holds at work goes in front of the station too (the can over the plant's pot). */}
+      {atWork && station?.held ? (
+        <Animated.View
+          style={[
+            styles.buddy,
+            styles.passThrough,
+            {
+              bottom: FLOOR - scale,
+              left: workSway,
+              width: spriteWidth,
+              height: spriteHeight,
+              transform: [{ translateX: x }, { translateY: hop }],
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.jobProp,
+              { left: station.held.col * scale, top: station.held.row * scale },
+            ]}
+          >
+            <PixelSprite
+              frame={station.held.frames[tick % 2]}
+              palette={PROP_PALETTE}
+              scale={scale}
+            />
+          </View>
+        </Animated.View>
       ) : null}
 
       {/* In front of the buddy, so one by its feet can still be tapped away. */}
