@@ -14,13 +14,15 @@ type Hatched = Exclude<BuddyStage, 'EGG'>;
 // Rows painted over the adult's grid, from the row given in JOB_LOOKS: '.' keeps the buddy's own
 // pixel, '-' clears it (the leaves a hat sits on). None of them covers the face or the blossom.
 
-// A short cook's toque around the blossom.
+// A white towel twisted into a headband, the knot and its ends out at one side, as a ramen cook
+// wears it; the blossom stays on top.
 // prettier-ignore
-const CHEF_HAT: Frame = [
-  '....kwww......wwwk....',
-  '...kwwwwwwwwwwwwwwk...',
-  '...kwwxwwwxwwwxwwwk...',
-  '....kxxxxxxxxxxxxk....',
+const HEADBAND: Frame = [
+  '.....kkkkkkkkkkkk.....',
+  '....kwxwwxwwxwwxwk.kk.',
+  '...kkkkkkkkkkkkkkkkwxk',
+  '..................kxwk',
+  '...................kk.',
 ];
 // A straw hat with a red band; the blossom grows up through it.
 // prettier-ignore
@@ -65,7 +67,7 @@ const BANDANA: Frame = [
 ];
 
 const JOB_LOOKS: Record<BuddyJob, readonly [row: number, look: Frame]> = {
-  CHEF: [5, CHEF_HAT],
+  CHEF: [7, HEADBAND],
   GARDENER: [5, STRAW_HAT],
   DJ: [7, HEADPHONES],
   WRITER: [5, BERET],
