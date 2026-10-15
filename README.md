@@ -64,8 +64,8 @@ at you, no daily missions. Just **having something to raise together** makes the
 - Over time it gets hungry and poops. Tap the bowl or the 💩, or just send "food" in the chat, and the chat notes who did it
 - Left alone it dances and sings. Once a kid, it talks too: "Long time no see!", "Have you eaten?"
 - **It never dies.** Forget it for a few days and it's fine; a little care and it's back on its feet
-- A little after it grows up (Lv.12), it takes a job from how you two raised it (chef, gardener, radio DJ, writer, barista), each with its own look and spot on the stage. You can change it once at level 20 and at 30, and any time from 40. It dresses up for the season (bunny ears in spring, antlers at Christmas) and now and then a butterfly lands on it or a shooting star crosses the sky
-- Every level or two the room gets something: a toy box, a window whose sky follows your clock, a music box, new rugs and floors, a tree that bears fruit, and guests at the window (a snail, a sparrow, a stray cat). From level 20 it can go its own way; keep it to level 40 and the room keeps growing (below)
+- A little after it grows up (Lv.12), it takes a job from how you two raised it (chef, gardener, radio DJ, writer, barista), each with its own look and spot on the stage. You can change it once each at level 20, 30 and 40, and any time from 50. It dresses up for the season (bunny ears in spring, antlers at Christmas) and now and then a butterfly lands on it or a shooting star crosses the sky
+- Every level or two the room gets something: a toy box, a window whose sky follows your clock, a music box, new rugs and floors, a tree that bears fruit, and guests at the window (a snail, a sparrow, a stray cat). From level 20 it can go its own way; keep it to level 50 and the room keeps growing (below)
 - **A hot spring** to send it to, and **a dream** of what it will become before the first egg (below)
 
 **🤝 For two**

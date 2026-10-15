@@ -463,7 +463,7 @@ export function StandingLamp({ scale, lit }: { scale: number; lit: boolean }) {
   );
 }
 
-// The gold cushion (Lv.40), on the rug.
+// The gold cushion (Lv.50), on the rug.
 export function Cushion({ scale }: { scale: number }) {
   return <PixelSprite frame={CUSHION} palette={ROOM_PALETTE} scale={scale} />;
 }
@@ -626,7 +626,7 @@ function Firefly({ left, top, ms }: { left: number; top: number; ms: number }) {
   );
 }
 
-// The top level (Lv.40): the room sparkles all over for a moment.
+// The top level (Lv.50): the room sparkles all over for a moment.
 const TWINKLES = [
   [0.08, 0.3],
   [0.22, 0.12],

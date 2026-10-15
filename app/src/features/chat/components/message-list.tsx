@@ -102,7 +102,7 @@ export function MessageList({
                   buddy: buddyName,
                   job: t(`buddy.job.${item.detail}`),
                 })}
-                body={t(`buddy.jobWhy.${item.detail}`)}
+                body={`${t(`buddy.jobWhy.${item.detail}`)} ${t('chat.jobChangeRule')}`}
               />
             </View>
           );

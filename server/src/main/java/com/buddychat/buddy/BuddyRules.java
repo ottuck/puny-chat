@@ -76,7 +76,7 @@ public final class BuddyRules {
     }
 
     // The highest level (docs/spec.md, 최고 레벨). EXP keeps counting past it.
-    public static final int MAX_LEVEL = 40;
+    public static final int MAX_LEVEL = 50;
 
     public static int level(int exp) {
         return Math.min(MAX_LEVEL, exp / expPerLevel + 1);
@@ -102,8 +102,8 @@ public final class BuddyRules {
     // The job is settled a little after it grows up (docs/fun-improvements.md, 직업): first the new grown-up
     // look on its own, then the job, from how the two raised it.
     static final int JOB_AT = 12;
-    // The members may change the job once every this many levels from JOB_CHANGE_FROM (at 20, at 30), and
-    // as they like from the top level.
+    // The members may change the job once every this many levels from JOB_CHANGE_FROM (at 20, 30 and 40:
+    // with the settled one, a buddy can try four of the five jobs), and as they like from the top level.
     static final int JOB_CHANGE_EVERY = 10;
     static final int JOB_CHANGE_FROM = 20;
 
@@ -125,7 +125,7 @@ public final class BuddyRules {
         return Math.min(MAX_LEVEL, Math.max(JOB_CHANGE_FROM, (window(level) + 1) * JOB_CHANGE_EVERY));
     }
 
-    // The levels one change is allowed within: 20–29, 30–39.
+    // The levels one change is allowed within: 20–29, 30–39, 40–49.
     private static int window(int level) {
         return level / JOB_CHANGE_EVERY;
     }
