@@ -20,7 +20,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 /**
- * Sends Web Push messages to browsers (docs/server-design.md, 웹 푸시): the payload encrypted for
+ * Sends Web Push messages to browsers (docs/spec.md, 웹 푸시): the payload encrypted for
  * the subscription (RFC 8291) and the request signed with this server's VAPID key (RFC 8292), then
  * POSTed to the browser's push service. Only known push services are contacted: the endpoint comes
  * from the client.

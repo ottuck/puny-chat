@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  * @param expPerLevel EXP for one level, tuned for solo users too (env {@code
  *     BUDDYCHAT_BUDDY_EXPPERLEVEL}).
  * @param fullToEmpty how long fullness takes to drop from 100 to 0 after a meal. Feeding is allowed
- *     again after a fifth of it, hunger comes after 70 % (docs/server-design.md, Buddy 규칙).
+ *     again after a fifth of it, hunger comes after 70 % (docs/spec.md, Buddy 규칙).
  * @param poopEvery one poop per this long since the last clean.
  */
 @ConfigurationProperties("buddychat.buddy")

@@ -62,7 +62,7 @@ import { JOB_LINES, type Line, pick, useBuddyTalk } from '../use-buddy-talk';
 import { SpeechBubble } from './speech-bubble';
 import { decorFor, Plant, plantRoom as plantRoomFor, WallDecor } from './stage-decor';
 
-// The buddy's stage above the chat (docs/product.md, 핵심 경험): the buddy walks around, waits by
+// The buddy's stage above the chat (docs/spec.md, 핵심 경험): the buddy walks around, waits by
 // an empty bowl when hungry, leaves poops on the floor and sleeps at night. Tapping the bowl or a
 // poop takes care of it right there, and it reacts to what happens in the room: eating when fed,
 // straining when it poops, sparkling when cleaned, hopping at a new message, and evolving. Left
@@ -79,9 +79,9 @@ const TICK_MS = 450;
 const FAST_TICK_MS = 90;
 const PET_MS = 900;
 // Things the buddy does by itself: a dance, a song, shaking its head at a full bowl, or the small
-// happenings of docs/fun-improvements.md, 4 (a hiccup, a start, a look around, a yawn, and with
-// pictures, docs/art-handover.md F: a butterfly landing on its head, a shower under an umbrella, a
-// shooting star in a sky gone dark for a moment).
+// happenings (docs/fun-improvements.md, 가끔 생기는 사건): a hiccup, a start, a look around, a yawn, and
+// with pictures, a butterfly landing on its head, a shower under an umbrella, a shooting star in a sky
+// gone dark for a moment.
 type Act =
   | 'dance'
   | 'sing'
@@ -231,7 +231,7 @@ const IDLE_ACTS: readonly (readonly [Act, number])[] = [
   ['rain', 6],
   ['shootingStar', 6],
 ];
-// A grown buddy with a job also does its work (docs/fun-improvements.md, 6).
+// A grown buddy with a job also does its work (docs/fun-improvements.md, 직업).
 const JOB_ACT_WEIGHT = 30;
 
 function pickIdleAct(job: BuddyJob | null): Act {

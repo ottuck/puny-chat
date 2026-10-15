@@ -14,7 +14,7 @@ import { BUDDY_PALETTE, POSES_IN_ORDER } from '@/features/buddy/pixel/sprites';
 import type { Reaction, ReactionKind } from '@/features/buddy/reactions';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
-// For making the buddy's art (docs/art-handover.md): the stage on its own, with a button for each
+// For making the buddy's art (docs/fun-improvements.md, 그림 작업): the stage on its own, with a button for each
 // thing it can do, so a new frame or prop can be seen at once instead of waiting for it to happen.
 // Not part of the app: it only opens in development builds, and nothing links to it.
 

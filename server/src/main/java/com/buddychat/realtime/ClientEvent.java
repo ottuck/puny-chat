@@ -3,7 +3,7 @@ package com.buddychat.realtime;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-/** Messages the app sends over the WebSocket (docs/server-design.md, "WebSocket 프로토콜"). */
+/** Messages the app sends over the WebSocket (docs/spec.md, "WebSocket 프로토콜"). */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
     @JsonSubTypes.Type(value = ClientEvent.Auth.class, name = "auth"),

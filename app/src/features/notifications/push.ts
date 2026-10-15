@@ -5,7 +5,7 @@ import * as Notifications from 'expo-notifications';
 
 import { api } from '@/lib/api';
 
-// Push notifications for new messages (docs/server-design.md, 푸시 알림). Needs a development
+// Push notifications for new messages (docs/spec.md, 푸시 알림). Needs a development
 // build: Expo Go has no push on SDK 53+.
 
 // While the app is open the chat already shows new messages, so no banner or sound on top.

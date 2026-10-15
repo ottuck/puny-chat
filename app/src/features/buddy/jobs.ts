@@ -1,6 +1,6 @@
 import type { BuddyJob } from './api';
 
-// What a buddy grows up to be (docs/fun-improvements.md, 5). The server counts and decides; this is
+// What a buddy grows up to be (docs/fun-improvements.md, 직업). The server counts and decides; this is
 // only how a job is shown: its name and reason are under buddy.job and buddy.jobWhy in the
 // translations. The icon stands for it on the screens made of text (the chat card, the detail, the album);
 // the stage draws its tool instead (pixel/sprites.ts, JOB_PROPS).

@@ -13,7 +13,7 @@ import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 
 /**
  * Verifies Firebase ID tokens as plain JWTs: Google's public keys, the project's issuer and audience.
- * Non-blocking, unlike the Firebase Admin SDK's verifyIdToken (docs/server-design.md).
+ * Non-blocking, unlike the Firebase Admin SDK's verifyIdToken (docs/spec.md).
  */
 @Configuration(proxyBeanMethods = false)
 class FirebaseJwtConfig {

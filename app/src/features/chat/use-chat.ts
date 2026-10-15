@@ -92,7 +92,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   // for the buddy to answer.
   const [cue, setCue] = useState<Cue | null>(null);
   // The partner just petted the buddy; the stage sets it against this user's own pets (a pet of
-  // both within seconds is a bigger moment, docs/fun-improvements.md, 2).
+  // both within seconds is a bigger moment, docs/fun-improvements.md, 함께 있을 때).
   const [partnerPet, setPartnerPet] = useState<{ id: string } | null>(null);
   // When the partner's arrival last made the buddy cheer: once in a while, not at every reconnect.
   const hereAt = useRef(0);

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 /**
- * Deletes a user's account (docs/server-design.md, 계정 삭제; App Store Guideline 5.1.1(v)).
+ * Deletes a user's account (docs/spec.md, 계정 삭제; App Store Guideline 5.1.1(v)).
  * The partner keeps the room, the buddy and their own messages. Authored messages and named
  * system notes are removed across all rooms, and a room left empty goes with its history. Everything only the
  * user's is removed. No transaction: each step can run again, so a retry finishes a deletion that

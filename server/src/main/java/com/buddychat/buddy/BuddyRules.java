@@ -6,8 +6,8 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 
 /**
- * Growth and care rules, with the initial launch values (docs/server-design.md, Buddy 규칙). The buddy
- * never dies: neglect only makes it hungry and dirty (docs/product.md).
+ * Growth and care rules, with the initial launch values (docs/spec.md, Buddy 규칙). The buddy
+ * never dies: neglect only makes it hungry and dirty (docs/spec.md).
  */
 public final class BuddyRules {
 
@@ -16,13 +16,13 @@ public final class BuddyRules {
     private static volatile int expPerLevel = DEFAULT_EXP_PER_LEVEL;
     public static final int FEED_EXP = 2;
     public static final int CLEAN_EXP = 2;
-    // A grown-up's work at its station: EXP for it once in this long (docs/product.md, 직업 무대 장치).
+    // A grown-up's work at its station: EXP for it once in this long (docs/spec.md, 직업 무대 장치).
     public static final int WORK_EXP = 2;
     public static final Duration WORK_EVERY = Duration.ofHours(1);
     public static final int MESSAGE_EXP = 1;
     // Stops "ㅎ ㅎ ㅎ" spam from levelling the buddy.
     public static final int MESSAGE_EXP_DAILY_CAP = 50;
-    // Once a day, when both members have sent a message that day (docs/product.md, 둘이 함께).
+    // Once a day, when both members have sent a message that day (docs/spec.md, 둘이 함께).
     public static final int TOGETHER_EXP = 10;
 
     // Fullness drops from 100 to 0 over this long after a meal (2.5 h: feedable again after 30
@@ -74,7 +74,7 @@ public final class BuddyRules {
         expPerLevel = value;
     }
 
-    // The highest level (docs/product.md, 최고 레벨). EXP keeps counting past it.
+    // The highest level (docs/spec.md, 최고 레벨). EXP keeps counting past it.
     public static final int MAX_LEVEL = 30;
 
     public static int level(int exp) {

@@ -123,7 +123,7 @@ public class BuddyService {
     }
 
     /**
-     * A grown-up's work at its station (a tap on it, or "일" in the chat; docs/product.md, 직업 무대
+     * A grown-up's work at its station (a tap on it, or "일" in the chat; docs/spec.md, 직업 무대
      * 장치). It may work any time; EXP comes once in {@link BuddyRules#WORK_EVERY}, with WORKED in
      * the timeline. Before growing up there is no station: nothing happens.
      */
@@ -186,7 +186,7 @@ public class BuddyService {
     }
 
     /**
-     * The grown buddy goes its own way (docs/product.md, 독립과 앨범): it is kept in the room's album
+     * The grown buddy goes its own way (docs/spec.md, 독립과 앨범): it is kept in the room's album
      * and a new egg takes its place, in one update so neither happens without the other. Only at
      * the top level; of two members doing it at once, one does (the other gets BUDDY_NOT_GROWN, as
      * there is only an egg now).
@@ -220,7 +220,7 @@ public class BuddyService {
 
     /**
      * An adult's job, chosen by either member instead of the one its upbringing gave (docs/fun-improvements.md,
-     * 5): once a day, for the day the buddy is in (Asia/Tokyo). One conditional update on the job as read
+     * 직업): once a day, for the day the buddy is in (Asia/Tokyo). One conditional update on the job as read
      * and the day, so two members choosing at once change it once; the other gets JOB_CHANGED_TODAY.
      * The automatic first job does not use up the day.
      */
@@ -321,7 +321,7 @@ public class BuddyService {
     }
 
     /**
-     * Notes that the sender talked today (docs/product.md, 둘이 함께). The first time both members
+     * Notes that the sender talked today (docs/spec.md, 둘이 함께). The first time both members
      * have, the buddy gets {@link BuddyRules#TOGETHER_EXP} once for the day and the timeline a
      * TOGETHER entry. A member's first message of the day otherwise just updates everyone's view, so
      * the other one sees they are awaited. Later messages that day change nothing.
@@ -474,7 +474,7 @@ public class BuddyService {
     }
 
     /**
-     * Growing up fixes the job (docs/fun-improvements.md, 5): from what the two did so far, once. The
+     * Growing up fixes the job (docs/fun-improvements.md, 직업): from what the two did so far, once. The
      * update only goes through for this buddy while it has none, so the job never changes after.
      * The timeline gets the evolution, then the job.
      */

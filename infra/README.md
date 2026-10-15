@@ -2,7 +2,7 @@
 
 puny-chat's infrastructure as Terraform: MongoDB on Atlas, DNS on Cloudflare, state in Cloudflare R2.
 The server runs on a shared AWS Lightsail instance that Terraform does not manage (`server/deploy`). The web app is a Cloudflare Worker that CI deploys with wrangler
-(`app/wrangler.jsonc`). Decisions and costs: `docs/server-design.md`, 인프라.
+(`app/wrangler.jsonc`). Decisions and costs: `docs/spec.md`, 인프라.
 
 ## Accounts and tokens (once, by hand)
 

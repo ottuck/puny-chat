@@ -48,7 +48,7 @@ type Props = {
 const MAX_NAME_LENGTH = 12; // server: Buddy.MAX_NAME_LENGTH
 
 // Buddy detail: stats, the two care actions, going its own way once grown, and the album
-// (docs/product.md). A native page sheet on iOS, so it can be swiped down.
+// (docs/spec.md). A native page sheet on iOS, so it can be swiped down.
 export function BuddySheet({
   visible,
   buddy,
@@ -155,7 +155,7 @@ export function BuddySheet({
   );
 }
 
-// The day's together bonus (docs/product.md, 둘이 함께): who has talked today, and what is left.
+// The day's together bonus (docs/spec.md, 둘이 함께): who has talked today, and what is left.
 function TogetherCard({
   buddy,
   myId,
@@ -192,7 +192,7 @@ function TogetherCard({
   );
 }
 
-// What it grows up to be (docs/fun-improvements.md, 5): the job once an adult, and before that where
+// What it grows up to be (docs/fun-improvements.md, 직업): the job once an adult, and before that where
 // it is heading, so the way they raise it shows. An adult's job can be changed, once a day.
 function JobCard({
   buddy,

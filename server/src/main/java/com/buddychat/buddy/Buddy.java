@@ -5,7 +5,7 @@ import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Buddy state, embedded in its room (docs/server-design.md). Only timestamps are stored; hunger
+ * Buddy state, embedded in its room (docs/spec.md). Only timestamps are stored; hunger
  * and poop are computed from them when read ({@link BuddyRules}), so no scheduler is needed.
  *
  * @param lastFedAt null on rooms created before care existed; treated as {@code bornAt}

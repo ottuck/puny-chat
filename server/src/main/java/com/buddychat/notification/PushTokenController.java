@@ -34,7 +34,7 @@ class PushTokenController {
         return userService.current(jwt).flatMap(user -> notifications.register(user, request.token()));
     }
 
-    // Web Push (docs/server-design.md, 웹 푸시): the key browsers subscribe with, then their
+    // Web Push (docs/spec.md, 웹 푸시): the key browsers subscribe with, then their
     // subscriptions. An endpoint is a URL, so it goes in the body or the query, not the path.
     record WebKeyResponse(String publicKey) {}
 

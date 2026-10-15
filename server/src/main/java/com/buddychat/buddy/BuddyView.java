@@ -21,7 +21,7 @@ public record BuddyView(
         // Members who sent a message today, and whether both have (the day's bonus is given).
         List<String> talkedToday,
         boolean togetherToday,
-        // What it grew up to be (docs/fun-improvements.md, 5): set once it is an adult.
+        // What it grew up to be (docs/fun-improvements.md, 직업): set once it is an adult.
         @Nullable BuddyJob job,
         // As a child, the job it is heading for so far.
         @Nullable BuddyJob leaning,
