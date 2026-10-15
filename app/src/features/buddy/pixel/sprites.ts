@@ -431,7 +431,8 @@ export function mealTable(full: boolean, tier: BowlTier): Frame {
   ];
 }
 
-// What a hungry child or grown-up thinks of: a bowl of rice, steaming, in a cloud.
+// What a hungry buddy thinks of: a bowl of rice, steaming, in a cloud, with two small puffs trailing
+// down toward its head.
 // prettier-ignore
 export const THOUGHT_FOOD: Frame = [
   '.....kkk.kkwkk.....',
@@ -445,10 +446,15 @@ export const THOUGHT_FOOD: Frame = [
   'kzwwwwwwkkkkwwwwzk.',
   '.kzzzzzwwwwwwwwzk..',
   '..kkkkkzwwwzzzzk...',
-  '..kwzk.kzzzkkkk....',
-  '..kwwk..kkk........',
-  '.k.kk..............',
+  '.......kzzzkkkk....',
+  '..kkk...kkk........',
+  '.kwwzk.............',
+  '.kwzzk.............',
+  '..kkk..............',
+  '...................',
+  '.k.................',
   'kwk................',
+  '.k.................',
 ];
 
 // prettier-ignore
