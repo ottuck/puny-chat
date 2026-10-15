@@ -33,13 +33,21 @@ jobs:
           fetch-depth: 0
 
       # A push that changes only the app deploys no server: a new deployment would drop everyone's
-      # WebSocket. Run by hand, it always deploys.
+      # WebSocket. "Changes" are counted from the release the instance is running (/_revision), not
+      # the previous push, so a server change whose deploy was cancelled still goes out with the
+      # next push. When that release is unknown, and when run by hand, it always deploys.
       - name: Server changed?
         id: changed
+        env:
+          EVENT: ${{ github.event_name }}
+          API_URL: ${{ vars.EXPO_PUBLIC_API_URL }}
         run: |
-          before="${{ github.event.before }}"
-          if [ "${{ github.event_name }}" = "push" ] && [ -n "$before" ] && git cat-file -e "$before" 2>/dev/null \
-            && git diff --quiet "$before" HEAD -- server; then
+          running=$(curl -fsS "$API_URL/_revision" || true)
+          # Only a commit sha counts; anything else is an unknown release.
+          case "$running" in *[!0-9a-f]*) running= ;; esac
+          echo "running: ${running:-unknown}"
+          if [ "$EVENT" = "push" ] && [ -n "$running" ] && git cat-file -e "$running^{commit}" 2>/dev/null \
+            && git diff --quiet "$running" HEAD -- server; then
             echo "deploy=false" >> "$GITHUB_OUTPUT"
           else
             echo "deploy=true" >> "$GITHUB_OUTPUT"

@@ -263,8 +263,8 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
   (`ghcr.io/ottuck/puny-chat-server`, `latest`와 커밋 sha 태그, 패키지는 처음 한 번 GitHub 설정에서 Public으로 바꾼다)에 올리고, 웹은 `wrangler deploy`한다.
   인스턴스의 systemd 타이머(`puny-chat-update.timer`)가 1분마다 `server/deploy/update.sh`로 새 이미지를 받아 컨테이너를
   다시 만든다. CI가 인스턴스에 SSH로 들어가지 않으므로 22번을 열 필요가 없다. 배포 확인은 CI가 한다: `update.sh`가 실행 중인 커밋을
-  Caddy의 `/_revision`에 내놓으면 CI가 그 값이 방금 올린 sha가 될 때까지 기다린 뒤 health를 본다. `server/`가 바뀐 push만 서버를 다시 배포한다(새 배포는 모든 WebSocket을
-  끊는다). 롤백은 인스턴스에서 `compose.yaml`의 이미지 태그를 이전 sha로 바꾸고 타이머를 멈춘 뒤 `docker compose up -d`.
+  Caddy의 `/_revision`에 내놓으면 CI가 그 값이 방금 올린 sha가 될 때까지 기다린 뒤 health를 본다. 서버는 인스턴스가 돌리는 커밋(`/_revision`)에서 `server/`가 바뀌었을 때만 다시 배포한다(새 배포는 모든 WebSocket을
+  끊는다). 직전 push가 아니라 실행 중인 릴리스와 비교하므로, 앞선 배포가 취소돼도 다음 push가 서버 변경을 올린다(2026-10-15). 롤백은 인스턴스에서 `compose.yaml`의 이미지 태그를 이전 sha로 바꾸고 타이머를 멈춘 뒤 `docker compose up -d`.
   GitHub secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
 - **Redis는 쓰지 않는다.** 레플리카가 1개라 세션·presence·typing은 프로세스 메모리로 충분하다. 수평 확장이
   필요해지면 `RoomHub.publish` 뒤에 Redis Pub/Sub을 둔다.
