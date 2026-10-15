@@ -246,6 +246,10 @@ function Preview() {
           onClose={() => setDetail(false)}
           onFeed={() => setHungry(false)}
           onClean={() => setPoops((n) => Math.max(0, n - 1))}
+          onWork={() => {
+            setDetail(false);
+            setCue({ id: randomUUID(), kind: 'work' });
+          }}
           onChangeJob={async (next) => setJob(next)}
           onGraduate={async () => {
             setDetail(false);

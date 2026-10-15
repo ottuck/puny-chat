@@ -1,3 +1,4 @@
+import { randomUUID } from 'expo-crypto';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -15,6 +16,7 @@ import { GuestExpiryBanner } from '@/features/auth/components/guest-expiry-banne
 import { useGuestDaysLeft } from '@/features/auth/guest-expiry';
 import { BuddySheet } from '@/features/buddy/components/buddy-sheet';
 import { BuddyScene } from '@/features/buddy/components/buddy-scene';
+import type { Cue } from '@/features/buddy/components/buddy-stage';
 import { GuideBanner } from '@/features/buddy/components/guide-banner';
 import { changeJob, graduateBuddy } from '@/features/buddy/api';
 import { useBuddy } from '@/features/buddy/use-buddy';
@@ -51,6 +53,13 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
   const insets = useSafeAreaInsets();
   const { buddy, busy, setBuddy, feed, clean, work } = useBuddy(room.buddy);
   const chat = useChat({ myId: me.id, onRoomLost, onRoomChanged, onBuddy: setBuddy });
+  // What the buddy is asked to do: a word in the chat, or work from its details.
+  const [cue, setCue] = useState<Cue | null>(null);
+  const [chatCue, setChatCue] = useState(chat.cue);
+  if (chat.cue !== chatCue) {
+    setChatCue(chat.cue);
+    setCue(chat.cue);
+  }
   const { messages, status, online, typing, reads, unreadWhileAway } = chat;
   const [buddyOpen, setBuddyOpen] = useState(false);
   const [partnerOpen, setPartnerOpen] = useState(false);
@@ -106,7 +115,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
           onWork={work}
           onOpenDetail={() => setBuddyOpen(true)}
           reaction={chat.reaction}
-          cue={chat.cue}
+          cue={cue}
           lastTalkAt={chat.lastTalkAt}
           partnerPet={chat.partnerPet}
           onPet={chat.notifyPet}
@@ -143,6 +152,11 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
         onClose={() => setBuddyOpen(false)}
         onFeed={feed}
         onClean={clean}
+        onWork={() => {
+          setBuddyOpen(false);
+          work();
+          setCue({ id: randomUUID(), kind: 'work' });
+        }}
         album={room.album}
         together={
           partner

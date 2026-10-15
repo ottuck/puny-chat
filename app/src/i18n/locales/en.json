@@ -94,6 +94,7 @@
     "feed": "Feed",
     "cleanUp": "Clean up",
     "work": "Ask {{buddy}} to work",
+    "workShort": "Work",
     "growthHint": "The more you chat and take care of it, the more it grows.",
     "peckish": "Could eat",
     "pet": "Pet {{buddy}}",
