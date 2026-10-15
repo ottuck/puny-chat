@@ -1911,7 +1911,7 @@ const styles = StyleSheet.create({
   // Room for the big heart of a pet shared by both.
   thought: {
     position: 'absolute',
-    top: -34,
+    top: -40,
   },
   thoughtRight: {
     right: -4,
