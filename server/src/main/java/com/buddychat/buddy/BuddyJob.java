@@ -4,8 +4,8 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * What a buddy grows up to be, from how the two raised it (docs/fun-improvements.md, 직업). Nobody
- * picks it: each job has points from what they did, and the highest wins when the buddy becomes an
- * adult. Ties go to the job listed first; with too few points for any it is the barista.
+ * picks it: each job has points from what they did, and the highest wins when the job is settled at
+ * Lv.12 (BuddyRules.JOB_AT). Ties go to the job listed first; with too few points for any it is the barista.
  */
 public enum BuddyJob {
     // Meals given.
@@ -47,13 +47,13 @@ public enum BuddyJob {
         return best;
     }
 
-    /** The job this buddy would have if it became an adult now. */
+    /** The job this buddy would get if it were settled now. */
     static BuddyJob decide(Buddy buddy) {
         Best best = best(buddy);
         return best.points() >= MIN_POINTS ? best.job() : BARISTA;
     }
 
-    /** Where it is heading as a child; null until there is anything to go by. */
+    /** Where it is heading until the job is settled; null until there is anything to go by. */
     static @Nullable BuddyJob leaning(Buddy buddy) {
         return best(buddy).points() > 0 ? decide(buddy) : null;
     }
