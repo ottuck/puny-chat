@@ -5,7 +5,7 @@ import { type PropsWithChildren } from 'react';
 const SITE = 'https://puny-chat.com';
 const TITLE = 'puny-chat';
 const DESCRIPTION =
-  'A tiny 1:1 chat app where two people raise a pixel buddy together. Take a look without signing up.';
+  'ふたりで育てる、ドット絵のバディつき1対1チャットアプリ。登録なしで、まずは見てみよう。';
 
 // The web page around the app, rendered once at build time (web only; no browser APIs here).
 // Colors match the theme's background so the page does not flash white before the app draws.
@@ -22,10 +22,11 @@ export default function Root({ children }: PropsWithChildren) {
         <title>{TITLE}</title>
         <meta name="description" content={DESCRIPTION} />
         {/* Link previews (KakaoTalk, Slack, X, …) read these without running the app. The image
-            is public/og.png, made from the app's screenshots. */}
+            is public/og.png (the hot spring scene,
+            docs/images/bath.png), in Japanese for the Japanese App Store launch. */}
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content={TITLE} />
-        <meta property="og:title" content={`${TITLE} · Raise a tiny buddy together`} />
+        <meta property="og:title" content={`${TITLE} · 小さなバディをいっしょに育てよう`} />
         <meta property="og:description" content={DESCRIPTION} />
         <meta property="og:url" content={SITE} />
         <meta property="og:image" content={`${SITE}/og.png`} />
@@ -33,7 +34,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta property="og:image:height" content="630" />
         <meta
           property="og:image:alt"
-          content="A chat between two people with a pixel buddy on a small stage above it"
+          content="温泉につかるドット絵のバディ。木の桶に入り、頭にタオルをのせている"
         />
         <meta name="twitter:card" content="summary_large_image" />
         {/* Installable (home screen, standalone), which an iPhone needs for notifications. */}
