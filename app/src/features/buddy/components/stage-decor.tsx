@@ -72,31 +72,34 @@ export type Reward =
   | 'bowl3'
   | 'cushion';
 
-// Shown in the guide and the buddy sheet ("next: Lv.12 window") as well.
+// Shown in the guide and the buddy sheet ("next: Lv.9 window") as well. Thick in the first twenty
+// levels, when it is easiest to lose interest, and every other level after. The levels that bring
+// something of their own (a new stage at 3, 5, 10, the job at 12, a job change at 20 and 30) bring
+// no thing for the room.
 export const REWARDS: readonly { level: number; reward: Reward }[] = [
-  { level: 4, reward: 'plant1' },
-  { level: 6, reward: 'crate' },
-  { level: 8, reward: 'bowl1' },
-  { level: 9, reward: 'toys' },
-  { level: 12, reward: 'window' },
-  { level: 14, reward: 'plant2' },
-  { level: 16, reward: 'rug1' },
-  { level: 18, reward: 'clock' },
-  { level: 20, reward: 'musicBox' },
-  { level: 23, reward: 'snail' },
-  { level: 24, reward: 'rug2' },
-  { level: 25, reward: 'plant3' },
-  { level: 27, reward: 'wood' },
-  { level: 28, reward: 'firefly' },
-  { level: 30, reward: 'bowl2' },
-  { level: 31, reward: 'rug3' },
-  { level: 32, reward: 'plant4' },
-  { level: 33, reward: 'train' },
-  { level: 34, reward: 'sparrow' },
-  { level: 35, reward: 'tatami' },
-  { level: 36, reward: 'lamp' },
-  { level: 37, reward: 'catTail' },
-  { level: 38, reward: 'plant5' },
+  { level: 2, reward: 'plant1' },
+  { level: 4, reward: 'crate' },
+  { level: 6, reward: 'bowl1' },
+  { level: 7, reward: 'rug1' },
+  { level: 8, reward: 'toys' },
+  { level: 9, reward: 'window' },
+  { level: 11, reward: 'clock' },
+  { level: 13, reward: 'plant2' },
+  { level: 14, reward: 'snail' },
+  { level: 15, reward: 'musicBox' },
+  { level: 16, reward: 'rug2' },
+  { level: 17, reward: 'wood' },
+  { level: 18, reward: 'sparrow' },
+  { level: 19, reward: 'plant3' },
+  { level: 21, reward: 'firefly' },
+  { level: 23, reward: 'train' },
+  { level: 25, reward: 'bowl2' },
+  { level: 27, reward: 'rug3' },
+  { level: 29, reward: 'plant4' },
+  { level: 31, reward: 'catTail' },
+  { level: 33, reward: 'tatami' },
+  { level: 35, reward: 'lamp' },
+  { level: 37, reward: 'plant5' },
   { level: 39, reward: 'bowl3' },
   { level: 40, reward: 'cushion' },
 ];
@@ -165,8 +168,8 @@ export function nextReward(level: number) {
 // arrives, full size by the next reward (or the top level).
 const PLANT_SMALLEST = 2.2;
 const PLANT_LARGEST = 3.2;
-const PLANT_FROM: Record<PlantTier, number> = { 1: 4, 2: 14, 3: 25, 4: 32, 5: 38 };
-const PLANT_FULL_AT: Record<PlantTier, number> = { 1: 13, 2: 24, 3: 31, 4: 37, 5: 40 };
+const PLANT_FROM: Record<PlantTier, number> = { 1: 2, 2: 13, 3: 19, 4: 29, 5: 37 };
+const PLANT_FULL_AT: Record<PlantTier, number> = { 1: 12, 2: 18, 3: 28, 4: 36, 5: 40 };
 
 function plantScale(tier: PlantTier | 0, level: number): number {
   if (tier === 0) return 0;

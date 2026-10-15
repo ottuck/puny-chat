@@ -259,7 +259,7 @@ function Preview() {
             <Chip key={h} label={`${h}:10`} onPress={() => setHour(h)} active={h === hour} />
           ))}
         </Group>
-        <Group title="plant kind (Lv.14–24)">
+        <Group title="plant kind (Lv.13–18)">
           <Chip
             label="drawn"
             onPress={() => setPlantKind(undefined)}
