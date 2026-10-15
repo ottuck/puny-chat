@@ -59,7 +59,7 @@
     "emptySolo": "{{buddy}} has hatched!\nInvite a friend to raise it together.",
     "emptySoloHint": "While you wait for a friend, try sending a message.\n{{buddy}} grows as you chat.",
     "emptyDuo": "You and {{partner}} are together now.\nSay hello!",
-    "grownBody": "If it goes its own way it stays in the album and a new egg comes. You can also keep raising it.",
+    "grownBody": "If it goes its own way it stays in the album and a new egg comes. Keep raising it to the top level (Lv.40) instead and the room keeps getting new and better things every level: visitors, new floors, a fruit tree.",
     "maxLevelThanks": "Thank you so much! New characters, a collection and more are on the way. Stay tuned!",
     "togetherBody": "{{buddy}} is thrilled. When you both send a message on the same day, you get it once a day."
   },
@@ -171,7 +171,7 @@
     },
     "graduate": {
       "title": "Its own way",
-      "body": "{{buddy}} is all grown up. Let it go its own way: it stays in the album, and a new egg comes to the stage. It takes its things when it moves out, so the room is decorated again from scratch.",
+      "body": "{{buddy}} is all grown up. Let it go its own way: it stays in the album, and a new egg comes to the stage. It takes its things when it moves out, so the room is decorated again from scratch. Keep raising it to Lv.40 instead and the room keeps getting new and better things every level.",
       "namePlaceholder": "Name for the new egg",
       "button": "Let it go its own way",
       "confirmTitle": "Let {{buddy}} go its own way?",
@@ -408,7 +408,7 @@
     },
     "graduate": {
       "title": "🎓 Its own way",
-      "top": "From level 20 you can let your buddy go its own way from its details. It is your choice, you can keep raising it. The top level is 40, and EXP keeps counting after it.",
+      "top": "From level 20 you can let your buddy go its own way from its details. It is your choice, you can keep raising it: up to the top level, 40, the room gets new and better things every level, and EXP keeps counting after it.",
       "album": "It stays in the album and hangs on the wall in a frame. A new egg comes to the stage.",
       "keep": "It takes its things when it moves out. The new egg’s room starts bare and fills up again."
     }
