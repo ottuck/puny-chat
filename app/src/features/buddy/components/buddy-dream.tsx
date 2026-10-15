@@ -14,12 +14,12 @@ import { BuddyStage, type Cue } from './buddy-stage';
 // plays it once on this device and then opens on the egg with the iris. A tap skips it. Quick and
 // lively rather than hazy: each cut comes in with a flash and a little punch, about a second each.
 
-type Cut = { job: BuddyJob; season: Season | null; cue: Cue['kind'] | null; bath?: boolean };
+type Cut = { job: BuddyJob | null; season: Season | null; cue: Cue['kind'] | null; bath?: boolean };
 const CUTS: readonly Cut[] = [
   { job: 'BARISTA', season: null, cue: 'dance' },
   { job: 'WRITER', season: null, cue: 'love' },
-  { job: 'CHEF', season: 'CHRISTMAS', cue: 'snow' },
-  { job: 'GARDENER', season: null, cue: null, bath: true },
+  { job: null, season: 'CHRISTMAS', cue: 'snow' },
+  { job: 'CHEF', season: null, cue: null, bath: true },
 ];
 const CUT_MS = 1050;
 const NATIVE_DRIVER = Platform.OS !== 'web';
