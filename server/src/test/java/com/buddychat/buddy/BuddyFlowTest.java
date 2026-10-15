@@ -474,7 +474,6 @@ class BuddyFlowTest {
         assertThat(room.get("buddy").get("stage").asString()).isEqualTo("EGG");
         assertThat(room.get("album")).hasSize(1);
         assertThat(room.get("album").get(0).get("name").asString()).isEqualTo("Mugi");
-        assertThat(room.get("album").get(0).get("level").asInt()).isEqualTo(BuddyRules.GRADUATE_AT);
         // The new egg hatches with its own line, not blocked by the first one's.
         hatch(roomId);
         assertThat(timeline("henry")).containsExactly("EVOLVED", "GRADUATED", "EVOLVED");

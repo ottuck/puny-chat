@@ -173,7 +173,7 @@ Buddy 상태(레벨, 배고픔, 💩, 돌볼 수 있는지)는 서버가 계산�
 - **다 자람과 최고 레벨.** 20레벨이 되면 대화에 "다 자랐어요" 카드(`GROWN`)가 남고 독립시킬 수 있다. 독립은 **선택**이라 계속 키워도 된다.
   100이 되면 감사 카드(`MAX_LEVEL`)가 남는다. EXP는 계속 쌓여 기록되지만 레벨과 바는 멈춘다.
 - **독립과 앨범.** 20레벨 이상의 버디는 Buddy 상세(무대 이름 옆 🎓, 카드 버튼으로도 연다)에서 두 사람 중 누구든 확인 후 독립시킨다. 새 알의 이름을
-  지으면 버디는 앨범(이름, 함께한 기간, 직업, 떠난 레벨)에 남고 무대에는 새 알이 온다. 앨범은 관계의 기록이지 수집 게임이 아니다.
+  지으면 버디는 앨범(이름, 함께한 기간, 직업)에 남고 무대에는 새 알이 온다. 앨범은 관계의 기록이지 수집 게임이 아니다.
 - **도움말.** 돌보기, 자라기, 레벨 보상, 독립을 설명하는 화면(채팅 헤더 "?", 설정). 처음 들어오면 채팅 위에 안내 카드가 한 번 뜨고,
   Buddy 상세에 "다음 보상: Lv.8 은 밥그릇 · 2레벨 남았어요"가 보인다.
 
@@ -186,7 +186,7 @@ Buddy 상태(레벨, 배고픔, 💩, 돌볼 수 있는지)는 서버가 계산�
 - Lv.10(어른)에는 직업과 **직업 무대 장치**가 온다: 무대 왼쪽에 요리사 조리대, 정원사 큰 식물, 라디오 DJ 방송 책상, 작가 나무 책상, 바리스타 카페 카운터.
   장치는 늘 버디 앞에 있고 높이는 버디 입 바로 아래까지라 얼굴이 가려지지 않는다.
 - 무대 가운데의 러그는 알일 때부터 깔려 있다.
-- 독립해도 방의 보상은 남는다. 앨범에 떠난 레벨이 있어 그 레벨까지의 보상이 새 알과 함께 그대로고, 더 위의 보상은 새 버디가 그 레벨이 되어야 온다(옛 앨범은 30레벨로 본다).
+- 독립하면 소품은 버디가 가지고 이사간다. 새 알의 방은 러그만 있는 빈 방에서 다시 꾸며 간다(보상은 지금 버디의 레벨로만 정한다). 독립한 버디의 액자만 벽에 남는다.
 - 독립시킨 버디는 웃는 얼굴로 분홍 액자에 살짝 기울어 하트와 함께 걸린다(최근 3). 벽은 그 밖에는 비워 둔다(정신없어서).
 
 # 서버
@@ -221,7 +221,7 @@ com.buddychat
 
 ```text
 users          { _id, firebaseUid (unique), displayName, roomId?, createdAt, guest?, lastSeenAt?, roomJoinId? }
-rooms          { _id, memberIds [1..2], memberCount, createdAt, closureId?, historyVersion?, album? [{ name, bornAt, graduatedAt, job?, level? }],
+rooms          { _id, memberIds [1..2], memberCount, createdAt, closureId?, historyVersion?, album? [{ name, bornAt, graduatedAt, job? }],
                  buddy { name, exp, bornAt, lastFedAt?, lastCleanedAt?, poopsCleaned?, lastWorkedAt?, expDay?, messageExpToday?,
                          talkDay?, talkers?, togetherDay?, fedCount?, cleanedCount?, nightCount?, laughCount?, loveCount?,
                          job?, jobChangedDay? } }

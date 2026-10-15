@@ -203,10 +203,7 @@ public class BuddyService {
                     .and("buddy.exp")
                     .gte(BuddyRules.minExp(BuddyRules.GRADUATE_AT)));
             Update update = new Update()
-                    .push(
-                            "album",
-                            new AlbumEntry(
-                                    buddy.name(), buddy.bornAt(), now, buddy.job(), BuddyRules.level(buddy.exp())))
+                    .push("album", new AlbumEntry(buddy.name(), buddy.bornAt(), now, buddy.job()))
                     .set("buddy", buddy.next(newName, now));
             return mongo.findAndModify(same, update, RETURN_NEW, RoomBuddy.class, ROOMS)
                     .switchIfEmpty(Mono.error(notGrown()))

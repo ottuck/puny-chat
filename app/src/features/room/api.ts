@@ -11,9 +11,6 @@ export type AlbumEntry = {
   graduatedAt: string;
   // The job it grew into; null for those who left before jobs existed.
   job?: BuddyJob | null;
-  // The level it left at, which keeps the room's rewards up to there; missing for those who left
-  // at the old top level, 30.
-  level?: number | null;
 };
 export type Room = {
   id: string;

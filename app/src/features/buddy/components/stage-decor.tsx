@@ -16,7 +16,8 @@ import {
 
 // The stage's decorations (docs/spec.md, 무대 꾸미기). Levels bring a reward every few levels,
 // mostly making what is already there finer, so the stage does not fill up. They belong to the
-// room: once a buddy has gone its own way, everything stays, and its portrait hangs on the wall.
+// buddy: when it goes its own way it takes its things along, the new egg's room starts bare, and
+// only its portrait stays on the wall.
 
 export type Reward = 'plant1' | 'bowl1' | 'plant2' | 'plant3' | 'bowl2';
 
@@ -40,14 +41,8 @@ function kindOf(seed: string, tier: PlantTier, kinds: number): number {
 }
 
 // `seed`: the buddy's name. `kind`: a kind to show regardless (the art preview).
-// The highest level the room has seen: its buddy's now, or the one a buddy left at (they left at the
-// old top level, 30, before the level was kept).
-function reachedLevel(level: number, album: AlbumEntry[]): number {
-  return Math.max(level, ...album.map((entry) => entry.level ?? 30));
-}
-
 export function decorFor(level: number, album: AlbumEntry[], seed = '', kind?: number) {
-  const reached = reachedLevel(level, album);
+  const reached = level;
   const has = (reward: Reward) =>
     REWARDS.some((entry) => entry.reward === reward && reached >= entry.level);
   const plant: PlantTier | 0 = has('plant3') ? 3 : has('plant2') ? 2 : has('plant1') ? 1 : 0;
@@ -66,9 +61,8 @@ export function decorFor(level: number, album: AlbumEntry[], seed = '', kind?: n
 export type Decor = ReturnType<typeof decorFor>;
 
 // The next reward to look forward to, if any.
-export function nextReward(level: number, album: AlbumEntry[]) {
-  const reached = reachedLevel(level, album);
-  return REWARDS.find((entry) => entry.level > reached) ?? null;
+export function nextReward(level: number) {
+  return REWARDS.find((entry) => entry.level > level) ?? null;
 }
 
 // Each plant grows a little with every level until the next one replaces it: smallest when it
