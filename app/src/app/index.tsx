@@ -14,7 +14,7 @@ import { useAuth } from '@/features/auth/auth-provider';
 import { GuestExpiryBanner } from '@/features/auth/components/guest-expiry-banner';
 import { useGuestDaysLeft } from '@/features/auth/guest-expiry';
 import { BuddySheet } from '@/features/buddy/components/buddy-sheet';
-import { BuddyStage } from '@/features/buddy/components/buddy-stage';
+import { BuddyScene } from '@/features/buddy/components/buddy-scene';
 import { GuideBanner } from '@/features/buddy/components/guide-banner';
 import { changeJob, graduateBuddy } from '@/features/buddy/api';
 import { useBuddy } from '@/features/buddy/use-buddy';
@@ -62,6 +62,8 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
     registerForPush().catch((e) => console.warn('push registration failed', e));
   }, []);
   const [inviteOpen, setInviteOpen] = useState(false);
+  // The guide waits for the dream before the first egg to end.
+  const [dreaming, setDreaming] = useState(false);
   const partner = room.members.find((member) => member.id !== me.id);
 
   // The buddy's stage takes about a third of the screen and keeps it (docs/spec.md, 핵심 경험).
@@ -92,8 +94,10 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
           onPressPartner={partner ? () => setPartnerOpen(true) : undefined}
         />
         <GuestExpiryBanner daysLeft={guestDaysLeft} onPress={() => router.push('/settings')} />
-        <GuideBanner onOpen={() => router.push('/guide')} />
-        <BuddyStage
+        <GuideBanner hold={dreaming} onOpen={() => router.push('/guide')} />
+        <BuddyScene
+          dreams
+          onDreaming={setDreaming}
           buddy={buddy}
           busy={busy}
           height={stageHeight}

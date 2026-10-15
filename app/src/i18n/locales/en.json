@@ -158,7 +158,10 @@
       "barista4": "Take your time",
       "chefFed": "Seasoned just right",
       "gardenerCleaned": "Tidy at last",
-      "writerLove": "Me too"
+      "writerLove": "Me too",
+      "bath1": "Ahh, nice",
+      "bath2": "So warm",
+      "bath3": "I could live here"
     },
     "graduate": {
       "title": "Its own way",
@@ -224,6 +227,14 @@
       "DJ": "Upside-down days: on air in the small hours, asleep by day.",
       "WRITER": "Shows a big heart at loving words. Writes when alone.",
       "BARISTA": "Talks a lot, chiming in even while you chat."
+    },
+    "bath": {
+      "go": "Go to the hot spring",
+      "home": "Go back home"
+    },
+    "dream": {
+      "caption": "In a dream…",
+      "skip": "Skip the dream"
     }
   },
   "buddyEvent": {

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Svg, { G, Rect } from 'react-native-svg';
+import Svg, { Rect } from 'react-native-svg';
 import {
   Animated,
   Easing,
@@ -41,7 +41,6 @@ import {
   buddyFrame,
   EXCLAIM,
   HEART,
-  JOB_PROPS,
   JOB_STATIONS,
   type Station,
   LEVEL_UP,
@@ -61,6 +60,7 @@ import type { ChatWord, Mood } from '../chat-words';
 import { JOB_LINES, type Line, pick, useBuddyTalk } from '../use-buddy-talk';
 import { SpeechBubble } from './speech-bubble';
 import { decorFor, Plant, plantRoom as plantRoomFor, WallDecor } from './stage-decor';
+import { RAIN_GAP, rainDrops, Snowfall } from './weather';
 
 // The buddy's stage above the chat (docs/spec.md, 핵심 경험): the buddy walks around, waits by
 // an empty bowl when hungry, leaves poops on the floor and sleeps at night. Tapping the bowl or a
@@ -70,7 +70,9 @@ import { decorFor, Plant, plantRoom as plantRoomFor, WallDecor } from './stage-d
 // size while typing and reading back: a stage that folds and unfolds moved the chat under the
 // finger and broke scrolling.
 
-const FLOOR = 22;
+export const FLOOR = 22;
+// The corner button's square (buddy-scene.tsx).
+export const CORNER_SIZE = 36;
 const PROP_SCALE = 3;
 // How wide the meal table is, in its pixels (sprites.ts, mealTable).
 const TABLE_CELLS = 27;
@@ -153,17 +155,12 @@ const ACT_MS: Record<Act, number> = {
 };
 // How long the butterfly takes to come down onto the head, and to fly off again.
 const BUTTERFLY_FLY_MS = 700;
-// The rain: drops this far apart down the stage, falling one gap in this long, again and again.
-const RAIN_GAP = 30;
+// The rain falls one gap (weather.tsx) in this long, again and again.
 const RAIN_FALL_MS = 420;
-// Snow drifts down more slowly.
-const SNOW_FALL_MS = 1500;
 // The colors of the happenings drawn without a grid: the dusk sky, its stars, the rain.
 const DUSK = 'rgba(28, 36, 64, 0.62)';
 const STAR = '#FFE9A8';
 const RAIN = '#8FB8D8';
-const SNOW = '#FFFFFF';
-const SNOW_SHADE = '#B9CCDD';
 // Where the stars come out, as fractions of the stage.
 const STARS = [
   [0.08, 0.22],
@@ -173,23 +170,6 @@ const STARS = [
   [0.9, 0.34],
   [0.18, 0.46],
 ] as const;
-// The drops of one gap's worth of rain, column by column, each column a little off from the next.
-// Under the umbrella (`shelter`, in the stage's points) none fall.
-function rainDrops(
-  width: number,
-  height: number,
-  apart: number,
-  shelter: { left: number; right: number; top: number } | null,
-): [number, number][] {
-  const drops: [number, number][] = [];
-  for (let x = 6, i = 0; x < width; x += apart, i++) {
-    for (let y = (i * 13) % RAIN_GAP; y < height + RAIN_GAP; y += RAIN_GAP) {
-      if (shelter && x + 2 > shelter.left && x < shelter.right && y + 9 > shelter.top) continue;
-      drops.push([x, y]);
-    }
-  }
-  return drops;
-}
 // The longest the walk over to the station may take before the work starts anyway.
 const JOB_WALK_MAX_MS = 4000;
 // How long each point of the walk to work takes, in ms: a brisk walk.
@@ -329,10 +309,18 @@ type Props = {
   album?: AlbumEntry[];
   // The season's look (pixel/looks.ts): by the date unless given (the art preview picks one).
   season?: Season | null;
+  // A button in the top right corner (the way to the hot spring, buddy-scene.tsx).
+  corner?: ReactNode;
+  // Without its own margins and rounded frame: buddy-scene.tsx draws them around the scenes.
+  bare?: boolean;
+  // A cut of the dream (buddy-dream.tsx): no name or level, and the buddy stays in the middle.
+  dream?: boolean;
+  // Which kind of plant the pot shows, instead of the one the room drew (the art preview).
+  plantKind?: number;
 };
 
 // Local night hours, checked once a minute.
-function useSleeping(job: BuddyJob | null): boolean {
+export function useSleeping(job: BuddyJob | null): boolean {
   const [hour, setHour] = useState(() => new Date().getHours());
   useEffect(() => {
     const timer = setInterval(() => setHour(new Date().getHours()), 60_000);
@@ -476,7 +464,7 @@ function FlyingAway({
   );
 }
 
-function gridScale(height: number, gridHeight: number): number {
+export function gridScale(height: number, gridHeight: number): number {
   // Up to 5 points per pixel, smaller on short screens so the grown-up buddy still fits.
   return Math.max(3, Math.min(5, Math.floor((height - 84) / gridHeight)));
 }
@@ -499,6 +487,10 @@ export function BuddyStage({
   partnerHere = false,
   album,
   season: chosenSeason,
+  corner: cornerButton,
+  bare = false,
+  dream = false,
+  plantKind,
 }: Props) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -556,7 +548,7 @@ export function BuddyStage({
   const bowlWidth = 12 * PROP_SCALE;
   // A child or grown-up has hands: no bowl stands about, a table comes out for the meal.
   const atTable = buddy.stage === 'CHILD' || buddy.stage === 'ADULT';
-  const decor = decorFor(buddy.level, album ?? []);
+  const decor = decorFor(buddy.level, album ?? [], buddy.name, plantKind);
   // The season's corner stands in for the plant that week.
   const corner = season ? SEASON_CORNER[season] : undefined;
   const plantRoom = corner
@@ -584,7 +576,7 @@ export function BuddyStage({
   const station = buddy.stage === 'ADULT' && job ? JOB_STATIONS[job] : null;
   const stationX = station ? STATION_LEFT + station.standAt * scale : 0;
   const eating = active?.kind === 'fed';
-  const settled = sleeping || buddy.hungry || egg || eating || evolving;
+  const settled = sleeping || buddy.hungry || egg || eating || evolving || dream;
   const acting = act !== null;
   const { line, say, hush } = useBuddyTalk({
     stage: buddy.stage,
@@ -906,7 +898,7 @@ export function BuddyStage({
             to(flutter, 2, BUTTERFLY_FLY_MS, Easing.in(Easing.quad)),
           ])
         : act === 'rain' || act === 'snow'
-          ? Animated.loop(to(rainFall, 1, act === 'rain' ? RAIN_FALL_MS : SNOW_FALL_MS))
+          ? Animated.loop(to(rainFall, 1, RAIN_FALL_MS))
           : Animated.sequence([
               to(dusk, 1, 500),
               to(dusk, 2, 1000, Easing.in(Easing.quad)),
@@ -1300,13 +1292,18 @@ export function BuddyStage({
   return (
     <View
       onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}
-      style={[styles.stage, { height, backgroundColor: colors.stage }]}
+      style={[bare ? null : styles.stage, { height, backgroundColor: colors.stage }]}
     >
       <Pressable
         onPress={onOpenDetail}
+        disabled={dream}
         accessibilityRole="button"
         accessibilityLabel={t('buddy.open', { buddy: buddy.name })}
-        style={styles.info}
+        style={[
+          styles.info,
+          cornerButton ? styles.infoBesideCorner : null,
+          dream ? styles.hidden : null,
+        ]}
       >
         <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
           {buddy.name}
@@ -1333,18 +1330,6 @@ export function BuddyStage({
         </View>
       </Pressable>
 
-      {/* The job's mark: its tool, small, in the corner. */}
-      {job ? (
-        <View
-          style={[styles.jobBadge, styles.passThrough]}
-          accessible
-          accessibilityRole="image"
-          accessibilityLabel={t(`buddy.job.${job}`)}
-        >
-          <PixelSprite frame={JOB_PROPS[job][0]} palette={PROP_PALETTE} scale={2} />
-        </View>
-      ) : null}
-
       <View
         style={[
           styles.floor,
@@ -1359,7 +1344,7 @@ export function BuddyStage({
         </View>
       ) : decor.plant ? (
         <View style={[styles.poop, { bottom: FLOOR - 2, right: 8 }]} pointerEvents="none">
-          <Plant tier={decor.plant} scale={decor.plantScale} />
+          <Plant tier={decor.plant} kind={decor.plantKind} scale={decor.plantScale} />
         </View>
       ) : null}
 
@@ -1470,7 +1455,8 @@ export function BuddyStage({
           </Animated.View>
         </Animated.View>
       ) : null}
-      {(act === 'rain' || act === 'snow') && width > 0 ? (
+      {act === 'snow' && width > 0 ? <Snowfall width={width} height={height - FLOOR} /> : null}
+      {act === 'rain' && width > 0 ? (
         <Animated.View
           style={[
             styles.rain,
@@ -1489,16 +1475,9 @@ export function BuddyStage({
           ]}
         >
           <Svg width={width} height={height - FLOOR + RAIN_GAP}>
-            {act === 'rain'
-              ? rainDrops(width, height - FLOOR, 26, shelter).map(([dx, dy]) => (
-                  <Rect key={dx + ',' + dy} x={dx} y={dy} width={2} height={9} fill={RAIN} />
-                ))
-              : rainDrops(width, height - FLOOR, 34, null).map(([dx, dy]) => (
-                  <G key={dx + ',' + dy}>
-                    <Rect x={dx + 1} y={dy + 1} width={4} height={4} fill={SNOW_SHADE} />
-                    <Rect x={dx} y={dy} width={4} height={4} fill={SNOW} />
-                  </G>
-                ))}
+            {rainDrops(width, height - FLOOR, 26, shelter).map(([dx, dy]) => (
+              <Rect key={dx + ',' + dy} x={dx} y={dy} width={2} height={9} fill={RAIN} />
+            ))}
           </Svg>
         </Animated.View>
       ) : null}
@@ -1827,6 +1806,7 @@ export function BuddyStage({
 
       {/* The evolution's quick flash as the new look settles, over the whole stage. */}
       <Animated.View style={[StyleSheet.absoluteFill, styles.flash, { opacity: flash }]} />
+      {cornerButton ? <View style={styles.corner}>{cornerButton}</View> : null}
     </View>
   );
 }
@@ -1897,10 +1877,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -24,
   },
-  jobBadge: {
+  infoBesideCorner: {
+    right: 14 + CORNER_SIZE + 6,
+  },
+  corner: {
     position: 'absolute',
-    top: 10,
-    right: 12,
+    top: 4,
+    right: 6,
+    zIndex: 2,
   },
   jobProp: {
     position: 'absolute',
@@ -1944,6 +1928,9 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: '#FFD166',
     pointerEvents: 'none',
+  },
+  hidden: {
+    opacity: 0,
   },
   passThrough: {
     pointerEvents: 'none',

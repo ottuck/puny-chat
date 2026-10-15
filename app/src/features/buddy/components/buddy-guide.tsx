@@ -13,10 +13,11 @@ import { type Reward, REWARDS } from './stage-decor';
 // arrival, so the goals are known from the start.
 
 const REWARD_ICON: Record<Reward, Frame> = {
-  plant1: PLANTS[1],
+  plant1: PLANTS[1][0],
   bowl1: bowl(true, 1),
-  plant2: PLANTS[2],
-  plant3: PLANTS[3],
+  // One of the kinds it may grow into.
+  plant2: PLANTS[2][0],
+  plant3: PLANTS[3][0],
   bowl2: bowl(true, 2),
 };
 

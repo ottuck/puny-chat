@@ -23,6 +23,12 @@ const light = {
   stage: '#EAF3E3',
   stageFloor: '#D6E6C8',
   stageLine: '#B8CFA4',
+  // The hot spring: misty, with a stone floor.
+  bath: '#D4E9F4',
+  bathFloor: '#CCD7DC',
+  bathLine: '#AEBDC4',
+  // Over the bamboo fence: it stays in the back at night too.
+  bathDim: 'rgba(0, 0, 0, 0)',
 };
 
 export type Colors = typeof light;
@@ -46,6 +52,10 @@ const dark: Colors = {
   stage: '#1E2822',
   stageFloor: '#27352C',
   stageLine: '#36493C',
+  bath: '#1B2529',
+  bathFloor: '#25323A',
+  bathLine: '#37464F',
+  bathDim: 'rgba(27, 37, 41, 0.5)',
 };
 
 // One subscription per component for its lifetime. react-native-web's useColorScheme subscribes
