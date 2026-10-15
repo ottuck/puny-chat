@@ -324,6 +324,9 @@ export const PROP_PALETTE: Palette = {
   z: '#E9EDF1', // pot lid
   K: '#5B5562', // dark grey: mic, headband, ink
   R: '#6B4426', // coffee
+  D: '#9C6B43', // wood
+  L: '#C99A68', // wood, lit
+  j: '#3F8740', // deep leaf
 };
 
 // prettier-ignore
@@ -574,6 +577,283 @@ export const JOB_PROPS: Record<BuddyJob, [Frame, Frame]> = {
   DJ: HEADPHONES,
   POET: QUILL,
   BARISTA: COFFEE,
+};
+
+// --- Job stations (docs/art-handover.md, A·B) ---
+
+// What an adult works at, on the left of the stage in the buddy's own pixel size: it walks over
+// and works behind it (a counter or desk, which hides its lower half) or beside it (the plant).
+// Two frames each, swapped while it works. The counters are as tall as half the buddy's body, so
+// the face stays clear; whatever stands on them is off to the side for the same reason.
+export type Station = {
+  frames: [Frame, Frame];
+  // Rows at the bottom drawn below the floor line, so the station stands in front of the buddy.
+  sink: number;
+  // Where the buddy's grid stands while it works, in cells from the station's left edge.
+  standAt: number;
+  // Whether the buddy works behind it (drawn over the buddy) or beside it (drawn under).
+  behind: boolean;
+  // Cells the buddy stands higher while behind it: further back, and its face clear of the top.
+  lift: number;
+  // A tool in its hand while it works, by the grid cell of the tool's top left.
+  held?: { frames: [Frame, Frame]; row: number; col: number };
+};
+
+const COUNTER_TOP = 'k'.repeat(32);
+
+// A kitchen counter with a pot on the stove, the ladle stirring.
+// prettier-ignore
+const KITCHEN: [Frame, Frame] = [[
+  '..v..v..........................',
+  '...v..v.........................',
+  '..v..v..........................',
+  '.....k..........................',
+  '.kkkkkkkk.......................',
+  'kkSSSSSSkk......................',
+  '.kSwSSSSk.......................',
+  '.kSwSSSSk.......................',
+  COUNTER_TOP,
+  'k' + 'z'.repeat(30) + 'k',
+  COUNTER_TOP,
+  'k' + 'n'.repeat(14) + 'k' + 'n'.repeat(15) + 'k',
+  'k' + 'n'.repeat(14) + 'k' + 'n'.repeat(15) + 'k',
+  'k' + 'n'.repeat(13) + 'KkK' + 'n'.repeat(14) + 'k',
+  'k' + 'n'.repeat(14) + 'k' + 'n'.repeat(15) + 'k',
+  'k' + 'n'.repeat(14) + 'k' + 'n'.repeat(15) + 'k',
+  'k' + 'n'.repeat(14) + 'k' + 'n'.repeat(15) + 'k',
+  COUNTER_TOP,
+], [
+  '...v..v.........................',
+  '..v..v..........................',
+  '...v..v.........................',
+  '......k.........................',
+  '.kkkkkkkk.......................',
+  'kkSSSSSSkk......................',
+  '.kSwSSSSk.......................',
+  '.kSwSSSSk.......................',
+  COUNTER_TOP,
+  'k' + 'z'.repeat(30) + 'k',
+  COUNTER_TOP,
+  'k' + 'n'.repeat(14) + 'k' + 'n'.repeat(15) + 'k',
+  'k' + 'n'.repeat(14) + 'k' + 'n'.repeat(15) + 'k',
+  'k' + 'n'.repeat(13) + 'KkK' + 'n'.repeat(14) + 'k',
+  'k' + 'n'.repeat(14) + 'k' + 'n'.repeat(15) + 'k',
+  'k' + 'n'.repeat(14) + 'k' + 'n'.repeat(15) + 'k',
+  'k' + 'n'.repeat(14) + 'k' + 'n'.repeat(15) + 'k',
+  COUNTER_TOP,
+]];
+
+// A plant taller than the buddy, in a clay pot. Its crown sways while it is watered.
+// prettier-ignore
+const BIG_PLANT_STILL: Frame = [
+  '........gggg........',
+  '......ggGGGGgg......',
+  '.....gGGjGGjGGg.....',
+  '....gGjjGGGGjjGg....',
+  '....gGGjjGGjjGGg....',
+  '.....ggGGjjGGgg.....',
+  '.......ggGDgg.......',
+  '.........DD.........',
+  '.........DD.........',
+  '..gggg...DD...gggg..',
+  '.gGGGGg..DD..gGGGGg.',
+  'gGjjGGGg.DD.gGGGjjGg',
+  'gGGjjGGGgDDgGGGjjGGg',
+  '.gGGjjGGGDDGGGjjGGg.',
+  '..ggGGGGgDDgGGGGgg..',
+  '....gggg.DD.gggg....',
+  '.........DD.........',
+  '.........DD.........',
+  '...ggg...DD...ggg...',
+  '..gGGGg..DD..gGGGg..',
+  '.gGjjGGg.DD.gGGjjGg.',
+  '.gGGjjGGgDDgGGjjGGg.',
+  '..ggGGGGgDDgGGGGgg..',
+  '....gggg.DD.gggg....',
+  '.........DD.........',
+  '.........DD.........',
+  '...kkkkkkkkkkkkkk...',
+  '...keeeeeeeeeeeek...',
+  '....k' + 'o'.repeat(10) + 'k....',
+  '....k' + 'o'.repeat(10) + 'k....',
+  '.....k' + 'o'.repeat(8) + 'k.....',
+  '.....' + 'k'.repeat(10) + '.....',
+];
+// The crown leans a cell to the side.
+const BIG_PLANT: [Frame, Frame] = [
+  BIG_PLANT_STILL,
+  BIG_PLANT_STILL.map((row, i) => (i < 6 ? '.' + row.slice(0, -1) : row)),
+];
+
+// The late-night radio desk: silver, a broadcast mic on a stand, the on-air lamp.
+// prettier-ignore
+const RADIO_DESK: [Frame, Frame] = [[
+  '................................',
+  '................................',
+  '................................',
+  '.....kkk........................',
+  '....kKSKk.......................',
+  '.kk.kSKSk.......................',
+  'krrk.kkk........................',
+  'kkkk..k.........................',
+  COUNTER_TOP,
+  'k' + 'z'.repeat(30) + 'k',
+  COUNTER_TOP,
+  'k' + 'S'.repeat(30) + 'k',
+  'kS' + 'KS'.repeat(14) + 'Sk',
+  'k' + 'S'.repeat(30) + 'k',
+  'k' + 'S'.repeat(30) + 'k',
+  'kSS' + 'K'.repeat(26) + 'SSk',
+  'k' + 'S'.repeat(30) + 'k',
+  COUNTER_TOP,
+], [
+  '................................',
+  '................................',
+  '................................',
+  '.....kkk........................',
+  '....kKSKk.......................',
+  '.kk.kSKSk.......................',
+  'kuuk.kkk........................',
+  'kkkk..k.........................',
+  COUNTER_TOP,
+  'k' + 'z'.repeat(30) + 'k',
+  COUNTER_TOP,
+  'k' + 'S'.repeat(30) + 'k',
+  'kS' + 'SK'.repeat(14) + 'Sk',
+  'k' + 'S'.repeat(30) + 'k',
+  'k' + 'S'.repeat(30) + 'k',
+  'kSS' + 'K'.repeat(26) + 'SSk',
+  'k' + 'S'.repeat(30) + 'k',
+  COUNTER_TOP,
+]];
+
+// A wooden writing desk: an inkwell with its quill, paper on the top.
+// prettier-ignore
+const WRITING_DESK: [Frame, Frame] = [[
+  '................................',
+  '...kk...........................',
+  '..kwwk..........................',
+  '..kwvk..........................',
+  '...kvk..........................',
+  '..kkkkk.........................',
+  '.kKKKKKk........................',
+  '.kKKKKKk........................',
+  COUNTER_TOP,
+  'k' + 'L'.repeat(9) + 'w'.repeat(14) + 'L'.repeat(7) + 'k',
+  COUNTER_TOP,
+  'k' + 'D'.repeat(30) + 'k',
+  'kDD' + 'k'.repeat(26) + 'DDk',
+  'kDDk' + 'L'.repeat(24) + 'kDDk',
+  'kDDk' + 'L'.repeat(11) + 'kk' + 'L'.repeat(11) + 'kDDk',
+  'kDD' + 'k'.repeat(26) + 'DDk',
+  'k' + 'D'.repeat(30) + 'k',
+  COUNTER_TOP,
+], [
+  '................................',
+  '....kk..........................',
+  '...kwwk.........................',
+  '...kwvk.........................',
+  '...kvk..........................',
+  '..kkkkk.........................',
+  '.kKKKKKk........................',
+  '.kKKKKKk........................',
+  COUNTER_TOP,
+  'k' + 'L'.repeat(9) + 'wKKKKKwwwwwwww' + 'L'.repeat(7) + 'k',
+  COUNTER_TOP,
+  'k' + 'D'.repeat(30) + 'k',
+  'kDD' + 'k'.repeat(26) + 'DDk',
+  'kDDk' + 'L'.repeat(24) + 'kDDk',
+  'kDDk' + 'L'.repeat(11) + 'kk' + 'L'.repeat(11) + 'kDDk',
+  'kDD' + 'k'.repeat(26) + 'DDk',
+  'k' + 'D'.repeat(30) + 'k',
+  COUNTER_TOP,
+]];
+
+// A café counter: an espresso machine pulling a shot into a cup, a dark wooden front.
+// prettier-ignore
+const CAFE_COUNTER: [Frame, Frame] = [[
+  '..v.v...........................',
+  '...v.v..........................',
+  'kkkkkkkkk.......................',
+  'kSSSSSSSk.......................',
+  'kSKKKKKSk.......................',
+  'kSSkKkSSk.......................',
+  'kSkwwwkSk.......................',
+  'kSkwwwkSk.......................',
+  COUNTER_TOP,
+  'k' + 'z'.repeat(30) + 'k',
+  COUNTER_TOP,
+  'k' + 'RRRRD'.repeat(6) + 'k',
+  'k' + 'RRRRD'.repeat(6) + 'k',
+  'k' + 'RRRRD'.repeat(6) + 'k',
+  'k' + 'RRRRD'.repeat(6) + 'k',
+  'k' + 'RRRRD'.repeat(6) + 'k',
+  'k' + 'RRRRD'.repeat(6) + 'k',
+  COUNTER_TOP,
+], [
+  '...v.v..........................',
+  '..v.v...........................',
+  'kkkkkkkkk.......................',
+  'kSSSSSSSk.......................',
+  'kSKKKKKSk.......................',
+  'kSSkKkSSk.......................',
+  'kSkwRwkSk.......................',
+  'kSkRRRkSk.......................',
+  COUNTER_TOP,
+  'k' + 'z'.repeat(30) + 'k',
+  COUNTER_TOP,
+  'k' + 'RRRRD'.repeat(6) + 'k',
+  'k' + 'RRRRD'.repeat(6) + 'k',
+  'k' + 'RRRRD'.repeat(6) + 'k',
+  'k' + 'RRRRD'.repeat(6) + 'k',
+  'k' + 'RRRRD'.repeat(6) + 'k',
+  'k' + 'RRRRD'.repeat(6) + 'k',
+  COUNTER_TOP,
+]];
+
+// The gardener's watering can, held out towards the plant: the water falls from the spout.
+// prettier-ignore
+export const HELD_CAN: [Frame, Frame] = [[
+  '.....kkkk.',
+  '....k....k',
+  'kk..kkkkkk',
+  'kak.kaaaak',
+  '.kakkawaak',
+  '..kaaawaak',
+  '...kaaaaak',
+  '...kaaaaak',
+  '....kkkkk.',
+  'a.........',
+  '..........',
+  '.a........',
+], [
+  '.....kkkk.',
+  '....k....k',
+  'kk..kkkkkk',
+  'kak.kaaaak',
+  '.kakkawaak',
+  '..kaaawaak',
+  '...kaaaaak',
+  '...kaaaaak',
+  '....kkkkk.',
+  '..........',
+  'a.........',
+  '..........',
+]];
+
+export const JOB_STATIONS: Record<BuddyJob, Station> = {
+  CHEF: { frames: KITCHEN, sink: 2, standAt: 8, behind: true, lift: 2 },
+  GARDENER: {
+    frames: BIG_PLANT,
+    sink: 1,
+    standAt: 20,
+    behind: false,
+    lift: 0,
+    held: { frames: HELD_CAN, row: 12, col: -8 },
+  },
+  DJ: { frames: RADIO_DESK, sink: 2, standAt: 8, behind: true, lift: 2 },
+  POET: { frames: WRITING_DESK, sink: 2, standAt: 8, behind: true, lift: 2 },
+  BARISTA: { frames: CAFE_COUNTER, sink: 2, standAt: 8, behind: true, lift: 2 },
 };
 
 // --- Decorations (docs/product.md, 무대 꾸미기) ---

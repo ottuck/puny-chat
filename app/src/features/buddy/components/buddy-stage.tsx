@@ -27,6 +27,7 @@ import {
   EXCLAIM,
   HEART,
   JOB_PROPS,
+  JOB_STATIONS,
   LEVEL_UP,
   NOTE,
   POOP,
@@ -97,8 +98,15 @@ const ACT_MS: Record<Act, number> = {
   startle: 900,
   lookAround: 1400,
   yawn: 1500,
-  job: 2000,
+  // At the station, once there.
+  job: 2400,
 };
+// The longest the walk over to the station may take before the work starts anyway.
+const JOB_WALK_MAX_MS = 4000;
+// How long each point of the walk to work takes, in ms: a brisk walk.
+const JOB_WALK_MS = 12;
+// The station's left edge on the stage.
+const STATION_LEFT = 12;
 // What it says as it happens, once grown.
 const ACT_LINE: Partial<Record<Act, Line>> = {
   hiccup: 'hiccup',
@@ -140,17 +148,18 @@ const SLEEP_UNTIL = 7;
 const DJ_SLEEP_FROM = 3;
 const DJ_SLEEP_UNTIL = 11;
 
-// What each job looks like at its work, from the poses there are, its tool in hand (JOB_PROPS). A
-// placeholder until each job gets its own poses (docs/art-handover.md, A).
+// The face at work, at its station (JOB_STATIONS); the station's own frames do the rest.
 function jobPose(job: BuddyJob, tick: number): Pose {
   switch (job) {
-    case 'CHEF': // stirring the pot
-    case 'GARDENER': // gardener: tending the plants
-    case 'DJ': // radio DJ: nodding to the music
-      return tick % 2 === 0 ? 'step' : 'idle';
-    case 'POET': // poet: writing a letter
+    case 'CHEF': // stirring the pot, swaying to it
+      return tick % 2 === 0 ? 'happy' : 'idle';
+    case 'GARDENER': // watering the plant
       return 'happy';
-    case 'BARISTA': // barista: mouth going
+    case 'DJ': // on air, nodding to the music
+      return tick % 2 === 0 ? 'happy' : 'blink';
+    case 'POET': // writing, and liking it
+      return tick % 3 === 0 ? 'blink' : 'happy';
+    case 'BARISTA': // talking over the coffee
       return tick % 2 === 0 ? 'eat' : 'happy';
   }
 }
@@ -391,11 +400,20 @@ export function BuddyStage({
   const spriteHeight = idleFrame.length * scale;
   const glowSize = Math.round(spriteWidth * 1.5);
   const bowlWidth = 12 * PROP_SCALE;
-  // The walkable strip: right of the bowl, left of the poops.
-  const minX = 16 + bowlWidth + 8;
   const decor = decorFor(buddy.level, album ?? []);
   const plantRoom = plantRoomFor(decor);
-  const maxX = Math.max(minX, width - spriteWidth - 16 - (companionEgg ? EGG_ROOM : 0) - plantRoom);
+  // The bowl stands by the plant on the right; the poops land left of it.
+  const bowlRight = 16 + plantRoom;
+  const poopRight = bowlRight + bowlWidth + 12;
+  // The walkable strip: from the left (in front of a job's station) up to the bowl.
+  const minX = 16;
+  const maxX = Math.max(
+    minX,
+    width - spriteWidth - bowlRight - bowlWidth - 8 - (companionEgg ? EGG_ROOM : 0),
+  );
+  // A grown-up's station on the left, where it goes to work.
+  const station = buddy.stage === 'ADULT' && job ? JOB_STATIONS[job] : null;
+  const stationX = station ? STATION_LEFT + station.standAt * scale : 0;
   const eating = active?.kind === 'fed';
   const settled = sleeping || buddy.hungry || egg || eating || evolving;
   const acting = act !== null;
@@ -425,10 +443,14 @@ export function BuddyStage({
       setActRun((run) => run + 1);
       const line = next === 'job' && job ? pick(JOB_LINES[job]) : ACT_LINE[next];
       if (line) say(line);
-      actTimer.current = setTimeout(() => {
-        actTimer.current = null;
-        setAct(null);
-      }, ACT_MS[next]);
+      actTimer.current = setTimeout(
+        () => {
+          actTimer.current = null;
+          setAct(null);
+        },
+        // Work starts on arrival (see below), which restarts this; the walk is the most it waits.
+        next === 'job' ? JOB_WALK_MAX_MS + ACT_MS.job : ACT_MS[next],
+      );
     },
     [say, job],
   );
@@ -465,7 +487,7 @@ export function BuddyStage({
     }
     let stopped = false;
     let current: Animated.CompositeAnimation | null = null;
-    const home = buddy.hungry || eating ? minX : (minX + maxX) / 2;
+    const home = buddy.hungry || eating ? maxX : (minX + maxX) / 2;
     const leg = (from: number) => {
       if (stopped) return;
       const to = settled ? home : minX + Math.random() * (maxX - minX);
@@ -474,7 +496,7 @@ export function BuddyStage({
         setFacingLeft(to < from);
         setWalking(true);
       } else if (buddy.hungry || eating) {
-        setFacingLeft(true); // looking at the bowl
+        setFacingLeft(false); // looking at the bowl
       }
       setOnRightHalf(to > (minX + maxX) / 2);
       current = Animated.sequence([
@@ -507,6 +529,52 @@ export function BuddyStage({
       current?.stop();
     };
   }, [width, settled, acting, mood, eating, buddy.hungry, minX, maxX, x]);
+
+  // Work: walk over to the station, then work there for a while. Without one (not grown up yet,
+  // or no job) it works where it stands.
+  const [arrivedRun, setArrivedRun] = useState(-1);
+  const atWork = act === 'job' && arrivedRun === actRun;
+  useEffect(() => {
+    if (act !== 'job' || width === 0) return;
+    let stopped = false;
+    const startWork = () => {
+      if (stopped) return;
+      setWalking(false);
+      setArrivedRun(actRun);
+      if (actTimer.current) clearTimeout(actTimer.current);
+      actTimer.current = setTimeout(() => {
+        actTimer.current = null;
+        setAct(null);
+      }, ACT_MS.job);
+    };
+    if (!station) {
+      startWork();
+      return () => {
+        stopped = true;
+      };
+    }
+    x.stopAnimation((from) => {
+      if (stopped) return;
+      const distance = Math.abs(stationX - from);
+      // The plant is watered from its right, looking left; behind a counter it faces the front.
+      setFacingLeft(station.behind ? stationX < from : true);
+      setOnRightHalf(false);
+      setWalking(distance > 2);
+      Animated.timing(x, {
+        toValue: stationX,
+        duration: Math.min(JOB_WALK_MAX_MS - 200, distance * JOB_WALK_MS),
+        easing: Easing.linear,
+        useNativeDriver: NATIVE_DRIVER,
+      }).start(({ finished }) => {
+        if (finished) startWork();
+      });
+    });
+    return () => {
+      stopped = true;
+    };
+    // A new walk for each piece of work, not for every change of the stage's size.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [act, actRun]);
 
   // A one-word message: dance or sing; for "밥" when full or "청소" with nothing to clean, an
   // answer instead of nothing (the care itself, when needed, comes from the server as an event).
@@ -566,8 +634,7 @@ export function BuddyStage({
 
   // A hiccup is three small hops, a start one big one.
   useEffect(() => {
-    const jobHops = act === 'job' && job === 'CHEF';
-    if (act !== 'hiccup' && act !== 'startle' && !jobHops) return;
+    if (act !== 'hiccup' && act !== 'startle') return;
     const jump = (h: number, ms: number) =>
       Animated.sequence([
         Animated.timing(hop, { toValue: -h, duration: ms, useNativeDriver: NATIVE_DRIVER }),
@@ -576,15 +643,13 @@ export function BuddyStage({
     const move =
       act === 'startle'
         ? jump(18, 200)
-        : act === 'job'
-          ? Animated.sequence([jump(6, 150), jump(6, 150), jump(6, 150)])
-          : Animated.sequence([jump(5, 110), jump(5, 110), jump(5, 110)]);
+        : Animated.sequence([jump(5, 110), jump(5, 110), jump(5, 110)]);
     move.start();
     return () => {
       move.stop();
       hop.setValue(0);
     };
-  }, [act, actRun, job, hop]);
+  }, [act, actRun, hop]);
 
   // Little hops for a mood; a good night sleeps instead.
   useEffect(() => {
@@ -845,7 +910,11 @@ export function BuddyStage({
             ? 'eat'
             : 'happy'
           : act === 'job' && job
-            ? jobPose(job, tick)
+            ? atWork
+              ? jobPose(job, tick)
+              : tick % 2 === 0
+                ? 'step'
+                : 'idle'
             : act === 'yawn'
               ? 'yawn'
               : act === 'hiccup'
@@ -958,14 +1027,13 @@ export function BuddyStage({
     (key: string) => setLeaving((prev) => prev.filter((poop) => poop.key !== key)),
     [],
   );
+  // Behind a counter it stands a little further back; the cook sways to the pot, the DJ nods.
+  const workLift = atWork && station?.behind ? station.lift * scale : 0;
+  const workSway = atWork && job === 'CHEF' ? (tick % 2 === 0 ? -scale : 0) : 0;
+  const workNod = atWork && job === 'DJ' && tick % 2 === 0 ? scale : 0;
   // Dancing and head-shaking turn the buddy left and right.
   const flipped =
-    act === 'dance' ||
-    act === 'refuse' ||
-    act === 'lookAround' ||
-    (act === 'job' && job === 'GARDENER')
-      ? tick % 2 === 0
-      : facingLeft;
+    act === 'dance' || act === 'refuse' || act === 'lookAround' ? tick % 2 === 0 : facingLeft;
 
   const feed = () => {
     if (busy) return;
@@ -1047,7 +1115,11 @@ export function BuddyStage({
       <Animated.View
         style={[
           styles.bowl,
-          { bottom: FLOOR - 3, transform: [{ translateY: wantsFood ? nudge : 0 }] },
+          {
+            bottom: FLOOR - 3,
+            right: bowlRight,
+            transform: [{ translateY: wantsFood ? nudge : 0 }],
+          },
         ]}
       >
         {buddy.hungry && !eating ? (
@@ -1084,42 +1156,25 @@ export function BuddyStage({
         </Pressable>
       </Animated.View>
 
-      {Array.from({ length: buddy.poops }, (_, i) => (
-        <Animated.View
-          key={i}
+      {companionEgg ? (
+        <View style={[styles.poop, { bottom: FLOOR - 2, right: poopRight + 4 }]}>
+          <PixelSprite frame={buddyFrame('EGG', 'idle')} palette={BUDDY_PALETTE} scale={3} />
+        </View>
+      ) : null}
+
+      {station && !(atWork && station.behind) ? (
+        <View
           style={[
-            styles.poop,
-            {
-              bottom: FLOOR - 2,
-              right: 16 + plantRoom + i * 30,
-              transform: [{ translateY: nudge }],
-            },
+            styles.station,
+            styles.passThrough,
+            { left: STATION_LEFT, bottom: FLOOR - station.sink * scale },
           ]}
         >
-          <Pressable
-            onPress={clean}
-            disabled={busy}
-            accessibilityRole="button"
-            accessibilityLabel={t('buddy.cleanUp')}
-          >
-            <DroppingIn>
-              <PixelSprite frame={POOP} palette={PROP_PALETTE} scale={PROP_SCALE} />
-            </DroppingIn>
-          </Pressable>
-        </Animated.View>
-      ))}
-      {leaving.map((poop) => (
-        <FlyingAway
-          key={poop.key}
-          id={poop.key}
-          onDone={doneLeaving}
-          style={[styles.poop, { bottom: FLOOR - 2, right: 16 + plantRoom + poop.index * 30 }]}
-        />
-      ))}
-
-      {companionEgg ? (
-        <View style={[styles.poop, { bottom: FLOOR - 2, right: 20 + plantRoom }]}>
-          <PixelSprite frame={buddyFrame('EGG', 'idle')} palette={BUDDY_PALETTE} scale={3} />
+          <PixelSprite
+            frame={station.frames[atWork ? tick % 2 : 0]}
+            palette={PROP_PALETTE}
+            scale={scale}
+          />
         </View>
       ) : null}
 
@@ -1127,7 +1182,8 @@ export function BuddyStage({
         style={[
           styles.buddy,
           {
-            bottom: FLOOR - scale,
+            bottom: FLOOR - scale + workLift - workNod,
+            left: workSway,
             transform: [
               { translateX: x },
               { translateY: hop },
@@ -1183,18 +1239,18 @@ export function BuddyStage({
             </View>
           </>
         ) : null}
-        {act === 'job' && job ? (
+        {atWork && station?.held ? (
           <View
             style={[
               styles.jobProp,
               styles.passThrough,
-              { left: spriteWidth * 0.85, top: spriteHeight * 0.4 + (tick % 2) * 3 },
+              { left: station.held.col * scale, top: station.held.row * scale },
             ]}
           >
             <PixelSprite
-              frame={JOB_PROPS[job][tick % 2]}
+              frame={station.held.frames[tick % 2]}
               palette={PROP_PALETTE}
-              scale={PROP_SCALE}
+              scale={scale}
             />
           </View>
         ) : null}
@@ -1264,6 +1320,55 @@ export function BuddyStage({
           <PixelSprite frame={frame} palette={BUDDY_PALETTE} scale={scale} flipped={flipped} />
         </Pressable>
       </Animated.View>
+      {station && atWork && station.behind ? (
+        <View
+          style={[
+            styles.station,
+            styles.passThrough,
+            { left: STATION_LEFT, bottom: FLOOR - station.sink * scale },
+          ]}
+        >
+          <PixelSprite
+            frame={station.frames[atWork ? tick % 2 : 0]}
+            palette={PROP_PALETTE}
+            scale={scale}
+          />
+        </View>
+      ) : null}
+
+      {/* In front of the buddy, so one by its feet can still be tapped away. */}
+      {Array.from({ length: buddy.poops }, (_, i) => (
+        <Animated.View
+          key={i}
+          style={[
+            styles.poop,
+            {
+              bottom: FLOOR - 2,
+              right: poopRight + i * 30,
+              transform: [{ translateY: nudge }],
+            },
+          ]}
+        >
+          <Pressable
+            onPress={clean}
+            disabled={busy}
+            accessibilityRole="button"
+            accessibilityLabel={t('buddy.cleanUp')}
+          >
+            <DroppingIn>
+              <PixelSprite frame={POOP} palette={PROP_PALETTE} scale={PROP_SCALE} />
+            </DroppingIn>
+          </Pressable>
+        </Animated.View>
+      ))}
+      {leaving.map((poop) => (
+        <FlyingAway
+          key={poop.key}
+          id={poop.key}
+          onDone={doneLeaving}
+          style={[styles.poop, { bottom: FLOOR - 2, right: poopRight + poop.index * 30 }]}
+        />
+      ))}
 
       {/* The evolution's quick flash as the new look settles, over the whole stage. */}
       <Animated.View style={[StyleSheet.absoluteFill, styles.flash, { opacity: flash }]} />
@@ -1311,7 +1416,6 @@ const styles = StyleSheet.create({
   },
   bowl: {
     position: 'absolute',
-    left: 16,
   },
   poop: {
     position: 'absolute',
@@ -1344,6 +1448,9 @@ const styles = StyleSheet.create({
     right: 12,
   },
   jobProp: {
+    position: 'absolute',
+  },
+  station: {
     position: 'absolute',
   },
   // Room for the big heart of a pet shared by both.
