@@ -49,6 +49,10 @@ export type Line =
   | 'startle'
   | 'lookAround'
   | 'yawn'
+  | 'butterfly'
+  | 'rain'
+  | 'snow'
+  | 'shootingStar'
   // A job's own words (JOB_LINES), and what it says at its own moments.
   | 'chef1'
   | 'chef2'

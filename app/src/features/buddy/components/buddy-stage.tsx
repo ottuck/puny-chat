@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import Svg, { G, Rect } from 'react-native-svg';
 import {
   Animated,
   Easing,
@@ -19,7 +20,21 @@ import { useColors } from '@/theme';
 import type { AlbumEntry } from '@/features/room/api';
 
 import type { BuddyJob, BuddyView } from '../api';
-import { PixelSprite } from '../pixel/pixel-sprite';
+import {
+  BUTTERFLY,
+  butterflyAt,
+  dressedFrame,
+  HEART_BIG,
+  isWinter,
+  type Layer,
+  SEASON_CORNER,
+  type Season,
+  seasonBehind,
+  seasonFront,
+  seasonOn,
+  umbrellaFor,
+} from '../pixel/looks';
+import { type Palette, PixelSprite } from '../pixel/pixel-sprite';
 import {
   bowl,
   BUDDY_PALETTE,
@@ -60,13 +75,39 @@ const TICK_MS = 450;
 const FAST_TICK_MS = 90;
 const PET_MS = 900;
 // Things the buddy does by itself: a dance, a song, shaking its head at a full bowl, or the small
-// happenings of docs/fun-improvements.md, 4 (a hiccup, a start, a look around, a yawn).
-type Act = 'dance' | 'sing' | 'refuse' | 'hiccup' | 'startle' | 'lookAround' | 'yawn' | 'job';
+// happenings of docs/fun-improvements.md, 4 (a hiccup, a start, a look around, a yawn, and with
+// pictures, docs/art-handover.md F: a butterfly landing on its head, a shower under an umbrella, a
+// shooting star in a sky gone dark for a moment).
+type Act =
+  | 'dance'
+  | 'sing'
+  | 'refuse'
+  | 'hiccup'
+  | 'startle'
+  | 'lookAround'
+  | 'yawn'
+  | 'butterfly'
+  | 'rain'
+  | 'snow'
+  | 'shootingStar'
+  | 'job';
 // A one-word message for the buddy ("밥", "춤", …, features/buddy/chat-words.ts), or the tour's
 // script asking for a dance or a song.
 // "job": the buddy does its work (only asked for by the art preview, app/preview.tsx).
 // The happenings can be cued too, but only the preview screen does (app/preview.tsx).
-type Happening = 'hiccup' | 'startle' | 'lookAround' | 'yawn';
+const HAPPENINGS = [
+  'hiccup',
+  'startle',
+  'lookAround',
+  'yawn',
+  'butterfly',
+  'rain',
+  'snow',
+  'shootingStar',
+] as const;
+type Happening = (typeof HAPPENINGS)[number];
+const isHappening = (kind: string): kind is Happening =>
+  (HAPPENINGS as readonly string[]).includes(kind);
 export type Cue = { id: string; kind: ChatWord | Mood | 'job' | Happening };
 // How long a mood from the chat ("사랑해", "ㅋㅋ", …, chat-words.ts) shows, and what the buddy says.
 type StageMood = Mood | 'coPet';
@@ -99,9 +140,52 @@ const ACT_MS: Record<Act, number> = {
   startle: 900,
   lookAround: 1400,
   yawn: 1500,
+  butterfly: 4200,
+  rain: 5000,
+  snow: 5000,
+  shootingStar: 2800,
   // At the station, once there.
   job: 2400,
 };
+// How long the butterfly takes to come down onto the head, and to fly off again.
+const BUTTERFLY_FLY_MS = 700;
+// The rain: drops this far apart down the stage, falling one gap in this long, again and again.
+const RAIN_GAP = 30;
+const RAIN_FALL_MS = 420;
+// Snow drifts down more slowly.
+const SNOW_FALL_MS = 1500;
+// The colors of the happenings drawn without a grid: the dusk sky, its stars, the rain.
+const DUSK = 'rgba(28, 36, 64, 0.62)';
+const STAR = '#FFE9A8';
+const RAIN = '#8FB8D8';
+const SNOW = '#FFFFFF';
+const SNOW_SHADE = '#B9CCDD';
+// Where the stars come out, as fractions of the stage.
+const STARS = [
+  [0.08, 0.22],
+  [0.3, 0.12],
+  [0.52, 0.3],
+  [0.7, 0.1],
+  [0.9, 0.34],
+  [0.18, 0.46],
+] as const;
+// The drops of one gap's worth of rain, column by column, each column a little off from the next.
+// Under the umbrella (`shelter`, in the stage's points) none fall.
+function rainDrops(
+  width: number,
+  height: number,
+  apart: number,
+  shelter: { left: number; right: number; top: number } | null,
+): [number, number][] {
+  const drops: [number, number][] = [];
+  for (let x = 6, i = 0; x < width; x += apart, i++) {
+    for (let y = (i * 13) % RAIN_GAP; y < height + RAIN_GAP; y += RAIN_GAP) {
+      if (shelter && x + 2 > shelter.left && x < shelter.right && y + 9 > shelter.top) continue;
+      drops.push([x, y]);
+    }
+  }
+  return drops;
+}
 // The longest the walk over to the station may take before the work starts anyway.
 const JOB_WALK_MAX_MS = 4000;
 // How long each point of the walk to work takes, in ms: a brisk walk.
@@ -126,6 +210,10 @@ const ACT_LINE: Partial<Record<Act, Line>> = {
   startle: 'startle',
   lookAround: 'lookAround',
   yawn: 'yawn',
+  butterfly: 'butterfly',
+  rain: 'rain',
+  snow: 'snow',
+  shootingStar: 'shootingStar',
 };
 // What it does when left alone, by weight: dancing and singing most, the small happenings between.
 const IDLE_ACTS: readonly (readonly [Act, number])[] = [
@@ -135,6 +223,9 @@ const IDLE_ACTS: readonly (readonly [Act, number])[] = [
   ['startle', 15],
   ['lookAround', 10],
   ['yawn', 10],
+  ['butterfly', 8],
+  ['rain', 6],
+  ['shootingStar', 6],
 ];
 // A grown buddy with a job also does its work (docs/fun-improvements.md, 6).
 const JOB_ACT_WEIGHT = 30;
@@ -146,7 +237,8 @@ function pickIdleAct(job: BuddyJob | null): Act {
   let roll = Math.random() * acts.reduce((sum, [, weight]) => sum + weight, 0);
   for (const [act, weight] of acts) {
     roll -= weight;
-    if (roll < 0) return act;
+    // In winter the rain comes as snow.
+    if (roll < 0) return act === 'rain' && isWinter(new Date()) ? 'snow' : act;
   }
   return 'dance';
 }
@@ -231,6 +323,8 @@ type Props = {
   partnerHere?: boolean;
   // Buddies gone their own way: their portraits hang on the wall, and the decorations stay.
   album?: AlbumEntry[];
+  // The season's look (pixel/looks.ts): by the date unless given (the art preview picks one).
+  season?: Season | null;
 };
 
 // Local night hours, checked once a minute.
@@ -242,6 +336,39 @@ function useSleeping(job: BuddyJob | null): boolean {
   }, []);
   if (job === 'DJ') return hour >= DJ_SLEEP_FROM && hour < DJ_SLEEP_UNTIL;
   return hour >= SLEEP_FROM || hour < SLEEP_UNTIL;
+}
+
+// The season by the device's date, checked once an hour.
+function useSeason(chosen: Season | null | undefined): Season | null {
+  const [season, setSeason] = useState(() => seasonOn(new Date()));
+  useEffect(() => {
+    const timer = setInterval(() => setSeason(seasonOn(new Date())), 3_600_000);
+    return () => clearInterval(timer);
+  }, []);
+  return chosen === undefined ? season : chosen;
+}
+
+// Something drawn with the buddy (a look behind it, an umbrella, a butterfly), placed by the cells
+// of its grid and mirrored with it when it turns.
+function LayerSprite({
+  layer,
+  gridWidth,
+  palette,
+  scale,
+  flipped,
+}: {
+  layer: Layer;
+  gridWidth: number;
+  palette: Palette;
+  scale: number;
+  flipped: boolean;
+}) {
+  const col = flipped ? gridWidth - layer.col - layer.frame[0].length : layer.col;
+  return (
+    <View style={[styles.layer, styles.passThrough, { left: col * scale, top: layer.row * scale }]}>
+      <PixelSprite frame={layer.frame} palette={palette} scale={scale} flipped={flipped} />
+    </View>
+  );
 }
 
 // A counter that drives frame changes (steps, blinks, chewing) at a toy-like pace.
@@ -367,6 +494,7 @@ export function BuddyStage({
   onPet,
   partnerHere = false,
   album,
+  season: chosenSeason,
 }: Props) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -384,6 +512,7 @@ export function BuddyStage({
   const tick = useTick(evolving || act === 'refuse' ? FAST_TICK_MS : TICK_MS);
   const job = buddy.job;
   const night = useSleeping(job);
+  const season = useSeason(chosenSeason);
   const [width, setWidth] = useState(0);
   const [walking, setWalking] = useState(false);
   const [facingLeft, setFacingLeft] = useState(false);
@@ -405,6 +534,10 @@ export function BuddyStage({
   const [burst] = useState(() => new Animated.Value(0));
   const [nudge] = useState(() => new Animated.Value(0));
   const [note] = useState(() => new Animated.Value(0));
+  const [flutter] = useState(() => new Animated.Value(0));
+  const [rainFall] = useState(() => new Animated.Value(0));
+  const [dusk] = useState(() => new Animated.Value(0));
+  const [rainX, setRainX] = useState<number | null>(null);
   // Which half of the stage the buddy is heading to, so its speech bubble opens toward the middle.
   const [onRightHalf, setOnRightHalf] = useState(false);
 
@@ -418,15 +551,22 @@ export function BuddyStage({
   const glowSize = Math.round(spriteWidth * 1.5);
   const bowlWidth = 12 * PROP_SCALE;
   const decor = decorFor(buddy.level, album ?? []);
-  const plantRoom = plantRoomFor(decor);
+  // The season's corner stands in for the plant that week.
+  const corner = season ? SEASON_CORNER[season] : undefined;
+  const plantRoom = corner
+    ? Math.ceil(corner.frame[0].length * corner.size * scale) + 8
+    : plantRoomFor(decor);
   // The bowl stands by the plant on the right; the poops land left of it.
   const bowlRight = 16 + plantRoom;
   const poopRight = bowlRight + bowlWidth + 12;
   // The walkable strip: from the left (in front of a job's station) up to the bowl.
-  const minX = 16;
+  // Wings stick out on both sides: the walk keeps them on the stage and off the bowl.
+  const behind = seasonBehind(buddy.stage, season);
+  const reach = behind ? Math.max(0, -behind.col) * scale : 0;
+  const minX = 16 + reach;
   const maxX = Math.max(
     minX,
-    width - spriteWidth - bowlRight - bowlWidth - 8 - (companionEgg ? EGG_ROOM : 0),
+    width - spriteWidth - reach - bowlRight - bowlWidth - 8 - (companionEgg ? EGG_ROOM : 0),
   );
   // A grown-up's station on the left, where it goes to work.
   const station = buddy.stage === 'ADULT' && job ? JOB_STATIONS[job] : null;
@@ -515,7 +655,8 @@ export function BuddyStage({
       } else if (buddy.hungry || eating) {
         setFacingLeft(false); // looking at the bowl
       }
-      setOnRightHalf(to > (minX + maxX) / 2);
+      // By the stage itself: the walkable strip is lopsided with a station and a corner.
+      setOnRightHalf(to + spriteWidth / 2 > width / 2);
       current = Animated.sequence([
         Animated.timing(x, {
           toValue: to,
@@ -545,7 +686,7 @@ export function BuddyStage({
       stopped = true;
       current?.stop();
     };
-  }, [width, settled, acting, mood, eating, buddy.hungry, minX, maxX, x]);
+  }, [width, spriteWidth, settled, acting, mood, eating, buddy.hungry, minX, maxX, x]);
 
   // Work: walk over to the station, then work there for a while. Without one (not grown up yet,
   // or no job) it works where it stands.
@@ -604,10 +745,7 @@ export function BuddyStage({
         cue.kind === 'dance' ||
         cue.kind === 'sing' ||
         cue.kind === 'job' ||
-        cue.kind === 'hiccup' ||
-        cue.kind === 'startle' ||
-        cue.kind === 'lookAround' ||
-        cue.kind === 'yawn'
+        isHappening(cue.kind)
       )
         perform(cue.kind, true);
       else if (cue.kind !== 'feed' && cue.kind !== 'clean' && cue.kind !== 'work')
@@ -737,6 +875,39 @@ export function BuddyStage({
       note.setValue(0);
     };
   }, [act, actRun, hop, note]);
+
+  // A butterfly comes down onto the head and flies off again; the rain keeps falling; the sky goes
+  // dark for a shooting star to cross it (dusk: 0→1 darkening, 1→2 the star, 2→3 light again).
+  useEffect(() => {
+    if (act !== 'butterfly' && act !== 'rain' && act !== 'snow' && act !== 'shootingStar') return;
+    // It stands still under the umbrella: where, so the rain can miss it.
+    if (act === 'rain') x.stopAnimation((value) => setRainX(value));
+    const to = (value: Animated.Value, toValue: number, duration: number, easing = Easing.linear) =>
+      Animated.timing(value, { toValue, duration, easing, useNativeDriver: NATIVE_DRIVER });
+    const move =
+      act === 'butterfly'
+        ? Animated.sequence([
+            to(flutter, 1, BUTTERFLY_FLY_MS, Easing.out(Easing.quad)),
+            Animated.delay(ACT_MS.butterfly - 2 * BUTTERFLY_FLY_MS),
+            to(flutter, 2, BUTTERFLY_FLY_MS, Easing.in(Easing.quad)),
+          ])
+        : act === 'rain' || act === 'snow'
+          ? Animated.loop(to(rainFall, 1, act === 'rain' ? RAIN_FALL_MS : SNOW_FALL_MS))
+          : Animated.sequence([
+              to(dusk, 1, 500),
+              to(dusk, 2, 1000, Easing.in(Easing.quad)),
+              Animated.delay(ACT_MS.shootingStar - 2000),
+              to(dusk, 3, 500),
+            ]);
+    move.start();
+    return () => {
+      move.stop();
+      flutter.setValue(0);
+      rainFall.setValue(0);
+      dusk.setValue(0);
+      setRainX(null);
+    };
+  }, [act, actRun, flutter, rainFall, dusk, x]);
 
   // Work done (by either of them) is shown at the station; the gardener likes the tidy plant.
   useEffect(() => {
@@ -951,28 +1122,32 @@ export function BuddyStage({
               ? 'yawn'
               : act === 'hiccup'
                 ? 'hiccup'
-                : act === 'startle'
+                : act === 'startle' || act === 'shootingStar'
                   ? 'surprised'
-                  : act === 'refuse' || act === 'lookAround'
-                    ? 'idle'
-                    : active?.kind === 'cleaned' ||
-                        active?.kind === 'levelUp' ||
-                        active?.kind === 'together' ||
-                        active?.kind === 'here' ||
-                        (active?.kind === 'evolved' && !evolving) ||
-                        petted
+                  : act === 'butterfly' || act === 'snow'
+                    ? tick % 2 === 0
                       ? 'happy'
-                      : sleeping
-                        ? 'sleep'
-                        : buddy.hungry
-                          ? 'hungry'
-                          : walking
-                            ? tick % 2 === 0
-                              ? 'step'
-                              : 'idle'
-                            : tick % 11 === 0
-                              ? 'blink'
-                              : 'idle';
+                      : 'idle'
+                    : act === 'refuse' || act === 'lookAround'
+                      ? 'idle'
+                      : active?.kind === 'cleaned' ||
+                          active?.kind === 'levelUp' ||
+                          active?.kind === 'together' ||
+                          active?.kind === 'here' ||
+                          (active?.kind === 'evolved' && !evolving) ||
+                          petted
+                        ? 'happy'
+                        : sleeping
+                          ? 'sleep'
+                          : buddy.hungry
+                            ? 'hungry'
+                            : walking
+                              ? tick % 2 === 0
+                                ? 'step'
+                                : 'idle'
+                              : tick % 11 === 0
+                                ? 'blink'
+                                : 'idle';
 
   // A mood from the chat shows on the face unless something bigger (eating, straining) is going on.
   const moodPose: Pose | null =
@@ -992,8 +1167,14 @@ export function BuddyStage({
 
   // While evolving, the old and new looks take turns quickly.
   const previousStage = STAGE_ORDER[Math.max(0, STAGE_ORDER.indexOf(buddy.stage) - 1)];
-  const frame =
-    evolving && tick % 2 === 0 ? buddyFrame(previousStage, 'idle') : buddyFrame(buddy.stage, pose);
+  // Dressed for the season or its job, but not in the middle of growing.
+  const frame = evolving
+    ? buddyFrame(tick % 2 === 0 ? previousStage : buddy.stage, tick % 2 === 0 ? 'idle' : pose)
+    : dressedFrame(buddy.stage, pose, job, season);
+
+  const gridWidth = frame[0].length;
+  // Resting on the head while it is there.
+  const butterfly = act === 'butterfly' && buddy.stage !== 'EGG' ? butterflyAt(buddy.stage) : null;
 
   // A writer's love, and a pet shared by both, show a big heart.
   const bigHeart = mood === 'coPet' || (mood === 'love' && job === 'WRITER');
@@ -1065,6 +1246,18 @@ export function BuddyStage({
   // Dancing and head-shaking turn the buddy left and right.
   const flipped =
     act === 'dance' || act === 'refuse' || act === 'lookAround' ? tick % 2 === 0 : facingLeft;
+
+  // The umbrella over it in the rain, and the part of the stage it keeps dry.
+  const umbrella = act === 'rain' && buddy.stage !== 'EGG' ? umbrellaFor(buddy.stage) : null;
+  const shelter = (() => {
+    if (!umbrella || rainX === null) return null;
+    const cells = umbrella.frame[0].length;
+    const col = flipped ? gridWidth - umbrella.col - cells : umbrella.col;
+    const left = rainX + workSway + col * scale;
+    const top = height - (FLOOR - scale) - spriteHeight + umbrella.row * scale;
+    return { left, right: left + cells * scale, top };
+  })();
+  const front = evolving ? null : seasonFront(buddy.stage, season);
 
   const feed = () => {
     if (busy) return;
@@ -1143,7 +1336,11 @@ export function BuddyStage({
       />
 
       <WallDecor decor={decor} floor={FLOOR} top={34} />
-      {decor.plant ? (
+      {corner ? (
+        <View style={[styles.poop, { bottom: FLOOR - 2, right: 8 }]} pointerEvents="none">
+          <PixelSprite frame={corner.frame} palette={PROP_PALETTE} scale={scale * corner.size} />
+        </View>
+      ) : decor.plant ? (
         <View style={[styles.poop, { bottom: FLOOR - 2, right: 8 }]} pointerEvents="none">
           <Plant tier={decor.plant} scale={decor.plantScale} />
         </View>
@@ -1193,6 +1390,98 @@ export function BuddyStage({
         </Pressable>
       </Animated.View>
 
+      {act === 'shootingStar' ? (
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            styles.passThrough,
+            {
+              backgroundColor: DUSK,
+              opacity: dusk.interpolate({ inputRange: [0, 1, 2, 3], outputRange: [0, 1, 1, 0] }),
+            },
+          ]}
+        >
+          <Svg width={width} height={height - FLOOR}>
+            {STARS.map(([sx, sy], i) => (
+              <Rect key={i} x={sx * width} y={sy * height} width={4} height={4} fill={STAR} />
+            ))}
+          </Svg>
+          <Animated.View
+            style={[
+              styles.layer,
+              {
+                opacity: dusk.interpolate({
+                  inputRange: [0.9, 1, 2, 2.1],
+                  outputRange: [0, 1, 1, 0],
+                  extrapolate: 'clamp',
+                }),
+                transform: [
+                  {
+                    translateX: dusk.interpolate({
+                      inputRange: [1, 2],
+                      outputRange: [width * 0.85, width * 0.2],
+                      extrapolate: 'clamp',
+                    }),
+                  },
+                  {
+                    translateY: dusk.interpolate({
+                      inputRange: [1, 2],
+                      outputRange: [14, 64],
+                      extrapolate: 'clamp',
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            {/* The tail trails up and to the right of the falling star. */}
+            {Array.from({ length: 7 }, (_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.layer,
+                  styles.streak,
+                  { left: 4 + i * 7, top: 2 - i * 5, opacity: 1 - i / 7 },
+                ]}
+              />
+            ))}
+            <PixelSprite frame={SPARKLE} palette={PROP_PALETTE} scale={2} />
+          </Animated.View>
+        </Animated.View>
+      ) : null}
+      {(act === 'rain' || act === 'snow') && width > 0 ? (
+        <Animated.View
+          style={[
+            styles.rain,
+            styles.passThrough,
+            {
+              top: -RAIN_GAP,
+              transform: [
+                {
+                  translateY: rainFall.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, RAIN_GAP],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <Svg width={width} height={height - FLOOR + RAIN_GAP}>
+            {act === 'rain'
+              ? rainDrops(width, height - FLOOR, 26, shelter).map(([dx, dy]) => (
+                  <Rect key={dx + ',' + dy} x={dx} y={dy} width={2} height={9} fill={RAIN} />
+                ))
+              : rainDrops(width, height - FLOOR, 34, null).map(([dx, dy]) => (
+                  <G key={dx + ',' + dy}>
+                    <Rect x={dx + 1} y={dy + 1} width={4} height={4} fill={SNOW_SHADE} />
+                    <Rect x={dx} y={dy} width={4} height={4} fill={SNOW} />
+                  </G>
+                ))}
+          </Svg>
+        </Animated.View>
+      ) : null}
+
       {companionEgg ? (
         <View style={[styles.poop, { bottom: FLOOR - 2, right: poopRight + 4 }]}>
           <PixelSprite frame={buddyFrame('EGG', 'idle')} palette={BUDDY_PALETTE} scale={3} />
@@ -1239,7 +1528,7 @@ export function BuddyStage({
           </View>
         ) : showHeart ? (
           <View style={[styles.above, bigHeart ? styles.aboveBig : null]}>
-            <PixelSprite frame={HEART} palette={PROP_PALETTE} scale={bigHeart ? 5 : 3} />
+            <PixelSprite frame={bigHeart ? HEART_BIG : HEART} palette={PROP_PALETTE} scale={3} />
           </View>
         ) : active?.kind === 'message' || act === 'startle' ? (
           <View style={styles.above}>
@@ -1278,13 +1567,6 @@ export function BuddyStage({
             <PixelSprite frame={NOTE} palette={BUDDY_PALETTE} scale={4} />
           </Animated.View>
         ) : null}
-        {line && !evolving ? (
-          <SpeechBubble
-            text={t(`buddy.say.${line}`)}
-            side={onRightHalf ? 'left' : 'right'}
-            above={spriteHeight * 0.85}
-          />
-        ) : null}
         {bursting
           ? BURST.map(([dx, dy], i) => (
               <Animated.View
@@ -1317,6 +1599,15 @@ export function BuddyStage({
               </Animated.View>
             ))
           : null}
+        {behind && !evolving ? (
+          <LayerSprite
+            layer={behind}
+            gridWidth={gridWidth}
+            palette={BUDDY_PALETTE}
+            scale={scale}
+            flipped={flipped}
+          />
+        ) : null}
         <Pressable
           nativeID="buddy-sprite-button"
           onPress={pet}
@@ -1325,6 +1616,60 @@ export function BuddyStage({
         >
           <PixelSprite frame={frame} palette={BUDDY_PALETTE} scale={scale} flipped={flipped} />
         </Pressable>
+        {front ? (
+          <LayerSprite
+            layer={front}
+            gridWidth={gridWidth}
+            palette={BUDDY_PALETTE}
+            scale={scale}
+            flipped={flipped}
+          />
+        ) : null}
+        {umbrella ? (
+          <LayerSprite
+            layer={umbrella}
+            gridWidth={gridWidth}
+            palette={PROP_PALETTE}
+            scale={scale}
+            flipped={flipped}
+          />
+        ) : null}
+        {butterfly ? (
+          <Animated.View
+            style={[
+              styles.layer,
+              styles.passThrough,
+              {
+                left: butterfly[1] * scale,
+                top: butterfly[0] * scale,
+                transform: [
+                  {
+                    translateX: flutter.interpolate({
+                      inputRange: [0, 1, 2],
+                      outputRange: [spriteWidth, 0, -spriteWidth],
+                    }),
+                  },
+                  {
+                    translateY: flutter.interpolate({
+                      inputRange: [0, 1, 2],
+                      outputRange: [-spriteHeight * 0.6, 0, -spriteHeight * 0.7],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <PixelSprite frame={BUTTERFLY[tick % 2]} palette={PROP_PALETTE} scale={scale} />
+          </Animated.View>
+        ) : null}
+        {/* In front of everything with the buddy, the umbrella too. */}
+        {line && !evolving ? (
+          <SpeechBubble
+            text={t(`buddy.say.${line}`)}
+            side={onRightHalf ? 'left' : 'right'}
+            above={spriteHeight * 0.85}
+          />
+        ) : null}
       </Animated.View>
       {/* The station stands in front of the buddy, whether it is working there or walking by. */}
       {station ? (
@@ -1505,7 +1850,20 @@ const styles = StyleSheet.create({
   },
   // Room for the big heart of a pet shared by both.
   aboveBig: {
-    top: -40,
+    top: -44,
+  },
+  layer: {
+    position: 'absolute',
+  },
+  rain: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+  },
+  streak: {
+    width: 4,
+    height: 4,
+    backgroundColor: '#FFD166',
   },
   sparkle: {
     position: 'absolute',
