@@ -41,7 +41,7 @@ import {
   buddyFrame,
   EXCLAIM,
   HEART,
-  JOB_PROPS,
+  JOB_BADGES,
   JOB_STATIONS,
   type Station,
   LEVEL_UP,
@@ -938,8 +938,9 @@ export function BuddyStage({
 
   // The bowl and the poops bob now and then while they need tapping.
   const wantsFood = buddy.hungry && !eating;
-  // A hungry child or grown-up thinks of food over its head, and a tap on it feeds it.
-  const thinking = atTable && wantsFood && !sleeping;
+  // Hungry, it thinks of food over its head from the egg on (no words needed), and a tap on it
+  // feeds it.
+  const thinking = wantsFood && !sleeping;
   const hasPoop = buddy.poops > 0;
   useEffect(() => {
     if (!wantsFood && !hasPoop) return;
@@ -1332,7 +1333,7 @@ export function BuddyStage({
         </View>
       </Pressable>
 
-      {/* The job's mark: its tool, small, in the corner. */}
+      {/* The job's mark: its round badge, in the corner. */}
       {job ? (
         <View
           style={[styles.jobBadge, styles.passThrough]}
@@ -1340,7 +1341,7 @@ export function BuddyStage({
           accessibilityRole="image"
           accessibilityLabel={t(`buddy.job.${job}`)}
         >
-          <PixelSprite frame={JOB_PROPS[job][0]} palette={PROP_PALETTE} scale={2} />
+          <PixelSprite frame={JOB_BADGES[job]} palette={PROP_PALETTE} scale={2} />
         </View>
       ) : null}
 
@@ -1374,11 +1375,8 @@ export function BuddyStage({
             },
           ]}
         >
-          {buddy.hungry && !eating ? (
-            <View style={styles.bowlAsk}>
-              <PixelSprite frame={EXCLAIM} palette={BUDDY_PALETTE} scale={2} />
-            </View>
-          ) : riceSparkle ? (
+          {/* Hungry, the buddy thinks of food instead of a mark over the bowl. */}
+          {riceSparkle ? (
             <View style={styles.bowlAsk}>
               <PixelSprite frame={SPARKLE} palette={PROP_PALETTE} scale={2} />
             </View>

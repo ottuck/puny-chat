@@ -375,6 +375,8 @@ export const PROP_PALETTE: Palette = {
   I: '#BFE3FF', // pale blue: butterfly, umbrella shine
   M: '#D9577F', // cherry blossom shade
   b: '#2E2A33', // black shopping bag
+  T: '#9E4A68', // the writer's badge
+  U: '#6A2C43', // the writer's badge, shade
 };
 
 // prettier-ignore
@@ -513,161 +515,102 @@ export const NOTE: Frame = [
   '.kk..',
 ];
 
-// --- Job props (docs/art-handover.md, 6) ---
+// --- Job badges (docs/art-handover.md, D) ---
 
-// What an adult holds at its work, small and plain: two frames each, swapped every tick (steam
-// drifting, water pouring, a note, a line written).
+// The job's mark in the stage's corner: a round coin in the job's color with its sign in white (a
+// cook's hat, a sprout, headphones, a quill, a steaming cup).
 // prettier-ignore
-const POT: [Frame, Frame] = [[
-  '...v....v...',
-  '....v....v..',
-  '...v....v...',
-  '............',
-  '.....kk.....',
-  '...kkkkkk...',
-  '..kzzzzzzk..',
-  '.kkkkkkkkkk.',
-  'kkSwSSSSSSkk',
-  '.kSwSSSSSSk.',
-  '.kSSSSSSSSk.',
-  '..kkkkkkkk..',
-], [
-  '....v....v..',
-  '...v....v...',
-  '....v....v..',
-  '............',
-  '.....kk.....',
-  '...kkkkkk...',
-  '..kzzzzzzk..',
-  '.kkkkkkkkkk.',
-  'kkSwSSSSSSkk',
-  '.kSwSSSSSSk.',
-  '.kSSSSSSSSk.',
-  '..kkkkkkkk..',
-]];
-
-// prettier-ignore
-const WATERING_CAN: [Frame, Frame] = [[
-  '............',
-  '...kkkk.....',
-  '..k....k....',
-  '..k....k..kk',
-  '.kkkkkkk.kak',
-  '.kaaaaaakak.',
-  '.kawaaaaak..',
-  '.kawaaaak...',
-  '.kaaaaaak...',
-  '.kaaaaaak...',
-  '..kkkkkk....',
-  '............',
-], [
-  '............',
-  '...kkkk.....',
-  '..k....k....',
-  '..k....k..kk',
-  '.kkkkkkk.kak',
-  '.kaaaaaakak.',
-  '.kawaaaaak.a',
-  '.kawaaaak...',
-  '.kaaaaaak.a.',
-  '.kaaaaaak..a',
-  '..kkkkkk....',
-  '..........a.',
-]];
-
-// prettier-ignore
-const HEADPHONES: [Frame, Frame] = [[
-  '............',
-  '............',
-  '............',
-  '...kkkkkk...',
-  '..kKKKKKKk..',
-  '.kKk....kKk.',
-  '.kk......kk.',
-  'kBBk....kBBk',
-  'kBwk....kwBk',
-  'kBBk....kBBk',
-  '.kk......kk.',
-  '............',
-], [
-  '...........k',
-  '...........k',
-  '..........kk',
-  '...kkkkkk...',
-  '..kKKKKKKk..',
-  '.kKk....kKk.',
-  '.kk......kk.',
-  'kBBk....kBBk',
-  'kBwk....kwBk',
-  'kBBk....kBBk',
-  '.kk......kk.',
-  '............',
-]];
-
-// prettier-ignore
-const QUILL: [Frame, Frame] = [[
-  '.........kk.',
-  '........kwk.',
-  '.......kwvk.',
-  '......kwvk..',
-  '.....kwvk...',
-  '....kwvk....',
-  '...kkkk.....',
-  'kkkkkkkkkk..',
-  'knnnnnnnnk..',
-  'knKKKnnnnk..',
-  'knnnnnnnnk..',
-  'kkkkkkkkkk..',
-], [
-  '..........kk',
-  '.........kwk',
-  '........kwvk',
-  '.......kwvk.',
-  '......kwvk..',
-  '.....kwvk...',
-  '....kkkk....',
-  'kkkkkkkkkk..',
-  'knnnnnnnnk..',
-  'knKKKKnnnk..',
-  'knnnnnnnnk..',
-  'kkkkkkkkkk..',
-]];
-
-// prettier-ignore
-const COFFEE: [Frame, Frame] = [[
-  '...v..v.....',
-  '..v..v......',
-  '...v..v.....',
-  '............',
-  '.kkkkkkkk...',
-  '.kRRRRRRk...',
-  '.kwwwwwwkkk.',
-  '.kwwwwwwk.k.',
-  '.kwwwwwwkkk.',
-  '..kwwwwk....',
-  'kwwwwwwwwwk.',
-  '.kkkkkkkkk..',
-], [
-  '..v..v......',
-  '...v..v.....',
-  '..v..v......',
-  '............',
-  '.kkkkkkkk...',
-  '.kRRRRRRk...',
-  '.kwwwwwwkkk.',
-  '.kwwwwwwk.k.',
-  '.kwwwwwwkkk.',
-  '..kwwwwk....',
-  'kwwwwwwwwwk.',
-  '.kkkkkkkkk..',
-]];
-
-export const JOB_PROPS: Record<BuddyJob, [Frame, Frame]> = {
-  CHEF: POT,
-  GARDENER: WATERING_CAN,
-  DJ: HEADPHONES,
-  WRITER: QUILL,
-  BARISTA: COFFEE,
+export const JOB_BADGES: Record<BuddyJob, Frame> = {
+  CHEF: [
+    '................',
+    '....kkkkkkkk....',
+    '...kkllllllkk...',
+    '..klluuuuuuuuk..',
+    '.kkluwwuuwwuukk.',
+    '.kluuwwwwwwuudk.',
+    '.kluwwwwwwwwudk.',
+    '.kluwwwwwwwwudk.',
+    '.kluuwwwwwwuudk.',
+    '.kluuvvvvvvuudk.',
+    '.kluuwwwwwwuudk.',
+    '.kkuuuuuuuuudkk.',
+    '..kuuuuuuuuddk..',
+    '...kkddddddkk...',
+    '....kkkkkkkk....',
+    '................',
+  ],
+  GARDENER: [
+    '................',
+    '....kkkkkkkk....',
+    '...kkPPPPPPkk...',
+    '..kPPggggggggk..',
+    '.kkPgggggggggkk.',
+    '.kPgwwggggwwgGk.',
+    '.kPgwwwggwwwgGk.',
+    '.kPggwwwwwwggGk.',
+    '.kPggggwwggggGk.',
+    '.kPggggwwggggGk.',
+    '.kPggggwwggggGk.',
+    '.kkgggggggggGkk.',
+    '..kggggggggGGk..',
+    '...kkGGGGGGkk...',
+    '....kkkkkkkk....',
+    '................',
+  ],
+  DJ: [
+    '................',
+    '....kkkkkkkk....',
+    '...kkaaaaaakk...',
+    '..kaaBBBBBBBBk..',
+    '.kkaBBwwwwBBBkk.',
+    '.kaBBwBBBBwBBNk.',
+    '.kaBwBBBBBBwBNk.',
+    '.kaBwBBBBBBwBNk.',
+    '.kaBwwBBBBwwBNk.',
+    '.kaBwwBBBBwwBNk.',
+    '.kaBwwBBBBwwBNk.',
+    '.kkBBBBBBBBBNkk.',
+    '..kBBBBBBBBNNk..',
+    '...kkNNNNNNkk...',
+    '....kkkkkkkk....',
+    '................',
+  ],
+  WRITER: [
+    '................',
+    '....kkkkkkkk....',
+    '...kkMMMMMMkk...',
+    '..kMMTTTTTTTTk..',
+    '.kkMTTTTTTwwTkk.',
+    '.kMTTTTTTwwwTUk.',
+    '.kMTTTTTwwwTTUk.',
+    '.kMTTTTwwwTTTUk.',
+    '.kMTTTwwwTTTTUk.',
+    '.kMTTTwwTTTTTUk.',
+    '.kMTTwTTTTTTTUk.',
+    '.kkTwTTTTTTTUkk.',
+    '..kTTTTTTTTUUk..',
+    '...kkUUUUUUkk...',
+    '....kkkkkkkk....',
+    '................',
+  ],
+  BARISTA: [
+    '................',
+    '....kkkkkkkk....',
+    '...kkLLLLLLkk...',
+    '..kLLDDDDDDDDk..',
+    '.kkLDDwDwDDDDkk.',
+    '.kLDDwDwDDDDDRk.',
+    '.kLDDDDDDDDDDRk.',
+    '.kLDwwwwwwwDDRk.',
+    '.kLDwwwwwwDwDRk.',
+    '.kLDwwwwwwwDDRk.',
+    '.kLDDwwwwwDDDRk.',
+    '.kkDDDDDDDDDRkk.',
+    '..kDDDDDDDDRRk..',
+    '...kkRRRRRRkk...',
+    '....kkkkkkkk....',
+    '................',
+  ],
 };
 
 // --- Job stations (docs/art-handover.md, A·B) ---
