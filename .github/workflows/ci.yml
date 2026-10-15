@@ -30,12 +30,16 @@ concurrency:
 
 jobs:
   # Decides which of app/server needs to run from the changed files (GitHub API, no checkout).
+  # On main it compares with the last commit that passed CI there, not the previous push: a run
+  # cancelled by the next push (concurrency above) would otherwise leave its changes untested
+  # (2026-10-15: a server change was cancelled and the next, app-only push skipped the server).
   # On any error, or when the comparison is unavailable, both run.
   changes:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: read
+      actions: read
     outputs:
       app: ${{ steps.filter.outputs.app }}
       server: ${{ steps.filter.outputs.server }}
@@ -46,16 +50,20 @@ jobs:
           REPO: ${{ github.repository }}
           EVENT: ${{ github.event_name }}
           PR: ${{ github.event.pull_request.number }}
-          BEFORE: ${{ github.event.before }}
           SHA: ${{ github.sha }}
         run: |
           app=false; server=false
           if [ "$EVENT" = "pull_request" ]; then
             files=$(gh api --paginate "repos/$REPO/pulls/$PR/files" -q '.[].filename') || files=
-          elif [ -n "$BEFORE" ] && [ "${BEFORE#0000000}" != "$BEFORE" ]; then
-            files=
           else
-            files=$(gh api "repos/$REPO/compare/$BEFORE...$SHA" -q '.files[].filename') || files=
+            base=$(gh run list -R "$REPO" --workflow ci.yml --branch main --event push --status success \
+              --limit 1 --json headSha -q '.[0].headSha') || base=
+            echo "comparing with the last commit that passed: ${base:-none}"
+            if [ -n "$base" ]; then
+              files=$(gh api "repos/$REPO/compare/$base...$SHA" -q '.files[].filename') || files=
+            else
+              files=
+            fi
           fi
           if [ -z "$files" ]; then
             app=true; server=true
