@@ -89,6 +89,7 @@
     "clean": "Clean",
     "feed": "Feed",
     "cleanUp": "Clean up",
+    "work": "Ask {{buddy}} to work",
     "growthHint": "The more you chat and take care of it, the more it grows.",
     "peckish": "Could eat",
     "pet": "Pet {{buddy}}",
@@ -216,7 +217,7 @@
     },
     "jobPerk": {
       "CHEF": "Gets extra excited at mealtime. Stirs a pot when alone.",
-      "GARDENER": "Is happier when you clean up. Tends the garden when alone.",
+      "GARDENER": "Says \"All tidy\" when the work is done. Tends the big plant when alone.",
       "DJ": "Upside-down days: on air in the small hours, asleep by day.",
       "POET": "Shows a big heart at loving words. Writes a poem when alone.",
       "BARISTA": "Talks a lot, chiming in even while you chat."
@@ -227,6 +228,7 @@
     "FED": "{{actor}} fed {{buddy}}",
     "POOPED": "{{buddy}} pooped 💩",
     "CLEANED": "{{actor}} cleaned up after {{buddy}}",
+    "WORKED": "{{actor}} and {{buddy}} finished the work",
     "LEVELED_UP": "{{buddy}} leveled up! Lv.{{level}} ⬆️",
     "EVOLVED": "{{buddy}} evolved! ✨",
     "MAX_LEVEL": "🎉 {{buddy}} reached the top level, Lv.{{level}}!",

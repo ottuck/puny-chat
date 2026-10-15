@@ -49,7 +49,7 @@ type ChatScreenProps = {
 function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { buddy, busy, setBuddy, feed, clean } = useBuddy(room.buddy);
+  const { buddy, busy, setBuddy, feed, clean, work } = useBuddy(room.buddy);
   const chat = useChat({ myId: me.id, onRoomLost, onRoomChanged, onBuddy: setBuddy });
   const { messages, status, online, typing, reads, unreadWhileAway } = chat;
   const [buddyOpen, setBuddyOpen] = useState(false);
@@ -99,6 +99,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
           height={stageHeight}
           onFeed={feed}
           onClean={clean}
+          onWork={work}
           onOpenDetail={() => setBuddyOpen(true)}
           reaction={chat.reaction}
           cue={chat.cue}

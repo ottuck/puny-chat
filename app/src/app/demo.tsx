@@ -103,6 +103,7 @@ function DemoScreen({ onReplay }: { onReplay: () => void }) {
           height={stageHeight}
           onFeed={demo.feed}
           onClean={demo.clean}
+          onWork={demo.work}
           onOpenDetail={() => setBuddyOpen(true)}
           reaction={demo.reaction}
           companionEgg={demo.finished}

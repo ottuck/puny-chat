@@ -40,14 +40,18 @@ export function SpeechBubble({
 const OUTLINE = '#3A2E2A';
 
 const styles = StyleSheet.create({
+  // A fixed width: positioned from one side only, it would otherwise get just the room left of
+  // that side within the buddy and break short lines letter by letter. The box inside keeps to the
+  // length of the line.
   bubble: {
     position: 'absolute',
-    maxWidth: 170,
+    width: 170,
     pointerEvents: 'none',
   },
   // Beside the head, clear of the sprout on top.
   right: {
     left: '82%',
+    alignItems: 'flex-start',
   },
   left: {
     right: '82%',

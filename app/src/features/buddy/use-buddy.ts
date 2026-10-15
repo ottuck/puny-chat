@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import { type BuddyView, cleanBuddy, feedBuddy } from './api';
+import { type BuddyView, cleanBuddy, feedBuddy, workBuddy } from './api';
 
 // The room's buddy, kept current by care responses and the socket's `buddy` events. The timeline
 // events (FED, CLEANED, …) arrive through the chat as messages.
@@ -25,5 +25,6 @@ export function useBuddy(initial: BuddyView) {
     setBuddy,
     feed: () => run(feedBuddy),
     clean: () => run(cleanBuddy),
+    work: () => run(workBuddy),
   };
 }

@@ -123,6 +123,28 @@ public class BuddyService {
     }
 
     /**
+     * A grown-up's work at its station (a tap on it, or "일" in the chat; docs/product.md, 직업 무대
+     * 장치). It may work any time; EXP comes once in {@link BuddyRules#WORK_EVERY}, with WORKED in
+     * the timeline. Before growing up there is no station: nothing happens.
+     */
+    public Mono<CareResult> work(String roomId, String actorId) {
+        Instant now = Instant.now(clock);
+        return load(roomId).flatMap(buddy -> {
+            if (BuddyRules.stage(BuddyRules.level(buddy.exp())) != BuddyRules.Stage.ADULT) {
+                return Mono.just(new CareResult(BuddyView.of(buddy, now), false));
+            }
+            return care(
+                    roomId,
+                    actorId,
+                    orMissing("buddy.lastWorkedAt", where("buddy.lastWorkedAt").lte(now.minus(BuddyRules.WORK_EVERY))),
+                    new Update().set("buddy.lastWorkedAt", now).inc("buddy.exp", BuddyRules.WORK_EXP),
+                    "WORKED",
+                    BuddyRules.WORK_EXP,
+                    now);
+        });
+    }
+
+    /**
      * Compare-and-set on the cleaning state just read: of two taps on the same poop at once, one
      * cleans it and the other gets {@code changed: false}. A clean floor starts a new cycle (the
      * clean time moves to now), so poops are counted from there again.
@@ -261,7 +283,11 @@ public class BuddyService {
      */
     public Mono<Void> onMessageSent(String roomId, String senderId, String text) {
         Mono<?> care = CareCommand.of(text)
-                .map(command -> command == CareCommand.FEED ? feed(roomId, senderId) : cleanAll(roomId, senderId))
+                .map(command -> switch (command) {
+                    case FEED -> feed(roomId, senderId);
+                    case CLEAN -> cleanAll(roomId, senderId);
+                    case WORK -> work(roomId, senderId);
+                })
                 .orElse(Mono.empty());
         return onMessageSent(roomId)
                 .then(noteHabits(roomId, text, Instant.now(clock)))

@@ -26,6 +26,7 @@ const REACTIONS: ReactionKind[] = [
   'fed',
   'cleaned',
   'pooped',
+  'worked',
   'levelUp',
   'evolved',
   'together',
@@ -143,6 +144,7 @@ function Preview() {
           height={stageHeight}
           onFeed={() => setHungry(false)}
           onClean={() => setPoops((n) => Math.max(0, n - 1))}
+          onWork={() => {}}
           onOpenDetail={() => {}}
           reaction={reaction}
           cue={cue}

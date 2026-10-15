@@ -6,6 +6,8 @@ export type ReactionKind =
   | 'fed'
   | 'cleaned'
   | 'pooped'
+  // A grown-up's work at its station, earning EXP.
+  | 'worked'
   | 'levelUp'
   | 'evolved'
   | 'together'
@@ -17,6 +19,7 @@ const BY_EVENT: Partial<Record<string, ReactionKind>> = {
   FED: 'fed',
   CLEANED: 'cleaned',
   POOPED: 'pooped',
+  WORKED: 'worked',
   LEVELED_UP: 'levelUp',
   MAX_LEVEL: 'levelUp',
   // The new egg arrives with the same rings of light as an evolution.

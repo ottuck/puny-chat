@@ -16,7 +16,10 @@ export const BUDDY_PALETTE: Palette = {
   p: '#FF9E90', // cheeks
   g: '#8BCB6B', // leaf
   G: '#5DA14E', // leaf shade, stem
+  P: '#B8E39A', // leaf, lit
   f: '#FF9EB5', // petals
+  h: '#FFD3DE', // petal, lit
+  F: '#F27A9B', // petal shade
   y: '#FFD166', // flower center
   m: '#D9576B', // inside of an open mouth
 };
@@ -43,9 +46,9 @@ const EGG: Frame = [
 
 // prettier-ignore
 const BABY: Frame = [
-  '.......gg.......',
-  '......gGgg......',
-  '........G.......',
+  '....kkk..kkk....',
+  '...kPggkkggPk...',
+  '....kkkGGkkk....',
   '.....kkkkkk.....',
   '...kkbbbbbbkk...',
   '..kbllbbbbbbbk..',
@@ -63,23 +66,23 @@ const BABY: Frame = [
 
 // prettier-ignore
 const CHILD: Frame = [
-  '......gg....gg......',
-  '.....gGgg..ggGg.....',
-  '......ggGggGgg......',
-  '.........GG.........',
+  '....................',
+  '....kkk......kkk....',
+  '...kPggk....kggPk...',
+  '...kgGGGkGGkGGGgk...',
+  '....kkkkkGGkkkkk....',
   '......kkkkkkkk......',
   '....kkbbbbbbbbkk....',
   '...kbllbbbbbbbbbk...',
   '..kbllbbbbbbbbbbbk..',
+  '..kbbbkbbbbbbkbbbk..',
+  '..kbbbkbbbbbbkbbbk..',
+  '..kbpbbbbkkbbbbpbk..',
   '..kbbbbbbbbbbbbbbk..',
-  '.kbbbkbbbbbbbbkbbbk.',
-  '.kbbbkbbbbbbbbkbbbk.',
-  '.kbpbbbbbkkbbbbbpbk.',
-  '.kbbbbbbbbbbbbbbbbk.',
-  'kbkbbbbbbbbbbbbbbkbk',
-  '.kksbbbbbbbbbbbbskk.',
-  '...ksbbbbbbbbbbsk...',
-  '....kksssssssskk....',
+  '.kbkbbbbbbbbbbbbkbk.',
+  '..kksbbbbbbbbbbskk..',
+  '....ksbbbbbbbbsk....',
+  '.....kksssssskk.....',
   '.....kbk....kbk.....',
   '.....kkk....kkk.....',
   '....................',
@@ -87,30 +90,30 @@ const CHILD: Frame = [
 
 // prettier-ignore
 const ADULT: Frame = [
-  '..........ffff..........',
-  '.........ffyyff.........',
-  '.........ffyyff.........',
-  '..........ffff..........',
-  '.......gg..GG..gg.......',
-  '........ggGGGGgg........',
-  '...........GG...........',
-  '.......kkkkkkkkkk.......',
-  '.....kkbbbbbbbbbbkk.....',
-  '....kbllbbbbbbbbbbbk....',
-  '...kbllbbbbbbbbbbbbbk...',
-  '..kbbbbbbbbbbbbbbbbbbk..',
-  '..kbbbbkbbbbbbbbkbbbbk..',
-  '..kbbbbkbbbbbbbbkbbbbk..',
-  '..kbbpbbbbbkkbbbbbpbbk..',
-  '..kbbbbbbbbbbbbbbbbbbk..',
-  '.kbkbbbbbbbbbbbbbbbbkbk.',
-  '.kbkbbbbbbbbbbbbbbbbkbk.',
-  '..kksbbbbbbbbbbbbbbskk..',
-  '....ksbbbbbbbbbbbbsk....',
-  '.....kksssssssssskk.....',
-  '......kbk......kbk......',
-  '......kkk......kkk......',
-  '........................',
+  '..........kk..........',
+  '........kkhfkk........',
+  '.......khffFhfk.......',
+  '.......kfFyyfFk.......',
+  '........kffhfk........',
+  '.....kkkkfFfFkkkk.....',
+  '....kPgGkkkkkkGgPk....',
+  '.......kkkkkkkk.......',
+  '.....kkbbbbbbbbkk.....',
+  '....kbllbbbbbbbbbk....',
+  '...kbllbbbbbbbbbbbk...',
+  '...kblbbbbbbbbbbbbk...',
+  '..kbbbbbbbbbbbbbbbbk..',
+  '..kbbbbkbbbbbbkbbbbk..',
+  '..kbbbbkbbbbbbkbbbbk..',
+  '..kbbpbbbbkkbbbbpbbk..',
+  '..kbbbbbbbbbbbbbbbbk..',
+  '.kbkbbbbbbbbbbbbbbkbk.',
+  '..kksbbbbbbbbbbbbskk..',
+  '....ksbbbbbbbbbbsk....',
+  '.....kksssssssskk.....',
+  '......kbk....kbk......',
+  '......kkk....kkk......',
+  '......................',
 ];
 
 // Where the face and feet are in each hatched stage's grid, so every pose is made from one drawing
@@ -135,19 +138,19 @@ const ANATOMY: Record<Exclude<BuddyStage, 'EGG'>, Anatomy> = {
   },
   CHILD: {
     base: CHILD,
-    eyes: [9, 10, 5, 14],
+    eyes: [9, 10, 6, 13],
     mouth: [11, 9, 10],
-    cheeks: [11, 3, 16],
+    cheeks: [11, 4, 15],
     feet: 17,
     feetStep: ['....kbk......kbk....', '....kkk......kkk....'],
   },
   ADULT: {
     base: ADULT,
-    eyes: [12, 13, 7, 16],
-    mouth: [14, 11, 12],
-    cheeks: [14, 5, 18],
+    eyes: [13, 14, 7, 14],
+    mouth: [15, 10, 11],
+    cheeks: [15, 5, 16],
     feet: 21,
-    feetStep: ['.....kbk........kbk.....', '.....kkk........kkk.....'],
+    feetStep: ['.....kbk......kbk.....', '.....kkk......kkk.....'],
   },
 };
 
@@ -316,6 +319,7 @@ export const PROP_PALETTE: Palette = {
   m: '#F4B8A8', // rug
   n: '#FFF1E6', // rug stripes
   f: '#FF9EB5', // flowers
+  F: '#F27A9B', // flower shade
   S: '#C8CED6', // silver bowl
   Y: '#EFBF3A', // gold bowl
   e: '#C96F4A', // pot rim
@@ -324,6 +328,14 @@ export const PROP_PALETTE: Palette = {
   z: '#E9EDF1', // pot lid
   K: '#5B5562', // dark grey: mic, headband, ink
   R: '#6B4426', // coffee
+  D: '#9C6B43', // wood
+  L: '#C99A68', // wood, lit
+  j: '#3F8740', // leaf outline
+  P: '#B8E39A', // leaf, lit
+  q: '#74502F', // wood, dark
+  x: '#99A2AD', // metal shade
+  N: '#3A6A96', // glazed pot shade
+  Z: '#33413B', // chalkboard
 };
 
 // prettier-ignore
@@ -576,58 +588,367 @@ export const JOB_PROPS: Record<BuddyJob, [Frame, Frame]> = {
   BARISTA: COFFEE,
 };
 
+// --- Job stations (docs/art-handover.md, A·B) ---
+
+// What an adult works at, on the left of the stage in the buddy's own pixel size, always drawn in
+// front of it: it walks over and works behind it (a counter or desk, which hides its lower body)
+// or beside it (the plant). Two frames each, swapped while it works. The counters reach just below
+// the buddy's mouth and are a little narrower than it, so it stands towards their right end;
+// whatever stands on them is at the left end, clear of the face.
+export type Station = {
+  frames: [Frame, Frame];
+  // Rows at the bottom drawn below the floor line, so the station stands in front of the buddy.
+  sink: number;
+  // Where the buddy's grid stands while it works, in cells from the station's left edge.
+  standAt: number;
+  // A tool in its hand while it works, by the grid cell of the tool's top left.
+  // Drawn at `size` of the buddy's pixel size, its right edge (the handle) kept at the hand.
+  held?: { frames: [Frame, Frame]; row: number; col: number; size?: number };
+};
+
+// A kitchen counter: a pot on a lit burner (the flame flickers, the steam drifts), a cutting board
+// with tomato and herbs, an oven door with a window and two drawers.
+// prettier-ignore
+const KITCHEN: [Frame, Frame] = [[
+  '..v...v.................',
+  '...v...v................',
+  '..v...v.................',
+  '...kk...................',
+  '.kkkkkk.................',
+  '.kzwzzk.................',
+  'kkkkkkkk................',
+  '.kwSSxk.................',
+  '.kSSSxk.................',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+  'kKuuuuKwwwwwwwwwLLLLLLwk',
+  'kzzzzzzzzzzzzzzzLrLrgLzk',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+  'knKKKKKKKKnknnnnnnnnnnnk',
+  'knkKKvKKKknknnnnKKKnnnnk',
+  'knkKvKKKKknkvvvvvvvvvvvk',
+  'knkkkkkkkknknnnnKKKnnnnk',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+], [
+  '...v...v................',
+  '..v...v.................',
+  '...v...v................',
+  '....kk..................',
+  '.kkkkkk.................',
+  '.kzwzzk.................',
+  'kkkkkkkk................',
+  '.kwSSxk.................',
+  '.kSSSxk.................',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+  'kKyyyyKwwwwwwwwwLLLLLLwk',
+  'kzzzzzzzzzzzzzzzLrLrgLzk',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+  'knKKKKKKKKnknnnnnnnnnnnk',
+  'knkKKvKKKknknnnnKKKnnnnk',
+  'knkKvKKKKknkvvvvvvvvvvvk',
+  'knkkkkkkkknknnnnKKKnnnnk',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+]];
+
+// A plant taller than the buddy, in a clay pot: broad outlined leaves up a trunk. Its crown
+// sways while it is watered.
+// prettier-ignore
+const BIG_PLANT: [Frame, Frame] = [[
+  '.....jj.....',
+  '....jPgj....',
+  '...jPggGj...',
+  '...jgPGgj...',
+  '...jggGgj...',
+  '....jgGj....',
+  '.....jj.jjj.',
+  '.....DqjPPgj',
+  '.....DjGGGgj',
+  '.jjj.Dqjggj.',
+  'jgPPjDq.jj..',
+  'jgGGGjq.....',
+  '.jggjDq.jjj.',
+  '..jj.DqjPPgj',
+  '.....DjGGGgj',
+  '.jjj.Dqjggj.',
+  'jgPPjDq.jj..',
+  'jgGGGjq.....',
+  '.jggjDq.jjj.',
+  '..jj.DqjPPgj',
+  '.....DjGGGgj',
+  '.....Dqjggj.',
+  '.....Dq.jj..',
+  '.....Dq.....',
+  '.kkkkkkkkkk.',
+  '.koooooooek.',
+  '..kkkkkkkk..',
+  '..kooooooek.',
+  '...koooook..',
+  '...kkkkkk...',
+], [
+  '......jj....',
+  '.....jPgj...',
+  '....jPggGj..',
+  '....jgPGgj..',
+  '....jggGgj..',
+  '.....jgGj...',
+  '......jj.jjj',
+  '.....DqjPPgj',
+  '.....DjGGGgj',
+  '.jjj.Dqjggj.',
+  'jgPPjDq.jj..',
+  'jgGGGjq.....',
+  '.jggjDq.jjj.',
+  '..jj.DqjPPgj',
+  '.....DjGGGgj',
+  '.jjj.Dqjggj.',
+  'jgPPjDq.jj..',
+  'jgGGGjq.....',
+  '.jggjDq.jjj.',
+  '..jj.DqjPPgj',
+  '.....DjGGGgj',
+  '.....Dqjggj.',
+  '.....Dq.jj..',
+  '.....Dq.....',
+  '.kkkkkkkkkk.',
+  '.koooooooek.',
+  '..kkkkkkkk..',
+  '..kooooooek.',
+  '...koooook..',
+  '...kkkkkk...',
+]];
+
+// The late-night radio desk: a broadcast mic on a boom stand, headphones on the desk, faders, a
+// level meter that jumps with the music and the on-air lamp, which blinks.
+// prettier-ignore
+const RADIO_DESK: [Frame, Frame] = [[
+  '...kkkk.................',
+  '..kSwSSk................',
+  '..kxSxSk................',
+  '..kSxSxk................',
+  '..kxSxSk................',
+  '...kkkk.................',
+  '....kk..................',
+  '.kkkkk..................',
+  '.k......................',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+  'kzzzzzzzzzzzzzzzkKKKKkzk',
+  'kSSSSSSSSSSSSSSkBBkkBBkk',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+  'kSKSSwSSKSSKSSSSKKKkkkkk',
+  'kSwSSKSSKSSwSSSSKKKkrrkk',
+  'kSKSSKSSwSSKSSSSgggkrrkk',
+  'kSKSSKSSKSSKSSSSgggkkkkk',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+], [
+  '...kkkk.................',
+  '..kSwSSk................',
+  '..kxSxSk................',
+  '..kSxSxk................',
+  '..kxSxSk................',
+  '...kkkk.................',
+  '....kk..................',
+  '.kkkkk..................',
+  '.k......................',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+  'kzzzzzzzzzzzzzzzkKKKKkzk',
+  'kSSSSSSSSSSSSSSkBBkkBBkk',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+  'kSwSSKSSKSSKSSSSrrrkkkkk',
+  'kSKSSKSSwSSKSSSSyyykuukk',
+  'kSKSSwSSKSSKSSSSgggkuukk',
+  'kSKSSKSSKSSwSSSSgggkkkkk',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+]];
+
+// A wooden writing desk: a lit candle, a quill in its inkwell, an open book being written in, two
+// drawers with brass knobs.
+// prettier-ignore
+const WRITING_DESK: [Frame, Frame] = [[
+  '......kk................',
+  '.....kwk................',
+  '.u..kwvk................',
+  '.y..kwk.................',
+  'knk.kvk.................',
+  'knkkkkkk................',
+  'knkKwKKk................',
+  'knkKKKKk................',
+  'kYkkkkkk................',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+  'kLLLLLLLLwwwwkwwwwLLLLLk',
+  'kLLLLLLLLwKKwkwKwwLLLLLk',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+  'kDkkkkkkkkkDkkkkkkkkkkkk',
+  'kDkLLLyLLLkDkLLLLyLLLLkk',
+  'kDkkkkkkkkkDkkkkkkkkkkkk',
+  'kDqDDDqDDqDDDqDDDqDDqDqk',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+], [
+  '......kk................',
+  '.....kwk................',
+  '.y..kwvk................',
+  '.y..kwk.................',
+  'knk.kvk.................',
+  'knkkkkkk................',
+  'knkKwKKk................',
+  'knkKKKKk................',
+  'kYkkkkkk................',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+  'kLLLLLLLLwwwwkwwwwLLLLLk',
+  'kLLLLLLLLwKKwkwKKwLLLLLk',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+  'kDkkkkkkkkkDkkkkkkkkkkkk',
+  'kDkLLLyLLLkDkLLLLyLLLLkk',
+  'kDkkkkkkkkkDkkkkkkkkkkkk',
+  'kDqDDDqDDqDDDqDDDqDDqDqk',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+]];
+
+// A café counter: an espresso machine with its gauge pulling a shot into a cup, and a chalkboard
+// menu on the front.
+// prettier-ignore
+const CAFE_COUNTER: [Frame, Frame] = [[
+  '...v.v..................',
+  'kkkkkkkk................',
+  'kSwSSSxk................',
+  'kSkwkSxk................',
+  'kKKKKKKk................',
+  'kxkKKkxk................',
+  'kxkwwkxk................',
+  'kxkwwkxk................',
+  'kkkkkkkk................',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+  'kLLLLLLLLLLLLLLLLLLLLLLk',
+  'kDDDDDDDDDDDDDDDDDDDDDDk',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+  'kDkkkkkkkkkkkkkkkkkkkkDk',
+  'kDkZwwwZvvvvZwwZvvZZwkDk',
+  'kDkZvvZZwwwZZvvvZwZZvkDk',
+  'kDkkkkkkkkkkkkkkkkkkkkDk',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+], [
+  '..v.v...................',
+  'kkkkkkkk................',
+  'kSwSSSxk................',
+  'kSkwkSxk................',
+  'kKKKKKKk................',
+  'kxkKKkxk................',
+  'kxkRRkxk................',
+  'kxkwwkxk................',
+  'kkkkkkkk................',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+  'kLLLLLLLLLLLLLLLLLLLLLLk',
+  'kDDDDDDDDDDDDDDDDDDDDDDk',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+  'kDkkkkkkkkkkkkkkkkkkkkDk',
+  'kDkZwwwZvvvvZwwZvvZZwkDk',
+  'kDkZvvZZwwwZZvvvZwZZvkDk',
+  'kDkkkkkkkkkkkkkkkkkkkkDk',
+  'kkkkkkkkkkkkkkkkkkkkkkkk',
+]];
+
+// The gardener's watering can, held out towards the plant: the water falls from the spout.
+// prettier-ignore
+export const HELD_CAN: [Frame, Frame] = [[
+  '.....kkkk.',
+  '....k....k',
+  'kk..kkkkkk',
+  'kak.kaaaak',
+  '.kakkawaak',
+  '..kaaawaak',
+  '...kaaaaak',
+  '...kaaaaak',
+  '....kkkkk.',
+  'a.........',
+  '..........',
+  '.a........',
+], [
+  '.....kkkk.',
+  '....k....k',
+  'kk..kkkkkk',
+  'kak.kaaaak',
+  '.kakkawaak',
+  '..kaaawaak',
+  '...kaaaaak',
+  '...kaaaaak',
+  '....kkkkk.',
+  '..........',
+  'a.........',
+  '..........',
+]];
+
+export const JOB_STATIONS: Record<BuddyJob, Station> = {
+  CHEF: { frames: KITCHEN, sink: 3, standAt: 3 },
+  GARDENER: {
+    frames: BIG_PLANT,
+    sink: 1,
+    standAt: 15,
+    held: { frames: HELD_CAN, row: 12, col: -8, size: 0.6 },
+  },
+  DJ: { frames: RADIO_DESK, sink: 3, standAt: 3 },
+  POET: { frames: WRITING_DESK, sink: 3, standAt: 3 },
+  BARISTA: { frames: CAFE_COUNTER, sink: 3, standAt: 3 },
+};
+
 // --- Decorations (docs/product.md, 무대 꾸미기) ---
 
 // The plant in the corner grows finer with levels: a sprout in a clay pot, a leafy plant in a
 // rimmed pot, then flowers in a glazed pot.
 // prettier-ignore
 const PLANT_1: Frame = [
-  '..g...g..',
-  '.gGg.gGg.',
-  '.gGGgGGg.',
-  '..gGGGg..',
-  '...gGg...',
-  '....G....',
-  '.kkkkkkk.',
-  '.kooooook',
-  '..kooook.',
-  '..kkkkkk.',
+  '.kkk...kkk.',
+  'kPggk.kggPk',
+  'kgGGGkGGGgk',
+  '.kkkkGkkkk.',
+  '.....G.....',
+  '.....G.....',
+  'kkkkkkkkkkk',
+  'kwoooooooek',
+  'kkkkkkkkkkk',
+  '.kooooooek.',
+  '.kooooooek.',
+  '..kooooeek.',
+  '..kkkkkkk..',
 ];
 
 // prettier-ignore
 const PLANT_2: Frame = [
-  '..g..g..g..',
-  '.gGg.gGgGg.',
-  'gGgGgGgGgGg',
-  '.gGgGgGgGg.',
-  '..gGgGgGg..',
-  '...gGGGg...',
-  '.....G.....',
-  'k'.repeat(11),
-  'k' + 'e'.repeat(9) + 'k',
-  '.k' + 'o'.repeat(7) + 'k.',
-  '.k' + 'o'.repeat(7) + 'k.',
-  '..k' + 'o'.repeat(5) + 'k..',
-  '..' + 'k'.repeat(7) + '..',
+  '..kkk...kkk..',
+  '.kPggk.kggPk.',
+  '.kgGGGGGGGgk.',
+  '.kkkkkGkkkkk.',
+  'kPggk.G.kggPk',
+  'kgGGGkGkGGGgk',
+  '.kkkkkGkkkkk.',
+  '..kPggGggPk..',
+  '..kgGkGGGgk..',
+  '...kkkGkkk...',
+  'kkkkkkkkkkkkk',
+  'kwoooooooooek',
+  'kkkkkkkkkkkkk',
+  '.kooooooooek.',
+  '.kooooooooek.',
+  '..kooooooeek.',
+  '..kkkkkkkkk..',
 ];
 
 // prettier-ignore
 const PLANT_3: Frame = [
-  '...f.....f...',
-  '..fyf...fyf..',
-  '...f.gGg.f...',
-  '..gGg.G.gGg..',
-  '.gGgGgGgGgGg.',
-  'gGgGgfyfgGgGg',
-  '.gGgGgfgGgGg.',
-  '..gGgGgGgGg..',
-  '......G......',
-  'k'.repeat(13),
-  'k' + 'a'.repeat(11) + 'k',
-  '.k' + 'awawawawa' + 'k.',
-  '.k' + 'B'.repeat(9) + 'k.',
-  '..k' + 'B'.repeat(7) + 'k..',
-  '..' + 'k'.repeat(9) + '..',
+  '.kkk.........',
+  'kfyfk....kkk.',
+  'kffFk...kfyfk',
+  '.kkk.kkkkffFk',
+  '....kfyfkkkk.',
+  '.kkkkffFk....',
+  'kPggkkkk.kkk.',
+  'kgGGGkG.kggPk',
+  '.kkkk.GkGGGgk',
+  '......G.kkkk.',
+  'kkkkkkkkkkkkk',
+  'kwaaaaaaaaaak',
+  'kkkkkkkkkkkkk',
+  '.kaBBBBBBBNk.',
+  '.kaBBBBBBBNk.',
+  '..kBBBBBBNNk.',
+  '..kkkkkkkkk..',
 ];
 
 export type PlantTier = 1 | 2 | 3;
