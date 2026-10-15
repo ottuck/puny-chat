@@ -26,7 +26,6 @@ const REACTIONS: ReactionKind[] = [
   'fed',
   'cleaned',
   'pooped',
-  'task',
   'worked',
   'levelUp',
   'evolved',
@@ -145,6 +144,7 @@ function Preview() {
           height={stageHeight}
           onFeed={() => setHungry(false)}
           onClean={() => setPoops((n) => Math.max(0, n - 1))}
+          onWork={() => {}}
           onOpenDetail={() => {}}
           reaction={reaction}
           cue={cue}
@@ -188,7 +188,7 @@ function Preview() {
         </Group>
         <Group title="state">
           <Chip label="hungry" onPress={() => setHungry((h) => !h)} active={hungry} />
-          <Chip label="+ poop / task" onPress={() => setPoops((n) => Math.min(3, n + 1))} />
+          <Chip label="+ poop" onPress={() => setPoops((n) => Math.min(3, n + 1))} />
           <Chip
             label="partner here"
             onPress={() => setPartnerHere((h) => !h)}

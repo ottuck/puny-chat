@@ -309,15 +309,16 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
   이번 주기에 치운 수(`poopsCleaned`)를 올리고, 마지막 하나를 치우면 `lastCleanedAt`을 지금으로 옮겨 새 주기를 시작한다.
   바닥의 💩 = 주기에 생긴 수 − 치운 수. 채팅의 "청소"는 한 번에 다 치운다. `POOPED` 키는 주기 안의 번호라서 하나 치워도 남은
   💩이 다시 기록되지 않는다. 한 주기에 생기는 건 최대 3개라, 일부만 치우고 두면 다 치울 때까지 늘지 않는다.
-- **어른은 💩 대신 할 일**(2026-10-15): 어른(Lv.20~)은 다 컸으니 💩을 싸지 않고, 같은 주기·같은 필드로 **직업 무대 장치에 할 일**이
-  생긴다. 타임라인은 `POOPED` 대신 `TASK`(키 `buddy:task:…`), 다 끝내면 `CLEANED` 대신 `WORKED`. API와 `BuddyView`(`poops`,
-  `canClean`)는 그대로이고 앱이 어른이면 할 일로 보여준다(장치를 누르면 `clean`). 경험치도 그대로 하나당 +2.
+- **어른은 💩 대신 일**(2026-10-15): 어른(Lv.20~)은 다 컸으니 💩을 싸지 않는다(`poopsMade`가 0). 대신 직업 무대 장치를 누르거나
+  채팅 "일"을 보내면 일한다(`POST /api/rooms/me/buddy/work`). 언제든 일할 수 있지만 경험치(+2, `WORK_EXP`)와 타임라인 `WORKED`는
+  마지막으로 받은 때(`lastWorkedAt`)에서 1시간(`WORK_EVERY`)이 지났을 때만이다. `lastWorkedAt` 조건부 update라 둘이 동시에 눌러도 한 번.
+  어른이 아니면 아무 일도 없다(`changed: false`).
 - 두 주기는 설정값이다(`buddychat.buddy.full-to-empty`, `poop-every`). 테스트는 숫자 대신 `BuddyRules.hungryAfter()`,
   `poopEvery()`로 시간을 보낸다.
-- **채팅으로 돌보기**: 메시지 전체가 "밥"·"🍚"(일본어 "ごはん", 영어 "food")이면 밥주기, "청소"·"🧹"("そうじ", "clean")이면(어른이 아닐 때만. 어른은 "일"·"💼"("仕事", "work")이 할 일을 다 한다)
+- **채팅으로 돌보기**: 메시지 전체가 "밥"·"🍚"(일본어 "ごはん", 영어 "food")이면 밥주기, "청소"·"🧹"("そうじ", "clean")이면(어른은 💩이 없다. 어른에게는 "일"·"💼"("仕事", "work")이 일하기)
   청소를 보낸 사람이 한 것으로 처리한다(`CareCommand`). 끝의 "!", "~", "."는 괜찮고, "밥 먹었어?"처럼 문장 안의 단어는
   아니다. 메시지는 그대로 대화에 남고 EXP도 받는다. 필요 없을 때(배부름, 💩 없음)는 그냥 메시지다.
-- **경험치**: 밥 +2, 💩(어른은 할 일) 하나당 +2, 메시지 +1(room당 하루 50까지, 일본 시간 기준). **최고 레벨은 30**이고 그 뒤로도 EXP는
+- **경험치**: 밥 +2, 💩 하나당 +2, 어른의 일 +2(1시간에 한 번), 메시지 +1(room당 하루 50까지, 일본 시간 기준). **최고 레벨은 30**이고 그 뒤로도 EXP는
   쌓이지만 레벨과 바는 30·가득에서 멈춘다. 30이 되는 순간 `MAX_LEVEL` 이벤트(감사 카드) 하나를 남긴다. 레벨당 **5**
   (`buddychat.buddy.exp-per-level`, Terraform `buddy_exp_per_level`). 혼자 쓰는 사람도 빠르게 변화를 느끼도록
   2026-10-13에 서버 기본값 20·포트폴리오 운영값 3에서 5로 맞췄다.
@@ -346,7 +347,7 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
   메시지부터는 아무것도 하지 않는다. 독립으로 온 새 알은 그날 기록을 이어받아 보너스가 두 번 들어가지 않는다. 혼자인 방은 받지
   않는다.
 - **타임라인 이벤트**: `FED`, `CLEANED`(누가 했는지 포함, 바닥이 깨끗해질 때 한 줄), `TOGETHER`(위), `LEVELED_UP`(`text`에 새 레벨,
-  단계가 바뀌면 대신 `EVOLVED` 하나만, 30이면 대신 `MAX_LEVEL`), `EVOLVED`는 일어날 때, `JOB`(직업, 아래), `JOB_CHANGED`(직업 바꾸기), `HUNGRY`, `POOPED`(어른은 `TASK`)는 누군가
+  단계가 바뀌면 대신 `EVOLVED` 하나만, 30이면 대신 `MAX_LEVEL`), `EVOLVED`는 일어날 때, `JOB`(직업, 아래), `JOB_CHANGED`(직업 바꾸기), `HUNGRY`, `POOPED`는 누군가
   앱을 열거나(`GET /api/rooms/me`) 연결할 때 기록한다. 원인 시각으로 만든 키(`buddy:hungry:<lastFedAt>` 등)가
   메시지 unique 인덱스에 걸려서 여러 번 확인해도 한 번만 남는다. 스케줄러가 없다.
 - **동시성**: 밥주기는 `lastFedAt < 지금 - 30분` 조건부 update, 청소는 읽은 `lastCleanedAt`·`poopsCleaned`가 그대로일 때만

@@ -183,41 +183,41 @@ class BuddyFlowTest {
     }
 
     @Test
-    void aGrownUpHasWorkAtItsStationInsteadOfPoops() {
+    void aGrownUpNoLongerPoopsAndEarnsFromWorkOnceAnHour() {
         String roomId = duoRoom("henry", "yuki");
         setExp(roomId, BuddyRules.minExp(BuddyRules.ADULT_AT));
-        clock.advance(BuddyRules.poopEvery().multipliedBy(2).plusMinutes(1)); // two pieces of work
-        assertThat(room("henry").buddy().poops()).isEqualTo(2);
-        assertThat(timeline("henry")).filteredOn("TASK"::equals).hasSize(2);
+        clock.advance(BuddyRules.poopEvery().multipliedBy(3));
+        assertThat(room("henry").buddy().poops()).isZero();
         assertThat(timeline("henry")).doesNotContain("POOPED");
         int before = room("henry").buddy().exp();
 
-        TestSocket henry = connect("henry");
-        henry.send(Map.of("type", "send", "clientMessageId", "w-1", "text", "청소"))
-                .expect("ack");
-        await(() -> room("henry").buddy().exp() == before + 1); // just a message to a grown-up
-        assertThat(room("henry").buddy().poops()).isEqualTo(2);
+        Care first = care("henry", "work");
+        Care tooSoon = care("yuki", "work");
 
-        henry.send(Map.of("type", "send", "clientMessageId", "w-2", "text", "일!"));
-        await(() -> timeline("henry").contains("WORKED"));
-        BuddyView done = room("henry").buddy();
-        assertThat(done.poops()).isZero();
-        assertThat(done.exp()).isEqualTo(before + 2 + 2 * BuddyRules.CLEAN_EXP);
-        assertThat(timeline("henry")).doesNotContain("CLEANED");
+        assertThat(first.changed()).isTrue();
+        assertThat(tooSoon.changed()).isFalse(); // it may work, but EXP comes once an hour
+        assertThat(room("henry").buddy().exp()).isEqualTo(before + BuddyRules.WORK_EXP);
+        assertThat(timeline("henry")).containsOnlyOnce("WORKED");
+
+        clock.advance(BuddyRules.WORK_EVERY);
+        assertThat(care("yuki", "work").changed()).isTrue();
+        assertThat(room("henry").buddy().exp()).isEqualTo(before + 2 * BuddyRules.WORK_EXP);
     }
 
     @Test
-    void workInTheChatIsJustAMessageBeforeGrowingUp() {
-        duoRoom("henry", "yuki");
-        clock.advance(BuddyRules.poopEvery().plusMinutes(1)); // one poop
-        room("henry");
+    void workInTheChatSendsAGrownUpToWorkAndIsJustAMessageBefore() {
+        String roomId = duoRoom("henry", "yuki");
         TestSocket henry = connect("henry");
-
-        henry.send(Map.of("type", "send", "clientMessageId", "w-3", "text", "일"))
+        henry.send(Map.of("type", "send", "clientMessageId", "w-1", "text", "일"))
                 .expect("ack");
-        await(() -> room("henry").buddy().exp() == 1);
-        assertThat(room("henry").buddy().poops()).isEqualTo(1);
-        assertThat(timeline("henry")).doesNotContain("WORKED", "CLEANED");
+        await(() -> room("henry").buddy().exp() == 1); // a child has no station: just a message
+        assertThat(timeline("henry")).doesNotContain("WORKED");
+
+        setExp(roomId, BuddyRules.minExp(BuddyRules.ADULT_AT));
+        int before = room("henry").buddy().exp();
+        henry.send(Map.of("type", "send", "clientMessageId", "w-2", "text", "일!"));
+        await(() -> timeline("henry").contains("WORKED"));
+        assertThat(room("henry").buddy().exp()).isEqualTo(before + 1 + BuddyRules.WORK_EXP);
     }
 
     @Test
@@ -721,7 +721,7 @@ class BuddyFlowTest {
     private static Buddy counts(int fed, int cleaned, int nights, int laughs, int loves) {
         Instant now = Instant.now();
         return new Buddy(
-                "Mugi", 0, now, now, now, null, 0, 0, null, null, null, fed, cleaned, nights, laughs, loves, null,
+                "Mugi", 0, now, now, now, null, 0, 0, null, null, null, fed, cleaned, nights, laughs, loves, null, null,
                 null);
     }
 

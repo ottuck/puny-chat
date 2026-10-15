@@ -72,7 +72,6 @@ export type Line =
   | 'barista4'
   | 'chefFed'
   | 'gardenerCleaned'
-  | 'noWork'
   | 'poetLove';
 
 const SAY_MS = 3000;

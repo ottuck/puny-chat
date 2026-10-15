@@ -16,6 +16,9 @@ public final class BuddyRules {
     private static volatile int expPerLevel = DEFAULT_EXP_PER_LEVEL;
     public static final int FEED_EXP = 2;
     public static final int CLEAN_EXP = 2;
+    // A grown-up's work at its station: EXP for it once in this long (docs/product.md, 직업 무대 장치).
+    public static final int WORK_EXP = 2;
+    public static final Duration WORK_EVERY = Duration.ofHours(1);
     public static final int MESSAGE_EXP = 1;
     // Stops "ㅎ ㅎ ㅎ" spam from levelling the buddy.
     public static final int MESSAGE_EXP_DAILY_CAP = 50;
@@ -109,6 +112,8 @@ public final class BuddyRules {
 
     /** Poops made since the floor was last clean (the first MAX_POOPS count), cleaned or not. */
     static int poopsMade(Buddy buddy, Instant now) {
+        // Grown up, it does not poop any more; it works at its station instead.
+        if (stage(level(buddy.exp())) == Stage.ADULT) return 0;
         long count = Duration.between(buddy.cleanedAt(), now).dividedBy(poopEvery);
         return (int) Math.min(MAX_POOPS, Math.max(0, count));
     }

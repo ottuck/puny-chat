@@ -86,10 +86,10 @@ function afterEvent(buddy: BuddyView, event: BuddyEvent): BuddyView | null {
         ? { ...buddy, hungry: false, canFeed: false, fullness: 100, levelProgress: 0.6 }
         : null;
     case 'POOPED':
-    case 'TASK':
       return { ...buddy, poops: buddy.poops + 1, canClean: true };
-    case 'CLEANED':
     case 'WORKED':
+      return null; // not in the script
+    case 'CLEANED':
       return buddy.poops > 0 ? { ...buddy, poops: 0, canClean: false } : null;
   }
 }
@@ -230,6 +230,8 @@ export function useDemo({ buddyName, lineText, replyText }: Options) {
     finished,
     send,
     feed: () => event('FED', DEMO_ME),
+    // The tour has no server: its grown-up just works.
+    work: () => {},
     // A tap cleans one poop; the last one leaves the line in the timeline, as in a real room.
     clean: () => {
       const current = buddyRef.current;

@@ -66,11 +66,11 @@ const BABY: Frame = [
 
 // prettier-ignore
 const CHILD: Frame = [
-  '..kkk..........kkk..',
-  '.kPgGk........kGgPk.',
-  '.kgGGgk......kgGGgk.',
-  '..kggGGkk..kkGGggk..',
-  '....kkkkGGGGkkkk....',
+  '....................',
+  '....kkk......kkk....',
+  '...kPggk....kggPk...',
+  '...kgGGGkGGkGGGgk...',
+  '....kkkkkGGkkkkk....',
   '......kkkkkkkk......',
   '....kkbbbbbbbbkk....',
   '...kbllbbbbbbbbbk...',
@@ -601,9 +601,6 @@ export type Station = {
   sink: number;
   // Where the buddy's grid stands while it works, in cells from the station's left edge.
   standAt: number;
-  // Where the marks for waiting work sit: the grid row they stand on and the column they start at,
-  // and what they look like if not the job's tool (JOB_PROPS).
-  mark: { row: number; col: number; frame?: Frame };
   // A tool in its hand while it works, by the grid cell of the tool's top left.
   // Drawn at `size` of the buddy's pixel size, its right edge (the handle) kept at the hand.
   held?: { frames: [Frame, Frame]; row: number; col: number; size?: number };
@@ -848,20 +845,6 @@ const CAFE_COUNTER: [Frame, Frame] = [[
   'kkkkkkkkkkkkkkkkkkkkkkkk',
 ]];
 
-// A drop of water: the plant is thirsty. The gardener's mark for waiting work (the can is in its hand).
-// prettier-ignore
-const DROP: Frame = [
-  '...k...',
-  '..kak..',
-  '..kak..',
-  '.kaaak.',
-  'kaaaaak',
-  'kawaaak',
-  'kawaaak',
-  '.kaaak.',
-  '..kkk..',
-];
-
 // The gardener's watering can, held out towards the plant: the water falls from the spout.
 // prettier-ignore
 export const HELD_CAN: [Frame, Frame] = [[
@@ -893,17 +876,16 @@ export const HELD_CAN: [Frame, Frame] = [[
 ]];
 
 export const JOB_STATIONS: Record<BuddyJob, Station> = {
-  CHEF: { frames: KITCHEN, sink: 3, standAt: 3, mark: { row: 0, col: 0 } },
+  CHEF: { frames: KITCHEN, sink: 3, standAt: 3 },
   GARDENER: {
     frames: BIG_PLANT,
     sink: 1,
     standAt: 15,
-    mark: { row: 24, col: 12, frame: DROP },
     held: { frames: HELD_CAN, row: 12, col: -8, size: 0.6 },
   },
-  DJ: { frames: RADIO_DESK, sink: 3, standAt: 3, mark: { row: 0, col: 0 } },
-  POET: { frames: WRITING_DESK, sink: 3, standAt: 3, mark: { row: 0, col: 0 } },
-  BARISTA: { frames: CAFE_COUNTER, sink: 3, standAt: 3, mark: { row: 0, col: 0 } },
+  DJ: { frames: RADIO_DESK, sink: 3, standAt: 3 },
+  POET: { frames: WRITING_DESK, sink: 3, standAt: 3 },
+  BARISTA: { frames: CAFE_COUNTER, sink: 3, standAt: 3 },
 };
 
 // --- Decorations (docs/product.md, 무대 꾸미기) ---

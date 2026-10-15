@@ -3,8 +3,7 @@ export type BuddyEvent =
   | 'FED'
   | 'POOPED'
   | 'CLEANED'
-  // A grown-up's work at its station, in place of the poops (docs/product.md, 직업 무대 장치).
-  | 'TASK'
+  // A grown-up's work at its station (docs/product.md, 직업 무대 장치).
   | 'WORKED'
   | 'LEVELED_UP'
   | 'EVOLVED'

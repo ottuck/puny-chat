@@ -40,6 +40,8 @@ type CareResult = { buddy: BuddyView; changed: boolean };
 export const feedBuddy = () => api<CareResult>('/api/rooms/me/buddy/feed', { method: 'POST' });
 
 export const cleanBuddy = () => api<CareResult>('/api/rooms/me/buddy/clean', { method: 'POST' });
+// A grown-up's work at its station; EXP once an hour (`changed: false` otherwise).
+export const workBuddy = () => api<CareResult>('/api/rooms/me/buddy/work', { method: 'POST' });
 
 // An adult's job, chosen by either of us instead of the one its upbringing gave; once a day.
 export const changeJob = (job: BuddyJob) =>

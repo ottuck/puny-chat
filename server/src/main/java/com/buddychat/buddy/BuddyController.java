@@ -40,6 +40,12 @@ class BuddyController {
         return inMyRoom(jwt, buddyService::clean);
     }
 
+    // A grown-up's work at its station: "changed: false" when not yet an hour since the last.
+    @PostMapping("/api/rooms/me/buddy/work")
+    Mono<BuddyService.CareResult> work(@AuthenticationPrincipal Jwt jwt) {
+        return inMyRoom(jwt, buddyService::work);
+    }
+
     record GraduateRequest(
             @NotBlank @Size(max = Buddy.MAX_NAME_LENGTH) String buddyName) {}
 

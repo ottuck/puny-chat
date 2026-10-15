@@ -182,7 +182,6 @@ const REACTION_MS: Record<ReactionKind, number> = {
   fed: 3200,
   cleaned: 1800,
   pooped: 1400,
-  task: 1400,
   worked: 1800,
   levelUp: 1600,
   evolved: 2600,
@@ -212,6 +211,8 @@ type Props = {
   height: number;
   onFeed: () => void;
   onClean: () => void;
+  // A grown-up's work at its station (EXP once an hour; the server decides).
+  onWork: () => void;
   onOpenDetail: () => void;
   // The latest live event to react to.
   reaction: Reaction | null;
@@ -355,6 +356,7 @@ export function BuddyStage({
   height,
   onFeed,
   onClean,
+  onWork,
   onOpenDetail,
   reaction: latest,
   companionEgg,
@@ -614,7 +616,7 @@ export function BuddyStage({
         perform('refuse', true);
         say('full');
       } else if (cue.kind === 'clean' && poops === 0 && !station) say('alreadyClean');
-      else if (cue.kind === 'work' && poops === 0 && station) say('noWork');
+      else if (cue.kind === 'work' && station) perform('job', true);
     }, 0);
     return () => clearTimeout(timer);
     // Answer each cue once, with the state as it was when it came.
@@ -738,7 +740,8 @@ export function BuddyStage({
 
   // Work done (by either of them) is shown at the station; the gardener likes the tidy plant.
   useEffect(() => {
-    if (reaction?.kind !== 'worked' || !station) return;
+    // Already off to work (this side's own tap): no need to start again.
+    if (reaction?.kind !== 'worked' || !station || act === 'job') return;
     const timer = setTimeout(
       () => perform('job', true, job === 'GARDENER' ? 'gardenerCleaned' : undefined),
       0,
@@ -1077,10 +1080,10 @@ export function BuddyStage({
     if (!buddy.canClean || busy) return;
     onClean();
   };
-  // A grown-up's station: a tap does one piece of the work waiting there, and off it goes to it.
+  // A grown-up's station: a tap sends it off to work there (EXP once an hour, the server decides).
   const work = () => {
-    if (!buddy.canClean || busy) return;
-    onClean();
+    if (busy) return;
+    onWork();
     perform('job', true);
   };
 
@@ -1364,55 +1367,27 @@ export function BuddyStage({
         </Animated.View>
       ) : null}
 
-      {/* Work waiting at the station: its tool, once for each piece, bobbing; a tap on the station
-          does one. */}
-      {station && job && buddy.poops > 0 ? (
-        <>
-          <Animated.View
-            style={[
-              styles.taskMarks,
-              styles.passThrough,
-              {
-                left: STATION_LEFT + station.mark.col * scale,
-                bottom:
-                  FLOOR -
-                  station.sink * scale +
-                  (station.frames[0].length - station.mark.row) * scale +
-                  4,
-                transform: [{ translateY: nudge }],
-              },
-            ]}
-          >
-            {Array.from({ length: buddy.poops }, (_, i) => (
-              <PixelSprite
-                key={i}
-                frame={station.mark.frame ?? JOB_PROPS[job][0]}
-                palette={PROP_PALETTE}
-                scale={2}
-              />
-            ))}
-          </Animated.View>
-          <Pressable
-            onPress={work}
-            disabled={busy}
-            accessibilityRole="button"
-            accessibilityLabel={t('buddy.work', { buddy: buddy.name })}
-            style={[
-              styles.station,
-              {
-                left: STATION_LEFT,
-                bottom: FLOOR - station.sink * scale,
-                width: station.frames[0][0].length * scale,
-                height: station.frames[0].length * scale,
-              },
-            ]}
-          />
-        </>
+      {/* A tap on the station sends the buddy to work there. */}
+      {station ? (
+        <Pressable
+          onPress={work}
+          disabled={busy}
+          accessibilityRole="button"
+          accessibilityLabel={t('buddy.work', { buddy: buddy.name })}
+          style={[
+            styles.station,
+            {
+              left: STATION_LEFT,
+              bottom: FLOOR - station.sink * scale,
+              width: station.frames[0][0].length * scale,
+              height: station.frames[0].length * scale,
+            },
+          ]}
+        />
       ) : null}
 
-      {/* In front of the buddy, so one by its feet can still be tapped away. A grown-up has work at
-          its station instead. */}
-      {Array.from({ length: station ? 0 : buddy.poops }, (_, i) => (
+      {/* In front of the buddy, so one by its feet can still be tapped away. */}
+      {Array.from({ length: buddy.poops }, (_, i) => (
         <Animated.View
           key={i}
           style={[
@@ -1527,11 +1502,6 @@ const styles = StyleSheet.create({
   },
   station: {
     position: 'absolute',
-  },
-  taskMarks: {
-    position: 'absolute',
-    flexDirection: 'row',
-    gap: 4,
   },
   // Room for the big heart of a pet shared by both.
   aboveBig: {
