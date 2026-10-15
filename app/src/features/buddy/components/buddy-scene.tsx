@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { type ComponentProps, useEffect, useRef, useState } from 'react';
+import { type ComponentProps, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
 
@@ -33,6 +33,8 @@ type Props = ComponentProps<typeof BuddyStage> & {
   dreams?: boolean | 'always';
   // While the dream is on (the guide banner waits for it).
   onDreaming?: (dreaming: boolean) => void;
+  // Opens in the bath (the art preview's link, for pictures of it).
+  startInBath?: boolean;
 };
 
 function CornerButton({
@@ -61,19 +63,25 @@ function CornerButton({
   );
 }
 
-export function BuddyScene({ dreams = false, onDreaming, ...props }: Props) {
+export function BuddyScene({ dreams = false, onDreaming, startInBath = false, ...props }: Props) {
   const { t } = useTranslation();
   const colors = useColors();
   const { buddy, height, reaction: latest } = props;
   const [width, setWidth] = useState(0);
   const [iris, setIris] = useState<IrisRun | null>(null);
   const runs = useRef(0);
-  const [place, setPlace] = useState<'home' | 'bath'>('home');
+  const [place, setPlace] = useState<'home' | 'bath'>(startInBath ? 'bath' : 'home');
   // The buddy as it came to the bath: the bath shows it, and home does too until the iris opens.
-  const [kept, setKept] = useState<BuddyView | null>(null);
+  const [kept, setKept] = useState<BuddyView | null>(startInBath ? props.buddy : null);
   // What home plays once the iris opens on the way back: a level up or an evolution missed.
   const [caughtUp, setCaughtUp] = useState<{ reaction: Reaction; after?: string } | null>(null);
   const night = useSleeping(buddy.job);
+  // Where the buddy is at home, to close the iris on it; and where it closes this time.
+  const buddyAt = useRef<number | null>(null);
+  const onWalk = useCallback((middle: number) => {
+    buddyAt.current = middle;
+  }, []);
+  const [focusX, setFocusX] = useState<number | null>(null);
 
   // The dream: only for an egg, only once on this device.
   const egg = buddy.stage === 'EGG';
@@ -124,6 +132,8 @@ export function BuddyScene({ dreams = false, onDreaming, ...props }: Props) {
 
   const goHome = () => {
     if (iris || place !== 'bath') return;
+    // The tub is in the middle.
+    setFocusX(null);
     run(
       () => setPlace('home'),
       () => {
@@ -143,6 +153,7 @@ export function BuddyScene({ dreams = false, onDreaming, ...props }: Props) {
   };
   const toBath = () => {
     if (iris) return;
+    setFocusX(buddyAt.current);
     run(() => {
       setKept(buddy);
       setCaughtUp(null);
@@ -166,7 +177,7 @@ export function BuddyScene({ dreams = false, onDreaming, ...props }: Props) {
   // Where the iris closes: about where the buddy is.
   const grid = buddyFrame(shown.stage, 'idle');
   const spriteHeight = grid.length * gridScale(height, grid.length);
-  const focus = { x: width / 2, y: height - FLOOR - spriteHeight / 2 };
+  const focus = { x: focusX ?? width / 2, y: height - FLOOR - spriteHeight / 2 };
   const canBathe = !egg && !night && !dreaming;
 
   let scene;
@@ -189,6 +200,7 @@ export function BuddyScene({ dreams = false, onDreaming, ...props }: Props) {
       <BuddyStage
         {...props}
         bare
+        onWalk={onWalk}
         buddy={shown}
         reaction={reaction}
         corner={

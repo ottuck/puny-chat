@@ -1,5 +1,5 @@
 import { randomUUID } from 'expo-crypto';
-import { Redirect } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import { type ReactNode, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -142,8 +142,13 @@ function PoseSheet({
   );
 }
 
+// A link can open it on a scene, for taking pictures of it (README):
+// /preview?scene=bath, ?scene=bath&season=CHRISTMAS (snowing), ?scene=cut2 (a cut of the dream).
 function Preview() {
   const colors = useColors();
+  const params = useLocalSearchParams<{ scene?: string; season?: string }>();
+  const linkedCut = params.scene?.startsWith('cut') ? Number(params.scene.slice(3)) - 1 : null;
+  const linkedSeason = SEASONS.find((s) => s === params.season);
   const { height: windowHeight } = useWindowDimensions();
   const [stage, setStage] = useState<BuddyStage>('ADULT');
   const [job, setJob] = useState<BuddyJob | null>('CHEF');
@@ -154,13 +159,13 @@ function Preview() {
   const [partnerPet, setPartnerPet] = useState<{ id: string } | null>(null);
   const [partnerHere, setPartnerHere] = useState(false);
   // undefined: by today's date, as in the app.
-  const [season, setSeason] = useState<Season | null | undefined>(undefined);
+  const [season, setSeason] = useState<Season | null | undefined>(linkedSeason);
   const shownSeason = season === undefined ? seasonOn(new Date()) : season;
   const stageHeight = Math.round(Math.min(280, Math.max(180, windowHeight * 0.3)));
   // Each press plays the dream again (a new scene).
   const [dreamRun, setDreamRun] = useState(0);
   // One cut of the dream held still, to look at.
-  const [dreamCut, setDreamCut] = useState<number | null>(null);
+  const [dreamCut, setDreamCut] = useState<number | null>(linkedCut);
   // The kind of plant in the pot (undefined: the one the room drew).
   const [plantKind, setPlantKind] = useState<number | undefined>(undefined);
 
@@ -181,6 +186,7 @@ function Preview() {
         <BuddyScene
           key={dreamRun}
           dreams={dreamRun > 0 ? 'always' : false}
+          startInBath={params.scene === 'bath'}
           buddy={buddyOf(stage, job, hungry, poops)}
           busy={false}
           height={stageHeight}

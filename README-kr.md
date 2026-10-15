@@ -66,6 +66,8 @@ Yuki    싫어 ㅋㅋ
 - 시간이 지나면 배고파지고 💩을 싸요. 밥그릇·💩을 누르거나 채팅에 "밥"만 보내도 돌볼 수 있고, 누가 챙겼는지 대화에 남아요
 - 혼자 두면 춤추고 노래해요. 어린이가 되면 "오랜만이야!", "밥 먹었어?"처럼 말도 걸어요
 - **죽지 않아요.** 며칠 잊어도 괜찮아요. 돌봐주면 금방 기운을 차려요
+- 어른이 되면 둘이 키운 방식대로 직업이 생겨요(요리사, 정원사, 라디오 DJ, 작가, 바리스타). 직업마다 모습과 무대 장치가 달라요. 계절마다 옷을 갈아입고(봄 토끼 귀, 크리스마스 사슴뿔), 가끔 나비가 앉거나 별똥별이 지나가요
+- 버디를 보낼 수 있는 **온천**, 첫 알 전에 보여주는 **미래의 꿈**(아래)
 
 **🤝 둘이서**
 - 같은 날 둘 다 메시지를 보내면 하루 한 번 **함께 보너스** 🤝. 혼자보다 둘이 이야기할 때 더 잘 자라요
@@ -83,6 +85,35 @@ Yuki    싫어 ㅋㅋ
   <tr>
     <td align="center"><img src="docs/images/chat-dark.png" width="220" alt="다크 모드 채팅"><br><sub>다크 모드</sub></td>
     <td align="center"><img src="docs/images/desktop.png" width="560" alt="데스크톱 브라우저에서 본 채팅. 모바일 레이아웃이 가운데 놓인다"><br><sub>웹 (데스크톱)</sub></td>
+  </tr>
+</table>
+</div>
+
+<br>
+
+### 온천과 꿈
+
+무대 모서리의 ♨를 누르면 버디가 노천 온천에 가요. 머리에 수건을 얹고 나무통에 몸을 담그고, 김이 피어오르고 구름이 지나가요. 겨울에는 눈도 내려요. 집 버튼을 누르거나 10분이 지나야 돌아오고, 그사이 방에서 생긴 일은 대화에 남아요. 진화했다면 돌아와서 한 번 보여줘요. 장면은 버디 쪽으로 좁혀지는 검은 원으로 바뀌어요.
+
+<div align="center">
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/iris.png" width="260" alt="장면 전환. 계단 모양의 검은 원이 버디 쪽으로 좁혀진다"><br><sub>버디 쪽으로 닫히는 원</sub></td>
+    <td align="center"><img src="docs/images/bath.png" width="260" alt="수건을 얹고 나무통에 들어간 버디. 뒤에 대나무 울타리와 구름"><br><sub>온천</sub></td>
+    <td align="center"><img src="docs/images/bath-snow.png" width="260" alt="눈이 내리는 온천"><br><sub>겨울에는 눈이 와요</sub></td>
+  </tr>
+</table>
+</div>
+
+방에서 알을 처음 볼 때는 알 대신 미래의 꿈부터 보여줘요. 다 자란 모습의 빠른 컷 4개(약 5초)로, 컷마다 다른 직업과 다른 날이에요. 원이 닫혔다 열리면 알에서 시작해요.
+
+<div align="center">
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/dream-1.png" width="190" alt="꿈 1. 카페 카운터 앞에서 춤추는 바리스타"><br><sub>바리스타</sub></td>
+    <td align="center"><img src="docs/images/dream-2.png" width="190" alt="꿈 2. 큰 하트와 '나도, 그래' 말풍선의 작가"><br><sub>사랑에 빠진 작가</sub></td>
+    <td align="center"><img src="docs/images/dream-3.png" width="190" alt="꿈 3. 사슴뿔, 크리스마스트리, 눈"><br><sub>크리스마스</sub></td>
+    <td align="center"><img src="docs/images/dream-4.png" width="190" alt="꿈 4. 온천"><br><sub>온천</sub></td>
   </tr>
 </table>
 </div>
@@ -162,6 +193,7 @@ iPhone에서는 개발용 빌드로 열어요. 자세한 명령은 [CLAUDE.md](C
 - [x] 배포 (서버 AWS Lightsail · 웹 Cloudflare Workers · DB Atlas)
 - [x] Buddy 도트 캐릭터와 애니메이션 (먹기 · 💩 · 진화 · 메시지 반응)
 - [x] 웹 푸시 (홈 화면에 추가한 웹)
+- [x] 직업, 계절 모습, 가끔 생기는 사건, 온천과 첫 알 전의 꿈
 - [ ] iPhone 개발용 빌드와 푸시 알림
 - [ ] Sign in with Apple
 

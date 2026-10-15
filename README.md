@@ -64,6 +64,8 @@ at you, no daily missions. Just **having something to raise together** makes the
 - Over time it gets hungry and poops. Tap the bowl or the 💩, or just send "food" in the chat, and the chat notes who did it
 - Left alone it dances and sings. Once a child, it talks too: "Long time no see!", "Have you eaten?"
 - **It never dies.** Forget it for a few days and it's fine; a little care and it's back on its feet
+- Grown up, it takes a job from how you two raised it (chef, gardener, radio DJ, writer, barista), each with its own look and spot on the stage. It dresses up for the season (bunny ears in spring, antlers at Christmas) and now and then a butterfly lands on it or a shooting star crosses the sky
+- **A hot spring** to send it to, and **a dream** of what it will become before the first egg (below)
 
 **🤝 For two**
 - When you both send a message on the same day, a **together bonus** 🤝 once a day. It grows better when you two talk
@@ -81,6 +83,35 @@ at you, no daily missions. Just **having something to raise together** makes the
   <tr>
     <td align="center"><img src="docs/images/chat-dark.png" width="220" alt="Chat in dark mode"><br><sub>Dark mode</sub></td>
     <td align="center"><img src="docs/images/desktop.png" width="560" alt="The chat in a desktop browser, with the mobile layout centered"><br><sub>Web (desktop)</sub></td>
+  </tr>
+</table>
+</div>
+
+<br>
+
+### A soak and a dream
+
+Tap ♨ in the stage's corner and the buddy goes for a soak in an open-air hot spring: a towel on its head, steam, clouds drifting by, and snow in winter. It stays until you take it home (or ten minutes pass); whatever happens in the room meanwhile shows in the chat, and an evolution plays once it's back. The scene changes with a black circle that closes on the buddy, holds for a beat and opens again.
+
+<div align="center">
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/iris.png" width="260" alt="The scene change: a stepped black circle closing on the buddy"><br><sub>The circle closes on the buddy</sub></td>
+    <td align="center"><img src="docs/images/bath.png" width="260" alt="The buddy in a wooden tub with a towel on its head, a bamboo fence and clouds behind"><br><sub>In the hot spring</sub></td>
+    <td align="center"><img src="docs/images/bath-snow.png" width="260" alt="The same hot spring with snow falling"><br><sub>In winter it snows</sub></td>
+  </tr>
+</table>
+</div>
+
+The first time a room shows its egg, it opens instead on a dream of what the egg may grow into: four quick cuts, about five seconds, each a different job and a different day. Then the circle closes, and it wakes up as an egg.
+
+<div align="center">
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/dream-1.png" width="190" alt="Dream cut 1: a barista dancing by its café counter"><br><sub>A barista</sub></td>
+    <td align="center"><img src="docs/images/dream-2.png" width="190" alt="Dream cut 2: a writer with a big heart, saying 'Me too'"><br><sub>A writer in love</sub></td>
+    <td align="center"><img src="docs/images/dream-3.png" width="190" alt="Dream cut 3: antlers, a Christmas tree and snow"><br><sub>Christmas</sub></td>
+    <td align="center"><img src="docs/images/dream-4.png" width="190" alt="Dream cut 4: the hot spring"><br><sub>The hot spring</sub></td>
   </tr>
 </table>
 </div>
@@ -161,6 +192,7 @@ On an iPhone, open it with a development build. The commands are collected in [C
 - [x] Deployment (server on AWS Lightsail · web on Cloudflare Workers · DB on Atlas)
 - [x] Buddy pixel character and animations (eating · 💩 · evolving · reacting to messages)
 - [x] Web Push (the web added to the home screen)
+- [x] Jobs, seasonal looks, small happenings, the hot spring and the dream before the first egg
 - [ ] iPhone development build and push notifications
 - [ ] Sign in with Apple
 
