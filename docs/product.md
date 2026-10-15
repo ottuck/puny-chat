@@ -207,7 +207,7 @@ Yuki:  니가 치워
 캘린더·공유 앨범·기념일, AI 기능, Buddy 여러 종류·분기 진화·교배, 게임 요소 전부.
 
 나중에 고려할 수 있는 것: Buddy 종류 추가, 분기 진화, room 테마, 스티커, 리액션, 사진 메시지(Blob Storage),
-공유 앨범, Buddy 꾸미기, Android 출시.
+공유 앨범, Buddy 꾸미기, Android 출시. 검토만 해 둔 아이디어(목욕, 미래의 꿈)는 `docs/fun-improvements.md` 8·9번.
 
 ## 성공 기준
 
