@@ -18,7 +18,8 @@ import org.jspecify.annotations.Nullable;
  * @param talkers members who sent a message on {@code talkDay}
  * @param togetherDay the last day both members talked (and the buddy got the bonus for it)
  * @param fedCount meals given, and the next four: poops cleaned up, messages written at night, with a
- *     laugh, and with a "love you" in them. What the job is made of ({@link BuddyJob}); null on
+ *     laugh, and with a "love you" in them. What the job is made of ({@link BuddyJob}), except the
+ *     laughs: no job uses them since the comedian was dropped, but they are still counted. Null on
  *     buddies from before they were counted, which counts as none
  * @param job decided when the buddy becomes an adult; null before that, and on adults from before
  *     jobs existed. An adult's members may change it, once a day
@@ -73,10 +74,6 @@ public record Buddy(
 
     int nights() {
         return nightCount != null ? nightCount : 0;
-    }
-
-    int laughs() {
-        return laughCount != null ? laughCount : 0;
     }
 
     int loves() {

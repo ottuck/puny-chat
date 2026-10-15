@@ -590,7 +590,7 @@ class BuddyFlowTest {
         assertThat(changed.job()).isEqualTo(BuddyJob.DJ);
         assertThat(changed.canChangeJob()).isFalse();
         assertThat(timeline("henry")).endsWith("JOB", "JOB_CHANGED");
-        post("yuki", "/api/rooms/me/buddy/job", Map.of("job", "COMEDIAN"))
+        post("yuki", "/api/rooms/me/buddy/job", Map.of("job", "POET"))
                 .expectStatus()
                 .isEqualTo(409)
                 .expectBody(JsonNode.class)
@@ -598,10 +598,10 @@ class BuddyFlowTest {
 
         clock.advance(Duration.ofDays(1));
         assertThat(room("yuki").buddy().canChangeJob()).isTrue();
-        post("yuki", "/api/rooms/me/buddy/job", Map.of("job", "COMEDIAN"))
+        post("yuki", "/api/rooms/me/buddy/job", Map.of("job", "POET"))
                 .expectStatus()
                 .isOk();
-        assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.COMEDIAN);
+        assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.POET);
     }
 
     @Test
@@ -669,7 +669,8 @@ class BuddyFlowTest {
         assertThat(BuddyJob.decide(counts(5, 5, 0, 0, 0))).isEqualTo(BuddyJob.CHEF);
         assertThat(BuddyJob.decide(counts(5, 6, 0, 0, 0))).isEqualTo(BuddyJob.GARDENER);
         assertThat(BuddyJob.decide(counts(0, 0, 15, 0, 0))).isEqualTo(BuddyJob.DJ);
-        assertThat(BuddyJob.decide(counts(0, 0, 0, 15, 0))).isEqualTo(BuddyJob.COMEDIAN);
+        // Laughs are still counted but no job is made of them.
+        assertThat(BuddyJob.decide(counts(0, 0, 0, 30, 0))).isEqualTo(BuddyJob.BARISTA);
         assertThat(BuddyJob.decide(counts(0, 0, 0, 0, 10))).isEqualTo(BuddyJob.POET);
         assertThat(BuddyJob.leaning(counts(0, 0, 0, 0, 0))).isNull();
         assertThat(BuddyJob.leaning(counts(1, 0, 0, 0, 0))).isEqualTo(BuddyJob.BARISTA);

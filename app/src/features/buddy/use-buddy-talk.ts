@@ -62,10 +62,6 @@ export type Line =
   | 'dj2'
   | 'dj3'
   | 'dj4'
-  | 'comedian1'
-  | 'comedian2'
-  | 'comedian3'
-  | 'comedian4'
   | 'poet1'
   | 'poet2'
   | 'poet3'
@@ -76,7 +72,6 @@ export type Line =
   | 'barista4'
   | 'chefFed'
   | 'gardenerCleaned'
-  | 'comedianLaugh'
   | 'poetLove';
 
 const SAY_MS = 3000;
@@ -105,7 +100,6 @@ export const JOB_LINES: Record<BuddyJob, Line[]> = {
   CHEF: ['chef1', 'chef2', 'chef3', 'chef4'],
   GARDENER: ['gardener1', 'gardener2', 'gardener3', 'gardener4'],
   DJ: ['dj1', 'dj2', 'dj3', 'dj4'],
-  COMEDIAN: ['comedian1', 'comedian2', 'comedian3', 'comedian4'],
   POET: ['poet1', 'poet2', 'poet3', 'poet4'],
   BARISTA: ['barista1', 'barista2', 'barista3', 'barista4'],
 };

@@ -14,8 +14,6 @@ public enum BuddyJob {
     GARDENER,
     // Messages written at night (23:00 to 7:00, Japan time), three to a point.
     DJ,
-    // Messages with a laugh in them, three to a point.
-    COMEDIAN,
     // Messages with a "love you" in them, two to a point.
     POET,
     // Nothing stood out.
@@ -25,7 +23,6 @@ public enum BuddyJob {
     static final int MIN_POINTS = 5;
 
     static final int NIGHT_PER_POINT = 3;
-    static final int LAUGH_PER_POINT = 3;
     static final int LOVE_PER_POINT = 2;
 
     private int points(Buddy buddy) {
@@ -33,7 +30,6 @@ public enum BuddyJob {
             case CHEF -> buddy.fed();
             case GARDENER -> buddy.cleanedUp();
             case DJ -> buddy.nights() / NIGHT_PER_POINT;
-            case COMEDIAN -> buddy.laughs() / LAUGH_PER_POINT;
             case POET -> buddy.loves() / LOVE_PER_POINT;
             case BARISTA -> 0;
         };

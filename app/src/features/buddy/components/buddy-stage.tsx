@@ -140,15 +140,14 @@ const SLEEP_UNTIL = 7;
 const DJ_SLEEP_FROM = 3;
 const DJ_SLEEP_UNTIL = 11;
 
-// What each job looks like at its work, from the poses there are. A placeholder until the job art
-// (docs/fun-improvements.md, 디자인 인수인계): each job gets its own poses and a prop sprite.
+// What each job looks like at its work, from the poses there are, its tool in hand (JOB_PROPS). A
+// placeholder until each job gets its own poses (docs/art-handover.md, A).
 function jobPose(job: BuddyJob, tick: number): Pose {
   switch (job) {
     case 'CHEF': // stirring the pot
     case 'GARDENER': // gardener: tending the plants
     case 'DJ': // radio DJ: nodding to the music
       return tick % 2 === 0 ? 'step' : 'idle';
-    case 'COMEDIAN': // doing a bit
     case 'POET': // poet: writing a letter
       return 'happy';
     case 'BARISTA': // barista: mouth going
@@ -445,21 +444,12 @@ export function BuddyStage({
       setAct(null);
       setPetted(false);
       setMood(next);
-      // A poet answers "love" in its own words, a comedian a laugh.
-      const own =
-        job === 'POET' && next === 'love'
-          ? 'poetLove'
-          : job === 'COMEDIAN' && next === 'laugh'
-            ? 'comedianLaugh'
-            : null;
-      say(own ?? MOOD_LINE[next]);
-      moodTimer.current = setTimeout(
-        () => {
-          moodTimer.current = null;
-          setMood(null);
-        },
-        MOOD_MS[next] + (job === 'COMEDIAN' && next === 'laugh' ? 800 : 0),
-      );
+      // A poet answers "love" in its own words.
+      say(job === 'POET' && next === 'love' ? 'poetLove' : MOOD_LINE[next]);
+      moodTimer.current = setTimeout(() => {
+        moodTimer.current = null;
+        setMood(null);
+      }, MOOD_MS[next]);
     },
     [say, job],
   );
@@ -576,7 +566,7 @@ export function BuddyStage({
 
   // A hiccup is three small hops, a start one big one.
   useEffect(() => {
-    const jobHops = act === 'job' && (job === 'COMEDIAN' || job === 'CHEF');
+    const jobHops = act === 'job' && job === 'CHEF';
     if (act !== 'hiccup' && act !== 'startle' && !jobHops) return;
     const jump = (h: number, ms: number) =>
       Animated.sequence([
@@ -606,10 +596,7 @@ export function BuddyStage({
       ]);
     const moves: Record<StageMood, Animated.CompositeAnimation | null> = {
       coPet: Animated.sequence([jump(16), jump(16)]),
-      // A comedian laughs at its own best.
-      laugh: Animated.sequence(
-        Array.from({ length: job === 'COMEDIAN' ? 8 : 4 }, () => jump(6, 90)),
-      ),
+      laugh: Animated.sequence(Array.from({ length: 4 }, () => jump(6, 90))),
       love: Animated.sequence([jump(10), jump(6)]),
       goodnight: null,
       cheer: Animated.sequence([jump(16), jump(16)]),

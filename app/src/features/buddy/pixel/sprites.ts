@@ -422,7 +422,7 @@ export const NOTE: Frame = [
 // --- Job props (docs/art-handover.md, 6) ---
 
 // What an adult holds at its work, small and plain: two frames each, swapped every tick (steam
-// drifting, water pouring, a note, a quip, a line written).
+// drifting, water pouring, a note, a line written).
 // prettier-ignore
 const POT: [Frame, Frame] = [[
   '...v....v...',
@@ -511,35 +511,6 @@ const HEADPHONES: [Frame, Frame] = [[
 ]];
 
 // prettier-ignore
-const MIC: [Frame, Frame] = [[
-  '............',
-  '....kkkk....',
-  '...kSKSKk...',
-  '...kKSKSk...',
-  '...kSKSKk...',
-  '....kkkk....',
-  '....kuuk....',
-  '....kKKk....',
-  '....kKKk....',
-  '....kKKk....',
-  '.....kk.....',
-  '............',
-], [
-  '............',
-  '....kkkk..y.',
-  '...kSKSKk..y',
-  '...kKSKSk.y.',
-  '...kSKSKk...',
-  '....kkkk....',
-  '....kuuk....',
-  '....kKKk....',
-  '....kKKk....',
-  '....kKKk....',
-  '.....kk.....',
-  '............',
-]];
-
-// prettier-ignore
 const QUILL: [Frame, Frame] = [[
   '.........kk.',
   '........kwk.',
@@ -601,7 +572,6 @@ export const JOB_PROPS: Record<BuddyJob, [Frame, Frame]> = {
   CHEF: POT,
   GARDENER: WATERING_CAN,
   DJ: HEADPHONES,
-  COMEDIAN: MIC,
   POET: QUILL,
   BARISTA: COFFEE,
 };
