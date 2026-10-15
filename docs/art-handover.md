@@ -28,7 +28,7 @@
 | 도트 그리기(문자열 격자 → SVG 사각형) | `app/src/features/buddy/pixel/pixel-sprite.tsx` (`Frame`, `Palette`, `PixelSprite`) |
 | 말랑이 격자와 자세, 소품 격자, 팔레트 | `app/src/features/buddy/pixel/sprites.ts` |
 | 무대(자세 고르기, 소품, 움직임, 말풍선) | `app/src/features/buddy/components/buddy-stage.tsx` |
-| 무대 꾸미기(화분, 밥그릇, 러그, 액자) | `app/src/features/buddy/components/stage-decor.tsx` |
+| 무대 꾸미기(화분, 밥그릇, 러그(처음부터), 액자) · 밥상과 밥 생각 풍선은 `sprites.ts`의 `mealTable`·`THOUGHT_FOOD` | `app/src/features/buddy/components/stage-decor.tsx` |
 | 직업 이모지(글자 화면용)와 순서 | `app/src/features/buddy/jobs.ts` (`JOB_ICON`, `JOB_ORDER`) |
 | 직업 소품·배지(무대) | `app/src/features/buddy/pixel/sprites.ts` (`JOB_PROPS`) |
 | 직업 대사, 말풍선 | `app/src/features/buddy/use-buddy-talk.ts` (`JOB_LINES`), 문구는 `app/src/i18n/locales/*.json`의 `buddy.say.*` |
@@ -77,6 +77,8 @@ pnpm web
 | H | **큰 하트** — **됨**(2026-10-15) | 같이 쓰다듬기와 작가의 사랑 반응에 전용 `HEART_BIG`(15×12, 테두리·반짝임·그림자)을 3배로 | |
 
 참고로 이모지는 **글자로 된 화면**(채팅의 직업 카드, Buddy 상세, 앨범)에서는 그대로 써도 된다. 도트로 바꾸는 곳은 무대(A·B·C·D)뿐이다.
+
+쓰지 않기로 했지만 나중에 쓸 만한 시안(2단계 화분 후보, 도시락, 작가 안경)은 `docs/art-archive.md`에 보관한다.
 
 ## 6. 직업별 시안
 

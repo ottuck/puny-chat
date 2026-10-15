@@ -18,14 +18,13 @@ import {
 // mostly making what is already there finer, so the stage does not fill up. They belong to the
 // room: once a buddy has gone its own way, everything stays, and its portrait hangs on the wall.
 
-export type Reward = 'plant1' | 'bowl1' | 'plant2' | 'rug' | 'plant3' | 'bowl2';
+export type Reward = 'plant1' | 'bowl1' | 'plant2' | 'plant3' | 'bowl2';
 
 // Shown in the guide and the buddy sheet ("next: Lv.10 silver bowl") as well.
 export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 5, reward: 'plant1' },
   { level: 10, reward: 'bowl1' },
   { level: 15, reward: 'plant2' },
-  { level: 20, reward: 'rug' },
   { level: 25, reward: 'plant3' },
   { level: 30, reward: 'bowl2' },
 ];
@@ -42,7 +41,6 @@ export function decorFor(level: number, album: AlbumEntry[]) {
     plant,
     plantScale: plantScale(plant, reached),
     bowl,
-    rug: has('rug'),
     // The latest ones, newest on the right.
     portraits: album.slice(-FRAMES_SHOWN),
   };
@@ -101,11 +99,10 @@ export function WallDecor({ decor, floor, top }: { decor: Decor; floor: number; 
           </View>
         </View>
       ))}
-      {decor.rug ? (
-        <View style={[styles.rug, { bottom: floor - 5 }]}>
-          <PixelSprite frame={RUG} palette={PROP_PALETTE} scale={3} />
-        </View>
-      ) : null}
+      {/* The rug is there from the egg on: it warms the room and keeps the empty stage balanced. */}
+      <View style={[styles.rug, { bottom: floor - 5 }]}>
+        <PixelSprite frame={RUG} palette={PROP_PALETTE} scale={3} />
+      </View>
     </View>
   );
 }

@@ -411,6 +411,49 @@ export function bowl(full: boolean, tier: BowlTier): Frame {
   ];
 }
 
+// A child or grown-up eats at a low round table instead (docs/product.md, 식사): it shows only
+// for the meal, laid for one with rice in a bowl of the reward's color, soup with steam and a side
+// dish. Once eaten, the rice is gone.
+export function mealTable(full: boolean, tier: BowlTier): Frame {
+  const c = BOWL_COLOR[tier];
+  const shine = tier > 0 ? 'w' : c;
+  return [
+    '................v.v........',
+    full ? '.....kkkk........v.........' : '.................v.........',
+    full ? '....kwwwwk.....kkkkkk......' : '...............kkkkkk......',
+    full ? '...kwwwwwwk...kQQQQQQk.....' : '...kkkkkkkk...kQQQQQQk.....',
+    '...k' + c + shine + c.repeat(5) + 'k..kEQQQQEk.kkk.',
+    '....k' + c.repeat(5) + 'k....kEEEEk.kgGk.',
+    'kkkkkkkkkkkkkkkkkkkkkkkkkkk',
+    'kLLLLLLLLLLLLLLLLLLLLLLLLLk',
+    'kDDDDDDDDDDDDDDDDDDDDDDDDDk',
+    '.kkkkkkkkkkkkkkkkkkkkkkkkk.',
+    '...kqk...............kqk...',
+    '...kqk...............kqk...',
+    '...kkk...............kkk...',
+  ];
+}
+
+// What a hungry child or grown-up thinks of: a bowl of rice, steaming, in a cloud.
+// prettier-ignore
+export const THOUGHT_FOOD: Frame = [
+  '.....kkk.kkwkk.....',
+  '....kwwwvwvwwwk....',
+  '...kwwwwwvwwwwwk...',
+  '..kwwwwwkkkkwwwkk..',
+  '..kwwwwkwwwwkwwwwk.',
+  '.kwwwwkkkkkkkkwwwwk',
+  'kwwwwwkaaaaaakwwwwk',
+  'kwwwwwwkaaaakwwwwzk',
+  'kzwwwwwwkkkkwwwwzk.',
+  '.kzzzzzwwwwwwwwzk..',
+  '..kkkkkzwwwzzzzk...',
+  '..kwzk.kzzzkkkk....',
+  '..kwwk..kkk........',
+  '.k.kk..............',
+  'kwk................',
+];
+
 // prettier-ignore
 export const HEART: Frame = [
   '.rr.rr.',
@@ -929,8 +972,8 @@ export const JOB_STATIONS: Record<BuddyJob, Station> = {
 
 // --- Decorations (docs/product.md, 무대 꾸미기) ---
 
-// The plant in the corner grows finer with levels: a sprout in a clay pot, a leafy plant in a
-// rimmed pot, then flowers in a glazed pot.
+// The plant in the corner grows finer with levels: a sprout in a clay pot, a flowering cactus in a
+// rimmed pot, then flowers in a glazed pot. (Other plants drawn for later: docs/art-archive.md.)
 // prettier-ignore
 const PLANT_1: Frame = [
   '.kkk...kkk.',
@@ -950,16 +993,18 @@ const PLANT_1: Frame = [
 
 // prettier-ignore
 const PLANT_2: Frame = [
-  '..kkk...kkk..',
-  '.kPggk.kggPk.',
-  '.kgGGGGGGGgk.',
-  '.kkkkkGkkkkk.',
-  'kPggk.G.kggPk',
-  'kgGGGkGkGGGgk',
-  '.kkkkkGkkkkk.',
-  '..kPggGggPk..',
-  '..kgGkGGGgk..',
-  '...kkkGkkk...',
+  '.....kkk.....',
+  '....kfyfk....',
+  '....kPgGk....',
+  '....kPwGk.kk.',
+  '.kk.kPgGk.kgk',
+  'kgk.kwgGk.kwk',
+  'kwk.kPgGkkkgk',
+  'kgkkkPgwGgggk',
+  'kggggPgGkkkk.',
+  '.kkkkPwGk....',
+  '....kPgGk....',
+  '....kPgGk....',
   'kkkkkkkkkkkkk',
   'kwoooooooooek',
   'kkkkkkkkkkkkk',

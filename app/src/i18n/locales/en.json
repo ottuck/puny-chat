@@ -178,7 +178,6 @@
       "plant1": "Sprout pot",
       "bowl1": "Silver bowl",
       "plant2": "Leafy plant",
-      "rug": "Rug",
       "plant3": "Flowers in a glazed pot",
       "bowl2": "Gold bowl"
     },
@@ -346,7 +345,7 @@
     },
     "care": {
       "title": "🍚 Care",
-      "feed": "When it is hungry the bowl is empty. Tap the bowl, or send just \"food\" in the chat.",
+      "feed": "When it is hungry, a baby's bowl is empty and an older one thinks of food. Tap the bowl or the hungry buddy, or send just \"food\" in the chat.",
       "clean": "Each tap cleans up one 💩. Send \"clean\" in the chat to clean them all.",
       "pet": "Tap your buddy and it cheers, dances or sings.",
       "words": "Words like \"lol\", \"love you\" or \"good night\" in the chat make the buddy react. It loves it even more when you both pet it."

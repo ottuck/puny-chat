@@ -45,6 +45,7 @@ import {
   JOB_STATIONS,
   type Station,
   LEVEL_UP,
+  mealTable,
   NOTE,
   POOP,
   type Pose,
@@ -52,6 +53,7 @@ import {
   RICE,
   SPARKLE,
   STAGE_ORDER,
+  THOUGHT_FOOD,
   ZZZ,
 } from '../pixel/sprites';
 import type { Reaction, ReactionKind } from '../reactions';
@@ -70,6 +72,8 @@ import { decorFor, Plant, plantRoom as plantRoomFor, WallDecor } from './stage-d
 
 const FLOOR = 22;
 const PROP_SCALE = 3;
+// How wide the meal table is, in its pixels (sprites.ts, mealTable).
+const TABLE_CELLS = 27;
 const TICK_MS = 450;
 // While evolving the old and new looks swap this fast.
 const FAST_TICK_MS = 90;
@@ -550,6 +554,8 @@ export function BuddyStage({
   const spriteHeight = idleFrame.length * scale;
   const glowSize = Math.round(spriteWidth * 1.5);
   const bowlWidth = 12 * PROP_SCALE;
+  // A child or grown-up has hands: no bowl stands about, a table comes out for the meal.
+  const atTable = buddy.stage === 'CHILD' || buddy.stage === 'ADULT';
   const decor = decorFor(buddy.level, album ?? []);
   // The season's corner stands in for the plant that week.
   const corner = season ? SEASON_CORNER[season] : undefined;
@@ -558,7 +564,7 @@ export function BuddyStage({
     : plantRoomFor(decor);
   // The bowl stands by the plant on the right; the poops land left of it.
   const bowlRight = 16 + plantRoom;
-  const poopRight = bowlRight + bowlWidth + 12;
+  const poopRight = atTable ? bowlRight : bowlRight + bowlWidth + 12;
   // The walkable strip: from the left (in front of a job's station) up to the bowl.
   // Wings stick out on both sides: the walk keeps them on the stage and off the bowl.
   const behind = seasonBehind(buddy.stage, season);
@@ -566,7 +572,13 @@ export function BuddyStage({
   const minX = 16 + reach;
   const maxX = Math.max(
     minX,
-    width - spriteWidth - reach - bowlRight - bowlWidth - 8 - (companionEgg ? EGG_ROOM : 0),
+    width -
+      spriteWidth -
+      reach -
+      bowlRight -
+      (atTable ? 0 : bowlWidth) -
+      8 -
+      (companionEgg ? EGG_ROOM : 0),
   );
   // A grown-up's station on the left, where it goes to work.
   const station = buddy.stage === 'ADULT' && job ? JOB_STATIONS[job] : null;
@@ -645,9 +657,11 @@ export function BuddyStage({
     let stopped = false;
     let current: Animated.CompositeAnimation | null = null;
     const home = buddy.hungry || eating ? maxX : (minX + maxX) / 2;
+    // At the table it eats where it is, and a hungry one waits where it is, thinking of food.
+    const stay = atTable && (buddy.hungry || eating);
     const leg = (from: number) => {
       if (stopped) return;
-      const to = settled ? home : minX + Math.random() * (maxX - minX);
+      const to = settled ? (stay ? from : home) : minX + Math.random() * (maxX - minX);
       const distance = Math.abs(to - from);
       if (distance > 2) {
         setFacingLeft(to < from);
@@ -686,7 +700,7 @@ export function BuddyStage({
       stopped = true;
       current?.stop();
     };
-  }, [width, spriteWidth, settled, acting, mood, eating, buddy.hungry, minX, maxX, x]);
+  }, [width, spriteWidth, settled, acting, mood, eating, buddy.hungry, atTable, minX, maxX, x]);
 
   // Work: walk over to the station, then work there for a while. Without one (not grown up yet,
   // or no job) it works where it stands.
@@ -924,6 +938,8 @@ export function BuddyStage({
 
   // The bowl and the poops bob now and then while they need tapping.
   const wantsFood = buddy.hungry && !eating;
+  // A hungry child or grown-up thinks of food over its head, and a tap on it feeds it.
+  const thinking = atTable && wantsFood && !sleeping;
   const hasPoop = buddy.poops > 0;
   useEffect(() => {
     if (!wantsFood && !hasPoop) return;
@@ -1346,49 +1362,56 @@ export function BuddyStage({
         </View>
       ) : null}
 
-      <Animated.View
-        style={[
-          styles.bowl,
-          {
-            bottom: FLOOR - 3,
-            right: bowlRight,
-            transform: [{ translateY: wantsFood ? nudge : 0 }],
-          },
-        ]}
-      >
-        {buddy.hungry && !eating ? (
-          <View style={styles.bowlAsk}>
-            <PixelSprite frame={EXCLAIM} palette={BUDDY_PALETTE} scale={2} />
-          </View>
-        ) : riceSparkle ? (
-          <View style={styles.bowlAsk}>
-            <PixelSprite frame={SPARKLE} palette={PROP_PALETTE} scale={2} />
-          </View>
-        ) : null}
-        <Pressable
-          onPress={feed}
-          disabled={busy}
-          accessibilityRole="button"
-          accessibilityLabel={t('buddy.feed')}
+      {/* The bowl, for the egg and the baby; older ones eat at the table. */}
+      {atTable ? null : (
+        <Animated.View
+          style={[
+            styles.bowl,
+            {
+              bottom: FLOOR - 3,
+              right: bowlRight,
+              transform: [{ translateY: wantsFood ? nudge : 0 }],
+            },
+          ]}
         >
-          {/* Full, but empty while the buddy is hungry: the rice pops in and shrinks away. */}
-          <PixelSprite frame={bowl(false, decor.bowl)} palette={PROP_PALETTE} scale={PROP_SCALE} />
-          <Animated.View
-            style={[
-              styles.rice,
-              {
-                opacity: rice.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 1, 1] }),
-                transform: [
-                  { translateY: rice.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }) },
-                  { scale: rice.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) },
-                ],
-              },
-            ]}
+          {buddy.hungry && !eating ? (
+            <View style={styles.bowlAsk}>
+              <PixelSprite frame={EXCLAIM} palette={BUDDY_PALETTE} scale={2} />
+            </View>
+          ) : riceSparkle ? (
+            <View style={styles.bowlAsk}>
+              <PixelSprite frame={SPARKLE} palette={PROP_PALETTE} scale={2} />
+            </View>
+          ) : null}
+          <Pressable
+            onPress={feed}
+            disabled={busy}
+            accessibilityRole="button"
+            accessibilityLabel={t('buddy.feed')}
           >
-            <PixelSprite frame={RICE} palette={PROP_PALETTE} scale={PROP_SCALE} />
-          </Animated.View>
-        </Pressable>
-      </Animated.View>
+            {/* Full, but empty while the buddy is hungry: the rice pops in and shrinks away. */}
+            <PixelSprite
+              frame={bowl(false, decor.bowl)}
+              palette={PROP_PALETTE}
+              scale={PROP_SCALE}
+            />
+            <Animated.View
+              style={[
+                styles.rice,
+                {
+                  opacity: rice.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 1, 1] }),
+                  transform: [
+                    { translateY: rice.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }) },
+                    { scale: rice.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) },
+                  ],
+                },
+              ]}
+            >
+              <PixelSprite frame={RICE} palette={PROP_PALETTE} scale={PROP_SCALE} />
+            </Animated.View>
+          </Pressable>
+        </Animated.View>
+      )}
 
       {act === 'shootingStar' ? (
         <Animated.View
@@ -1530,6 +1553,23 @@ export function BuddyStage({
           <View style={[styles.above, bigHeart ? styles.aboveBig : null]}>
             <PixelSprite frame={bigHeart ? HEART_BIG : HEART} palette={PROP_PALETTE} scale={3} />
           </View>
+        ) : thinking ? (
+          // Away from the speech bubble, its trail of puffs toward the head.
+          <Animated.View
+            style={[
+              styles.thought,
+              styles.passThrough,
+              onRightHalf ? styles.thoughtRight : styles.thoughtLeft,
+              { transform: [{ translateY: nudge }] },
+            ]}
+          >
+            <PixelSprite
+              frame={THOUGHT_FOOD}
+              palette={PROP_PALETTE}
+              scale={2}
+              flipped={!onRightHalf}
+            />
+          </Animated.View>
         ) : active?.kind === 'message' || act === 'startle' ? (
           <View style={styles.above}>
             <PixelSprite frame={EXCLAIM} palette={BUDDY_PALETTE} scale={3} />
@@ -1610,9 +1650,10 @@ export function BuddyStage({
         ) : null}
         <Pressable
           nativeID="buddy-sprite-button"
-          onPress={pet}
+          // Hungry at an age with hands, a tap brings the meal (there is no bowl to tap).
+          onPress={thinking ? feed : pet}
           accessibilityRole="button"
-          accessibilityLabel={t('buddy.pet', { buddy: buddy.name })}
+          accessibilityLabel={thinking ? t('buddy.feed') : t('buddy.pet', { buddy: buddy.name })}
         >
           <PixelSprite frame={frame} palette={BUDDY_PALETTE} scale={scale} flipped={flipped} />
         </Pressable>
@@ -1709,6 +1750,27 @@ export function BuddyStage({
               scale={scale * (station.held.size ?? 1)}
             />
           </View>
+        </Animated.View>
+      ) : null}
+
+      {/* The table, out for the meal and in front of the buddy, which eats behind it. */}
+      {atTable && eating ? (
+        <Animated.View
+          style={[
+            styles.buddy,
+            styles.passThrough,
+            {
+              bottom: FLOOR - 2,
+              left: workSway + (spriteWidth - TABLE_CELLS * PROP_SCALE) / 2,
+              transform: [{ translateX: x }],
+            },
+          ]}
+        >
+          <PixelSprite
+            frame={mealTable(active?.phase === 'main', decor.bowl)}
+            palette={PROP_PALETTE}
+            scale={PROP_SCALE}
+          />
         </Animated.View>
       ) : null}
 
@@ -1849,6 +1911,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   // Room for the big heart of a pet shared by both.
+  thought: {
+    position: 'absolute',
+    top: -34,
+  },
+  thoughtRight: {
+    right: -4,
+  },
+  thoughtLeft: {
+    left: -4,
+  },
   aboveBig: {
     top: -44,
   },
