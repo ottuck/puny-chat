@@ -53,6 +53,12 @@ export type Line =
   | 'rain'
   | 'snow'
   | 'shootingStar'
+  // The room's guests, and goodbye when it goes its own way.
+  | 'snail'
+  | 'sparrow'
+  | 'catTail'
+  | 'train'
+  | 'farewell'
   // A job's own words (JOB_LINES), and what it says at its own moments.
   | 'chef1'
   | 'chef2'

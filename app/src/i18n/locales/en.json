@@ -162,7 +162,12 @@
       "writerLove": "Me too",
       "bath1": "Ahh, nice",
       "bath2": "So warm",
-      "bath3": "I could live here"
+      "bath3": "I could live here",
+      "snail": "A snail came by",
+      "sparrow": "Tweet tweet, hi!",
+      "catTail": "…a cat?",
+      "train": "Choo choo!",
+      "farewell": "Thanks for everything!"
     },
     "graduate": {
       "title": "Its own way",
@@ -180,10 +185,30 @@
     },
     "reward": {
       "plant1": "Sprout pot",
+      "crate": "Wooden crate",
       "bowl1": "Silver bowl",
+      "toys": "Toy box",
+      "window": "Window",
       "plant2": "Leafy plant",
+      "rug1": "Spotted rug",
+      "clock": "Wall clock",
+      "musicBox": "Music box",
+      "snail": "A snail drops by",
+      "rug2": "Striped rug",
       "plant3": "Flowers in a glazed pot",
-      "bowl2": "Gold bowl"
+      "wood": "Wooden floor",
+      "firefly": "Fireflies drop by",
+      "bowl2": "Gold bowl",
+      "rug3": "Round flower rug",
+      "plant4": "Little tree",
+      "train": "Toy train",
+      "sparrow": "A sparrow drops by",
+      "tatami": "Tatami floor",
+      "lamp": "Floor lamp",
+      "catTail": "A stray cat drops by",
+      "plant5": "Fruit tree",
+      "bowl3": "Porcelain bowls",
+      "cushion": "Gold cushion"
     },
     "nextReward_one": "Next reward: Lv.{{level}} {{reward}} · {{count}} level to go",
     "nextReward_other": "Next reward: Lv.{{level}} {{reward}} · {{count}} levels to go",
@@ -238,6 +263,10 @@
     "dream": {
       "caption": "In a dream…",
       "skip": "Skip the dream"
+    },
+    "room": {
+      "toys": "Toy box",
+      "music": "Music box"
     }
   },
   "buddyEvent": {
@@ -247,6 +276,7 @@
     "CLEANED": "{{actor}} cleaned up after {{buddy}}",
     "WORKED": "{{actor}} and {{buddy}} finished the work",
     "LEVELED_UP": "{{buddy}} leveled up! Lv.{{level}} ⬆️",
+    "LEVELED_UP_REWARD": "{{buddy}} leveled up! Lv.{{level}} ⬆️ 🎁 {{reward}}",
     "EVOLVED": "{{buddy}} evolved! ✨",
     "GROWN": "🎓 {{buddy}} is all grown up! It can go its own way now.",
     "MAX_LEVEL": "🎉 {{buddy}} reached the top level, Lv.{{level}}!",

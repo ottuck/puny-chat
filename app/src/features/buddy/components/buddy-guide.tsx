@@ -4,7 +4,27 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/theme';
 
 import { TOGETHER_EXP } from '../api';
-import { type Frame, PixelSprite } from '../pixel/pixel-sprite';
+import { type Frame, type Palette, PixelSprite } from '../pixel/pixel-sprite';
+import {
+  CAT_TAIL,
+  clockAt,
+  CRATE,
+  CUSHION,
+  FIREFLY,
+  LAMP_LIT,
+  LAMP,
+  MUSIC_BOX,
+  ROOM_PALETTE,
+  RUGS,
+  SKY_PALETTES,
+  SNAIL,
+  SPARROW,
+  TATAMI_SWATCH,
+  TOY_BOX,
+  TRAIN,
+  WINDOW,
+  WOOD_SWATCH,
+} from '../pixel/room';
 import { bowl, PLANTS, PROP_PALETTE } from '../pixel/sprites';
 import { type Reward, REWARDS } from './stage-decor';
 
@@ -12,19 +32,42 @@ import { type Reward, REWARDS } from './stage-decor';
 // every few levels, and going its own way. Opened from the chat header, settings, and once on
 // arrival, so the goals are known from the start.
 
-const REWARD_ICON: Record<Reward, Frame> = {
-  plant1: PLANTS[1][0],
-  bowl1: bowl(true, 1),
+const prop = (frame: Frame) => ({ frame, palette: PROP_PALETTE });
+const room = (frame: Frame) => ({ frame, palette: ROOM_PALETTE });
+
+const REWARD_ICON: Record<Reward, { frame: Frame; palette: Palette }> = {
+  plant1: prop(PLANTS[1][0]),
+  crate: room(CRATE),
+  bowl1: prop(bowl(true, 1)),
+  toys: room(TOY_BOX),
+  window: { frame: WINDOW, palette: SKY_PALETTES.day },
   // One of the kinds it may grow into.
-  plant2: PLANTS[2][0],
-  plant3: PLANTS[3][0],
-  bowl2: bowl(true, 2),
+  plant2: prop(PLANTS[2][0]),
+  rug1: room(RUGS[1]),
+  clock: room(clockAt(10, 10)),
+  musicBox: room(MUSIC_BOX[0]),
+  snail: room(SNAIL[0]),
+  rug2: room(RUGS[2]),
+  plant3: prop(PLANTS[3][0]),
+  wood: room(WOOD_SWATCH),
+  firefly: room(FIREFLY),
+  bowl2: prop(bowl(true, 2)),
+  rug3: room(RUGS[3]),
+  plant4: prop(PLANTS[4][0]),
+  train: room(TRAIN[0]),
+  sparrow: room(SPARROW[0]),
+  tatami: room(TATAMI_SWATCH),
+  lamp: { frame: LAMP, palette: LAMP_LIT },
+  catTail: room(CAT_TAIL[0]),
+  plant5: prop(PLANTS[5][0]),
+  bowl3: prop(bowl(true, 3)),
+  cushion: room(CUSHION),
 };
 
 export function rewardIcon(reward: Reward, size = 30) {
-  const frame = REWARD_ICON[reward];
+  const { frame, palette } = REWARD_ICON[reward];
   const scale = Math.min(size / frame[0].length, size / frame.length);
-  return <PixelSprite frame={frame} palette={PROP_PALETTE} scale={scale} />;
+  return <PixelSprite frame={frame} palette={palette} scale={scale} />;
 }
 
 export function BuddyGuide() {

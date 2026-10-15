@@ -7,6 +7,8 @@ export type BuddyJob = 'CHEF' | 'GARDENER' | 'DJ' | 'WRITER' | 'BARISTA';
 
 // Once a day, when both members have sent a message that day. server: BuddyRules.TOGETHER_EXP
 export const TOGETHER_EXP = 10;
+// From this level it may go its own way. server: BuddyRules.GRADUATE_AT
+export const GROWN_LEVEL = 20;
 
 // Computed by the server (server/src/main/java/com/buddychat/buddy/BuddyView.java); the app only
 // displays it and does not re-derive the rules.

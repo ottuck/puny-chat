@@ -1,9 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { FlatList, StyleSheet, View } from 'react-native';
 
+import { GROWN_LEVEL } from '@/features/buddy/api';
+import { rewardAt } from '@/features/buddy/components/stage-decor';
 import { isJob, JOB_ICON } from '@/features/buddy/jobs';
 
-import { formatTime, runPosition } from '../timeline';
+import { foldLevelUps, formatTime, runPosition } from '../timeline';
 import type { Member, Message } from '../types';
 import { BuddyEventRow, EventCard } from './buddy-event-row';
 import { MessageBubble } from './message-bubble';
@@ -41,12 +43,14 @@ export function MessageList({
       )
     : undefined;
 
+  const shown = foldLevelUps(messages, GROWN_LEVEL);
+
   return (
     // Inverted: the newest message sits at the bottom and new ones stay in view. The list's
     // "end" is the top, so reaching it loads older history.
     <FlatList
       inverted
-      data={messages}
+      data={shown}
       keyExtractor={(message) => message.clientMessageId}
       keyboardDismissMode="interactive"
       keyboardShouldPersistTaps="handled"
@@ -127,6 +131,24 @@ export function MessageList({
             </View>
           );
         }
+        // A level that brings something new to the room says what.
+        const reward =
+          item.type === 'BUDDY_EVENT' && item.event === 'LEVELED_UP' && item.level
+            ? rewardAt(item.level)
+            : null;
+        if (item.type === 'BUDDY_EVENT' && reward) {
+          return (
+            <View style={styles.spaced}>
+              <BuddyEventRow
+                label={t('buddyEvent.LEVELED_UP_REWARD', {
+                  buddy: buddyName,
+                  level: item.level,
+                  reward: t(`buddy.reward.${reward}`),
+                })}
+              />
+            </View>
+          );
+        }
         if (item.type === 'BUDDY_EVENT') {
           return (
             <View style={styles.spaced}>
@@ -141,7 +163,7 @@ export function MessageList({
             </View>
           );
         }
-        const { continuesOlder, showTime } = runPosition(messages, index);
+        const { continuesOlder, showTime } = runPosition(shown, index);
         return (
           <View style={continuesOlder ? styles.grouped : styles.spaced}>
             <MessageBubble

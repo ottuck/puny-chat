@@ -4,7 +4,7 @@
 **Chat first. Buddy makes it fun.** iOS가 기준 플랫폼이고 Web은 보조, Android는 나중.
 
 - 명세(제품 원칙·범위, Buddy, 컬렉션, API, WebSocket 프로토콜, 규칙, 인프라): `docs/spec.md` — 기능·범위·서버를 바꾸기 전에 읽는다.
-- Buddy의 직업·사건·기간 한정 모습·온천·꿈, 그림 작업 규칙: `docs/fun-improvements.md`.
+- Buddy의 직업·사건·기간 한정 모습·온천·방 소품·꿈, 그림 작업 규칙: `docs/fun-improvements.md`.
 - 이 문서들이 기준(source of truth)이다. 결정이 바뀌면 코드와 같은 커밋에서 문서도 고친다. 일지처럼 쓰지 않고 지금 상태만 적는다.
 
 ## Repo layout

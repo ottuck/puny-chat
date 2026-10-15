@@ -384,9 +384,10 @@ export const POOP: Frame = [
   'kkkkkkkk',
 ];
 
-// The bowl gets finer with levels: blue, then silver (with a shine), then gold.
-export type BowlTier = 0 | 1 | 2;
-const BOWL_COLOR = ['a', 'S', 'Y'] as const;
+// The bowl gets finer with levels: blue, then silver (with a shine), then gold, and last white
+// porcelain with a blue band (and a blue soup bowl to match at the table).
+export type BowlTier = 0 | 1 | 2 | 3;
+const BOWL_COLOR = ['a', 'S', 'Y', 'z'] as const;
 
 // The rice on top of a bowl, drawn over an empty one so it can pop in and shrink away.
 // prettier-ignore
@@ -398,12 +399,13 @@ export const RICE: Frame = [
 export function bowl(full: boolean, tier: BowlTier): Frame {
   const c = BOWL_COLOR[tier];
   const shine = tier > 0 ? 'w' : c;
+  const foot = tier === 3 ? 'B' : c;
   return [
     full ? '...wwwwww...' : '............',
     full ? '..wwwwwwww..' : '............',
     'kkkkkkkkkkkk',
     '.k' + c + shine + c.repeat(6) + 'k.',
-    '..k' + c.repeat(6) + 'k..',
+    '..k' + foot.repeat(6) + 'k..',
     '...kkkkkk...',
   ];
 }
@@ -414,13 +416,16 @@ export function bowl(full: boolean, tier: BowlTier): Frame {
 export function mealTable(full: boolean, tier: BowlTier): Frame {
   const c = BOWL_COLOR[tier];
   const shine = tier > 0 ? 'w' : c;
-  return [
+  const foot = tier === 3 ? 'B' : c;
+  // The soup bowl: red lacquer, or blue to go with the porcelain.
+  const [soup, soupShade] = tier === 3 ? ['a', 'B'] : ['Q', 'E'];
+  const rows = [
     '................v.v........',
     full ? '.....kkkk........v.........' : '.................v.........',
     full ? '....kwwwwk.....kkkkkk......' : '...............kkkkkk......',
     full ? '...kwwwwwwk...kQQQQQQk.....' : '...kkkkkkkk...kQQQQQQk.....',
     '...k' + c + shine + c.repeat(5) + 'k..kEQQQQEk.kkk.',
-    '....k' + c.repeat(5) + 'k....kEEEEk.kgGk.',
+    '....k' + foot.repeat(5) + 'k....kEEEEk.kgGk.',
     'kkkkkkkkkkkkkkkkkkkkkkkkkkk',
     'kLLLLLLLLLLLLLLLLLLLLLLLLLk',
     'kDDDDDDDDDDDDDDDDDDDDDDDDDk',
@@ -429,6 +434,11 @@ export function mealTable(full: boolean, tier: BowlTier): Frame {
     '...kqk...............kqk...',
     '...kkk...............kkk...',
   ];
+  return rows.map((row, i) =>
+    i >= 3 && i <= 5
+      ? row.slice(0, 13) + row.slice(13).replace(/Q/g, soup).replace(/E/g, soupShade)
+      : row,
+  );
 }
 
 // What a hungry buddy thinks of: a bowl of rice, steaming, in a cloud, with two small puffs trailing
@@ -820,7 +830,7 @@ export const JOB_STATIONS: Record<BuddyJob, Station> = {
 
 // The plant in the corner grows finer with levels: a sprout in a clay pot, a bigger plant in a
 // rimmed pot (a flowering cactus, a rubber plant, a snake plant or a round-leaved one, whichever the
-// room drew), then flowers in a glazed pot.
+// room drew), flowers in a glazed pot, a small tree, and the tree in fruit.
 // prettier-ignore
 const PLANT_1: Frame = [
   '.kkk...kkk.',
@@ -952,17 +962,65 @@ const PLANT_3: Frame = [
   '..kkkkkkkkk..',
 ];
 
-export type PlantTier = 1 | 2 | 3;
+// A small tree in a big glazed pot, and later the same tree hung with oranges.
+// prettier-ignore
+const PLANT_4: Frame = [
+  '.....kkkkk.....',
+  '...kkPPggGkk...',
+  '..kPPgggggGGk..',
+  '.kPPggggGgggGk.',
+  '.kPgggGgggggGk.',
+  'kPggggggggGggGk',
+  'kPgGgggggggGGGk',
+  'kggggGggGgggGGk',
+  '.kgggggggggGGk.',
+  '.kGgggGgggGGGk.',
+  '..kkGGGGGGGkk..',
+  '......kDqk.....',
+  '......kDqk.....',
+  '.....kDDqqk....',
+  'kkkkkkkkkkkkkkk',
+  'kwaaaaaaaaaaaak',
+  'kkkkkkkkkkkkkkk',
+  '.kaBBBBBBBBBNk.',
+  '.kaBBBBBBBBBNk.',
+  '..kaBBBBBBBNNk.',
+  '..kBBBBBBBBNNk.',
+  '...kkkkkkkkkk..',
+];
+
+// prettier-ignore
+const PLANT_5: Frame = [
+  '.....kkkkk.....',
+  '...kkPPggGkk...',
+  '..kPPgggggGGk..',
+  '.kPPgglOGgggGk.',
+  '.kPggOOGgggggk.',
+  'kPggggggggOlgGk',
+  'kPglOgggggOOGGk',
+  'kggOOGggGgggGGk',
+  '.kgggggOlggGGk.',
+  '.kGgggGOOgGGGk.',
+  '..kkGGGGGGGkk..',
+  '......kDqk.....',
+  '......kDqk.....',
+  '.....kDDqqk....',
+  'kkkkkkkkkkkkkkk',
+  'kwaaaaaaaaaaaak',
+  'kkkkkkkkkkkkkkk',
+  '.kaBBBBBBBBBNk.',
+  '.kaBBBBBBBBBNk.',
+  '..kaBBBBBBBNNk.',
+  '..kBBBBBBBBNNk.',
+  '...kkkkkkkkkk..',
+];
+
+export type PlantTier = 1 | 2 | 3 | 4 | 5;
 // The kinds a pot may grow into at each tier.
 export const PLANTS: Record<PlantTier, readonly Frame[]> = {
   1: [PLANT_1],
   2: [PLANT_2, PLANT_2_RUBBER, PLANT_2_SNAKE, PLANT_2_ROUND],
   3: [PLANT_3],
+  4: [PLANT_4],
+  5: [PLANT_5],
 };
-
-export const RUG: Frame = [
-  '..' + 'm'.repeat(26) + '..',
-  '.' + 'mmn'.repeat(9) + 'm.',
-  '.' + 'nmm'.repeat(9) + 'm.',
-  '..' + 'm'.repeat(26) + '..',
-];

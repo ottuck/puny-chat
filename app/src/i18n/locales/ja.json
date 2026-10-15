@@ -162,7 +162,12 @@
       "writerLove": "私も、だよ",
       "bath1": "あ〜いい湯",
       "bath2": "ぽかぽかする",
-      "bath3": "ここに住みたい"
+      "bath3": "ここに住みたい",
+      "snail": "カタツムリさんだ",
+      "sparrow": "チュンチュン、こんにちは!",
+      "catTail": "…ネコ?",
+      "train": "シュッシュッポッポ!",
+      "farewell": "今までありがとう!"
     },
     "graduate": {
       "title": "独り立ち",
@@ -180,10 +185,30 @@
     },
     "reward": {
       "plant1": "芽の鉢植え",
+      "crate": "木箱",
       "bowl1": "銀のごはん皿",
+      "toys": "おもちゃ箱",
+      "window": "窓",
       "plant2": "茂った鉢植え",
+      "rug1": "水玉のラグ",
+      "clock": "壁掛け時計",
+      "musicBox": "オルゴール",
+      "snail": "カタツムリのお客さん",
+      "rug2": "しましまのラグ",
       "plant3": "花咲く陶器の鉢植え",
-      "bowl2": "金のごはん皿"
+      "wood": "フローリング",
+      "firefly": "ホタルのお客さん",
+      "bowl2": "金のごはん皿",
+      "rug3": "花柄の丸いラグ",
+      "plant4": "小さな木",
+      "train": "おもちゃの汽車",
+      "sparrow": "スズメのお客さん",
+      "tatami": "畳",
+      "lamp": "スタンドライト",
+      "catTail": "野良猫のお客さん",
+      "plant5": "実のなる木",
+      "bowl3": "陶器の器",
+      "cushion": "金色の座布団"
     },
     "nextReward_one": "次のごほうび：Lv.{{level}} {{reward}} · あと{{count}}レベル",
     "nextReward_other": "次のごほうび：Lv.{{level}} {{reward}} · あと{{count}}レベル",
@@ -238,6 +263,10 @@
     "dream": {
       "caption": "夢の中で…",
       "skip": "夢をスキップ"
+    },
+    "room": {
+      "toys": "おもちゃ箱",
+      "music": "オルゴール"
     }
   },
   "buddyEvent": {
@@ -247,6 +276,7 @@
     "CLEANED": "{{actor}}が{{buddy}}のうんちを片付けました",
     "WORKED": "{{actor}}と{{buddy}}のお仕事が終わりました",
     "LEVELED_UP": "{{buddy}}がレベルアップしました！Lv.{{level}} ⬆️",
+    "LEVELED_UP_REWARD": "{{buddy}}がレベルアップしました！Lv.{{level}} ⬆️ 🎁 {{reward}}",
     "EVOLVED": "{{buddy}}が進化しました！✨",
     "GROWN": "🎓 {{buddy}}が大きくなりました！独り立ちできます。",
     "MAX_LEVEL": "🎉 {{buddy}}が最高レベル Lv.{{level}}に到達しました！",

@@ -8,6 +8,7 @@ import type { BuddyJob, BuddyStage, BuddyView } from '@/features/buddy/api';
 import type { Mood } from '@/features/buddy/chat-words';
 import { BuddyDream, DREAM_CUTS } from '@/features/buddy/components/buddy-dream';
 import { BuddyScene } from '@/features/buddy/components/buddy-scene';
+import { REWARDS } from '@/features/buddy/components/stage-decor';
 import type { Cue } from '@/features/buddy/components/buddy-stage';
 import { JOB_ICON, JOB_ORDER } from '@/features/buddy/jobs';
 import { dressedFrame, type Season, SEASONS, seasonOn } from '@/features/buddy/pixel/looks';
@@ -31,6 +32,10 @@ const HAPPENINGS = [
   'rain',
   'snow',
   'shootingStar',
+  'snail',
+  'sparrow',
+  'catTail',
+  'train',
 ] as const;
 const MOODS: Mood[] = ['laugh', 'love', 'cheer', 'comfort', 'goodnight', 'morning'];
 const REACTIONS: ReactionKind[] = [
@@ -40,13 +45,16 @@ const REACTIONS: ReactionKind[] = [
   'pooped',
   'worked',
   'levelUp',
+  'maxLevel',
   'evolved',
   'together',
   'here',
 ];
 
 // Levels where the room gets something new (the rewards), for looking at each step.
-const LEVELS = [1, 4, 8, 14, 25, 30];
+const LEVELS = [1, ...REWARDS.map((entry) => entry.level)];
+// The room's window and lamp by the hour: day, dusk, night.
+const HOURS = [12, 18, 22];
 
 function buddyOf(
   stage: BuddyStage,
@@ -148,7 +156,7 @@ function PoseSheet({
 
 // A link can open it on a scene, for taking pictures of it (README):
 // /preview?scene=bath, ?scene=bath&season=CHRISTMAS (snowing), ?scene=cut2 (a cut of the dream),
-// ?stage=CHILD&level=8 (the room at that level).
+// ?stage=CHILD&level=8 (the room at that level), &hour=22 (the room at night).
 function Preview() {
   const colors = useColors();
   const params = useLocalSearchParams<{
@@ -156,6 +164,7 @@ function Preview() {
     season?: string;
     stage?: string;
     level?: string;
+    hour?: string;
   }>();
   const linkedCut = params.scene?.startsWith('cut') ? Number(params.scene.slice(3)) - 1 : null;
   const linkedSeason = SEASONS.find((s) => s === params.season);
@@ -180,6 +189,10 @@ function Preview() {
   const [dreamCut, setDreamCut] = useState<number | null>(linkedCut);
   // The kind of plant in the pot (undefined: the one the room drew).
   const [plantKind, setPlantKind] = useState<number | undefined>(undefined);
+  // The hour of the room (undefined: the device's).
+  const [hour, setHour] = useState<number | undefined>(
+    params.hour ? Number(params.hour) : undefined,
+  );
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
@@ -213,6 +226,7 @@ function Preview() {
           partnerHere={partnerHere}
           season={season}
           plantKind={plantKind}
+          hour={hour}
         />
         <Group title="scene">
           <Chip label="dream" onPress={() => setDreamRun((n) => n + 1)} />
@@ -223,6 +237,21 @@ function Preview() {
               onPress={() => setDreamCut(dreamCut === i ? null : i)}
               active={dreamCut === i}
             />
+          ))}
+        </Group>
+        <Group title="moving out (from a hatched buddy)">
+          <Chip
+            label="go its own way"
+            onPress={() => {
+              setStage('EGG');
+              setLevel(null);
+            }}
+          />
+        </Group>
+        <Group title="hour (window, clock, lamp, fireflies)">
+          <Chip label="now" onPress={() => setHour(undefined)} active={hour === undefined} />
+          {HOURS.map((h) => (
+            <Chip key={h} label={`${h}:10`} onPress={() => setHour(h)} active={h === hour} />
           ))}
         </Group>
         <Group title="plant kind (Lv.14–24)">
@@ -259,6 +288,7 @@ function Preview() {
           ))}
         </Group>
         <Group title="job (ADULT)">
+          <Chip label="none" onPress={() => setJob(null)} active={job === null} />
           {JOB_ORDER.map((j) => (
             <Chip
               key={j}
