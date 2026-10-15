@@ -7,6 +7,7 @@ export type BuddyEvent =
   | 'WORKED'
   | 'LEVELED_UP'
   | 'EVOLVED'
+  | 'GROWN'
   | 'MAX_LEVEL'
   | 'GRADUATED'
   | 'TOGETHER'
@@ -63,7 +64,7 @@ export type BuddyEventMessage = MessageBase & {
   event: BuddyEvent;
   // Member who triggered the event (FED, CLEANED); absent for events the buddy causes itself.
   actorId?: string;
-  // LEVELED_UP, MAX_LEVEL: the level reached; TOGETHER: the bonus EXP (the server sends it as text).
+  // LEVELED_UP, GROWN, MAX_LEVEL: the level reached; TOGETHER: the bonus EXP (the server sends it as text).
   level?: number;
   // GRADUATED: the name of the buddy that went its own way.
   detail?: string;

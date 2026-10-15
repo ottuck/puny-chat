@@ -187,23 +187,26 @@ public class BuddyService {
 
     /**
      * The grown buddy goes its own way (docs/spec.md, 독립과 앨범): it is kept in the room's album
-     * and a new egg takes its place, in one update so neither happens without the other. Only at
-     * the top level; of two members doing it at once, one does (the other gets BUDDY_NOT_GROWN, as
-     * there is only an egg now).
+     * and a new egg takes its place, in one update so neither happens without the other. Only from
+     * {@link BuddyRules#GRADUATE_AT}; of two members doing it at once, one does (the other gets
+     * BUDDY_NOT_GROWN, as there is only an egg now).
      */
     public Mono<BuddyView> graduate(String roomId, String actorId, String newName) {
         Instant now = Instant.now(clock);
         return load(roomId).flatMap(buddy -> {
-            if (BuddyRules.level(buddy.exp()) < BuddyRules.MAX_LEVEL) return Mono.error(notGrown());
+            if (BuddyRules.level(buddy.exp()) < BuddyRules.GRADUATE_AT) return Mono.error(notGrown());
             // Still this buddy, still grown: a new egg (EXP 0) never matches, even if born the same moment.
             Query same = query(where("_id")
                     .is(roomId)
                     .and("buddy.bornAt")
                     .is(buddy.bornAt())
                     .and("buddy.exp")
-                    .gte(BuddyRules.minExp(BuddyRules.MAX_LEVEL)));
+                    .gte(BuddyRules.minExp(BuddyRules.GRADUATE_AT)));
             Update update = new Update()
-                    .push("album", new AlbumEntry(buddy.name(), buddy.bornAt(), now, buddy.job()))
+                    .push(
+                            "album",
+                            new AlbumEntry(
+                                    buddy.name(), buddy.bornAt(), now, buddy.job(), BuddyRules.level(buddy.exp())))
                     .set("buddy", buddy.next(newName, now));
             return mongo.findAndModify(same, update, RETURN_NEW, RoomBuddy.class, ROOMS)
                     .switchIfEmpty(Mono.error(notGrown()))
@@ -447,6 +450,10 @@ public class BuddyService {
         if (stage != BuddyRules.stage(levelBefore)) {
             event = chatService.recordBuddyEvent(roomId, "EVOLVED", null, eventKey(after, "evolved:" + stage));
             if (stage == BuddyRules.Stage.ADULT) return becameAdult(roomId, after, event, now);
+        } else if (level == BuddyRules.GRADUATE_AT && levelBefore < level) {
+            // Grown: it may go its own way now, or keep growing. A card with the way to do it.
+            event = chatService.recordBuddyEvent(
+                    roomId, "GROWN", String.valueOf(level), null, eventKey(after, "grown:" + BuddyRules.expPerLevel()));
         } else if (level == BuddyRules.MAX_LEVEL && levelBefore < level) {
             // The top: a thank-you in the timeline instead of one more level.
             event = chatService.recordBuddyEvent(

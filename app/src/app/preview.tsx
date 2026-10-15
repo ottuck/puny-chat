@@ -21,7 +21,7 @@ import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 // Not part of the app: it only opens in development builds, and nothing links to it.
 
 const STAGES: BuddyStage[] = ['EGG', 'BABY', 'CHILD', 'ADULT'];
-const LEVEL: Record<BuddyStage, number> = { EGG: 1, BABY: 3, CHILD: 7, ADULT: 12 };
+const LEVEL: Record<BuddyStage, number> = { EGG: 1, BABY: 3, CHILD: 5, ADULT: 10 };
 const HAPPENINGS = [
   'hiccup',
   'startle',

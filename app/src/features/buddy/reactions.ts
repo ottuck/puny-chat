@@ -21,6 +21,7 @@ const BY_EVENT: Partial<Record<string, ReactionKind>> = {
   POOPED: 'pooped',
   WORKED: 'worked',
   LEVELED_UP: 'levelUp',
+  GROWN: 'levelUp',
   MAX_LEVEL: 'levelUp',
   // The new egg arrives with the same rings of light as an evolution.
   GRADUATED: 'evolved',

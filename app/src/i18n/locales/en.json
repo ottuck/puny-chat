@@ -59,6 +59,7 @@
     "emptySolo": "{{buddy}} has hatched!\nInvite a friend to raise it together.",
     "emptySoloHint": "While you wait for a friend, try sending a message.\n{{buddy}} grows as you chat.",
     "emptyDuo": "You and {{partner}} are together now.\nSay hello!",
+    "grownBody": "If it goes its own way it stays in the album and a new egg comes. You can also keep raising it.",
     "maxLevelThanks": "Thank you so much! New characters, a collection and more are on the way. Stay tuned!",
     "togetherBody": "{{buddy}} is thrilled. When you both send a message on the same day, you get it once a day."
   },
@@ -247,6 +248,7 @@
     "WORKED": "{{actor}} and {{buddy}} finished the work",
     "LEVELED_UP": "{{buddy}} leveled up! Lv.{{level}} ⬆️",
     "EVOLVED": "{{buddy}} evolved! ✨",
+    "GROWN": "🎓 {{buddy}} is all grown up! It can go its own way now.",
     "MAX_LEVEL": "🎉 {{buddy}} reached the top level, Lv.{{level}}!",
     "GRADUATED": "🎓 {{name}} went its own way and is in the album now. A new egg arrived!",
     "TOGETHER": "🤝 You both showed up today! Together bonus +{{exp}} EXP",
@@ -353,7 +355,7 @@
     "title": "Raising your buddy",
     "banner": {
       "title": "🥚 How to raise your buddy",
-      "body": "It grows as you chat and take care of it, with a bonus when you both talk on the same day. A new prop appears in the room every few levels, and at level 30 it can go its own way.",
+      "body": "It grows as you chat and take care of it, with a bonus when you both talk on the same day. A new prop appears in the room every few levels, and from level 20 it can go its own way.",
       "open": "See the guide ›"
     },
     "care": {
@@ -366,7 +368,7 @@
     "grow": {
       "title": "🌱 Growing",
       "exp": "EXP: +1 per message (up to 50 a day), +2 for a meal, +2 per 💩 cleaned.",
-      "stages": "Egg → baby (Lv.3) → child (Lv.7) → adult (Lv.12). From child on, it talks.",
+      "stages": "Egg → baby (Lv.3) → child (Lv.5) → adult (Lv.10). From child on, it talks.",
       "together": "When you both send a message on the same day, you get a together bonus of +{{exp}} EXP once a day. 🤝",
       "job": "When it grows up, how you raised it decides its job: feed it a lot and it is a chef, talk late into the night and it becomes a radio DJ. Once grown, you can change it from the buddy details, once a day."
     },
@@ -376,9 +378,9 @@
     },
     "graduate": {
       "title": "🎓 Its own way",
-      "top": "The top level is 30. Then you can let your buddy go its own way from its details.",
+      "top": "From level 20 you can let your buddy go its own way from its details. It is your choice, you can keep raising it. The top level is 100, and EXP keeps counting after it.",
       "album": "It stays in the album and hangs on the wall in a frame. A new egg comes to the stage.",
-      "keep": "The rewards you collected stay with the new egg."
+      "keep": "The rewards you collected up to that level stay with the new egg."
     }
   },
   "support": {

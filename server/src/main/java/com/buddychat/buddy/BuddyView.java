@@ -42,7 +42,7 @@ public record BuddyView(
                 BuddyRules.isHungry(buddy, now),
                 BuddyRules.canFeed(buddy, now),
                 BuddyRules.canClean(buddy, now),
-                level == BuddyRules.MAX_LEVEL,
+                level >= BuddyRules.GRADUATE_AT,
                 buddy.talkedOn(today),
                 today.equals(buddy.togetherDay()),
                 BuddyJob.of(buddy.job()),

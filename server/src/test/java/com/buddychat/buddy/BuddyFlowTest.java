@@ -252,6 +252,35 @@ class BuddyFlowTest {
     }
 
     @Test
+    void expKeepsCountingAtTheTopLevel() {
+        String roomId = createRoom("henry").id();
+        setExp(roomId, BuddyRules.minExp(BuddyRules.MAX_LEVEL));
+
+        buddyService.onMessageSent(roomId).block();
+
+        BuddyView buddy = room("henry").buddy();
+        assertThat(buddy.level()).isEqualTo(BuddyRules.MAX_LEVEL);
+        assertThat(buddy.exp()).isEqualTo(BuddyRules.minExp(BuddyRules.MAX_LEVEL) + BuddyRules.MESSAGE_EXP);
+        assertThat(timeline("henry")).isEmpty();
+    }
+
+    @Test
+    void growingUpSaysSoOnceAndItMayGoItsOwnWayBeforeTheTopLevel() {
+        String roomId = createRoom("henry").id();
+        setExp(roomId, BuddyRules.minExp(BuddyRules.GRADUATE_AT) - 1);
+        assertThat(room("henry").buddy().grown()).isFalse();
+
+        buddyService.onMessageSent(roomId).block();
+        buddyService.onMessageSent(roomId).block();
+
+        BuddyView buddy = room("henry").buddy();
+        assertThat(buddy.level()).isEqualTo(BuddyRules.GRADUATE_AT);
+        assertThat(buddy.grown()).isTrue();
+        assertThat(timeline("henry")).containsExactly("GROWN");
+        assertThat(BuddyRules.GRADUATE_AT).isLessThan(BuddyRules.MAX_LEVEL);
+    }
+
+    @Test
     void messageExpIsCappedPerDayEvenWhenSentConcurrently() {
         String roomId = createRoom("henry").id();
 
@@ -393,7 +422,7 @@ class BuddyFlowTest {
         BuddyView buddy = room("henry").buddy();
         assertThat(buddy.exp()).isEqualTo(exp * BuddyRules.expPerLevel() / 3);
         assertThat(buddy.level()).isEqualTo(10);
-        assertThat(buddy.levelProgress()).isBetween(0.6, 0.7);
+        assertThat(buddy.levelProgress()).isBetween(0.5, 0.75);
     }
 
     @Test
@@ -433,7 +462,7 @@ class BuddyFlowTest {
     void goingItsOwnWayKeepsItInTheAlbumAndANewEggGrowsAgain() {
         String roomId = createRoom("henry").id();
         hatch(roomId); // EVOLVED
-        setExp(roomId, (BuddyRules.MAX_LEVEL - 1) * BuddyRules.expPerLevel());
+        setExp(roomId, BuddyRules.minExp(BuddyRules.GRADUATE_AT));
         clock.advance(Duration.ofMinutes(1)); // the new egg is born later than the first
 
         post("henry", "/api/rooms/me/buddy/graduate", Map.of("buddyName", "Mochi"))
@@ -445,6 +474,7 @@ class BuddyFlowTest {
         assertThat(room.get("buddy").get("stage").asString()).isEqualTo("EGG");
         assertThat(room.get("album")).hasSize(1);
         assertThat(room.get("album").get(0).get("name").asString()).isEqualTo("Mugi");
+        assertThat(room.get("album").get(0).get("level").asInt()).isEqualTo(BuddyRules.GRADUATE_AT);
         // The new egg hatches with its own line, not blocked by the first one's.
         hatch(roomId);
         assertThat(timeline("henry")).containsExactly("EVOLVED", "GRADUATED", "EVOLVED");
@@ -454,7 +484,7 @@ class BuddyFlowTest {
     void bothGraduatingAtOnceGraduatesOnce() {
         duoRoom("henry", "yuki");
         String roomId = room("henry").id();
-        setExp(roomId, (BuddyRules.MAX_LEVEL - 1) * BuddyRules.expPerLevel());
+        setExp(roomId, BuddyRules.minExp(BuddyRules.GRADUATE_AT));
 
         List<Integer> statuses = race(
                 6,
@@ -597,7 +627,7 @@ class BuddyFlowTest {
 
         setBuddy(
                 roomId,
-                new Update().set("buddy.laughCount", 300).set("buddy.exp", BuddyRules.minExp(BuddyRules.MAX_LEVEL)));
+                new Update().set("buddy.laughCount", 300).set("buddy.exp", BuddyRules.minExp(BuddyRules.GRADUATE_AT)));
         buddyService.onMessageSent(roomId).block();
         assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.CHEF);
 

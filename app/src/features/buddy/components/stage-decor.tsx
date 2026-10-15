@@ -40,8 +40,14 @@ function kindOf(seed: string, tier: PlantTier, kinds: number): number {
 }
 
 // `seed`: the buddy's name. `kind`: a kind to show regardless (the art preview).
+// The highest level the room has seen: its buddy's now, or the one a buddy left at (they left at the
+// old top level, 30, before the level was kept).
+function reachedLevel(level: number, album: AlbumEntry[]): number {
+  return Math.max(level, ...album.map((entry) => entry.level ?? 30));
+}
+
 export function decorFor(level: number, album: AlbumEntry[], seed = '', kind?: number) {
-  const reached = album.length > 0 ? Infinity : level;
+  const reached = reachedLevel(level, album);
   const has = (reward: Reward) =>
     REWARDS.some((entry) => entry.reward === reward && reached >= entry.level);
   const plant: PlantTier | 0 = has('plant3') ? 3 : has('plant2') ? 2 : has('plant1') ? 1 : 0;
@@ -61,8 +67,8 @@ export type Decor = ReturnType<typeof decorFor>;
 
 // The next reward to look forward to, if any.
 export function nextReward(level: number, album: AlbumEntry[]) {
-  if (album.length > 0) return null;
-  return REWARDS.find((entry) => entry.level > level) ?? null;
+  const reached = reachedLevel(level, album);
+  return REWARDS.find((entry) => entry.level > reached) ?? null;
 }
 
 // Each plant grows a little with every level until the next one replaces it: smallest when it

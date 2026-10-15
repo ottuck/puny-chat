@@ -65,6 +65,18 @@ export function MessageList({
             </View>
           );
         }
+        if (item.type === 'BUDDY_EVENT' && item.event === 'GROWN') {
+          return (
+            <View style={styles.spaced}>
+              <EventCard
+                title={t('buddyEvent.GROWN', { buddy: buddyName })}
+                body={t('chat.grownBody')}
+                action={onGraduate ? `🎓 ${t('buddy.graduate.button')}` : undefined}
+                onAction={onGraduate}
+              />
+            </View>
+          );
+        }
         if (item.type === 'BUDDY_EVENT' && item.event === 'MAX_LEVEL') {
           return (
             <View style={styles.spaced}>

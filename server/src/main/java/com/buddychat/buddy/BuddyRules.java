@@ -11,7 +11,7 @@ import java.time.ZoneId;
  */
 public final class BuddyRules {
 
-    public static final int DEFAULT_EXP_PER_LEVEL = 5;
+    public static final int DEFAULT_EXP_PER_LEVEL = 4;
     // Set once at startup from BuddyProperties.
     private static volatile int expPerLevel = DEFAULT_EXP_PER_LEVEL;
     public static final int FEED_EXP = 2;
@@ -75,7 +75,7 @@ public final class BuddyRules {
     }
 
     // The highest level (docs/spec.md, 최고 레벨). EXP keeps counting past it.
-    public static final int MAX_LEVEL = 30;
+    public static final int MAX_LEVEL = 100;
 
     public static int level(int exp) {
         return Math.min(MAX_LEVEL, exp / expPerLevel + 1);
@@ -94,8 +94,10 @@ public final class BuddyRules {
 
     // The level each stage starts at.
     static final int BABY_AT = 3;
-    static final int CHILD_AT = 7;
-    static final int ADULT_AT = 12;
+    static final int CHILD_AT = 5;
+    static final int ADULT_AT = 10;
+    // From this level the buddy may go its own way (docs/spec.md, 독립과 앨범): a choice, it can keep growing.
+    static final int GRADUATE_AT = 20;
 
     public static Stage stage(int level) {
         if (level >= ADULT_AT) return Stage.ADULT;

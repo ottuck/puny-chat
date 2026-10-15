@@ -154,22 +154,26 @@ Buddy 상태(레벨, 배고픔, 💩, 돌볼 수 있는지)는 서버가 계산�
 
 ## 성장
 
-- 경험치(레벨)로만 진화한다: 알 → 아기(Lv.3) → 어린이(Lv.7) → 어른(Lv.12), 최고 Lv.30. 레벨당 **5 EXP**. 공식은 사용자에게 보여주지 않고
+- 경험치(레벨)로만 진화한다: 알 → 아기(Lv.3) → 어린이(Lv.5) → 어른(Lv.10), 독립은 Lv.20부터 고를 수 있고, 최고 Lv.100. 레벨당 **4 EXP**. 공식은 사용자에게 보여주지 않고
   "대화하고 돌봐줄수록 Buddy가 성장해요" 정도로만 말한다.
 - 메시지 하루 10개(혼자) 또는 방 전체 20~30개와 함께 보너스(둘이)를 가정한 대략의 기간. 밥·청소를 더하면 더 빠르다.
 
   | 단계 | 누적 EXP | 혼자 | 둘이 함께 |
   | --- | --- | --- | --- |
-  | 아기 (Lv.3) | 10 | 첫날 | 첫날 |
-  | 어린이 (Lv.7) | 30 | 약 3일 | 약 1일 |
-  | 어른 (Lv.12) | 55 | 약 6일 | 약 2일 |
-  | 최고 (Lv.30) | 145 | 약 15일 | 약 4~5일 |
+  | 아기 (Lv.3) | 8 | 첫날 | 첫날 |
+  | 어린이 (Lv.5) | 16 | 약 2일 | 첫날 |
+  | 어른 (Lv.10) | 36 | 약 4일 | 약 1일 |
+  | 독립 가능 (Lv.20) | 76 | 약 8일 | 약 2일 |
+  | 최고 (Lv.100) | 396 | 약 40일 | 약 11일 |
+
+  어른이 일찍 되는 것이 목적이다. 직업, 직업 장치, 일하기 같은 어른의 볼거리를 첫 주 안에 모두 겪게 한다.
 
 - **둘이 함께.** 같은 날 두 사람이 모두 메시지를 보내면 하루 한 번 +10 EXP. 대화에 "🤝 오늘은 둘 다 왔어요!" 카드, 무대에서 하트와 두 번 크게 뛰기,
   그날은 레벨 옆에 🤝. Buddy 상세에 "나 ✅ · 상대 ⏳"와 남은 일. 상대에게 메시지를 보내라는 알림은 보내지 않는다.
-- **최고 레벨.** 30이 되면 대화에 감사 카드가 남는다. EXP는 계속 쌓이지만 레벨과 바는 멈춘다.
-- **독립과 앨범.** 30레벨 버디는 Buddy 상세(무대 이름 옆 🎓, 감사 카드 버튼으로도 연다)에서 두 사람 중 누구든 확인 후 독립시킨다. 새 알의 이름을
-  지으면 버디는 앨범(이름, 함께한 기간, 직업)에 남고 무대에는 새 알이 온다. 앨범은 관계의 기록이지 수집 게임이 아니다.
+- **다 자람과 최고 레벨.** 20레벨이 되면 대화에 "다 자랐어요" 카드(`GROWN`)가 남고 독립시킬 수 있다. 독립은 **선택**이라 계속 키워도 된다.
+  100이 되면 감사 카드(`MAX_LEVEL`)가 남는다. EXP는 계속 쌓여 기록되지만 레벨과 바는 멈춘다.
+- **독립과 앨범.** 20레벨 이상의 버디는 Buddy 상세(무대 이름 옆 🎓, 카드 버튼으로도 연다)에서 두 사람 중 누구든 확인 후 독립시킨다. 새 알의 이름을
+  지으면 버디는 앨범(이름, 함께한 기간, 직업, 떠난 레벨)에 남고 무대에는 새 알이 온다. 앨범은 관계의 기록이지 수집 게임이 아니다.
 - **도움말.** 돌보기, 자라기, 레벨 보상, 독립을 설명하는 화면(채팅 헤더 "?", 설정). 처음 들어오면 채팅 위에 안내 카드가 한 번 뜨고,
   Buddy 상세에 "다음 보상: Lv.8 은 밥그릇 · 2레벨 남았어요"가 보인다.
 
@@ -179,9 +183,10 @@ Buddy 상태(레벨, 배고픔, 💩, 돌볼 수 있는지)는 서버가 계산�
 
 - Lv.4 새싹 화분, Lv.8 은 밥그릇, Lv.14 큰 화분, Lv.25 꽃 핀 도자기 화분, Lv.30 금 밥그릇. 화분은 다음 화분이 오기 전까지 레벨마다 조금씩 커진다.
   Lv.14 화분은 꽃 핀 선인장·고무나무·산세베리아·둥근 잎 화분 중 하나로 자란다. 버디 이름으로 정해서 두 사람 화면이 같고 다시 열어도 그대로다.
-- Lv.12(어른)에는 직업과 **직업 무대 장치**가 온다: 무대 왼쪽에 요리사 조리대, 정원사 큰 식물, 라디오 DJ 방송 책상, 작가 나무 책상, 바리스타 카페 카운터.
+- Lv.10(어른)에는 직업과 **직업 무대 장치**가 온다: 무대 왼쪽에 요리사 조리대, 정원사 큰 식물, 라디오 DJ 방송 책상, 작가 나무 책상, 바리스타 카페 카운터.
   장치는 늘 버디 앞에 있고 높이는 버디 입 바로 아래까지라 얼굴이 가려지지 않는다.
 - 무대 가운데의 러그는 알일 때부터 깔려 있다.
+- 독립해도 방의 보상은 남는다. 앨범에 떠난 레벨이 있어 그 레벨까지의 보상이 새 알과 함께 그대로고, 더 위의 보상은 새 버디가 그 레벨이 되어야 온다(옛 앨범은 30레벨로 본다).
 - 독립시킨 버디는 웃는 얼굴로 분홍 액자에 살짝 기울어 하트와 함께 걸린다(최근 3). 벽은 그 밖에는 비워 둔다(정신없어서).
 
 # 서버
@@ -216,7 +221,7 @@ com.buddychat
 
 ```text
 users          { _id, firebaseUid (unique), displayName, roomId?, createdAt, guest?, lastSeenAt?, roomJoinId? }
-rooms          { _id, memberIds [1..2], memberCount, createdAt, closureId?, historyVersion?, album? [{ name, bornAt, graduatedAt, job? }],
+rooms          { _id, memberIds [1..2], memberCount, createdAt, closureId?, historyVersion?, album? [{ name, bornAt, graduatedAt, job?, level? }],
                  buddy { name, exp, bornAt, lastFedAt?, lastCleanedAt?, poopsCleaned?, lastWorkedAt?, expDay?, messageExpToday?,
                          talkDay?, talkers?, togetherDay?, fedCount?, cleanedCount?, nightCount?, laughCount?, loveCount?,
                          job?, jobChangedDay? } }
@@ -282,7 +287,7 @@ history_deletions  계정 삭제 중 영향받는 방 id(삭제 진행 표식)
 | `ALREADY_MEMBER` | 409 | 자기 room의 초대를 수락 |
 | `ALREADY_IN_ROOM` | 409 | 2명 room의 멤버가 다른 room에 참가 |
 | `LEAVE_CONFIRMATION_REQUIRED` | 409 | solo room을 두고 참가하려면 확인 필요 |
-| `BUDDY_NOT_GROWN` | 409 | 30레벨이 아닌데 독립 |
+| `BUDDY_NOT_GROWN` | 409 | 20레벨이 안 됐는데 독립 |
 | `BUDDY_NOT_ADULT` / `JOB_UNCHANGED` / `JOB_CHANGED_TODAY` | 409 | 직업 바꾸기 불가 |
 | `PARTNER_CHANGED` | 409 | 같은 `requestId`로 다른 신고 |
 | `SUPPORT_RATE_LIMIT` | 429 | 1시간에 문의 5개 이상 |
@@ -342,15 +347,15 @@ togetherToday, job, leaning, canChangeJob, grown)를 그대로 보여준다.
 - **일**: 어른만. 언제든 할 수 있지만 +2 EXP와 타임라인 `WORKED`는 `lastWorkedAt`에서 1시간이 지났을 때만(조건부 update라 동시에 눌러도 한 번).
 - **채팅으로 돌보기**(`CareCommand`): 메시지 전체가 "밥"·"🍚"·"ごはん"·"food"면 밥, "청소"·"🧹"·"そうじ"·"clean"이면 청소, 어른에게 "일"·"💼"·"仕事"·"work"면 일.
   끝의 "!", "~", "."는 괜찮고 문장 안의 단어는 아니다. 보낸 사람이 한 것으로 처리하고, 메시지는 그대로 남고 EXP도 받는다.
-- **경험치**: 밥 +2, 💩 하나 +2, 일 +2(1시간에 한 번), 메시지 +1(room당 하루 50까지, 일본 시간). 레벨 = `exp / 레벨당 EXP + 1`, 최고 30.
-  단계는 `BABY_AT` 3, `CHILD_AT` 10, `ADULT_AT` 20.
+- **경험치**: 밥 +2, 💩 하나 +2, 일 +2(1시간에 한 번), 메시지 +1(room당 하루 50까지, 일본 시간). 레벨 = `exp / 레벨당 EXP + 1`, 최고 100.
+  단계는 `BABY_AT` 3, `CHILD_AT` 5, `ADULT_AT` 10, 독립은 `GRADUATE_AT` 20부터.
 - **레벨당 EXP를 바꿔도 레벨은 그대로**(`BuddyExpScale`): 서버가 시작할 때 `settings`에 기록한 값과 다르면 모든 Buddy의 EXP를
   `exp × 새 값 ÷ 옛 값`(내림)으로 바꾼다. 새 값을 조건부 update로 먼저 기록하므로 서버 두 대가 같이 떠도 한 번만 바꾼다. 트래픽 전 1회성이라 blocking.
 - **둘이 함께**: 같은 날(일본 시간) 두 사람이 모두 메시지를 보내면 하루 한 번 +10(메시지 상한과 별개, 혼자인 방은 없음). 메시지마다 보낸 사람을
   그날 목록(`talkDay`, `talkers`)에 넣고, 그날 처음인 사람이면 둘 다 있고 `togetherDay`가 오늘이 아닐 때만 주는 조건부 update를 한다.
   주면 타임라인 `TOGETHER`, 아니면 `buddy` 이벤트만 보내서 상대 화면에 누가 왔는지 보인다. 독립으로 온 새 알은 그날 기록을 이어받는다.
-- **타임라인 이벤트**: `FED`, `CLEANED`(바닥이 깨끗해질 때), `WORKED`, `TOGETHER`, `LEVELED_UP`(단계가 바뀌면 대신 `EVOLVED`, 30이면 대신
-  `MAX_LEVEL`), `JOB`, `JOB_CHANGED`, `GRADUATED`는 일어날 때 남긴다. `HUNGRY`, `POOPED`는 누군가 room을 읽거나 연결할 때 원인 시각으로 만든
+- **타임라인 이벤트**: `FED`, `CLEANED`(바닥이 깨끗해질 때), `WORKED`, `TOGETHER`, `LEVELED_UP`(단계가 바뀌면 대신 `EVOLVED`, 20이면 대신
+  `GROWN`, 100이면 대신 `MAX_LEVEL`), `JOB`, `JOB_CHANGED`, `GRADUATED`는 일어날 때 남긴다. `HUNGRY`, `POOPED`는 누군가 room을 읽거나 연결할 때 원인 시각으로 만든
   키(`buddy:hungry:<lastFedAt>` 등)로 남겨서 메시지 unique 인덱스로 한 번만 기록된다. 진화·레벨 키에는 버디의 `bornAt`이 들어간다.
 - **동시성**: 밥은 `lastFedAt < 지금 - 30분` 조건부 update, 청소는 읽은 `lastCleanedAt`·`poopsCleaned`가 그대로일 때만 바꾼다. 진 쪽은
   `changed: false`와 현재 상태를 받는다. 변화는 room 전체에 `message`와 `buddy` 이벤트로 간다.
@@ -363,8 +368,8 @@ togetherToday, job, leaning, canChangeJob, grown)를 그대로 보여준다.
   - **바꾸기**(`POST …/buddy/job`): 어른이 된 뒤 두 멤버 누구든 **하루에 한 번**(`jobChangedDay`, 일본 시간, 둘이 합쳐서). 처음 자동으로
     정해진 직업은 치지 않는다. 조건부 update 하나라 동시에 해도 한 번. 타임라인 `JOB_CHANGED`(`actorId` = 바꾼 사람). 점수는 계속 센다.
   - 직업 값을 바꾸려면 저장된 곳(`buddy.job`, 앨범의 `job`, 타임라인 `JOB`·`JOB_CHANGED`의 `text`)을 함께 옮겨야 한다.
-- **독립**(`POST …/buddy/graduate`): `grown`(30레벨)일 때만. 지금 버디를 `album`에 push하고 `buddy`를 새 알로 바꾸는 것을 조건부 update 하나로
-  한다(같은 `bornAt`이고 30레벨 이상일 때만). 진 쪽은 `BUDDY_NOT_GROWN`. 타임라인 `GRADUATED`, 상대 앱은 room을 다시 읽는다.
+- **독립**(`POST …/buddy/graduate`): `grown`(20레벨 이상)일 때만. 지금 버디를 `album`에 push하고 `buddy`를 새 알로 바꾸는 것을 조건부 update 하나로
+  한다(같은 `bornAt`이고 20레벨 이상일 때만). 진 쪽은 `BUDDY_NOT_GROWN`. 타임라인 `GRADUATED`, 상대 앱은 room을 다시 읽는다.
 
 ## Room·초대 규칙
 
