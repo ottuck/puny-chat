@@ -317,6 +317,9 @@ type Props = {
   dream?: boolean;
   // Which kind of plant the pot shows, instead of the one the room drew (the art preview).
   plantKind?: number;
+  // Told where the buddy's middle is across the stage as it walks (buddy-scene.tsx closes the iris
+  // on it).
+  onWalk?: (middle: number) => void;
 };
 
 // Local night hours, checked once a minute.
@@ -491,6 +494,7 @@ export function BuddyStage({
   bare = false,
   dream = false,
   plantKind,
+  onWalk,
 }: Props) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -590,6 +594,12 @@ export function BuddyStage({
   useEffect(() => {
     if (evolving) hush();
   }, [evolving, hush]);
+
+  useEffect(() => {
+    if (!onWalk) return;
+    const id = x.addListener(({ value }) => onWalk(value + spriteWidth / 2));
+    return () => x.removeListener(id);
+  }, [onWalk, x, spriteWidth]);
 
   const perform = useCallback(
     (next: Act, replaceCurrent = false, spoken?: Line) => {
