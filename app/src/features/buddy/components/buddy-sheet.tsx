@@ -262,7 +262,12 @@ function JobCard({
             {t('buddy.jobCard.hint')}
           </Text>
         </>
-      ) : null}
+      ) : (
+        // Nothing to lean on yet: just when and how the job comes.
+        <Text lineBreakStrategyIOS="hangul-word" style={[styles.body, { color: colors.textMuted }]}>
+          {t('buddy.jobCard.hint')}
+        </Text>
+      )}
 
       {changeable ? (
         buddy.canChangeJob ? (

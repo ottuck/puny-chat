@@ -26,6 +26,7 @@ Buddy의 볼거리(대화 반응, 사건, 직업, 기간 한정 모습, 온천, 
 | 기간 한정 모습(몸) / 그때 화분 자리에 서는 것 | 6 / 5 | season |
 | 온천의 모습(수건, 나무통) | 1 | 무대의 ♨ 버튼, 주소 `?scene=bath` |
 | 이사 보따리 | 1 | moving out의 go its own way |
+| Buddy 상세(직업 고르기, 다음 보상, 독립) | 1 | 무대의 이름을 누르거나 주소 `&detail=1`. 직업 바꾸기는 level 20 이상 |
 
 **방 소품** (레벨 보상 25개, 아래 방 소품의 레벨표)
 
@@ -48,7 +49,7 @@ Buddy의 볼거리(대화 반응, 사건, 직업, 기간 한정 모습, 온천, 
 | 방의 반응(메시지·밥·청소·💩·일·레벨 업·최고 레벨·진화·함께·같이 있음) | 10 | room events. 진화 직후 다음 목표 안내도 evolved로 |
 | 장면(온천, 겨울 온천, 미래의 꿈 4컷) | 3 | ♨ 버튼, season CHRISTMAS, scene의 dream·cut 1~4 |
 
-주소로 바로 열기: `?stage=ADULT&level=50&hour=22&job=none`(단계·레벨·시각·직업), `?scene=bath`, `?scene=cut1`.
+주소로 바로 열기: `?stage=ADULT&level=50&hour=22&job=none`(단계·레벨·시각·직업), `&detail=1`(Buddy 상세), `?scene=bath`, `?scene=cut1`.
 
 ## 대화 낱말 반응
 

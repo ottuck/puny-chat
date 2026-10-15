@@ -8,6 +8,7 @@ import type { BuddyJob, BuddyStage, BuddyView } from '@/features/buddy/api';
 import type { Mood } from '@/features/buddy/chat-words';
 import { BuddyDream, DREAM_CUTS } from '@/features/buddy/components/buddy-dream';
 import { BuddyScene } from '@/features/buddy/components/buddy-scene';
+import { BuddySheet } from '@/features/buddy/components/buddy-sheet';
 import { REWARDS } from '@/features/buddy/components/stage-decor';
 import type { Cue } from '@/features/buddy/components/buddy-stage';
 import { JOB_ICON, JOB_ORDER } from '@/features/buddy/jobs';
@@ -160,7 +161,7 @@ function PoseSheet({
 // A link can open it on a scene, for taking pictures of it (README):
 // /preview?scene=bath, ?scene=bath&season=CHRISTMAS (snowing), ?scene=cut2 (a cut of the dream),
 // ?stage=CHILD&level=8 (the room at that level), &hour=22 (the room at night), &job=none (a grown-up
-// before its job).
+// before its job), &detail=1 (its details open, as from its name).
 function Preview() {
   const colors = useColors();
   const params = useLocalSearchParams<{
@@ -170,6 +171,7 @@ function Preview() {
     level?: string;
     hour?: string;
     job?: string;
+    detail?: string;
   }>();
   const linkedCut = params.scene?.startsWith('cut') ? Number(params.scene.slice(3)) - 1 : null;
   const linkedSeason = SEASONS.find((s) => s === params.season);
@@ -196,6 +198,8 @@ function Preview() {
   const [dreamCut, setDreamCut] = useState<number | null>(linkedCut);
   // The kind of plant in the pot (undefined: the one the room drew).
   const [plantKind, setPlantKind] = useState<number | undefined>(undefined);
+  // The buddy's details, opened from its name as in the app (the job's choices, the next reward).
+  const [detail, setDetail] = useState(params.detail === '1');
   // The hour of the room (undefined: the device's).
   const [hour, setHour] = useState<number | undefined>(
     params.hour ? Number(params.hour) : undefined,
@@ -225,7 +229,7 @@ function Preview() {
           onFeed={() => setHungry(false)}
           onClean={() => setPoops((n) => Math.max(0, n - 1))}
           onWork={() => {}}
-          onOpenDetail={() => {}}
+          onOpenDetail={() => setDetail(true)}
           reaction={reaction}
           cue={cue}
           greets={false}
@@ -234,6 +238,20 @@ function Preview() {
           season={season}
           plantKind={plantKind}
           hour={hour}
+        />
+        <BuddySheet
+          visible={detail}
+          buddy={buddyOf(stage, job, hungry, poops, level)}
+          busy={false}
+          onClose={() => setDetail(false)}
+          onFeed={() => setHungry(false)}
+          onClean={() => setPoops((n) => Math.max(0, n - 1))}
+          onChangeJob={async (next) => setJob(next)}
+          onGraduate={async () => {
+            setDetail(false);
+            setStage('EGG');
+            setLevel(null);
+          }}
         />
         <Group title="scene">
           <Chip label="dream" onPress={() => setDreamRun((n) => n + 1)} />
