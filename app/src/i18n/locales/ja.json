@@ -94,6 +94,7 @@
     "feed": "ごはん",
     "cleanUp": "おそうじ",
     "work": "{{buddy}}にお仕事をたのむ",
+    "workShort": "お仕事",
     "growthHint": "おしゃべりしたりお世話したりするほど、大きくなります。",
     "peckish": "ちょっと小腹",
     "pet": "{{buddy}}をなでる",

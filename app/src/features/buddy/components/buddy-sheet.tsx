@@ -35,6 +35,8 @@ type Props = {
   onClose: () => void;
   onFeed: () => void;
   onClean: () => void;
+  // A grown-up's work at its station, in place of cleaning up (it no longer poops).
+  onWork?: () => void;
   // Buddies gone their own way; none in the tour.
   album?: AlbumEntry[];
   // At the top level: the buddy goes into the album and a new egg with this name arrives.
@@ -56,6 +58,7 @@ export function BuddySheet({
   onClose,
   onFeed,
   onClean,
+  onWork,
   album,
   onGraduate,
   onChangeJob,
@@ -64,6 +67,7 @@ export function BuddySheet({
   const colors = useColors();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const grownUp = buddy.stage === 'ADULT';
 
   return (
     <Modal
@@ -116,12 +120,15 @@ export function BuddySheet({
                 progress={buddy.fullness / 100}
                 color={colors.fullness}
               />
-              <Stat
-                label={t('buddy.cleanliness')}
-                value={buddy.poops > 0 ? '💩'.repeat(buddy.poops) : t('buddy.clean')}
-                progress={1 - buddy.poops / MAX_POOPS}
-                color={colors.cleanliness}
-              />
+              {/* A grown-up no longer poops: nothing to keep clean. */}
+              {grownUp ? null : (
+                <Stat
+                  label={t('buddy.cleanliness')}
+                  value={buddy.poops > 0 ? '💩'.repeat(buddy.poops) : t('buddy.clean')}
+                  progress={1 - buddy.poops / MAX_POOPS}
+                  color={colors.cleanliness}
+                />
+              )}
             </View>
 
             <View style={styles.actions}>
@@ -131,12 +138,22 @@ export function BuddySheet({
                 onPress={onFeed}
                 disabled={busy || !buddy.canFeed}
               />
-              <CareButton
-                label={t('buddy.cleanUp')}
-                emoji="🧹"
-                onPress={onClean}
-                disabled={busy || !buddy.canClean}
-              />
+              {grownUp ? (
+                // Off to its station; without a job yet there is none to go to.
+                <CareButton
+                  label={t('buddy.workShort')}
+                  emoji={buddy.job && isJob(buddy.job) ? JOB_ICON[buddy.job] : '💼'}
+                  onPress={() => onWork?.()}
+                  disabled={busy || !buddy.job || !onWork}
+                />
+              ) : (
+                <CareButton
+                  label={t('buddy.cleanUp')}
+                  emoji="🧹"
+                  onPress={onClean}
+                  disabled={busy || !buddy.canClean}
+                />
+              )}
             </View>
 
             {together ? <TogetherCard buddy={buddy} {...together} /> : null}
@@ -262,7 +279,12 @@ function JobCard({
             {t('buddy.jobCard.hint')}
           </Text>
         </>
-      ) : null}
+      ) : (
+        // Nothing to lean on yet: just when and how the job comes.
+        <Text lineBreakStrategyIOS="hangul-word" style={[styles.body, { color: colors.textMuted }]}>
+          {t('buddy.jobCard.hint')}
+        </Text>
+      )}
 
       {changeable ? (
         buddy.canChangeJob ? (
