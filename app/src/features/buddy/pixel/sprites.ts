@@ -1,4 +1,4 @@
-import type { BuddyStage } from '../api';
+import type { BuddyJob, BuddyStage } from '../api';
 import type { Frame, Palette } from './pixel-sprite';
 
 // The buddy's pixel art, in the spirit of GitAnimals: a small grid, few colors, a thick outline
@@ -319,7 +319,11 @@ export const PROP_PALETTE: Palette = {
   S: '#C8CED6', // silver bowl
   Y: '#EFBF3A', // gold bowl
   e: '#C96F4A', // pot rim
-  B: '#4F86B8', // glazed pot
+  B: '#4F86B8', // glazed pot, headphone cups
+  v: '#BFC8D1', // steam, quill shade
+  z: '#E9EDF1', // pot lid
+  K: '#5B5562', // dark grey: mic, headband, ink
+  R: '#6B4426', // coffee
 };
 
 // prettier-ignore
@@ -414,6 +418,163 @@ export const NOTE: Frame = [
   'kkkk.',
   '.kk..',
 ];
+
+// --- Job props (docs/art-handover.md, 6) ---
+
+// What an adult holds at its work, small and plain: two frames each, swapped every tick (steam
+// drifting, water pouring, a note, a line written).
+// prettier-ignore
+const POT: [Frame, Frame] = [[
+  '...v....v...',
+  '....v....v..',
+  '...v....v...',
+  '............',
+  '.....kk.....',
+  '...kkkkkk...',
+  '..kzzzzzzk..',
+  '.kkkkkkkkkk.',
+  'kkSwSSSSSSkk',
+  '.kSwSSSSSSk.',
+  '.kSSSSSSSSk.',
+  '..kkkkkkkk..',
+], [
+  '....v....v..',
+  '...v....v...',
+  '....v....v..',
+  '............',
+  '.....kk.....',
+  '...kkkkkk...',
+  '..kzzzzzzk..',
+  '.kkkkkkkkkk.',
+  'kkSwSSSSSSkk',
+  '.kSwSSSSSSk.',
+  '.kSSSSSSSSk.',
+  '..kkkkkkkk..',
+]];
+
+// prettier-ignore
+const WATERING_CAN: [Frame, Frame] = [[
+  '............',
+  '...kkkk.....',
+  '..k....k....',
+  '..k....k..kk',
+  '.kkkkkkk.kak',
+  '.kaaaaaakak.',
+  '.kawaaaaak..',
+  '.kawaaaak...',
+  '.kaaaaaak...',
+  '.kaaaaaak...',
+  '..kkkkkk....',
+  '............',
+], [
+  '............',
+  '...kkkk.....',
+  '..k....k....',
+  '..k....k..kk',
+  '.kkkkkkk.kak',
+  '.kaaaaaakak.',
+  '.kawaaaaak.a',
+  '.kawaaaak...',
+  '.kaaaaaak.a.',
+  '.kaaaaaak..a',
+  '..kkkkkk....',
+  '..........a.',
+]];
+
+// prettier-ignore
+const HEADPHONES: [Frame, Frame] = [[
+  '............',
+  '............',
+  '............',
+  '...kkkkkk...',
+  '..kKKKKKKk..',
+  '.kKk....kKk.',
+  '.kk......kk.',
+  'kBBk....kBBk',
+  'kBwk....kwBk',
+  'kBBk....kBBk',
+  '.kk......kk.',
+  '............',
+], [
+  '...........k',
+  '...........k',
+  '..........kk',
+  '...kkkkkk...',
+  '..kKKKKKKk..',
+  '.kKk....kKk.',
+  '.kk......kk.',
+  'kBBk....kBBk',
+  'kBwk....kwBk',
+  'kBBk....kBBk',
+  '.kk......kk.',
+  '............',
+]];
+
+// prettier-ignore
+const QUILL: [Frame, Frame] = [[
+  '.........kk.',
+  '........kwk.',
+  '.......kwvk.',
+  '......kwvk..',
+  '.....kwvk...',
+  '....kwvk....',
+  '...kkkk.....',
+  'kkkkkkkkkk..',
+  'knnnnnnnnk..',
+  'knKKKnnnnk..',
+  'knnnnnnnnk..',
+  'kkkkkkkkkk..',
+], [
+  '..........kk',
+  '.........kwk',
+  '........kwvk',
+  '.......kwvk.',
+  '......kwvk..',
+  '.....kwvk...',
+  '....kkkk....',
+  'kkkkkkkkkk..',
+  'knnnnnnnnk..',
+  'knKKKKnnnk..',
+  'knnnnnnnnk..',
+  'kkkkkkkkkk..',
+]];
+
+// prettier-ignore
+const COFFEE: [Frame, Frame] = [[
+  '...v..v.....',
+  '..v..v......',
+  '...v..v.....',
+  '............',
+  '.kkkkkkkk...',
+  '.kRRRRRRk...',
+  '.kwwwwwwkkk.',
+  '.kwwwwwwk.k.',
+  '.kwwwwwwkkk.',
+  '..kwwwwk....',
+  'kwwwwwwwwwk.',
+  '.kkkkkkkkk..',
+], [
+  '..v..v......',
+  '...v..v.....',
+  '..v..v......',
+  '............',
+  '.kkkkkkkk...',
+  '.kRRRRRRk...',
+  '.kwwwwwwkkk.',
+  '.kwwwwwwk.k.',
+  '.kwwwwwwkkk.',
+  '..kwwwwk....',
+  'kwwwwwwwwwk.',
+  '.kkkkkkkkk..',
+]];
+
+export const JOB_PROPS: Record<BuddyJob, [Frame, Frame]> = {
+  CHEF: POT,
+  GARDENER: WATERING_CAN,
+  DJ: HEADPHONES,
+  POET: QUILL,
+  BARISTA: COFFEE,
+};
 
 // --- Decorations (docs/product.md, 무대 꾸미기) ---
 

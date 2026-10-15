@@ -3,7 +3,7 @@ import { api } from '@/lib/api';
 export type BuddyStage = 'EGG' | 'BABY' | 'CHILD' | 'ADULT';
 
 // What it grows up to be, from how the two raised it (server: buddy/BuddyJob).
-export type BuddyJob = 'CHEF' | 'GARDENER' | 'DJ' | 'COMEDIAN' | 'POET' | 'BARISTA';
+export type BuddyJob = 'CHEF' | 'GARDENER' | 'DJ' | 'POET' | 'BARISTA';
 
 // Once a day, when both members have sent a message that day. server: BuddyRules.TOGETHER_EXP
 export const TOGETHER_EXP = 10;

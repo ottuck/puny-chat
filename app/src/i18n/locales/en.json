@@ -143,10 +143,6 @@
       "dj2": "What should play next?",
       "dj3": "For those who cannot sleep",
       "dj4": "The night is still long",
-      "comedian1": "Mind if I try something?",
-      "comedian2": "This one might land",
-      "comedian3": "Good crowd tonight",
-      "comedian4": "That was funny, right?",
       "poet1": "Got a line for today",
       "poet2": "Writing about you two",
       "poet3": "A good day",
@@ -157,7 +153,6 @@
       "barista4": "Take your time",
       "chefFed": "Seasoned just right",
       "gardenerCleaned": "Tidy at last",
-      "comedianLaugh": "See? It landed",
       "poetLove": "Me too"
     },
     "graduate": {
@@ -197,7 +192,6 @@
       "CHEF": "Chef",
       "GARDENER": "Gardener",
       "DJ": "Radio DJ",
-      "COMEDIAN": "Comedian",
       "POET": "Poet",
       "BARISTA": "Barista"
     },
@@ -205,7 +199,6 @@
       "CHEF": "You fed it well",
       "GARDENER": "You kept the floor clean",
       "DJ": "You talked late into the night",
-      "COMEDIAN": "You laughed a lot",
       "POET": "You said \"love you\" a lot",
       "BARISTA": "A bit of everything"
     },
@@ -225,7 +218,6 @@
       "CHEF": "Gets extra excited at mealtime. Stirs a pot when alone.",
       "GARDENER": "Is happier when you clean up. Tends the garden when alone.",
       "DJ": "Upside-down days: on air in the small hours, asleep by day.",
-      "COMEDIAN": "Cracks up at laughing words. Rehearses a bit when alone.",
       "POET": "Shows a big heart at loving words. Writes a poem when alone.",
       "BARISTA": "Talks a lot, chiming in even while you chat."
     }
