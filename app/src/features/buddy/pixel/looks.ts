@@ -66,12 +66,26 @@ const BANDANA: Frame = [
   '...................kk.',
 ];
 
-const JOB_LOOKS: Record<BuddyJob, readonly [row: number, look: Frame]> = {
-  CHEF: [7, HEADBAND],
-  GARDENER: [5, STRAW_HAT],
-  DJ: [7, HEADPHONES],
-  WRITER: [5, BERET],
-  BARISTA: [7, BANDANA],
+// Browline glasses for the writer: a thick black brow along the top, thin gold wire round the
+// bottom of each lens, the eyes inside.
+// prettier-ignore
+const GLASSES: Frame = [
+  '.....NNNNN..NNNNN.....',
+  '....NN...NYYN...NN....',
+  '.....Y...Y..Y...Y.....',
+  '.....Y...Y..Y...Y.....',
+  '......YYY....YYY......',
+];
+
+const JOB_LOOKS: Record<BuddyJob, readonly (readonly [row: number, look: Frame])[]> = {
+  CHEF: [[7, HEADBAND]],
+  GARDENER: [[5, STRAW_HAT]],
+  DJ: [[7, HEADPHONES]],
+  WRITER: [
+    [5, BERET],
+    [11, GLASSES],
+  ],
+  BARISTA: [[7, BANDANA]],
 };
 
 // --- A week's look for the season ---
@@ -283,8 +297,7 @@ export function dressedFrame(
     const [row, col, width] = FIT[stage].ring;
     look = wear(frame, idle, row, col, ring(width));
   } else if (!season && stage === 'ADULT' && job) {
-    const [row, outfit] = JOB_LOOKS[job];
-    look = wear(frame, idle, row, 0, outfit);
+    for (const [row, outfit] of JOB_LOOKS[job]) look = wear(look, idle, row, 0, outfit);
   }
   dressed.set(key, look);
   return look;
