@@ -16,6 +16,7 @@ import { dressedFrame, type Season, SEASONS, seasonOn } from '@/features/buddy/p
 import { PixelSprite } from '@/features/buddy/pixel/pixel-sprite';
 import { BUDDY_PALETTE, POSES_IN_ORDER } from '@/features/buddy/pixel/sprites';
 import type { Reaction, ReactionKind } from '@/features/buddy/reactions';
+import type { AlbumEntry } from '@/features/room/api';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
 // For making the buddy's art (docs/fun-improvements.md, 그림 작업): the stage on its own, with a button for each
@@ -158,10 +159,19 @@ function PoseSheet({
   );
 }
 
+// Buddies gone their own way, for the photos on the wall (&album=).
+const PAST_BUDDIES: AlbumEntry[] = ['Mochi', 'Dango', 'Kinako'].map((name, i) => ({
+  name,
+  bornAt: `2026-0${i + 1}-01T00:00:00Z`,
+  graduatedAt: `2026-0${i + 2}-01T00:00:00Z`,
+  job: null,
+}));
+
 // A link can open it on a scene, for taking pictures of it (README):
 // /preview?scene=bath, ?scene=bath&season=CHRISTMAS (snowing), ?scene=cut2 (a cut of the dream),
 // ?stage=CHILD&level=8 (the room at that level), &hour=22 (the room at night), &job=none (a grown-up
-// before its job), &detail=1 (its details open, as from its name).
+// before its job), &detail=1 (its details open, as from its name), &album=2 (that many buddies gone
+// their own way, their photos on the wall).
 function Preview() {
   const colors = useColors();
   const params = useLocalSearchParams<{
@@ -172,6 +182,7 @@ function Preview() {
     hour?: string;
     job?: string;
     detail?: string;
+    album?: string;
   }>();
   const linkedCut = params.scene?.startsWith('cut') ? Number(params.scene.slice(3)) - 1 : null;
   const linkedSeason = SEASONS.find((s) => s === params.season);
@@ -204,6 +215,8 @@ function Preview() {
   const [hour, setHour] = useState<number | undefined>(
     params.hour ? Number(params.hour) : undefined,
   );
+
+  const album = PAST_BUDDIES.slice(0, Number(params.album ?? 0));
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
@@ -238,6 +251,7 @@ function Preview() {
           season={season}
           plantKind={plantKind}
           hour={hour}
+          album={album}
         />
         <BuddySheet
           visible={detail}

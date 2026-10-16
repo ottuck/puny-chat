@@ -26,6 +26,7 @@ import org.jspecify.annotations.Nullable;
  * @param jobChangedLevel the level the members last changed the job at; null if never. The settled
  *     job, and a first pick, do not count
  * @param lastWorkedAt when a grown-up last earned EXP for work at its station; null if never
+ * @param lastBathedAt when it last earned EXP for a trip to the hot spring; null if never
  */
 public record Buddy(
         String name,
@@ -46,12 +47,13 @@ public record Buddy(
         @Nullable Integer loveCount,
         @Nullable String job,
         @Nullable Integer jobChangedLevel,
-        @Nullable Instant lastWorkedAt) {
+        @Nullable Instant lastWorkedAt,
+        @Nullable Instant lastBathedAt) {
 
     public static final int MAX_NAME_LENGTH = 12;
 
     public static Buddy hatch(String name, Instant now) {
-        return new Buddy(name, 0, now, now, now, null, 0, 0, null, null, null, 0, 0, 0, 0, 0, null, null, null);
+        return new Buddy(name, 0, now, now, now, null, 0, 0, null, null, null, 0, 0, 0, 0, 0, null, null, null, null);
     }
 
     Instant fedAt() {
@@ -85,7 +87,26 @@ public record Buddy(
     /** The egg that takes this grown buddy's place. Today's talk carries over: one bonus a day. */
     Buddy next(String name, Instant now) {
         return new Buddy(
-                name, 0, now, now, now, null, 0, 0, talkDay, talkers, togetherDay, 0, 0, 0, 0, 0, null, null, null);
+                name,
+                0,
+                now,
+                now,
+                now,
+                null,
+                0,
+                0,
+                talkDay,
+                talkers,
+                togetherDay,
+                0,
+                0,
+                0,
+                0,
+                0,
+                null,
+                null,
+                null,
+                null);
     }
 
     /** Members who sent a message on that day. */

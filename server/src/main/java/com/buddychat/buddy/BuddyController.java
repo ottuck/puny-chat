@@ -46,6 +46,12 @@ class BuddyController {
         return inMyRoom(jwt, buddyService::work);
     }
 
+    // Off to the hot spring: "changed: false" when it was there not long ago, or is still an egg.
+    @PostMapping("/api/rooms/me/buddy/bath")
+    Mono<BuddyService.CareResult> bathe(@AuthenticationPrincipal Jwt jwt) {
+        return inMyRoom(jwt, buddyService::bathe);
+    }
+
     record GraduateRequest(
             @NotBlank @Size(max = Buddy.MAX_NAME_LENGTH) String buddyName) {}
 

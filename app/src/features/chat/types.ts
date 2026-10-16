@@ -5,6 +5,8 @@ export type BuddyEvent =
   | 'CLEANED'
   // A grown-up's work at its station (docs/spec.md, 직업 무대 장치).
   | 'WORKED'
+  // A trip to the hot spring that earned EXP (docs/fun-improvements.md, 목욕).
+  | 'BATHED'
   | 'LEVELED_UP'
   | 'EVOLVED'
   | 'GROWN'

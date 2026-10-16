@@ -26,7 +26,8 @@ import { Iris, type IrisRun } from './iris';
 // The buddy's stage with its other scenes (docs/fun-improvements.md, 목욕·미래의 꿈), changed with an
 // iris: home, the hot spring, and once, before the first egg, a dream of what it may become.
 //
-// The bath is this device's alone (the partner still sees the buddy at home). It goes back home only
+// The bath is this device's alone (the partner still sees the buddy at home); only the EXP for going
+// after a while is the room's (`onBathe`, the server decides). It goes back home only
 // when asked or after ten minutes, never because of something in the room: meanwhile the bath shows
 // the buddy as it came, and what happened is in the chat. Back home it catches up: a level up, or the
 // evolution, plays there once the iris opens.
@@ -47,6 +48,8 @@ type Props = ComponentProps<typeof BuddyStage> & {
   onDreaming?: (dreaming: boolean) => void;
   // Opens in the bath (the art preview's link, for pictures of it).
   startInBath?: boolean;
+  // On the way to the bath, once it is there: EXP if it has been a while.
+  onBathe?: () => void;
 };
 
 function CornerButton({
@@ -75,7 +78,13 @@ function CornerButton({
   );
 }
 
-export function BuddyScene({ dreams = false, onDreaming, startInBath = false, ...props }: Props) {
+export function BuddyScene({
+  dreams = false,
+  onDreaming,
+  startInBath = false,
+  onBathe,
+  ...props
+}: Props) {
   const { t } = useTranslation();
   const colors = useColors();
   const { buddy, height, reaction: latest } = props;
@@ -183,6 +192,8 @@ export function BuddyScene({ dreams = false, onDreaming, startInBath = false, ..
       setKept(buddy);
       setCaughtUp(null);
       setPlace('bath');
+      // Asked once it is there, so a level up from it waits for the way back like any other.
+      onBathe?.();
     });
   };
   // Ten minutes in the water is plenty.
