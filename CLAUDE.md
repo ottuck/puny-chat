@@ -27,6 +27,7 @@
 - 아이폰은 **개발용 빌드**(`expo-dev-client`, bundle id `com.ottuck.buddychat`)로 연다. Expo Go에는 푸시가 없어 S8부터 쓰지 않는다.
   JS 수정은 Metro로 바로 반영되고, 네이티브 설정(패키지·config plugin·`app.json`)이 바뀔 때만 다시 빌드한다:
   `npx eas-cli build --profile development --platform ios`(Apple 계정 로그인이 필요해 사용자가 실행, `eas.json`).
+- 출시된 iOS 앱의 JS·그림·번역 변경은 EAS Update로 보낸다(`docs/release.md`의 앱 업데이트). 네이티브가 바뀌면 `app.json`의 `version`을 올리고 새로 빌드한다.
 - 번역 JSON 등 수정이 화면에 반영되지 않으면 Metro 캐시 문제다: `pnpm start --clear`
 - `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm format:check` · 한 번에: `pnpm check`
 - `pnpm test` — Node 내장 테스트 러너로 메시지 복구 실패·페이지네이션·재연결·취소 회귀 테스트. 새 라이브러리는 쓰지 않는다.
