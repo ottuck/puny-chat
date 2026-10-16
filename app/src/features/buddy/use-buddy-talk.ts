@@ -59,6 +59,13 @@ export type Line =
   | 'catTail'
   | 'train'
   | 'farewell'
+  // A tap on a thing in the room (buddy-stage.tsx, touchProp).
+  | 'plant'
+  | 'portrait'
+  | 'clock'
+  | 'windowDay'
+  | 'windowDusk'
+  | 'windowNight'
   // A job's own words (JOB_LINES), and what it says at its own moments.
   | 'chef1'
   | 'chef2'

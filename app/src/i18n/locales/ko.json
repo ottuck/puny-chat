@@ -171,7 +171,13 @@
       "sparrow": "짹짹, 안녕!",
       "catTail": "…고양이?",
       "train": "칙칙폭폭!",
-      "farewell": "그동안 고마웠어!"
+      "farewell": "그동안 고마웠어!",
+      "plant": "쑥쑥 자라라~",
+      "portrait": "잘 지내고 있겠지?",
+      "clock": "벌써 시간이 이렇게!",
+      "windowDay": "날씨 좋다~",
+      "windowDusk": "노을 예쁘다",
+      "windowNight": "별이 반짝반짝"
     },
     "graduate": {
       "title": "독립시키기",
@@ -275,7 +281,16 @@
     },
     "room": {
       "toys": "장난감 상자",
-      "music": "오르골"
+      "music": "오르골",
+      "plant": "화분",
+      "clock": "벽시계",
+      "window": "창문",
+      "lamp": "무드등",
+      "crate": "나무 상자",
+      "rug": "러그",
+      "cushion": "방석",
+      "portrait": "{{name}}의 사진",
+      "corner": "계절 장식"
     },
     "notice": {
       "jobChangeOpen": "직업을 한 번 바꿀 수 있어요! Buddy 상세에서 골라 보세요",

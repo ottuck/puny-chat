@@ -171,7 +171,13 @@
       "sparrow": "チュンチュン、こんにちは!",
       "catTail": "…ネコ?",
       "train": "シュッシュッポッポ!",
-      "farewell": "今までありがとう!"
+      "farewell": "今までありがとう!",
+      "plant": "すくすく育ってね",
+      "portrait": "元気にしてるかな?",
+      "clock": "もうこんな時間!",
+      "windowDay": "いい天気~",
+      "windowDusk": "夕焼けきれい",
+      "windowNight": "星がキラキラ"
     },
     "graduate": {
       "title": "独り立ち",
@@ -275,7 +281,16 @@
     },
     "room": {
       "toys": "おもちゃ箱",
-      "music": "オルゴール"
+      "music": "オルゴール",
+      "plant": "植木鉢",
+      "clock": "掛け時計",
+      "window": "窓",
+      "lamp": "ランプ",
+      "crate": "木箱",
+      "rug": "ラグ",
+      "cushion": "座布団",
+      "portrait": "{{name}}の写真",
+      "corner": "季節の飾り"
     },
     "notice": {
       "jobChangeOpen": "職業を1回変えられます!バディの詳細で選んでみてね",

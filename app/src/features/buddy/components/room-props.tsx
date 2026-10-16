@@ -105,6 +105,118 @@ export function Arrive({
   );
 }
 
+// --- Taps ---
+
+// What a tap does to a thing in the room: a plant sways from its pot, the clock and the crate
+// rattle, a portrait swings on its pin, a rug or cushion gives under a pat.
+export type Jiggle = 'sway' | 'rattle' | 'swing' | 'squish';
+const JIGGLE_MS = 750;
+const SHINE_MS = 700;
+const PIVOT: Record<Jiggle, string> = {
+  sway: 'center bottom',
+  rattle: 'center',
+  swing: 'center top',
+  squish: 'center bottom',
+};
+
+function jiggled(kind: Jiggle, move: Animated.Value) {
+  const turn = (degrees: number[]) =>
+    move.interpolate({
+      inputRange: degrees.map((_, i) => i / (degrees.length - 1)),
+      outputRange: degrees.map((d) => `${d}deg`),
+    });
+  switch (kind) {
+    case 'sway':
+      return [{ rotate: turn([0, -9, 7, -4, 2, 0]) }];
+    case 'swing':
+      return [{ rotate: turn([0, 14, -10, 6, -3, 0]) }];
+    case 'rattle':
+      return [
+        { rotate: turn([0, -8, 7, -6, 5, -3, 0]) },
+        {
+          translateY: move.interpolate({
+            inputRange: [0, 0.15, 0.3, 0.45, 0.6, 1],
+            outputRange: [0, -3, 0, -3, 0, 0],
+          }),
+        },
+      ];
+    case 'squish':
+      return [
+        {
+          scaleX: move.interpolate({
+            inputRange: [0, 0.25, 0.55, 0.8, 1],
+            outputRange: [1, 1.15, 0.94, 1.03, 1],
+          }),
+        },
+        {
+          scaleY: move.interpolate({
+            inputRange: [0, 0.25, 0.55, 0.8, 1],
+            outputRange: [1, 0.7, 1.08, 0.97, 1],
+          }),
+        },
+      ];
+  }
+}
+
+// A thing in the room that answers a tap: it moves (or only twinkles, with no `kind`), and the
+// stage hears of it (`onTap`) when the buddy has something to say about it.
+export function Tappable({
+  kind,
+  label,
+  shine = false,
+  onTap,
+  children,
+}: {
+  kind?: Jiggle;
+  label: string;
+  shine?: boolean;
+  onTap?: () => void;
+  children: ReactNode;
+}) {
+  const [move] = useState(() => new Animated.Value(0));
+  const [shining, setShining] = useState(0);
+  useEffect(() => {
+    if (!shining) return;
+    const timer = setTimeout(() => setShining(0), SHINE_MS);
+    return () => clearTimeout(timer);
+  }, [shining]);
+  const tap = () => {
+    if (kind) {
+      move.stopAnimation();
+      move.setValue(0);
+      Animated.timing(move, {
+        toValue: 1,
+        duration: JIGGLE_MS,
+        easing: Easing.linear,
+        useNativeDriver: NATIVE_DRIVER,
+      }).start();
+    }
+    if (shine) setShining((n) => n + 1);
+    onTap?.();
+  };
+  return (
+    <Pressable onPress={tap} accessibilityRole="button" accessibilityLabel={label}>
+      <Animated.View
+        style={kind ? { transformOrigin: PIVOT[kind], transform: jiggled(kind, move) } : null}
+      >
+        {children}
+      </Animated.View>
+      {shining
+        ? TAP_SPARKLES.map((at, i) => (
+            <View key={i} style={[styles.at, styles.passThrough, at]}>
+              <PixelSprite frame={SPARKLE} palette={PROP_PALETTE} scale={2} />
+            </View>
+          ))
+        : null}
+    </Pressable>
+  );
+}
+
+const TAP_SPARKLES = [
+  { left: '-8%', top: -6 },
+  { right: '-8%', top: '35%' },
+] as const;
+
 // --- On the wall ---
 
 // The window (Lv.12): the sky by the device's clock, and the guests at the glass.
@@ -312,8 +424,8 @@ export function WallClock({ scale, now }: { scale: number; now: Date }) {
 
 // --- On the floor ---
 
-// The left of the floor until a job's station takes it: a crate (Lv.6), then full of toys (Lv.9).
-// A tap on the toys sends the ball bouncing out, and the buddy is glad.
+// The left of the floor until a job's station takes it: a crate (Lv.4), then full of toys (Lv.8).
+// A tap rattles the crate; on the toys it sends the ball bouncing out, and the buddy is glad.
 export function FloorToy({
   toys,
   scale,
@@ -338,7 +450,13 @@ export function FloorToy({
     move.start();
     return () => move.stop();
   }, [run, bounce]);
-  if (!toys) return <PixelSprite frame={CRATE} palette={ROOM_PALETTE} scale={scale} />;
+  if (!toys) {
+    return (
+      <Tappable kind="rattle" label={t('buddy.room.crate')}>
+        <PixelSprite frame={CRATE} palette={ROOM_PALETTE} scale={scale} />
+      </Tappable>
+    );
+  }
   const play = () => {
     setRun((n) => n + 1);
     onPlay();

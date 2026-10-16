@@ -171,7 +171,13 @@
       "sparrow": "Tweet tweet, hi!",
       "catTail": "…a cat?",
       "train": "Choo choo!",
-      "farewell": "Thanks for everything!"
+      "farewell": "Thanks for everything!",
+      "plant": "Grow, grow!",
+      "portrait": "I hope they are doing well",
+      "clock": "Look at the time!",
+      "windowDay": "What a nice day",
+      "windowDusk": "What a pretty sunset",
+      "windowNight": "Twinkle, twinkle"
     },
     "graduate": {
       "title": "Its own way",
@@ -275,7 +281,16 @@
     },
     "room": {
       "toys": "Toy box",
-      "music": "Music box"
+      "music": "Music box",
+      "plant": "Plant",
+      "clock": "Wall clock",
+      "window": "Window",
+      "lamp": "Lamp",
+      "crate": "Crate",
+      "rug": "Rug",
+      "cushion": "Cushion",
+      "portrait": "Photo of {{name}}",
+      "corner": "Seasonal decoration"
     },
     "notice": {
       "jobChangeOpen": "The job can be changed once! Pick one in the buddy details",

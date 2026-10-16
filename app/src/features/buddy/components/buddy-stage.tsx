@@ -35,7 +35,7 @@ import {
   umbrellaFor,
 } from '../pixel/looks';
 import { type Palette, PixelSprite } from '../pixel/pixel-sprite';
-import { BUNDLE, ROOM_PALETTE } from '../pixel/room';
+import { BUNDLE, ROOM_PALETTE, skyAt } from '../pixel/room';
 import {
   bowl,
   BUDDY_PALETTE,
@@ -60,8 +60,15 @@ import type { Reaction, ReactionKind } from '../reactions';
 import type { ChatWord, Mood } from '../chat-words';
 import { JOB_LINES, type Line, pick, useBuddyTalk } from '../use-buddy-talk';
 import { SpeechBubble } from './speech-bubble';
-import { Arrive, GUEST_MS, type Guest, RoomSparkle, Train } from './room-props';
-import { decorFor, LAMP_ROOM, Plant, plantRoom as plantRoomFor, WallDecor } from './stage-decor';
+import { Arrive, GUEST_MS, type Guest, RoomSparkle, Tappable, Train } from './room-props';
+import {
+  decorFor,
+  LAMP_ROOM,
+  Plant,
+  plantRoom as plantRoomFor,
+  type RoomProp,
+  WallDecor,
+} from './stage-decor';
 import { RAIN_GAP, rainDrops, Snowfall } from './weather';
 
 // The buddy's stage above the chat (docs/spec.md, 핵심 경험): the buddy walks around, waits by
@@ -214,6 +221,8 @@ const ACT_LINE: Partial<Record<Act, Line>> = {
   catTail: 'catTail',
   train: 'train',
 };
+// What it says looking out of the window, by the sky (room.ts, skyAt).
+const WINDOW_LINE = { day: 'windowDay', dusk: 'windowDusk', night: 'windowNight' } as const;
 // What it does when left alone, by weight: dancing and singing most, the small happenings between.
 const IDLE_ACTS: readonly (readonly [Act, number])[] = [
   ['dance', 25],
@@ -697,7 +706,8 @@ export function BuddyStage({
     if (width === 0 || leaving) return;
     // Dancing, singing or feeling something on the spot.
     if (acting || mood) {
-      x.stopAnimation();
+      // Stopped short of where it was heading: what it says opens toward the middle from here.
+      x.stopAnimation((at) => setOnRightHalf(at + spriteWidth / 2 > width / 2));
       return;
     }
     let stopped = false;
@@ -1456,6 +1466,21 @@ export function BuddyStage({
     if (egg || leaving || active) return;
     perform(next, true);
   };
+  // A tap on a thing in the room (stage-decor.tsx): the buddy notices. At the window a guest drops
+  // by, if the room has grown any, or it looks out at the sky; the clock gives it a start; a plant or
+  // a portrait gets a word (from a child up, like every word).
+  const touchProp = (prop: RoomProp) => {
+    if (egg || leaving || active || dream) return;
+    if (prop === 'window') {
+      if (isGuest(act)) return say(act);
+      const atWindow = decor.guests.filter((guest) => guest !== 'train');
+      if (atWindow.length > 0) return perform(pick(atWindow), true);
+      const hours = hour ?? new Date().getHours();
+      return perform('lookAround', true, WINDOW_LINE[skyAt(hours)]);
+    }
+    if (prop === 'clock') return perform('startle', true, 'clock');
+    say(prop);
+  };
   // A grown-up's station: a tap sends it off to work there (EXP once an hour, the server decides).
   const work = () => {
     if (busy) return;
@@ -1525,15 +1550,25 @@ export function BuddyStage({
         playing={act === 'sing'}
         onToy={() => play('dance')}
         onMusic={() => play('sing')}
+        onProp={touchProp}
         hour={hour}
       />
       {corner ? (
-        <View style={[styles.poop, { bottom: FLOOR - 2, right: 8 }]} pointerEvents="none">
-          <PixelSprite frame={corner.frame} palette={PROP_PALETTE} scale={scale * corner.size} />
+        <View style={[styles.poop, { bottom: FLOOR - 2, right: 8 }]}>
+          <Tappable kind="sway" shine label={t('buddy.room.corner')}>
+            <PixelSprite frame={corner.frame} palette={PROP_PALETTE} scale={scale * corner.size} />
+          </Tappable>
         </View>
       ) : decor.plant ? (
-        <View style={[styles.poop, { bottom: FLOOR - 2, right: 8 }]} pointerEvents="none">
-          <Plant tier={decor.plant} kind={decor.plantKind} scale={decor.plantScale} />
+        <View style={[styles.poop, { bottom: FLOOR - 2, right: 8 }]}>
+          <Tappable
+            kind="sway"
+            shine
+            label={t('buddy.room.plant')}
+            onTap={() => touchProp('plant')}
+          >
+            <Plant tier={decor.plant} kind={decor.plantKind} scale={decor.plantScale} />
+          </Tappable>
         </View>
       ) : null}
 

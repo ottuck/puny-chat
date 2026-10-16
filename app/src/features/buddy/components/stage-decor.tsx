@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import type { AlbumEntry } from '@/features/room/api';
@@ -35,6 +36,7 @@ import {
   MusicBox,
   RoomWindow,
   StandingLamp,
+  Tappable,
   useNow,
   WallClock,
 } from './room-props';
@@ -196,6 +198,9 @@ const PORTRAIT_WIDTH = buddyFrame('ADULT', 'happy')[0].length * 1.5 + 12;
 const PORTRAIT_GAP = 52;
 const CLOCK_LEFT = 16;
 
+// The things in the room the buddy answers when tapped (buddy-stage.tsx); the rest only move.
+export type RoomProp = 'plant' | 'clock' | 'window' | 'portrait';
+
 type WallProps = {
   decor: Decor;
   floor: number;
@@ -215,6 +220,8 @@ type WallProps = {
   playing: boolean;
   onToy: () => void;
   onMusic: () => void;
+  // A tap on a thing the buddy has something to say about.
+  onProp: (prop: RoomProp) => void;
   // The hour to show instead of the device's (the art preview).
   hour?: number;
 };
@@ -236,8 +243,10 @@ export function WallDecor({
   playing,
   onToy,
   onMusic,
+  onProp,
   hour,
 }: WallProps) {
+  const { t } = useTranslation();
   const clock = useNow();
   const now = hour === undefined ? clock : new Date(2026, 0, 1, hour, 10);
   // What came after the stage opened pops in; what was there already does not.
@@ -265,6 +274,9 @@ export function WallDecor({
   const rug = RUGS[decor.rug];
   const rugWidth = rug[0].length * 3;
   const guestHere = guest && guest !== 'train' ? guest : null;
+  // A tap on the lamp switches it on or off, until the stage opens again.
+  const [lampOn, setLampOn] = useState<boolean | null>(null);
+  const lit = lampOn ?? sky !== 'day';
 
   return (
     <View style={[StyleSheet.absoluteFill, styles.passThrough]}>
@@ -279,7 +291,9 @@ export function WallDecor({
       {decor.window ? (
         <View style={[styles.at, { left: windowLeft, top: top + 4 }]}>
           <Arrive fresh={fresh('window')} width={windowWidth}>
-            <RoomWindow scale={wall} now={now} guest={guestHere} run={run} tick={tick} />
+            <Tappable shine label={t('buddy.room.window')} onTap={() => onProp('window')}>
+              <RoomWindow scale={wall} now={now} guest={guestHere} run={run} tick={tick} />
+            </Tappable>
           </Arrive>
         </View>
       ) : null}
@@ -293,7 +307,9 @@ export function WallDecor({
       {decor.clock ? (
         <View style={[styles.at, { left: CLOCK_LEFT, top: top + 8 }]}>
           <Arrive fresh={fresh('clock')} width={13 * clockScale}>
-            <WallClock scale={clockScale} now={now} />
+            <Tappable kind="rattle" label={t('buddy.room.clock')} onTap={() => onProp('clock')}>
+              <WallClock scale={clockScale} now={now} />
+            </Tappable>
           </Arrive>
         </View>
       ) : null}
@@ -304,19 +320,30 @@ export function WallDecor({
         <View
           key={entry.graduatedAt}
           style={[
-            styles.frame,
+            styles.at,
             {
               top: top + 8,
               right: 14 + (decor.portraits.length - 1 - i) * PORTRAIT_GAP,
               transform: [{ rotate: i % 2 === 0 ? '-6deg' : '5deg' }],
             },
           ]}
-          accessibilityLabel={entry.name}
         >
-          <PixelSprite frame={buddyFrame('ADULT', 'happy')} palette={BUDDY_PALETTE} scale={1.5} />
-          <View style={styles.heart}>
-            <PixelSprite frame={HEART} palette={PROP_PALETTE} scale={1.5} />
-          </View>
+          <Tappable
+            kind="swing"
+            label={t('buddy.room.portrait', { name: entry.name })}
+            onTap={() => onProp('portrait')}
+          >
+            <View style={styles.frame}>
+              <PixelSprite
+                frame={buddyFrame('ADULT', 'happy')}
+                palette={BUDDY_PALETTE}
+                scale={1.5}
+              />
+            </View>
+            <View style={styles.heart}>
+              <PixelSprite frame={HEART} palette={PROP_PALETTE} scale={1.5} />
+            </View>
+          </Tappable>
         </View>
       ))}
 
@@ -329,7 +356,9 @@ export function WallDecor({
         ]}
       >
         <Arrive fresh={decor.rug > 0 && fresh(`rug${decor.rug}` as Reward)} width={rugWidth}>
-          <PixelSprite frame={rug} palette={ROOM_PALETTE} scale={3} />
+          <Tappable kind="squish" label={t('buddy.room.rug')}>
+            <PixelSprite frame={rug} palette={ROOM_PALETTE} scale={3} />
+          </Tappable>
         </Arrive>
       </View>
       {decor.cushion ? (
@@ -340,7 +369,9 @@ export function WallDecor({
           ]}
         >
           <Arrive fresh={fresh('cushion')} width={CUSHION[0].length * FLOOR_SCALE}>
-            <Cushion scale={FLOOR_SCALE} />
+            <Tappable kind="squish" label={t('buddy.room.cushion')}>
+              <Cushion scale={FLOOR_SCALE} />
+            </Tappable>
           </Arrive>
         </View>
       ) : null}
@@ -358,7 +389,9 @@ export function WallDecor({
       {decor.lamp ? (
         <View style={[styles.at, { right: 8 + plantSpace, bottom: floor - 2 }]}>
           <Arrive fresh={fresh('lamp')} width={LAMP_ROOM}>
-            <StandingLamp scale={FLOOR_SCALE} lit={sky !== 'day'} />
+            <Tappable label={t('buddy.room.lamp')} onTap={() => setLampOn(!lit)}>
+              <StandingLamp scale={FLOOR_SCALE} lit={lit} />
+            </Tappable>
           </Arrive>
         </View>
       ) : null}
@@ -392,7 +425,6 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   frame: {
-    position: 'absolute',
     padding: 3,
     borderWidth: 3,
     borderRadius: 8,
