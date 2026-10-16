@@ -25,7 +25,9 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 - 앱 안 계정 삭제(Guideline 5.1.1(v)), 개인정보처리방침·지원 페이지(로그인 없이, 세 언어), 문의·상대 신고·내보내기.
 - 푸시: `expo-notifications`, EAS projectId 연결. 아이콘·스플래시: `app/assets/README.md`.
 - 수출 규정: `ios.infoPlist`의 `ITSAppUsesNonExemptEncryption: false`(표준 암호화만 쓴다. 업로드마다 묻지 않게).
-- Expo SDK 57 권장 패치 적용, `pnpm dlx expo-doctor` 21/21.
+- `pnpm dlx expo-doctor`는 20/21이다. SDK 57의 최신 패치 5개가 아직 pnpm의 최소 공개 기간 안이라 버전 확인 하나가 남는다.
+  기간이 지나면 `pnpm exec expo install --fix`로 맞춘다. 기간을 우회하는 `minimumReleaseAgeExclude`는 쓰지 않는다.
+- EAS Update(`expo-updates`): 아래 앱 업데이트.
 - EAS development·production 환경에 공개 클라이언트 설정 5개(`EXPO_PUBLIC_API_URL`, Firebase 4개), `eas.json`에서 환경을 고른다.
 - Gmail 발송(OAuth 앱 Production, `gmail.send`)과 서버 환경변수 설정.
 
@@ -56,6 +58,23 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
      심사자는 게스트로 바로 시작할 수 있다고 적는다.
 5. **제출.** 운영자가 최종 확인하고 직접 제출한다.
 
+## 앱 업데이트 (EAS Update)
+
+`expo-updates`가 들어간 빌드부터 JS·그림·번역 변경을 심사 없이 보낸다. 앱은 켤 때 업데이트를 받아 두고 다음 실행에 적용한다.
+서버 변경은 지금처럼 배포만 하면 모든 앱에 바로 적용된다(옛 앱도 계속 부르므로 API는 호환을 지킨다). 웹은 상관없다.
+
+- **채널.** `eas.json`의 preview·production 빌드가 같은 이름의 채널을 본다. 개발용 빌드는 Metro로 바로 받는다.
+- **runtimeVersion은 `appVersion` 정책.** 업데이트는 `app.json`의 `version`(지금 1.0.0)이 같은 빌드에만 간다. 네이티브가 바뀌면(패키지 추가·업그레이드,
+  config plugin, `app.json`의 네이티브 설정) `version`을 올리고 새로 빌드해 심사받는다. 올리지 않으면 옛 빌드에 맞지 않는 업데이트가 가서 앱이 깨질 수 있다.
+- **보내기.** main CI·웹 배포를 확인한 뒤, 같은 커밋에서:
+  ```bash
+  npx eas-cli update --channel production --environment production --message "방 소품 탭 반응"
+  ```
+  `--environment`로 EAS의 production 환경변수(`EXPO_PUBLIC_*`)를 쓴다.
+- **심사 중에는 production 채널에 보내지 않는다.** 심사자가 받는 앱이 심사 대상과 달라진다. 고칠 것이 생기면 승인 뒤 업데이트로 보낸다.
+  앱의 주된 목적이나 기능을 바꾸는 변경은 업데이트가 아니라 새 빌드로 심사받는다(App Store 가이드라인 2.5.2).
+- **되돌리기.** 문제가 있는 업데이트는 `npx eas-cli update:republish`로 이전 업데이트를 다시 보내거나 `npx eas-cli update:rollback`으로 되돌린다.
+
 ## 제출 전 확인
 
 - 서버 `.env`의 `BUDDYCHAT_BUDDY_EXPPERLEVEL`이 5인지(값을 읽지 않아 운영자가 확인한다).
@@ -66,6 +85,6 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 ## 참고
 
 - [Apple App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/) (1.2, 4.8, 5.1.1)
-- [Expo: EAS Build, Submit](https://docs.expo.dev/build/introduction/)
+- [Expo: EAS Build, Submit](https://docs.expo.dev/build/introduction/), [EAS Update](https://docs.expo.dev/eas-update/getting-started/), [런타임 버전](https://docs.expo.dev/eas-update/runtime-versions/)
 - [Firebase: Apple 로그인](https://firebase.google.com/docs/auth/ios/apple), [JS 토큰 취소](https://firebase.google.com/docs/auth/web/apple#token_revocation)
 - [Firebase iOS SDK 코드 취소 요청](https://github.com/firebase/firebase-ios-sdk/blob/main/FirebaseAuth/Sources/Swift/Backend/RPC/RevokeTokenRequest.swift)
