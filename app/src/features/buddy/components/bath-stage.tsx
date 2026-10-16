@@ -7,7 +7,6 @@ import {
   Platform,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import Svg, { Rect } from 'react-native-svg';
@@ -206,8 +205,6 @@ export function BathStage({
   const [splashing, setSplashing] = useState(false);
   const splashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [rattle] = useState(() => new Animated.Value(0));
-  const [rattling, setRattling] = useState(false);
-  const rattleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [line, setLine] = useState<(typeof LINES)[number] | null>(null);
 
   // It sways a little in the water.
@@ -251,15 +248,13 @@ export function BathStage({
   useEffect(
     () => () => {
       if (splashTimer.current) clearTimeout(splashTimer.current);
-      if (rattleTimer.current) clearTimeout(rattleTimer.current);
     },
     [],
   );
 
   // The bucket by the tub: a tap knocks it about on the stone, a clatter of small shakes.
   const knock = () => {
-    if (rattleTimer.current) clearTimeout(rattleTimer.current);
-    setRattling(true);
+    rattle.stopAnimation();
     rattle.setValue(0);
     Animated.timing(rattle, {
       toValue: 1,
@@ -267,10 +262,6 @@ export function BathStage({
       easing: Easing.linear,
       useNativeDriver: NATIVE_DRIVER,
     }).start();
-    rattleTimer.current = setTimeout(() => {
-      rattleTimer.current = null;
-      setRattling(false);
-    }, RATTLE_MS + 250);
   };
 
   const pet = () => {
@@ -448,13 +439,6 @@ export function BathStage({
             >
               <PixelSprite frame={BUCKET} palette={BATH_PALETTE} scale={scale} />
             </Animated.View>
-            {rattling ? (
-              <Text
-                style={[styles.sound, { color: colors.text, bottom: BUCKET.length * scale + 6 }]}
-              >
-                {t('buddy.bath.bucketSound')}
-              </Text>
-            ) : null}
           </Pressable>
           {[0.05, 0.88, 0.13].map((at, i) => (
             <Steam
@@ -529,14 +513,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderTopWidth: 2,
-  },
-  sound: {
-    position: 'absolute',
-    left: -6,
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 1,
-    minWidth: 60,
   },
   corner: {
     position: 'absolute',

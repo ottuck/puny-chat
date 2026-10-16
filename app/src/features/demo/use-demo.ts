@@ -90,6 +90,7 @@ function afterEvent(buddy: BuddyView, event: BuddyEvent): BuddyView | null {
     case 'POOPED':
       return { ...buddy, poops: buddy.poops + 1, canClean: true };
     case 'WORKED':
+    case 'BATHED':
       return null; // not in the script
     case 'CLEANED':
       return buddy.poops > 0 ? { ...buddy, poops: 0, canClean: false } : null;

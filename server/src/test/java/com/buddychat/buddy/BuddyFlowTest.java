@@ -205,6 +205,41 @@ class BuddyFlowTest {
     }
 
     @Test
+    void aTripToTheHotSpringAfterAWhileGivesExpOnce() {
+        String roomId = duoRoom("henry", "yuki");
+        assertThat(care("henry", "bath").changed()).isFalse(); // an egg does not go
+        setExp(roomId, BuddyRules.minExp(BuddyRules.BABY_AT));
+        int before = room("henry").buddy().exp();
+
+        Care first = care("henry", "bath");
+        Care again = care("yuki", "bath");
+
+        assertThat(first.changed()).isTrue();
+        assertThat(again.changed()).isFalse(); // it was there just now, for either member
+        assertThat(room("henry").buddy().exp()).isEqualTo(before + BuddyRules.BATH_EXP);
+        assertThat(timeline("henry")).containsOnlyOnce("BATHED");
+
+        clock.advance(BuddyRules.BATH_EVERY.minusMinutes(1));
+        assertThat(care("yuki", "bath").changed()).isFalse();
+        clock.advance(Duration.ofMinutes(1));
+        assertThat(care("yuki", "bath").changed()).isTrue();
+        assertThat(room("henry").buddy().exp()).isEqualTo(before + 2 * BuddyRules.BATH_EXP);
+    }
+
+    @Test
+    void bothGoingToTheHotSpringAtOnceGivesExpOnce() {
+        String roomId = duoRoom("henry", "yuki");
+        setExp(roomId, BuddyRules.minExp(BuddyRules.BABY_AT));
+        int before = room("henry").buddy().exp();
+
+        List<Boolean> changed =
+                race(4, i -> care(i % 2 == 0 ? "henry" : "yuki", "bath").changed());
+
+        assertThat(changed).containsOnlyOnce(true);
+        assertThat(room("henry").buddy().exp()).isEqualTo(before + BuddyRules.BATH_EXP);
+    }
+
+    @Test
     void workInTheChatSendsAGrownUpToWorkAndIsJustAMessageBefore() {
         String roomId = duoRoom("henry", "yuki");
         TestSocket henry = connect("henry");
@@ -781,7 +816,7 @@ class BuddyFlowTest {
         Instant now = Instant.now();
         return new Buddy(
                 "Mugi", 0, now, now, now, null, 0, 0, null, null, null, fed, cleaned, nights, laughs, loves, null, null,
-                null);
+                null, null);
     }
 
     private void say(TestSocket socket, String clientMessageId, String text) {

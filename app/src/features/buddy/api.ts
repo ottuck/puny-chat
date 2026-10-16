@@ -51,6 +51,8 @@ export const feedBuddy = () => api<CareResult>('/api/rooms/me/buddy/feed', { met
 export const cleanBuddy = () => api<CareResult>('/api/rooms/me/buddy/clean', { method: 'POST' });
 // A grown-up's work at its station; EXP once an hour (`changed: false` otherwise).
 export const workBuddy = () => api<CareResult>('/api/rooms/me/buddy/work', { method: 'POST' });
+// Off to the hot spring; EXP when it has been a while (`changed: false` otherwise).
+export const batheBuddy = () => api<CareResult>('/api/rooms/me/buddy/bath', { method: 'POST' });
 
 // An adult's job, chosen by either of us instead of the one its upbringing gave; once a day.
 export const changeJob = (job: BuddyJob) =>

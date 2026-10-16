@@ -145,6 +145,28 @@ public class BuddyService {
     }
 
     /**
+     * A trip to the hot spring (the app's ♨ button; docs/fun-improvements.md, 목욕). Where the buddy is
+     * stays on the device; only the EXP is here: once in {@link BuddyRules#BATH_EVERY}, for either
+     * member, with BATHED in the timeline. An egg does not go.
+     */
+    public Mono<CareResult> bathe(String roomId, String actorId) {
+        Instant now = Instant.now(clock);
+        return load(roomId).flatMap(buddy -> {
+            if (BuddyRules.stage(BuddyRules.level(buddy.exp())) == BuddyRules.Stage.EGG) {
+                return Mono.just(new CareResult(BuddyView.of(buddy, now), false));
+            }
+            return care(
+                    roomId,
+                    actorId,
+                    orMissing("buddy.lastBathedAt", where("buddy.lastBathedAt").lte(now.minus(BuddyRules.BATH_EVERY))),
+                    new Update().set("buddy.lastBathedAt", now).inc("buddy.exp", BuddyRules.BATH_EXP),
+                    "BATHED",
+                    BuddyRules.BATH_EXP,
+                    now);
+        });
+    }
+
+    /**
      * Compare-and-set on the cleaning state just read: of two taps on the same poop at once, one
      * cleans it and the other gets {@code changed: false}. A clean floor starts a new cycle (the
      * clean time moves to now), so poops are counted from there again.

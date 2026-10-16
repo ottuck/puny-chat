@@ -138,7 +138,7 @@ Buddy 상태(레벨, 배고픔, 💩, 돌볼 수 있는지)는 서버가 계산�
     (`timeline.ts`의 `foldLevelUps`, 메시지는 서버에 그대로 있고 무대는 매번 축하한다).
   - 진화: 금빛 고리가 퍼지는 동안 이전·새 모습이 번갈아 보이고(1.4초), 번쩍인 뒤 반짝이가 터지며 새 모습. 앱을 닫아둔 사이에 진화했으면
     내 읽음 위치보다 새로울 때 다시 열 때 한 번 보여준다.
-- **온천과 꿈.** 무대 오른쪽 위 ♨ 버튼으로 온천에 가서 쉰다(이 기기에서만, 집 버튼이나 10분 뒤 돌아옴). 처음 알을 보기 전에 이 기기에서 한 번,
+- **온천과 꿈.** 무대 오른쪽 위 ♨ 버튼으로 온천에 가서 쉰다(이 기기에서만, 집 버튼이나 10분 뒤 돌아옴). 방에서 12시간 만이면 +3 EXP. 처음 알을 보기 전에 이 기기에서 한 번,
   다 자란 모습의 짧은 꿈(약 5초)을 보여준다. 장면은 검은 원으로 바뀐다.
 - 대화 내용·함께 있을 때·직업·사건·기간 한정 모습·온천·꿈은 `docs/fun-improvements.md`.
 
@@ -232,7 +232,7 @@ com.buddychat
 ```text
 users          { _id, firebaseUid (unique), displayName, roomId?, createdAt, guest?, lastSeenAt?, roomJoinId? }
 rooms          { _id, memberIds [1..2], memberCount, createdAt, closureId?, historyVersion?, album? [{ name, bornAt, graduatedAt, job? }],
-                 buddy { name, exp, bornAt, lastFedAt?, lastCleanedAt?, poopsCleaned?, lastWorkedAt?, expDay?, messageExpToday?,
+                 buddy { name, exp, bornAt, lastFedAt?, lastCleanedAt?, poopsCleaned?, lastWorkedAt?, lastBathedAt?, expDay?, messageExpToday?,
                          talkDay?, talkers?, togetherDay?, fedCount?, cleanedCount?, nightCount?, laughCount?, loveCount?,
                          job?, jobChangedLevel? } }
 messages       { _id, roomId, senderId?, type (TEXT | SYSTEM | BUDDY_EVENT), text?, buddyEvent?, systemEvent?, actorId?,
@@ -276,6 +276,7 @@ history_deletions  계정 삭제 중 영향받는 방 id(삭제 진행 표식)
 | POST | `/api/rooms/me/buddy/feed` | 밥 → `{ buddy, changed }` |
 | POST | `/api/rooms/me/buddy/clean` | 💩 하나 치우기 → `{ buddy, changed }` |
 | POST | `/api/rooms/me/buddy/work` | 어른의 일 → `{ buddy, changed }` |
+| POST | `/api/rooms/me/buddy/bath` | 온천 → `{ buddy, changed }`(12시간에 한 번 EXP, 알은 `false`) |
 | POST | `/api/rooms/me/buddy/job` | 직업 바꾸기 `{ job }` |
 | POST | `/api/rooms/me/buddy/graduate` | 독립 `{ buddyName }` → 새 알의 Buddy |
 | POST | `/api/support/inquiries` | 문의 `{ requestId, description }` → 201 `{ id }` |
@@ -355,9 +356,10 @@ togetherToday, job, leaning, canChangeJob, jobChangeAt, grown)를 그대로 보�
 - **💩**: 바닥이 깨끗해진 뒤(`lastCleanedAt`) 1시간마다 하나, 최대 3개. 누를 때마다 하나씩 치운다(`poopsCleaned` 증가, 마지막 하나면
   `lastCleanedAt`을 지금으로 옮겨 새 주기). 채팅의 "청소"는 한 번에 다 치운다. 어른은 💩이 생기지 않는다.
 - **일**: 어른만. 언제든 할 수 있지만 +2 EXP와 타임라인 `WORKED`는 `lastWorkedAt`에서 1시간이 지났을 때만(조건부 update라 동시에 눌러도 한 번).
+- **온천**: 알이 아니면. 앱이 온천에 들어설 때 보낸다. +3 EXP와 타임라인 `BATHED`는 `lastBathedAt`에서 12시간이 지났을 때만(방에 하나, 조건부 update). 온천에 있는지는 저장하지 않는다.
 - **채팅으로 돌보기**(`CareCommand`): 메시지 전체가 "밥"·"🍚"·"ごはん"·"food"면 밥, "청소"·"🧹"·"そうじ"·"clean"이면 청소, 어른에게 "일"·"💼"·"仕事"·"work"면 일.
   끝의 "!", "~", "."는 괜찮고 문장 안의 단어는 아니다. 보낸 사람이 한 것으로 처리하고, 메시지는 그대로 남고 EXP도 받는다.
-- **경험치**: 밥 +2, 💩 하나 +2, 일 +2(1시간에 한 번), 메시지 +1(room당 하루 50까지, 일본 시간). 레벨 = `exp / 레벨당 EXP + 1`, 최고 50.
+- **경험치**: 밥 +2, 💩 하나 +2, 일 +2(1시간에 한 번), 온천 +3(12시간에 한 번), 메시지 +1(room당 하루 50까지, 일본 시간). 레벨 = `exp / 레벨당 EXP + 1`, 최고 50.
   단계는 `BABY_AT` 3, `CHILD_AT` 5, `ADULT_AT` 10, 독립은 `GRADUATE_AT` 20부터.
 - **레벨당 EXP를 바꿔도 레벨은 그대로**(`BuddyExpScale`): 서버가 시작할 때 `settings`에 기록한 값과 다르면 모든 Buddy의 EXP를
   `exp × 새 값 ÷ 옛 값`(내림)으로 바꾼다. 새 값을 조건부 update로 먼저 기록하므로 서버 두 대가 같이 떠도 한 번만 바꾼다. 트래픽 전 1회성이라 blocking.

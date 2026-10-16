@@ -267,8 +267,7 @@
     "bath": {
       "go": "Go to the hot spring",
       "home": "Go back home",
-      "bucket": "Bucket",
-      "bucketSound": "Clack"
+      "bucket": "Bucket"
     },
     "dream": {
       "caption": "In a dream…",
@@ -291,6 +290,7 @@
     "POOPED": "{{buddy}} pooped 💩",
     "CLEANED": "{{actor}} cleaned up after {{buddy}}",
     "WORKED": "{{actor}} and {{buddy}} finished the work",
+    "BATHED": "{{actor}} and {{buddy}} had a soak in the hot spring ♨",
     "LEVELED_UP": "{{buddy}} leveled up! Lv.{{level}} ⬆️",
     "LEVELED_UP_REWARD": "{{buddy}} leveled up! Lv.{{level}} ⬆️ 🎁 {{reward}}",
     "EVOLVED": "{{buddy}} evolved! ✨",
@@ -413,7 +413,7 @@
     },
     "grow": {
       "title": "🌱 Growing",
-      "exp": "EXP: +1 per message (up to 50 a day), +2 for a meal, +2 per 💩 cleaned.",
+      "exp": "EXP: +1 per message (up to 50 a day), +2 for a meal, +2 per 💩 cleaned, +2 for a grown-up's work (once an hour), +3 for the hot spring after a while (once in 12 hours).",
       "stages": "Egg → baby (Lv.3) → kid (Lv.5) → adult (Lv.10), and its job comes at Lv.12. From kid on, it talks.",
       "together": "When you both send a message on the same day, you get a together bonus of +{{exp}} EXP once a day. 🤝",
       "job": "At Lv.12, how you raised it decides its job: feed it a lot and it is a chef, talk late into the night and it becomes a radio DJ. You can change it in the buddy details once each at level 20, 30 and 40, and any time from 50."

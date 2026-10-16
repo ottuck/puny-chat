@@ -20,6 +20,9 @@ public final class BuddyRules {
     // A grown-up's work at its station: EXP for it once in this long (docs/spec.md, 직업 무대 장치).
     public static final int WORK_EXP = 2;
     public static final Duration WORK_EVERY = Duration.ofHours(1);
+    // A trip to the hot spring after a while away from it: EXP once in this long (docs/fun-improvements.md, 목욕).
+    public static final int BATH_EXP = 3;
+    public static final Duration BATH_EVERY = Duration.ofHours(12);
     public static final int MESSAGE_EXP = 1;
     // Stops "ㅎ ㅎ ㅎ" spam from levelling the buddy.
     public static final int MESSAGE_EXP_DAILY_CAP = 50;
