@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 /**
- * Keeps every buddy's level when the EXP per level changes (docs/spec.md, Buddy 규칙). The
+ * Keeps every buddy's level when the EXP per level changes (docs/PROJECT.md, Buddy 규칙). The
  * level is computed from EXP, so a bigger value would drop existing buddies' levels. At startup,
  * if the value differs from the one recorded last time, every buddy's EXP is scaled by new / old:
  * the level stays and the bar stays about where it was. The first start only records the value.

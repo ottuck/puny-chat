@@ -50,7 +50,7 @@ export function reactionTo(message: ServerMessage, myId: string): Reaction | nul
 // here just joined, and the buddy's past is not news to them.
 export function missedMoment(loaded: ServerMessage[], myRead: string | undefined): Reaction | null {
   if (!myRead) return null;
-  // Hex ids sort by time (docs/spec.md).
+  // Hex ids sort by time (docs/PROJECT.md).
   const newer = (event: string) =>
     loaded.find((m) => m.type === 'BUDDY_EVENT' && m.buddyEvent === event && m.id > myRead);
   const top = newer('MAX_LEVEL');

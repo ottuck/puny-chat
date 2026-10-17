@@ -15,7 +15,7 @@ import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 const CODE_LENGTH = 8;
 
 // Join a friend's room with their invite code. Someone who already has a solo room is asked to
-// confirm first: that room and its buddy go away (docs/spec.md, Room·초대 규칙).
+// confirm first: that room and its buddy go away (docs/PROJECT.md, Room·초대 규칙).
 export default function JoinScreen() {
   const colors = useColors();
   const { t } = useTranslation();

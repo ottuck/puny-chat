@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { api } from '@/lib/api';
 
-// Web Push (docs/spec.md, 웹 푸시): the browser subscribes with the server's key and the
+// Web Push (docs/PROJECT.md, 웹 푸시): the browser subscribes with the server's key and the
 // service worker (public/sw.js) shows what the server sends. Browsers ask for permission only
 // when the user does something, so it is asked from the switch in settings, never on its own.
 // An iPhone gets web notifications only from the app added to the home screen (iOS 16.4+).

@@ -4,7 +4,7 @@ import { wsUrl } from '@/lib/api-url';
 
 import type { ServerMessage } from './types';
 
-// Server → app events (docs/spec.md, "WebSocket 프로토콜").
+// Server → app events (docs/PROJECT.md, "WebSocket 프로토콜").
 type ServerEvent =
   | { type: 'hello' }
   | {

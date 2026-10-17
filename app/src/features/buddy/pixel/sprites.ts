@@ -2,7 +2,7 @@ import type { BuddyJob, BuddyStage } from '../api';
 import type { Frame, Palette } from './pixel-sprite';
 
 // The buddy's pixel art, in the spirit of GitAnimals: a small grid, few colors, a thick outline
-// and a big head (docs/spec.md, Buddy). An original character, a round mochi whose sprout
+// and a big head (docs/PROJECT.md, Buddy). An original character, a round mochi whose sprout
 // shows how far it has grown: a small sprout, then two leaves, then a flower.
 
 export const BUDDY_PALETTE: Palette = {
@@ -421,7 +421,7 @@ export function bowl(full: boolean, tier: BowlTier): Frame {
   ];
 }
 
-// A child or grown-up eats at a low round table instead (docs/spec.md, 식사): it shows only
+// A child or grown-up eats at a low round table instead (docs/PROJECT.md, 식사): it shows only
 // for the meal, laid for one with rice in a bowl of the reward's color, soup with steam and a side
 // dish. Once eaten, the rice is gone.
 export function mealTable(full: boolean, tier: BowlTier): Frame {
@@ -837,7 +837,7 @@ export const JOB_STATIONS: Record<BuddyJob, Station> = {
   BARISTA: { frames: CAFE_COUNTER, sink: 3, standAt: 3 },
 };
 
-// --- Decorations (docs/spec.md, 무대 꾸미기) ---
+// --- Decorations (docs/PROJECT.md, 무대 꾸미기) ---
 
 // The plant in the corner grows finer with levels: a sprout in a clay pot, a bigger plant in a
 // rimmed pot (a flowering cactus, a rubber plant, a snake plant or a round-leaved one, whichever the

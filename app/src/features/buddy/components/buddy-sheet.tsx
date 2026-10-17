@@ -46,7 +46,7 @@ type Props = {
 
 const MAX_NAME_LENGTH = 12; // server: Buddy.MAX_NAME_LENGTH
 
-// Buddy detail: stats, the two care actions, and going its own way once grown (docs/spec.md); the
+// Buddy detail: stats, the two care actions, and going its own way once grown (docs/PROJECT.md); the
 // buddies gone their own way are in the memory album (album-gallery.tsx). A native page sheet on iOS, so it can be swiped down.
 export function BuddySheet({
   visible,
@@ -166,7 +166,7 @@ export function BuddySheet({
   );
 }
 
-// The day's together bonus (docs/spec.md, 둘이 함께): who has talked today, and what is left.
+// The day's together bonus (docs/PROJECT.md, 둘이 함께): who has talked today, and what is left.
 function TogetherCard({
   buddy,
   myId,

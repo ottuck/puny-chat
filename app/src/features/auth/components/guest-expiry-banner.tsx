@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { useColors } from '@/theme';
 
-// Shown above the chat in a guest's last week (docs/spec.md, 게스트 우선). A quiet row rather
+// Shown above the chat in a guest's last week (docs/PROJECT.md, 게스트 우선). A quiet row rather
 // than a dialog: the chat stays usable, and the last three days only get a stronger color.
 const SHOW_FROM_DAYS = 7;
 const URGENT_FROM_DAYS = 3;

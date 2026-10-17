@@ -14,7 +14,7 @@ import { reauthenticateApple } from './apple-sign-in';
 import { reauthenticateGoogle } from './google-sign-in';
 
 // "Start now": a Firebase anonymous account, so there is a uid for the server like any other
-// sign-in. Google (or Apple) can be linked later without changing it (docs/spec.md).
+// sign-in. Google (or Apple) can be linked later without changing it (docs/PROJECT.md).
 // Needs the Anonymous provider in the Firebase console. Its automatic clean-up of anonymous
 // accounts after 30 days is on on purpose: that is how long a guest lasts (guest-expiry.ts).
 export async function signInAsGuest(): Promise<void> {

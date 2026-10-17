@@ -1,7 +1,6 @@
 # 선택한 아이콘의 파생 원본
 
-선택: `docs/design/icon-candidates/02-soft-cream.png`.
-편집 도구: 내장 ImageGen. 원본 디자인은 그대로 `puny-icon-source.png`에 복사했다.
+선택한 시안(크림색 일러스트)은 `puny-icon-source.png`다. 아래 두 파생 원본은 내장 ImageGen으로 이 시안을 편집해 만들었다.
 
 ## puny-character.png
 

@@ -1,6 +1,6 @@
 import type { BuddyEvent } from '@/features/chat/types';
 
-// The "take a look first" tour (docs/spec.md, 구경하기): a scripted conversation of about 55
+// The "take a look first" tour (docs/PROJECT.md, 구경하기): a scripted conversation of about 55
 // seconds in which both say hello (the together bonus), the buddy hatches, dances, gets hungry, eats, poops, is cleaned, levels up,
 // talks, sings and grows up. It runs in
 // the app only, with no account or server, so a first-time visitor sees what the app is about

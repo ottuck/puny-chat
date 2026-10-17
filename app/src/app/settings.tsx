@@ -42,7 +42,7 @@ import { confirm } from '@/lib/confirm';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
 // Who you are, your account, notifications, the room, and leaving, signing out or deleting the
-// account (docs/spec.md, MVP 범위).
+// account (docs/PROJECT.md, MVP 범위).
 export default function SettingsScreen() {
   const colors = useColors();
   const { t } = useTranslation();

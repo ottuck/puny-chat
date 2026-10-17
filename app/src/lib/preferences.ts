@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 
 // Display choices made in settings, kept on this device: the app's language and light or dark
-// (docs/spec.md, 설정). "system" follows the device, as before there was a choice.
+// (docs/PROJECT.md, 설정). "system" follows the device, as before there was a choice.
 
 export type ThemePreference = 'system' | 'light' | 'dark';
 export type LanguagePreference = 'system' | 'ko' | 'ja' | 'en';

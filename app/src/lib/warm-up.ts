@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 
 import { apiUrl } from './api-url';
 
-// The server stays on (docs/spec.md, 인프라), but right after a deploy or a restart the
+// The server stays on (docs/PROJECT.md, 인프라), but right after a deploy or a restart the
 // first visit waits for it to start. Poking it as soon as the app opens lets it start while the
 // user is still reading the first screen or restoring their session. Nothing is
 // read from the answer; on the web the health check sends no CORS headers, so the request is

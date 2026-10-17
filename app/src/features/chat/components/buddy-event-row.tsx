@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useColors } from '@/theme';
 
-// A buddy event shown in the timeline, e.g. "Mugi pooped 💩" (docs/spec.md).
+// A buddy event shown in the timeline, e.g. "Mugi pooped 💩" (docs/PROJECT.md).
 export function BuddyEventRow({ label }: { label: string }) {
   const colors = useColors();
 
@@ -16,7 +16,7 @@ export function BuddyEventRow({ label }: { label: string }) {
 }
 
 // A timeline entry worth noticing, as a card: the top level reached (a thank-you from us, and what
-// comes next) or the day's together bonus (docs/spec.md).
+// comes next) or the day's together bonus (docs/PROJECT.md).
 export function EventCard({
   title,
   body,

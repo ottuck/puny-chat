@@ -7,8 +7,8 @@ import java.time.ZoneId;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Growth and care rules, with the initial launch values (docs/spec.md, Buddy 규칙). The buddy
- * never dies: neglect only makes it hungry and dirty (docs/spec.md).
+ * Growth and care rules, with the initial launch values (docs/PROJECT.md, Buddy 규칙). The buddy
+ * never dies: neglect only makes it hungry and dirty (docs/PROJECT.md).
  */
 public final class BuddyRules {
 
@@ -17,7 +17,7 @@ public final class BuddyRules {
     private static volatile int expPerLevel = DEFAULT_EXP_PER_LEVEL;
     public static final int FEED_EXP = 2;
     public static final int CLEAN_EXP = 2;
-    // A grown-up's work at its station: EXP for it once in this long (docs/spec.md, 직업 무대 장치).
+    // A grown-up's work at its station: EXP for it once in this long (docs/PROJECT.md, 직업 무대 장치).
     public static final int WORK_EXP = 2;
     public static final Duration WORK_EVERY = Duration.ofHours(1);
     // A trip to the hot spring after a while away from it: EXP once in this long (docs/fun-improvements.md, 목욕).
@@ -26,7 +26,7 @@ public final class BuddyRules {
     public static final int MESSAGE_EXP = 1;
     // Stops "ㅎ ㅎ ㅎ" spam from levelling the buddy.
     public static final int MESSAGE_EXP_DAILY_CAP = 50;
-    // Once a day, when both members have sent a message that day (docs/spec.md, 둘이 함께).
+    // Once a day, when both members have sent a message that day (docs/PROJECT.md, 둘이 함께).
     public static final int TOGETHER_EXP = 10;
 
     // Fullness drops from 100 to 0 over this long after a meal (2.5 h: feedable again after 30
@@ -78,7 +78,7 @@ public final class BuddyRules {
         expPerLevel = value;
     }
 
-    // The highest level (docs/spec.md, 최고 레벨). EXP keeps counting past it.
+    // The highest level (docs/PROJECT.md, 최고 레벨). EXP keeps counting past it.
     public static final int MAX_LEVEL = 60;
 
     public static int level(int exp) {
@@ -100,7 +100,7 @@ public final class BuddyRules {
     static final int BABY_AT = 3;
     static final int CHILD_AT = 5;
     static final int ADULT_AT = 10;
-    // From this level the buddy may go its own way (docs/spec.md, 독립과 앨범): a choice, it can keep growing.
+    // From this level the buddy may go its own way (docs/PROJECT.md, 독립과 앨범): a choice, it can keep growing.
     static final int GRADUATE_AT = 20;
     // The job is settled a little after it grows up (docs/fun-improvements.md, 직업): first the new grown-up
     // look on its own, then the job, from how the two raised it.

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BuddyJob, BuddyStage } from './api';
 
-// What a grown buddy says (docs/spec.md, Buddy 무대): a greeting when the app opens, a word
+// What a grown buddy says (docs/PROJECT.md, Buddy 무대): a greeting when the app opens, a word
 // back when it is fed, petted or cleaned, and now and then a line of its own. Lines are keys under
 // buddy.say in the translations. Nothing is sent or stored in the chat.
 
