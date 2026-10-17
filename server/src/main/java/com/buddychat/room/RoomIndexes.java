@@ -1,5 +1,6 @@
 package com.buddychat.room;
 
+import java.time.Duration;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.data.domain.Sort;
@@ -21,6 +22,11 @@ class RoomIndexes implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         mongo.indexOps(Invitation.class)
                 .createIndex(new Index("code", Sort.Direction.ASC).unique())
+                .block();
+        // Frees short codes for reuse a week after they expire (a half-done join can still finish
+        // on the same code in that week).
+        mongo.indexOps(Invitation.class)
+                .createIndex(new Index("expiresAt", Sort.Direction.ASC).expire(Duration.ofDays(7)))
                 .block();
     }
 }

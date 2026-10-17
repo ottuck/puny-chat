@@ -320,7 +320,7 @@ export function BuddyScene({
 
   return (
     <View
-      style={[styles.frame, { height }]}
+      style={[styles.frame, { height, borderColor: colors.border }]}
       onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}
     >
       {scene}
@@ -337,10 +337,10 @@ export function BuddyScene({
 }
 
 const styles = StyleSheet.create({
+  // Edge to edge with a line under it: the room holds its part of the screen and the chat
+  // starts below, instead of a card the messages seem to slide under.
   frame: {
-    marginHorizontal: 12,
-    marginTop: 8,
-    borderRadius: 20,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
   },
   corners: {

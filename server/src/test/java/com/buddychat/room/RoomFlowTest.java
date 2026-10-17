@@ -243,6 +243,19 @@ class RoomFlowTest {
     }
 
     @Test
+    void guessingCodesIsCutOffAfterAFewMisses() {
+        createRoom("henry", "Mugi");
+        String code = invite("henry");
+        for (int i = 0; i < InvitationService.MAX_MISSES; i++) {
+            assertError(accept("guesser", "NOPE" + i, false), HttpStatus.NOT_FOUND, "INVITATION_NOT_FOUND");
+        }
+
+        // Even the right code waits now.
+        assertError(accept("guesser", code, false), HttpStatus.TOO_MANY_REQUESTS, "INVITATION_RATE_LIMIT");
+        accept("yuki", code, false).expectStatus().isOk();
+    }
+
+    @Test
     void memberCannotAcceptOwnRoomInvitation() {
         createRoom("henry", "Mugi");
         assertError(accept("henry", invite("henry"), false), HttpStatus.CONFLICT, "ALREADY_MEMBER");

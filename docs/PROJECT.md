@@ -41,7 +41,7 @@ Yuki:  니가 치워
 - **Solo → Duo.** 혼자 시작할 수 있고(room 멤버 1명), 친구를 초대하면 2명이 되며 Buddy는 그대로 이어진다. room은 최대 2명.
 - **한 화면.** 헤더에 상대(접속·입력 중)와 도움말·설정, 그 아래 화면 높이의 약 1/3이 Buddy 무대, 나머지가 대화. 하단 탭은 없다.
   무대는 입력 중에도, 위로 스크롤해도 접히지 않는다(접었다 펴면 손가락 아래에서 대화가 움직여 스크롤이 튄다).
-- 첫 흐름: 바로 시작하기(게스트) → 이름 → Buddy 이름 짓기(알 탄생) → 혼자 채팅 화면 → 언제든 초대 링크·코드로 친구 초대.
+  무대는 화면 폭을 꽉 채우고 아래에 선을 둔다. 떠 있는 둥근 카드로 두면 대화가 그 밑으로 들어가는 것처럼 보인다.- 첫 흐름: 바로 시작하기(게스트) → 이름 → Buddy 이름 짓기(알 탄생) → 혼자 채팅 화면 → 언제든 초대 링크·코드로 친구 초대.
 - **푸시는 상대 메시지용이다.** Buddy 상태로 알림을 보내지 않는다("배고파요!" 등).
 
 ## 구경하기
@@ -300,6 +300,7 @@ history_deletions  계정 삭제 중 영향받는 방 id(삭제 진행 표식)
 | `INVALID_REQUEST` | 400 | 요청 값 검증 실패, 모르는 직업 |
 | `ROOM_NOT_FOUND` | 404 | room 없음 |
 | `INVITATION_NOT_FOUND` | 404 | 없는 코드 |
+| `INVITATION_RATE_LIMIT` | 429 | 10분에 틀린 코드 10번 |
 | `INVITATION_EXPIRED` / `INVITATION_USED` | 410 | 만료 / 이미 사용 |
 | `ROOM_ALREADY_EXISTS` | 409 | 이미 room이 있는데 만들려고 함 |
 | `ROOM_FULL` | 409 | 2명이 찬 room |
@@ -404,8 +405,10 @@ togetherToday, job, leaning, canChangeJob, jobChangeAt, grown)를 그대로 보�
 ## Room·초대 규칙
 
 - 방 생성은 room 저장 → `users.roomId: null, roomJoinId: null` 조건으로 연결. 동시 생성에서 연결하지 못한 후보 room은 지운다.
-- 초대 코드: 8자리(0/O, 1/I/L 제외), 24시간 유효, 한 번만, 대소문자 무시. 초대 링크는 `<웹 주소>/join?code=<코드>`. 웹이 로그인 전에
-  코드를 기억했다가 이름을 정한 뒤 참가 화면을 연다(`lib/pending-invite`).
+- 초대 코드: 4자리(0/O, 1/I/L 제외), 24시간 유효, 한 번만, 대소문자 무시. 채팅 앱은 말풍선을 통째로만 복사하는 경우가 많아 손으로 칠 수 있게
+  짧게 두고, 참가 화면은 초대 메시지를 통째로 붙여 넣어도 링크에서 코드를 꺼낸다. 짧은 대신 틀린 코드는 이용자당 10분에 10번까지
+  (`INVITATION_RATE_LIMIT`, 서버가 한 대라 메모리에 센다). 만료 1주 뒤 초대 문서를 TTL 인덱스로 지워 코드를 다시 쓴다.
+  초대 링크는 `<웹 주소>/join?code=<코드>`. 웹이 로그인 전에 코드를 기억했다가 이름을 정한 뒤 참가 화면을 연다(`lib/pending-invite`).
 - solo room이 있는 사람이 수락하면 `LEAVE_CONFIRMATION_REQUIRED`. 앱이 "지금 Buddy는 사라져요"를 확인받고 `leaveCurrentRoom: true`로 다시 요청하면
   참가하고 기존 solo room은 지워진다. 2명 room의 멤버는 먼저 나가야 한다(`ALREADY_IN_ROOM`).
 - **나가기**: 2명 room이면 남은 사람이 room과 Buddy를 갖고 `left`와 SYSTEM `MEMBER_LEFT`(text = 나간 사람 이름)를 받는다. 혼자 room이면

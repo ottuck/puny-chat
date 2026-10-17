@@ -12,7 +12,16 @@ import { ApiError } from '@/lib/api';
 import { confirm } from '@/lib/confirm';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
-const CODE_LENGTH = 8;
+const CODE_LENGTH = 4;
+
+// Chat apps often copy only a whole bubble: a pasted invite message gives up the code in its link.
+function codeFrom(text: string) {
+  const fromLink = /code=([A-Za-z0-9]+)/.exec(text)?.[1] ?? text;
+  return fromLink
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .slice(0, CODE_LENGTH);
+}
 
 // Join a friend's room with their invite code. Someone who already has a solo room is asked to
 // confirm first: that room and its buddy go away (docs/PROJECT.md, Room·초대 규칙).
@@ -22,12 +31,7 @@ export default function JoinScreen() {
   const { setRoom } = useRoom();
   // From an invite link (join?code=…), if that is how they came.
   const params = useLocalSearchParams<{ code?: string }>();
-  const [code, setCode] = useState(() =>
-    (params.code ?? '')
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, '')
-      .slice(0, CODE_LENGTH),
-  );
+  const [code, setCode] = useState(() => codeFrom(params.code ?? ''));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,10 +72,9 @@ export default function JoinScreen() {
         <Text style={[styles.hint, { color: colors.textMuted }]}>{t('join.hint')}</Text>
         <TextInput
           value={code}
-          onChangeText={(value) => setCode(value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-          placeholder="ABCD2345"
+          onChangeText={(value) => setCode(codeFrom(value))}
+          placeholder="AB23"
           placeholderTextColor={colors.border}
-          maxLength={CODE_LENGTH}
           autoCapitalize="characters"
           autoCorrect={false}
           autoFocus
