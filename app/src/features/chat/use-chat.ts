@@ -41,7 +41,8 @@ function merge(current: Message[], incoming: ServerMessage[]): Message[] {
 type Options = {
   myId: string;
   // The server no longer knows this user's room (e.g. it changed on another device).
-  onRoomLost: () => void;
+  // `code`: why the server cut this device off, when it said (e.g. SEAT_TAKEN).
+  onRoomLost: (code?: string) => void;
   // A friend joined or left: the room's members changed.
   onRoomChanged: () => void;
   onBuddy: (buddy: BuddyView) => void;
@@ -264,7 +265,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
         }
       },
       onBuddy: (buddy) => onBuddyRef.current(buddy),
-      onFatal: () => onRoomLostRef.current(),
+      onFatal: (code) => onRoomLostRef.current(code),
     });
     socketRef.current = socket;
     socket.start();

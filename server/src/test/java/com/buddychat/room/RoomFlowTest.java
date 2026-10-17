@@ -2,6 +2,7 @@ package com.buddychat.room;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -9,6 +10,7 @@ import static org.springframework.security.test.web.reactive.server.SecurityMock
 
 import com.buddychat.TestcontainersConfiguration;
 import com.buddychat.chat.ChatService;
+import com.buddychat.chat.Message;
 import com.buddychat.common.ApiException;
 import com.buddychat.realtime.RoomHub;
 import com.buddychat.user.User;
@@ -223,11 +225,108 @@ class RoomFlowTest {
     }
 
     @Test
-    void cannotInviteIntoFullRoom() {
+    void aCodeMadeInAFullRoomHandsThePartnersSeatAndHistoryOver() {
+        RoomView room = createRoom("henry", "Mugi");
+        accept("yuki", invite("henry"), false).expectStatus().isOk();
+        User henry = userService.getOrCreate("henry", "henry").block();
+        User yuki = userService.getOrCreate("yuki", "yuki").block();
+        Message hello = chatService.send(henry, "c-1", "hi").block().message();
+        chatService.send(yuki, "c-2", "hello").block();
+        chatService.markRead(yuki, hello.id()).block();
+        String code = invite("henry");
+        assertError(accept("yuki", code, false), HttpStatus.CONFLICT, "ALREADY_MEMBER");
+
+        // Yuki started over in another app (a new guest with a new egg), then used the code.
+        createRoom("yuki2", "Egg");
+        RoomView joined = accept("yuki2", code, true)
+                .expectStatus()
+                .isOk()
+                .expectBody(RoomView.class)
+                .returnResult()
+                .getResponseBody();
+
+        String newId = userService.getOrCreate("yuki2", "yuki2").block().id();
+        assertThat(joined.id()).isEqualTo(room.id());
+        assertThat(joined.members()).extracting(RoomView.Member::displayName).containsExactly("henry", "yuki2");
+        assertThat(joined.buddy().name()).isEqualTo("Mugi");
+        assertThat(rooms.count().block()).isEqualTo(1); // the new egg's room is gone
+        get("yuki", "/api/rooms/me").expectStatus().isNotFound();
+
+        List<Message> timeline = mongo.find(Query.query(Criteria.where("roomId").is(room.id())), Message.class)
+                .collectList()
+                .block();
+        assertThat(timeline)
+                .filteredOn(m -> m.type() == Message.Type.TEXT)
+                .extracting(Message::text, Message::senderId)
+                .containsExactlyInAnyOrder(tuple("hi", henry.id()), tuple("hello", newId));
+        assertThat(timeline)
+                .filteredOn(m -> "MEMBER_RETURNED".equals(m.systemEvent()))
+                .extracting(Message::actorId, Message::text)
+                .containsExactly(tuple(newId, "yuki2"));
+        assertThat(chatService.readMarks(room.id()).block())
+                .containsEntry(newId, hello.id())
+                .doesNotContainKey(yuki.id());
+        assertError(accept("mika", code, false), HttpStatus.GONE, "INVITATION_USED");
+    }
+
+    @Test
+    void ofTwoCodesForTheSameSeatOnlyOneGetsIt() {
+        for (int round = 0; round < 5; round++) {
+            clean();
+            createRoom("henry", "Mugi");
+            accept("yuki", invite("henry"), false).expectStatus().isOk();
+            List<String> codes = List.of(invite("henry"), invite("henry"));
+
+            List<Integer> statuses = race(
+                    2,
+                    i -> accept("new" + i, codes.get(i), false)
+                            .returnResult(Void.class)
+                            .getStatus()
+                            .value());
+
+            assertThat(statuses).as("round %d", round).containsExactlyInAnyOrder(200, 409);
+            Room room = rooms.findAll().blockFirst();
+            assertThat(room.memberIds()).hasSize(2).doesNotContain(userId("yuki"));
+            assertThat(room.memberCount()).isEqualTo(2);
+        }
+    }
+
+    @Test
+    void aCodeForThePartnerIsVoidOnceItsMakerHasLeft() {
         createRoom("henry", "Mugi");
         accept("yuki", invite("henry"), false).expectStatus().isOk();
+        String code = invite("henry");
+        post("henry", "/api/rooms/me/leave", null).expectStatus().isNoContent();
 
-        assertError(post("henry", "/api/rooms/me/invitations", null), HttpStatus.CONFLICT, "ROOM_FULL");
+        assertError(accept("yuki2", code, false), HttpStatus.GONE, "INVITATION_EXPIRED");
+        assertThat(rooms.findAll().blockFirst().memberIds()).containsExactly(userId("yuki"));
+        // Handed back, like any code that was not used.
+        assertThat(invitations.findByCode(code).block().usedBy()).isNull();
+    }
+
+    @Test
+    void aCodeForAPartnerWhoHasLeftFillsTheFreeSlotWithTheirHistory() {
+        RoomView room = createRoom("henry", "Mugi");
+        accept("yuki", invite("henry"), false).expectStatus().isOk();
+        chatService
+                .send(userService.getOrCreate("yuki", "yuki").block(), "c-1", "hello")
+                .block();
+        String code = invite("henry");
+        post("yuki", "/api/rooms/me/leave", null).expectStatus().isNoContent();
+
+        accept("yuki2", code, false).expectStatus().isOk();
+
+        assertThat(rooms.findById(room.id()).block().memberIds()).containsExactly(userId("henry"), userId("yuki2"));
+        assertThat(mongo.find(
+                                Query.query(Criteria.where("roomId")
+                                        .is(room.id())
+                                        .and("type")
+                                        .is(Message.Type.TEXT)),
+                                Message.class)
+                        .map(Message::senderId)
+                        .collectList()
+                        .block())
+                .containsExactly(userId("yuki2"));
     }
 
     @Test
@@ -235,7 +334,8 @@ class RoomFlowTest {
         RoomView room = createRoom("henry", "Mugi");
         Instant past = Instant.now().minusSeconds(60);
         invitations
-                .insert(new Invitation(null, room.id(), "EXPIRED2", "x", past.minusSeconds(60), past, null, null, null))
+                .insert(new Invitation(
+                        null, room.id(), "EXPIRED2", "x", past.minusSeconds(60), past, null, null, null, null))
                 .block();
 
         assertError(accept("yuki", "NOPE2345", false), HttpStatus.NOT_FOUND, "INVITATION_NOT_FOUND");

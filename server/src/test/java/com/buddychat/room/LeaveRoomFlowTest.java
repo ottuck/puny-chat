@@ -92,6 +92,37 @@ class LeaveRoomFlowTest {
     }
 
     @Test
+    void aCodeForThePartnerTakesTheirSeatAndTellsBothSides() {
+        String roomId = duoRoom("henry", "yuki");
+        TestSocket henry = connect("henry");
+        TestSocket yukisBrowser = connect("yuki");
+        yukisBrowser
+                .send(Map.of("type", "send", "clientMessageId", "c-1", "text", "hi"))
+                .expect("ack");
+        henry.expect("message");
+        String code = invite("henry");
+
+        createRoom("yuki2"); // the same friend, started over in the home-screen app
+        post("yuki2", "/api/invitations/" + code + "/accept", Map.of("leaveCurrentRoom", true))
+                .expectStatus()
+                .isOk();
+
+        // The old browser is told its seat went elsewhere and is cut off.
+        assertThat(yukisBrowser.expect("error").get("code").asString()).isEqualTo("SEAT_TAKEN");
+        assertThat(yukisBrowser.awaitClosed()).isTrue();
+        assertThat(user("yuki").roomId()).isNull();
+
+        // Henry refetches the history (now under the new account), sees a note and the new member.
+        henry.expect("historyChanged");
+        JsonNode note = henry.expect("message").get("message");
+        assertThat(note.get("systemEvent").asString()).isEqualTo("MEMBER_RETURNED");
+        assertThat(note.get("text").asString()).isEqualTo("yuki2");
+        assertThat(henry.expect("member").get("userId").asString())
+                .isEqualTo(user("yuki2").id());
+        assertThat(user("yuki2").roomId()).isEqualTo(roomId);
+    }
+
+    @Test
     void leavingASoloRoomDeletesItWithItsHistory() {
         createRoom("henry");
         String roomId = user("henry").roomId();

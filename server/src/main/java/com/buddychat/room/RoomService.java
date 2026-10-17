@@ -174,6 +174,62 @@ public class RoomService {
                                 Room.class));
     }
 
+    /**
+     * Gives a member's seat to another user in one conditional update: only while the room still
+     * holds exactly the two who shared it when the code was made, and is not being closed. The seat
+     * keeps its place in the member order.
+     */
+    Mono<Boolean> takeSeat(String roomId, String replacedId, String keeperId, String userId) {
+        return mongo.updateFirst(
+                        query(where("_id")
+                                .is(roomId)
+                                .and("closureId")
+                                .is(null)
+                                .and("memberIds")
+                                .all(replacedId, keeperId)),
+                        new Update()
+                                .set("memberIds.$[seat]", userId)
+                                .filterArray(where("seat").is(replacedId)),
+                        Room.class)
+                .map(result -> result.getModifiedCount() == 1);
+    }
+
+    /**
+     * After {@code to} came in with a code made for {@code fromId}: the old account loses the room
+     * (its devices are told, {@code SEAT_TAKEN}) and its codes, and its messages, notes, read mark
+     * and today's talk move to the new one. Every step can run again; only the note is said once.
+     */
+    Mono<Void> handOver(String roomId, String fromId, User to, boolean announce) {
+        Mono<Void> note = chatService
+                .recordSystemEvent(roomId, "MEMBER_RETURNED", to.id(), to.displayName())
+                .doOnNext(message -> hub.publish(roomId, new ServerEvent.NewMessage(message), null))
+                .then();
+        return userService
+                .leaveRoom(fromId, roomId)
+                .then(Mono.fromRunnable(
+                        () -> hub.disconnect(roomId, fromId, new ServerEvent.Error("SEAT_TAKEN", null))))
+                .then(mongo.remove(
+                        query(where("roomId")
+                                .is(roomId)
+                                .and("createdBy")
+                                .is(fromId)
+                                .and("usedAt")
+                                .is(null)),
+                        Invitation.class))
+                .then(mongo.updateFirst(
+                        query(where("_id")
+                                .is(roomId)
+                                .and("buddy.talkers")
+                                .in(fromId)
+                                .nin(to.id())),
+                        new Update().set("buddy.talkers.$", to.id()),
+                        Room.class))
+                .then(mongo.updateFirst(
+                        query(where("_id").is(roomId)), new Update().pull("buddy.talkers", fromId), Room.class))
+                .then(chatService.handOverHistory(roomId, fromId, to.id()))
+                .then(announce ? note : Mono.empty());
+    }
+
     public Mono<Room> removalSnapshot(User user, String expectedRoomId, String targetId) {
         if (!expectedRoomId.equals(user.roomId()) || targetId.equals(user.id()))
             return Mono.error(new ApiException(HttpStatus.CONFLICT, "PARTNER_CHANGED"));

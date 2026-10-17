@@ -15,7 +15,8 @@ export type BuddyEvent =
   | 'TOGETHER'
   | 'JOB'
   | 'JOB_CHANGED';
-export type SystemEvent = 'MEMBER_LEFT';
+// MEMBER_RETURNED: someone came in with a code made for the partner and took their seat.
+export type SystemEvent = 'MEMBER_LEFT' | 'MEMBER_RETURNED';
 
 // As the server sends it (server/src/main/java/com/buddychat/chat/Message.java).
 export type ServerMessage = {

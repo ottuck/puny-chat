@@ -8,6 +8,11 @@ type ConfirmOptions = {
   destructive?: boolean;
 };
 
+// A message with an OK button.
+export function notice(title: string, message: string): void {
+  Alert.alert(title, message);
+}
+
 // A yes/no dialog. React Native Web's Alert has no buttons, hence the web variant.
 export function confirm(options: ConfirmOptions): Promise<boolean> {
   return new Promise((resolve) => {

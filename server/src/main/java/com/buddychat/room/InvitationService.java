@@ -65,11 +65,26 @@ class InvitationService {
 
     Mono<Invitation> create(User user) {
         return roomService.findMine(user).flatMap(room -> {
-            if (room.isFull()) return Mono.error(new ApiException(HttpStatus.CONFLICT, "ROOM_FULL"));
+            // In a full room the code is for the other member, to come back from somewhere else.
+            String replaces = room.isFull()
+                    ? room.memberIds().stream()
+                            .filter(id -> !id.equals(user.id()))
+                            .findFirst()
+                            .orElse(null)
+                    : null;
             Instant now = Instant.now(clock);
             // A new random code per attempt; the unique index catches the rare collision.
             return Mono.defer(() -> invitations.insert(new Invitation(
-                            null, room.id(), newCode(), user.id(), now, now.plus(VALIDITY), null, null, null)))
+                            null,
+                            room.id(),
+                            newCode(),
+                            user.id(),
+                            now,
+                            now.plus(VALIDITY),
+                            null,
+                            null,
+                            null,
+                            replaces)))
                     .retryWhen(Retry.max(3).filter(DuplicateKeyException.class::isInstance));
         });
     }
@@ -106,10 +121,11 @@ class InvitationService {
                     return (alreadyHere ? Mono.<Void>empty() : checkCanLeaveCurrentRoom(user, leaveCurrentRoom))
                             .then(claim(invitation, user, now))
                             .flatMap(claimed -> reserve(claimed, user)
-                                    .then(joinOrRelease(claimed, user))
-                                    .then(finish(claimed, user))
-                                    .then(cleanPreviousRoom(claimed, user))
-                                    .then(joined(claimed, user))
+                                    .then(seat(claimed, user))
+                                    .flatMap(tookSeat -> finish(claimed, user)
+                                            .then(cleanPreviousRoom(claimed, user))
+                                            .then(inherit(claimed, user, tookSeat))
+                                            .then(joined(claimed, user)))
                                     .onErrorResume(
                                             ApiException.class,
                                             e -> "ROOM_NOT_FOUND".equals(e.code())
@@ -205,6 +221,34 @@ class InvitationService {
                                     Invitation.class)
                             .switchIfEmpty(invitations.findById(claimed.id()));
                 });
+    }
+
+    /**
+     * A place in the room: a free slot, or with a code made for the other member, that member's seat.
+     * True only when this call took the seat. If that member left meanwhile, the code fills the free
+     * slot; if the one who made it left, it is no longer valid.
+     */
+    private Mono<Boolean> seat(Invitation invitation, User user) {
+        String replaced = invitation.replacesId();
+        if (replaced == null) return joinOrRelease(invitation, user).thenReturn(false);
+        return roomService
+                .takeSeat(invitation.roomId(), replaced, invitation.createdBy(), user.id())
+                .flatMap(took -> took
+                        ? Mono.just(true)
+                        : roomService.findById(invitation.roomId()).flatMap(room -> {
+                            if (room.memberIds().contains(user.id())) return Mono.just(false); // resuming
+                            if (room.memberIds().contains(replaced)) {
+                                return release(invitation, user)
+                                        .then(Mono.error(new ApiException(HttpStatus.GONE, "INVITATION_EXPIRED")));
+                            }
+                            return joinOrRelease(invitation, user).thenReturn(false);
+                        }));
+    }
+
+    // With a code made for a member: their history follows them to this account. Safe to repeat.
+    private Mono<Void> inherit(Invitation invitation, User user, boolean announce) {
+        String replaced = invitation.replacesId();
+        return replaced == null ? Mono.empty() : roomService.handOver(invitation.roomId(), replaced, user, announce);
     }
 
     // The room can still be full when another code for it was accepted at the same moment. Then

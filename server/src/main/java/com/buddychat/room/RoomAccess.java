@@ -51,7 +51,7 @@ public class RoomAccess {
     }
 
     /** Invalidates cached history, including on devices disconnected during account deletion. */
-    public Mono<Void> invalidateHistory(Collection<String> roomIds, String deletedUserId) {
+    public Mono<Void> invalidateHistory(Collection<String> roomIds, @Nullable String deletedUserId) {
         return Flux.fromIterable(roomIds)
                 .concatMap(roomId -> mongo.findAndModify(
                                 query(where("_id").is(roomId)),
