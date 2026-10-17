@@ -58,6 +58,7 @@ import type { Reaction, ReactionKind } from '../reactions';
 import type { ChatWord, Mood } from '../chat-words';
 import { JOB_LINES, type Line, pick, useBuddyTalk } from '../use-buddy-talk';
 import { SpeechBubble } from './speech-bubble';
+import { Feathers, TOP_NOTE_MS, TopLevelNotes, TopLevelRays } from './top-level';
 import {
   Arrive,
   GUEST_MS,
@@ -386,6 +387,8 @@ type Props = {
   hour?: number;
   // The day ("MM-DD") the room's seasonal things go by instead of today (the art preview).
   date?: string;
+  // Opens the mailbox (the top level's note about the developer's letter).
+  onOpenMail?: () => void;
 };
 
 // The room's time: the device's, or the hour and day the art preview picks.
@@ -577,6 +580,7 @@ export function BuddyStage({
   leaving = false,
   hour,
   date,
+  onOpenMail,
 }: Props) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -1248,7 +1252,8 @@ export function BuddyStage({
     } else if (reaction?.kind === 'levelUp' || reaction?.kind === 'maxLevel') {
       showNotice((now) => {
         if (!now.job) return null;
-        if (reaction.kind === 'maxLevel') return { key: 'notice.jobChangeFree' };
+        // The top level's own notes say so (TopLevelNotes).
+        if (reaction.kind === 'maxLevel') return null;
         if (now.canChangeJob && JOB_CHANGE_LEVELS.includes(now.level))
           return { key: 'notice.jobChangeOpen' };
         if (now.jobChangeAt === now.level + 1)
@@ -1274,6 +1279,22 @@ export function BuddyStage({
     );
   }, [job, showNotice]);
   const noticeShown = notice && !dream && !leaving ? notice : null;
+  // Reaching the top level (top-level.tsx): once for each such reaction, over after the notes.
+  const [topId, setTopId] = useState<string | null>(null);
+  const [topDone, setTopDone] = useState<string | null>(null);
+  if (reaction?.kind === 'maxLevel' && reaction.id !== topId) setTopId(reaction.id);
+  const topOn = topId !== null && topDone !== topId;
+  const topNotes = [
+    { text: t('buddy.top.reached') },
+    { text: t('buddy.top.letter'), onPress: onOpenMail },
+    ...(job ? [{ text: t('buddy.notice.jobChangeFree') }] : []),
+  ];
+  const topMs = topNotes.length * TOP_NOTE_MS;
+  useEffect(() => {
+    if (!topOn) return;
+    const timer = setTimeout(() => setTopDone(topId), topMs);
+    return () => clearTimeout(timer);
+  }, [topOn, topId, topMs]);
 
   useEffect(
     () => () => {
@@ -1777,6 +1798,9 @@ export function BuddyStage({
           },
         ]}
       >
+        {topOn ? (
+          <TopLevelRays key={topId} width={spriteWidth} height={spriteHeight} ms={topMs} />
+        ) : null}
         {evolving ? (
           <Animated.View
             style={[
@@ -2096,6 +2120,8 @@ export function BuddyStage({
         />
       ))}
 
+      {topOn && width > 0 ? <Feathers key={`f${topId}`} width={width} height={height} /> : null}
+      {topOn ? <TopLevelNotes key={`n${topId}`} notes={topNotes} /> : null}
       {noticeShown ? (
         <View style={[styles.notice, styles.passThrough]}>
           <Text

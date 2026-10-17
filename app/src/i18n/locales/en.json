@@ -339,6 +339,10 @@
       "jobChangeSoon": "At the next level (Lv.{{level}}) the job can be changed",
       "jobChangeAt": "The job can be changed next from Lv.{{level}}",
       "jobChangeFree": "From now on the job can be changed any time"
+    },
+    "top": {
+      "reached": "You reached the top level!",
+      "letter": "A letter from the developer has arrived 💌"
     }
   },
   "buddyEvent": {
@@ -574,6 +578,28 @@
       "changes": {
         "title": "10. Changes",
         "body": "We update this page and its effective date when the policy changes. Significant changes to purposes or sharing are announced in the app or service website, with separate consent where required."
+      }
+    }
+  },
+  "mailbox": {
+    "open": "Mailbox",
+    "title": "Mailbox",
+    "back": "All mail",
+    "unread": "Unread",
+    "kind": {
+      "letter": "Letter",
+      "notice": "News"
+    },
+    "mail": {
+      "topLevelLetter": {
+        "title": "Thank you for coming all the way",
+        "body": "Hi, I'm the one who made puny-chat.\n\nThank you so much for getting here. The top level isn't somewhere you reach in a day or two, so if you're reading this, you two must have been talking every day for quite a while.\n\nGuests at the window, books filling the shelf one by one, a kotatsu in winter: this room was built from your conversations. You now have every one of the things I made for it.\n\nFrom now on you can change the job any time. You can keep living together just like this, or, when you're ready, let your buddy go its own way and start again with a new egg. Buddies who move out stay in the memory album.\n\nIf there's anything you'd like, or anything that bothers you, tell me any time through \"Help & reports\" in settings. I read every one.\n\nI hope today is full of good talks.",
+        "from": "The puny-chat developer"
+      },
+      "roomUpdate": {
+        "title": "The room changes every level",
+        "body": "Every time your buddy levels up, something new comes to the room: guests at the window, a music box and a radio on the wall shelf, plush friends on the sill, a goldfish on the side table, a low table that turns into a kotatsu in winter. 49 in all.\n\nSome only come out in their season, like cherry petals, a wind chime, red dragonflies and kagami mochi. You can see when in the level rewards of the guide.\n\nThe top level is now 60, and the buddies who went their own way are in the memory album on the stage.",
+        "from": "puny-chat"
       }
     }
   }
