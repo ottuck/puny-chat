@@ -1,6 +1,6 @@
 import { randomUUID } from 'expo-crypto';
 import { Redirect, useLocalSearchParams } from 'expo-router';
-import { type ReactNode, useEffect, useState } from 'react';
+import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -126,10 +126,19 @@ function Chip({
   );
 }
 
+// "open all" / "fold all" under the stage: every group follows the latest press (a new `run`).
+const FoldAll = createContext({ open: false, run: 0 });
+
 // Folded until its title is tapped, so the stage above stays in view.
 function Group({ title, children }: { title: string; children: ReactNode }) {
   const colors = useColors();
-  const [open, setOpen] = useState(false);
+  const all = useContext(FoldAll);
+  const [open, setOpen] = useState(all.open);
+  const [run, setRun] = useState(all.run);
+  if (all.run !== run) {
+    setRun(all.run);
+    setOpen(all.open);
+  }
   return (
     <View style={styles.group}>
       <Pressable onPress={() => setOpen(!open)} accessibilityRole="button" hitSlop={6}>
@@ -248,187 +257,200 @@ function Preview() {
   const [date, setDate] = useState<string | undefined>(params.date);
 
   const album = PAST_BUDDIES.slice(0, Number(params.album ?? 0));
+  const [foldAll, setFoldAll] = useState({ open: false, run: 0 });
 
   return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
-      {/* The stage stays at the top while the buttons below scroll under it. */}
-      <ScrollView
-        style={styles.column}
-        contentContainerStyle={styles.content}
-        stickyHeaderIndices={[0]}
-      >
-        <View style={[styles.sticky, { backgroundColor: colors.background }]}>
-          {dreamCut !== null ? (
-            <View style={styles.held}>
-              <BuddyDream
-                buddy={buddyOf('EGG', null, false, 0, null)}
-                height={stageHeight}
-                onEnd={() => {}}
-                hold={dreamCut}
+    <FoldAll.Provider value={foldAll}>
+      <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
+        {/* The stage stays at the top while the buttons below scroll under it. */}
+        <ScrollView
+          style={styles.column}
+          contentContainerStyle={styles.content}
+          stickyHeaderIndices={[0]}
+        >
+          <View style={[styles.sticky, { backgroundColor: colors.background }]}>
+            {dreamCut !== null ? (
+              <View style={styles.held}>
+                <BuddyDream
+                  buddy={buddyOf('EGG', null, false, 0, null)}
+                  height={stageHeight}
+                  onEnd={() => {}}
+                  hold={dreamCut}
+                />
+              </View>
+            ) : null}
+            {/* The bath is the button in the corner, as in the app. */}
+            <BuddyScene
+              key={dreamRun}
+              dreams={dreamRun > 0 ? 'always' : false}
+              startInBath={params.scene === 'bath'}
+              buddy={buddyOf(stage, job, hungry, poops, level)}
+              busy={false}
+              height={stageHeight}
+              onFeed={() => setHungry(false)}
+              onClean={() => setPoops((n) => Math.max(0, n - 1))}
+              onWork={() => {}}
+              onOpenDetail={() => setDetail(true)}
+              reaction={reaction}
+              cue={cue}
+              greets={false}
+              partnerPet={partnerPet}
+              partnerHere={partnerHere}
+              season={season}
+              plantKind={plantKind}
+              hour={hour}
+              date={date}
+              album={album}
+            />
+            <View style={styles.foldRow}>
+              <Chip
+                label="open all"
+                onPress={() => setFoldAll({ open: true, run: foldAll.run + 1 })}
+              />
+              <Chip
+                label="fold all"
+                onPress={() => setFoldAll({ open: false, run: foldAll.run + 1 })}
               />
             </View>
-          ) : null}
-          {/* The bath is the button in the corner, as in the app. */}
-          <BuddyScene
-            key={dreamRun}
-            dreams={dreamRun > 0 ? 'always' : false}
-            startInBath={params.scene === 'bath'}
+          </View>
+          <BuddySheet
+            visible={detail}
             buddy={buddyOf(stage, job, hungry, poops, level)}
             busy={false}
-            height={stageHeight}
+            onClose={() => setDetail(false)}
             onFeed={() => setHungry(false)}
             onClean={() => setPoops((n) => Math.max(0, n - 1))}
-            onWork={() => {}}
-            onOpenDetail={() => setDetail(true)}
-            reaction={reaction}
-            cue={cue}
-            greets={false}
-            partnerPet={partnerPet}
-            partnerHere={partnerHere}
-            season={season}
-            plantKind={plantKind}
-            hour={hour}
-            date={date}
-            album={album}
-          />
-        </View>
-        <BuddySheet
-          visible={detail}
-          buddy={buddyOf(stage, job, hungry, poops, level)}
-          busy={false}
-          onClose={() => setDetail(false)}
-          onFeed={() => setHungry(false)}
-          onClean={() => setPoops((n) => Math.max(0, n - 1))}
-          onWork={() => {
-            setDetail(false);
-            setCue({ id: randomUUID(), kind: 'work' });
-          }}
-          onChangeJob={async (next) => setJob(next)}
-          onGraduate={async () => {
-            setDetail(false);
-            setStage('EGG');
-            setLevel(null);
-          }}
-        />
-        <Group title="scene">
-          <Chip label="dream" onPress={() => setDreamRun((n) => n + 1)} />
-          {[...Array(DREAM_CUTS)].map((_, i) => (
-            <Chip
-              key={i}
-              label={`cut ${i + 1}`}
-              onPress={() => setDreamCut(dreamCut === i ? null : i)}
-              active={dreamCut === i}
-            />
-          ))}
-        </Group>
-        <Group title="moving out (from a hatched buddy)">
-          <Chip
-            label="go its own way"
-            onPress={() => {
+            onWork={() => {
+              setDetail(false);
+              setCue({ id: randomUUID(), kind: 'work' });
+            }}
+            onChangeJob={async (next) => setJob(next)}
+            onGraduate={async () => {
+              setDetail(false);
               setStage('EGG');
               setLevel(null);
             }}
           />
-        </Group>
-        <Group title="hour (window, clock, lamp, fireflies)">
-          <Chip label="now" onPress={() => setHour(undefined)} active={hour === undefined} />
-          {HOURS.map((h) => (
-            <Chip key={h} label={`${h}:10`} onPress={() => setHour(h)} active={h === hour} />
-          ))}
-        </Group>
-        <Group title="day (seasonal things)">
-          <Chip label="today" onPress={() => setDate(undefined)} active={date === undefined} />
-          {DATES.map((d) => (
-            <Chip key={d} label={d} onPress={() => setDate(d)} active={d === date} />
-          ))}
-        </Group>
-        <Group title="plant kind (Lv.13–18)">
-          <Chip
-            label="drawn"
-            onPress={() => setPlantKind(undefined)}
-            active={plantKind === undefined}
-          />
-          {['cactus', 'rubber', 'snake', 'round'].map((name, i) => (
+          <Group title="scene">
+            <Chip label="dream" onPress={() => setDreamRun((n) => n + 1)} />
+            {[...Array(DREAM_CUTS)].map((_, i) => (
+              <Chip
+                key={i}
+                label={`cut ${i + 1}`}
+                onPress={() => setDreamCut(dreamCut === i ? null : i)}
+                active={dreamCut === i}
+              />
+            ))}
+          </Group>
+          <Group title="moving out (from a hatched buddy)">
             <Chip
-              key={name}
-              label={name}
-              onPress={() => setPlantKind(i)}
-              active={plantKind === i}
-            />
-          ))}
-        </Group>
-        <Group title="stage">
-          {STAGES.map((s) => (
-            <Chip
-              key={s}
-              label={s}
+              label="go its own way"
               onPress={() => {
-                setStage(s);
+                setStage('EGG');
                 setLevel(null);
               }}
-              active={s === stage}
             />
-          ))}
-        </Group>
-        <Group title="level (the room's rewards)">
-          {LEVELS.map((l) => (
-            <Chip key={l} label={`Lv.${l}`} onPress={() => setLevel(l)} active={l === level} />
-          ))}
-        </Group>
-        <Group title="job (ADULT)">
-          <Chip label="none" onPress={() => setJob(null)} active={job === null} />
-          {JOB_ORDER.map((j) => (
+          </Group>
+          <Group title="hour (window, clock, lamp, fireflies)">
+            <Chip label="now" onPress={() => setHour(undefined)} active={hour === undefined} />
+            {HOURS.map((h) => (
+              <Chip key={h} label={`${h}:10`} onPress={() => setHour(h)} active={h === hour} />
+            ))}
+          </Group>
+          <Group title="day (seasonal things)">
+            <Chip label="today" onPress={() => setDate(undefined)} active={date === undefined} />
+            {DATES.map((d) => (
+              <Chip key={d} label={d} onPress={() => setDate(d)} active={d === date} />
+            ))}
+          </Group>
+          <Group title="plant kind (Lv.13–18)">
             <Chip
-              key={j}
-              label={`${JOB_ICON[j]} ${j}`}
-              onPress={() => setJob(j)}
-              active={j === job}
+              label="drawn"
+              onPress={() => setPlantKind(undefined)}
+              active={plantKind === undefined}
             />
-          ))}
-        </Group>
-        <Group title="season">
-          <Chip
-            label="by date"
-            onPress={() => setSeason(undefined)}
-            active={season === undefined}
-          />
-          <Chip label="none" onPress={() => setSeason(null)} active={season === null} />
-          {SEASONS.map((s) => (
-            <Chip key={s} label={s} onPress={() => setSeason(s)} active={s === season} />
-          ))}
-        </Group>
-        {/* A new id for every press, or the stage takes it for the one it already played. */}
-        <Group title="does">
-          <Chip label="job work" onPress={() => setCue({ id: randomUUID(), kind: 'job' })} />
-          <Chip label="dance" onPress={() => setCue({ id: randomUUID(), kind: 'dance' })} />
-          <Chip label="sing" onPress={() => setCue({ id: randomUUID(), kind: 'sing' })} />
-          {HAPPENINGS.map((h) => (
-            <Chip key={h} label={h} onPress={() => setCue({ id: randomUUID(), kind: h })} />
-          ))}
-        </Group>
-        <Group title="chat words">
-          {MOODS.map((m) => (
-            <Chip key={m} label={m} onPress={() => setCue({ id: randomUUID(), kind: m })} />
-          ))}
-        </Group>
-        <Group title="room events">
-          {REACTIONS.map((r) => (
-            <Chip key={r} label={r} onPress={() => setReaction({ id: randomUUID(), kind: r })} />
-          ))}
-        </Group>
-        <Group title="state">
-          <Chip label="hungry" onPress={() => setHungry((h) => !h)} active={hungry} />
-          <Chip label="+ poop" onPress={() => setPoops((n) => Math.min(3, n + 1))} />
-          <Chip
-            label="partner here"
-            onPress={() => setPartnerHere((h) => !h)}
-            active={partnerHere}
-          />
-          <Chip label="partner pets" onPress={() => setPartnerPet({ id: randomUUID() })} />
-        </Group>
-        {stage !== 'EGG' && <PoseSheet stage={stage} job={job} season={shownSeason} />}
-      </ScrollView>
-    </SafeAreaView>
+            {['cactus', 'rubber', 'snake', 'round'].map((name, i) => (
+              <Chip
+                key={name}
+                label={name}
+                onPress={() => setPlantKind(i)}
+                active={plantKind === i}
+              />
+            ))}
+          </Group>
+          <Group title="stage">
+            {STAGES.map((s) => (
+              <Chip
+                key={s}
+                label={s}
+                onPress={() => {
+                  setStage(s);
+                  setLevel(null);
+                }}
+                active={s === stage}
+              />
+            ))}
+          </Group>
+          <Group title="level (the room's rewards)">
+            {LEVELS.map((l) => (
+              <Chip key={l} label={`Lv.${l}`} onPress={() => setLevel(l)} active={l === level} />
+            ))}
+          </Group>
+          <Group title="job (ADULT)">
+            <Chip label="none" onPress={() => setJob(null)} active={job === null} />
+            {JOB_ORDER.map((j) => (
+              <Chip
+                key={j}
+                label={`${JOB_ICON[j]} ${j}`}
+                onPress={() => setJob(j)}
+                active={j === job}
+              />
+            ))}
+          </Group>
+          <Group title="season">
+            <Chip
+              label="by date"
+              onPress={() => setSeason(undefined)}
+              active={season === undefined}
+            />
+            <Chip label="none" onPress={() => setSeason(null)} active={season === null} />
+            {SEASONS.map((s) => (
+              <Chip key={s} label={s} onPress={() => setSeason(s)} active={s === season} />
+            ))}
+          </Group>
+          {/* A new id for every press, or the stage takes it for the one it already played. */}
+          <Group title="does">
+            <Chip label="job work" onPress={() => setCue({ id: randomUUID(), kind: 'job' })} />
+            <Chip label="dance" onPress={() => setCue({ id: randomUUID(), kind: 'dance' })} />
+            <Chip label="sing" onPress={() => setCue({ id: randomUUID(), kind: 'sing' })} />
+            {HAPPENINGS.map((h) => (
+              <Chip key={h} label={h} onPress={() => setCue({ id: randomUUID(), kind: h })} />
+            ))}
+          </Group>
+          <Group title="chat words">
+            {MOODS.map((m) => (
+              <Chip key={m} label={m} onPress={() => setCue({ id: randomUUID(), kind: m })} />
+            ))}
+          </Group>
+          <Group title="room events">
+            {REACTIONS.map((r) => (
+              <Chip key={r} label={r} onPress={() => setReaction({ id: randomUUID(), kind: r })} />
+            ))}
+          </Group>
+          <Group title="state">
+            <Chip label="hungry" onPress={() => setHungry((h) => !h)} active={hungry} />
+            <Chip label="+ poop" onPress={() => setPoops((n) => Math.min(3, n + 1))} />
+            <Chip
+              label="partner here"
+              onPress={() => setPartnerHere((h) => !h)}
+              active={partnerHere}
+            />
+            <Chip label="partner pets" onPress={() => setPartnerPet({ id: randomUUID() })} />
+          </Group>
+          {stage !== 'EGG' && <PoseSheet stage={stage} job={job} season={shownSeason} />}
+        </ScrollView>
+      </SafeAreaView>
+    </FoldAll.Provider>
   );
 }
 
@@ -437,6 +459,7 @@ const styles = StyleSheet.create({
   column: { width: '100%', maxWidth: MAX_CONTENT_WIDTH },
   content: { gap: 12, paddingBottom: 32 },
   sticky: { gap: 12, paddingBottom: 8, zIndex: 1 },
+  foldRow: { flexDirection: 'row', gap: 6, paddingHorizontal: 12 },
   group: { gap: 6, paddingHorizontal: 12 },
   title: { fontSize: 12, fontWeight: '700' },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
