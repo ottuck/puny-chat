@@ -30,6 +30,7 @@ import {
   BUBBLE,
   CUCKOO,
   CUCKOO_DOOR,
+  CUCKOO_FINE,
   CUCKOO_CELLS,
   cuckooAt,
   fishBowl,
@@ -534,7 +535,7 @@ export function CuckooClock({
   const onTheHour = minutes === 0 ? hours : null;
   return (
     <View>
-      <PixelSprite frame={frame} palette={THINGS_PALETTE} scale={scale * CLOCK_FINE} />
+      <PixelSprite frame={frame} palette={THINGS_PALETTE} scale={scale * CUCKOO_FINE} />
       {run > 0 ? <CuckooOut key={`tap${run}`} scale={scale} /> : null}
       {onTheHour !== null ? <CuckooOut key={`hour${onTheHour}`} scale={scale} /> : null}
     </View>
@@ -569,15 +570,15 @@ function CuckooOut({ scale }: { scale: number }) {
         styles.passThrough,
         {
           // In the door of the roof.
-          left: CUCKOO_DOOR.col * CLOCK_FINE * scale - 3 * scale,
-          top: CUCKOO_DOOR.row * CLOCK_FINE * scale - 2 * scale,
+          left: CUCKOO_DOOR.col * CUCKOO_FINE * scale - 3 * scale * 0.8,
+          top: CUCKOO_DOOR.row * CUCKOO_FINE * scale - 2 * scale * 0.8,
           transform: [
             { translateY: hop.interpolate({ inputRange: [0, 1], outputRange: [0, -2 * scale] }) },
           ],
         },
       ]}
     >
-      <PixelSprite frame={CUCKOO} palette={THINGS_PALETTE} scale={scale} />
+      <PixelSprite frame={CUCKOO} palette={THINGS_PALETTE} scale={scale * 0.8} />
     </Animated.View>
   );
 }
