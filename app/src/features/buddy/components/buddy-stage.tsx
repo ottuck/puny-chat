@@ -49,6 +49,8 @@ import {
   type Pose,
   PROP_PALETTE,
   RICE,
+  seated,
+  SIT_ROWS,
   SPARKLE,
   STAGE_ORDER,
   THOUGHT_FOOD,
@@ -120,6 +122,8 @@ type Act =
   | 'shootingStar'
   // Guests the room has grown into (stage-decor.tsx): at the window, or a toy train on the floor.
   | Guest
+  // A child or grown-up sits down on the rug for a while.
+  | 'sit'
   | 'job';
 // A one-word message for the buddy ("밥", "춤", …, features/buddy/chat-words.ts), or the tour's
 // script asking for a dance or a song.
@@ -143,6 +147,7 @@ const HAPPENINGS = [
   'swallow',
   'owl',
   'squirrel',
+  'sit',
 ] as const;
 type Happening = (typeof HAPPENINGS)[number];
 const isHappening = (kind: string): kind is Happening =>
@@ -188,6 +193,8 @@ const ACT_MS: Record<Act, number> = {
   ...GUEST_MS,
   // At the station, once there.
   job: 2400,
+  // On the rug, once there.
+  sit: 5000,
 };
 // How long the butterfly takes to come down onto the head, and to fly off again.
 const BUTTERFLY_FLY_MS = 700;
@@ -243,6 +250,7 @@ const ACT_LINE: Partial<Record<Act, Line>> = {
   swallow: 'swallow',
   owl: 'owl',
   squirrel: 'squirrel',
+  sit: 'sit',
 };
 // What it says looking out of the window, by the sky (room.ts, skyAt).
 const WINDOW_LINE = { day: 'windowDay', dusk: 'windowDusk', night: 'windowNight' } as const;
@@ -262,10 +270,13 @@ const IDLE_ACTS: readonly (readonly [Act, number])[] = [
 const JOB_ACT_WEIGHT = 30;
 // The room's guests, once it has them, as often as a butterfly.
 const GUEST_WEIGHT = 8;
+// A child or grown-up sits down on the rug now and then.
+const SIT_WEIGHT = 10;
 
-function pickIdleAct(job: BuddyJob | null, guests: readonly Guest[]): Act {
+function pickIdleAct(job: BuddyJob | null, guests: readonly Guest[], sits: boolean): Act {
   const acts: readonly (readonly [Act, number])[] = [
     ...IDLE_ACTS,
+    ...(sits ? [['sit', SIT_WEIGHT] as const] : []),
     ...guests.map((guest) => [guest, GUEST_WEIGHT] as const),
     ...(job ? [['job', JOB_ACT_WEIGHT] as const] : []),
   ];
@@ -724,7 +735,7 @@ export function BuddyStage({
           setAct(null);
         },
         // Work starts on arrival (see below), which restarts this; the walk is the most it waits.
-        next === 'job' ? JOB_WALK_MAX_MS + ACT_MS.job : ACT_MS[next],
+        next === 'job' || next === 'sit' ? JOB_WALK_MAX_MS + ACT_MS[next] : ACT_MS[next],
       );
     },
     [say, job],
@@ -900,6 +911,52 @@ export function BuddyStage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [act, actRun]);
 
+  // Sitting: walk over to the middle of the rug, then sit there a while. Only with legs to fold
+  // (a child or grown-up); otherwise it does not.
+  const [seatedRun, setSeatedRun] = useState(-1);
+  const sitting = act === 'sit' && seatedRun === actRun;
+  useEffect(() => {
+    if (act !== 'sit' || width === 0) return;
+    let stopped = false;
+    const done = (after: number) => {
+      if (actTimer.current) clearTimeout(actTimer.current);
+      actTimer.current = setTimeout(() => {
+        actTimer.current = null;
+        setAct(null);
+      }, after);
+    };
+    if (!atTable) {
+      done(0);
+      return () => {
+        stopped = true;
+      };
+    }
+    const rug = Math.min(maxX, Math.max(minX, (width - spriteWidth) / 2));
+    x.stopAnimation((from) => {
+      if (stopped) return;
+      const distance = Math.abs(rug - from);
+      setFacingLeft(rug < from);
+      setOnRightHalf(false);
+      setWalking(distance > 2);
+      Animated.timing(x, {
+        toValue: rug,
+        duration: Math.min(JOB_WALK_MAX_MS - 200, distance * JOB_WALK_MS),
+        easing: Easing.linear,
+        useNativeDriver: NATIVE_DRIVER,
+      }).start(({ finished }) => {
+        if (!finished || stopped) return;
+        setWalking(false);
+        setSeatedRun(actRun);
+        done(ACT_MS.sit);
+      });
+    });
+    return () => {
+      stopped = true;
+    };
+    // A new walk for each sit, not for every change of the stage's size.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [act, actRun]);
+
   // A one-word message: dance or sing; for "밥" when full or "청소" with nothing to clean, an
   // answer instead of nothing (the care itself, when needed, comes from the server as an event).
   const canFeed = buddy.canFeed;
@@ -1005,11 +1062,11 @@ export function BuddyStage({
     // With the partner here too it is livelier: twice as often.
     const pace = partnerHere ? 0.5 : 1;
     const timer = setTimeout(
-      () => perform(pickIdleAct(job, guests ? (guests.split(',') as Guest[]) : [])),
+      () => perform(pickIdleAct(job, guests ? (guests.split(',') as Guest[]) : [], atTable)),
       pace * (IDLE_ACT_MIN_MS + Math.random() * (IDLE_ACT_MAX_MS - IDLE_ACT_MIN_MS)),
     );
     return () => clearTimeout(timer);
-  }, [egg, settled, active, acting, petted, mood, partnerHere, job, guests, perform]);
+  }, [egg, settled, active, acting, petted, mood, partnerHere, job, guests, atTable, perform]);
 
   // Little hops while dancing, notes rising while singing.
   useEffect(() => {
@@ -1368,43 +1425,51 @@ export function BuddyStage({
             ? tick % 2 === 0
               ? 'eat'
               : 'happy'
-            : act === 'job' && job
-              ? atWork
-                ? jobPose(job, tick)
+            : act === 'sit'
+              ? sitting
+                ? tick % 6 === 0
+                  ? 'blink'
+                  : 'happy'
                 : tick % 2 === 0
                   ? 'step'
                   : 'idle'
-              : act === 'yawn'
-                ? 'yawn'
-                : act === 'hiccup'
-                  ? 'hiccup'
-                  : act === 'startle' || act === 'shootingStar'
-                    ? 'surprised'
-                    : act === 'butterfly' || act === 'snow' || isGuest(act)
-                      ? tick % 2 === 0
-                        ? 'happy'
-                        : 'idle'
-                      : act === 'refuse' || act === 'lookAround'
-                        ? 'idle'
-                        : active?.kind === 'cleaned' ||
-                            active?.kind === 'levelUp' ||
-                            active?.kind === 'maxLevel' ||
-                            active?.kind === 'together' ||
-                            active?.kind === 'here' ||
-                            (active?.kind === 'evolved' && !evolving) ||
-                            petted
+              : act === 'job' && job
+                ? atWork
+                  ? jobPose(job, tick)
+                  : tick % 2 === 0
+                    ? 'step'
+                    : 'idle'
+                : act === 'yawn'
+                  ? 'yawn'
+                  : act === 'hiccup'
+                    ? 'hiccup'
+                    : act === 'startle' || act === 'shootingStar'
+                      ? 'surprised'
+                      : act === 'butterfly' || act === 'snow' || isGuest(act)
+                        ? tick % 2 === 0
                           ? 'happy'
-                          : sleeping
-                            ? 'sleep'
-                            : buddy.hungry
-                              ? 'hungry'
-                              : walking
-                                ? tick % 2 === 0
-                                  ? 'step'
-                                  : 'idle'
-                                : tick % 11 === 0
-                                  ? 'blink'
-                                  : 'idle';
+                          : 'idle'
+                        : act === 'refuse' || act === 'lookAround'
+                          ? 'idle'
+                          : active?.kind === 'cleaned' ||
+                              active?.kind === 'levelUp' ||
+                              active?.kind === 'maxLevel' ||
+                              active?.kind === 'together' ||
+                              active?.kind === 'here' ||
+                              (active?.kind === 'evolved' && !evolving) ||
+                              petted
+                            ? 'happy'
+                            : sleeping
+                              ? 'sleep'
+                              : buddy.hungry
+                                ? 'hungry'
+                                : walking
+                                  ? tick % 2 === 0
+                                    ? 'step'
+                                    : 'idle'
+                                  : tick % 11 === 0
+                                    ? 'blink'
+                                    : 'idle';
 
   // A mood from the chat shows on the face unless something bigger (eating, straining) is going on.
   const moodPose: Pose | null =
@@ -1425,9 +1490,10 @@ export function BuddyStage({
   // While evolving, the old and new looks take turns quickly.
   const previousStage = STAGE_ORDER[Math.max(0, STAGE_ORDER.indexOf(buddy.stage) - 1)];
   // Dressed for the season or its job, but not in the middle of growing.
-  const frame = evolving
+  const dressed = evolving
     ? buddyFrame(tick % 2 === 0 ? previousStage : buddy.stage, tick % 2 === 0 ? 'idle' : pose)
     : dressedFrame(buddy.stage, pose, job, season);
+  const frame = sitting ? seated(buddy.stage, dressed) : dressed;
 
   const gridWidth = frame[0].length;
   // Resting on the head while it is there.
@@ -1797,7 +1863,7 @@ export function BuddyStage({
         style={[
           styles.buddy,
           {
-            bottom: FLOOR - scale - workNod,
+            bottom: FLOOR - scale - workNod - (sitting ? SIT_ROWS * scale : 0),
             left: workSway,
             transform: [
               { translateX: x },

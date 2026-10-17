@@ -322,6 +322,17 @@ const POSES: Record<Exclude<BuddyStage, 'EGG'>, Record<Pose, Frame>> = {
   ADULT: makePoses(ANATOMY.ADULT),
 };
 
+// Sitting down (on the rug): the feet tucked away, the body two rows lower. Done on the dressed
+// frame, so what it wears comes down with it; the stage lowers the frame by those two rows.
+export const SIT_ROWS = 2;
+
+export function seated(stage: BuddyStage, frame: Frame): Frame {
+  if (stage === 'EGG') return frame;
+  const { feet } = ANATOMY[stage];
+  const blank = '.'.repeat(frame[0].length);
+  return frame.map((row, i) => (i === feet || i === feet + 1 ? blank : row));
+}
+
 export function buddyFrame(stage: BuddyStage, pose: Pose): Frame {
   return stage === 'EGG' ? EGG : POSES[stage][pose];
 }

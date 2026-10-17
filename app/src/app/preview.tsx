@@ -43,6 +43,7 @@ const HAPPENINGS = [
   'swallow',
   'owl',
   'squirrel',
+  'sit',
 ] as const;
 const MOODS: Mood[] = ['laugh', 'love', 'cheer', 'comfort', 'goodnight', 'morning'];
 const REACTIONS: ReactionKind[] = [
@@ -60,8 +61,8 @@ const REACTIONS: ReactionKind[] = [
 
 // Levels where the room gets something new (the rewards), for looking at each step.
 const LEVELS = [1, ...REWARDS.map((entry) => entry.level)];
-// The room's window and lamp by the hour: day, dusk, night.
-const HOURS = [12, 18, 22];
+// The room's window, lamp and light by the hour: morning, day, dusk, night.
+const HOURS = [7, 12, 18, 22];
 // Days for the room's seasonal things (stage-decor.tsx, SEASONAL): the New Year (kotatsu, mochi),
 // spring (petals), summer (wind chime), autumn (dragonflies).
 const DATES = ['01-01', '04-01', '08-01', '10-01'];
