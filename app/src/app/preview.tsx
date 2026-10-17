@@ -126,12 +126,18 @@ function Chip({
   );
 }
 
+// Folded until its title is tapped, so the stage above stays in view.
 function Group({ title, children }: { title: string; children: ReactNode }) {
   const colors = useColors();
+  const [open, setOpen] = useState(false);
   return (
     <View style={styles.group}>
-      <Text style={[styles.title, { color: colors.textMuted }]}>{title}</Text>
-      <View style={styles.row}>{children}</View>
+      <Pressable onPress={() => setOpen(!open)} accessibilityRole="button" hitSlop={6}>
+        <Text style={[styles.title, { color: colors.textMuted }]}>
+          {open ? '▾' : '▸'} {title}
+        </Text>
+      </Pressable>
+      {open ? <View style={styles.row}>{children}</View> : null}
     </View>
   );
 }
@@ -149,21 +155,18 @@ function PoseSheet({
 }) {
   const colors = useColors();
   return (
-    <View style={styles.group}>
-      <Text style={[styles.title, { color: colors.textMuted }]}>poses</Text>
-      <View style={styles.row}>
-        {POSES_IN_ORDER.map((pose) => (
-          <View key={pose} style={[styles.pose, { backgroundColor: colors.stage }]}>
-            <PixelSprite
-              frame={dressedFrame(stage, pose, stage === 'ADULT' ? job : null, season)}
-              palette={BUDDY_PALETTE}
-              scale={stage === 'ADULT' ? 4 : 5}
-            />
-            <Text style={[styles.poseName, { color: colors.textMuted }]}>{pose}</Text>
-          </View>
-        ))}
-      </View>
-    </View>
+    <Group title="poses">
+      {POSES_IN_ORDER.map((pose) => (
+        <View key={pose} style={[styles.pose, { backgroundColor: colors.stage }]}>
+          <PixelSprite
+            frame={dressedFrame(stage, pose, stage === 'ADULT' ? job : null, season)}
+            palette={BUDDY_PALETTE}
+            scale={stage === 'ADULT' ? 4 : 5}
+          />
+          <Text style={[styles.poseName, { color: colors.textMuted }]}>{pose}</Text>
+        </View>
+      ))}
+    </Group>
   );
 }
 
@@ -248,40 +251,47 @@ function Preview() {
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
-      <ScrollView style={styles.column} contentContainerStyle={styles.content}>
-        {dreamCut !== null ? (
-          <View style={styles.held}>
-            <BuddyDream
-              buddy={buddyOf('EGG', null, false, 0, null)}
-              height={stageHeight}
-              onEnd={() => {}}
-              hold={dreamCut}
-            />
-          </View>
-        ) : null}
-        {/* The bath is the button in the corner, as in the app. */}
-        <BuddyScene
-          key={dreamRun}
-          dreams={dreamRun > 0 ? 'always' : false}
-          startInBath={params.scene === 'bath'}
-          buddy={buddyOf(stage, job, hungry, poops, level)}
-          busy={false}
-          height={stageHeight}
-          onFeed={() => setHungry(false)}
-          onClean={() => setPoops((n) => Math.max(0, n - 1))}
-          onWork={() => {}}
-          onOpenDetail={() => setDetail(true)}
-          reaction={reaction}
-          cue={cue}
-          greets={false}
-          partnerPet={partnerPet}
-          partnerHere={partnerHere}
-          season={season}
-          plantKind={plantKind}
-          hour={hour}
-          date={date}
-          album={album}
-        />
+      {/* The stage stays at the top while the buttons below scroll under it. */}
+      <ScrollView
+        style={styles.column}
+        contentContainerStyle={styles.content}
+        stickyHeaderIndices={[0]}
+      >
+        <View style={[styles.sticky, { backgroundColor: colors.background }]}>
+          {dreamCut !== null ? (
+            <View style={styles.held}>
+              <BuddyDream
+                buddy={buddyOf('EGG', null, false, 0, null)}
+                height={stageHeight}
+                onEnd={() => {}}
+                hold={dreamCut}
+              />
+            </View>
+          ) : null}
+          {/* The bath is the button in the corner, as in the app. */}
+          <BuddyScene
+            key={dreamRun}
+            dreams={dreamRun > 0 ? 'always' : false}
+            startInBath={params.scene === 'bath'}
+            buddy={buddyOf(stage, job, hungry, poops, level)}
+            busy={false}
+            height={stageHeight}
+            onFeed={() => setHungry(false)}
+            onClean={() => setPoops((n) => Math.max(0, n - 1))}
+            onWork={() => {}}
+            onOpenDetail={() => setDetail(true)}
+            reaction={reaction}
+            cue={cue}
+            greets={false}
+            partnerPet={partnerPet}
+            partnerHere={partnerHere}
+            season={season}
+            plantKind={plantKind}
+            hour={hour}
+            date={date}
+            album={album}
+          />
+        </View>
         <BuddySheet
           visible={detail}
           buddy={buddyOf(stage, job, hungry, poops, level)}
@@ -426,6 +436,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, alignItems: 'center' },
   column: { width: '100%', maxWidth: MAX_CONTENT_WIDTH },
   content: { gap: 12, paddingBottom: 32 },
+  sticky: { gap: 12, paddingBottom: 8, zIndex: 1 },
   group: { gap: 6, paddingHorizontal: 12 },
   title: { fontSize: 12, fontWeight: '700' },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
