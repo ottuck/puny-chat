@@ -123,7 +123,7 @@ public class BuddyService {
     }
 
     /**
-     * A grown-up's work at its station (a tap on it, or "일" in the chat; docs/spec.md, 직업 무대
+     * A grown-up's work at its station (a tap on it, or "일" in the chat; docs/PROJECT.md, 직업 무대
      * 장치). It may work any time; EXP comes once in {@link BuddyRules#WORK_EVERY}, with WORKED in
      * the timeline. Before growing up there is no station: nothing happens.
      */
@@ -208,7 +208,7 @@ public class BuddyService {
     }
 
     /**
-     * The grown buddy goes its own way (docs/spec.md, 독립과 앨범): it is kept in the room's album
+     * The grown buddy goes its own way (docs/PROJECT.md, 독립과 앨범): it is kept in the room's album
      * and a new egg takes its place, in one update so neither happens without the other. Only from
      * {@link BuddyRules#GRADUATE_AT}; of two members doing it at once, one does (the other gets
      * BUDDY_NOT_GROWN, as there is only an egg now).
@@ -352,7 +352,7 @@ public class BuddyService {
     }
 
     /**
-     * Notes that the sender talked today (docs/spec.md, 둘이 함께). The first time both members
+     * Notes that the sender talked today (docs/PROJECT.md, 둘이 함께). The first time both members
      * have, the buddy gets {@link BuddyRules#TOGETHER_EXP} once for the day and the timeline a
      * TOGETHER entry. A member's first message of the day otherwise just updates everyone's view, so
      * the other one sees they are awaited. Later messages that day change nothing.

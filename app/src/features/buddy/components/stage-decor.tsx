@@ -52,7 +52,7 @@ import {
   type WindowThings,
 } from './room-props';
 
-// The stage's decorations (docs/spec.md 무대 꾸미기, docs/fun-improvements.md 방 소품). Every level
+// The stage's decorations (docs/PROJECT.md 무대 꾸미기, docs/fun-improvements.md 방 소품). Every level
 // the room gets something: a spot not used yet fills (the left of the floor, the wall, the window,
 // its sill, the side table, the middle of the rug), or a thing already there gets finer (the pot,
 // the bowl, the rug, the floor, the clock, the radio). Nothing pushes anything out, one thing to a

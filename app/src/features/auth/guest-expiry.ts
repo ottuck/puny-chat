@@ -1,7 +1,7 @@
 import type { User } from 'firebase/auth';
 import { useState } from 'react';
 
-// Guests can use the app for 30 days (docs/spec.md, 게스트 우선). Firebase deletes anonymous
+// Guests can use the app for 30 days (docs/PROJECT.md, 게스트 우선). Firebase deletes anonymous
 // accounts older than that (automatic clean-up in the console), so the count starts when the
 // Firebase account was created and nothing is stored for it here or on the server.
 export const GUEST_DAYS = 30;

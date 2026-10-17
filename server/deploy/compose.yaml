@@ -1,4 +1,4 @@
-# The server on the Lightsail instance (docs/spec.md, 인프라). Lives in /opt/puny-chat next to
+# The server on the Lightsail instance (docs/PROJECT.md, 인프라). Lives in /opt/puny-chat next to
 # a .env file with the server's settings (not in Git; see .env.example).
 # CI builds and pushes the image; update.sh (a systemd timer) pulls it and recreates the container.
 

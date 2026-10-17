@@ -84,7 +84,7 @@ import {
 } from './stage-decor';
 import { RAIN_GAP, rainDrops, Snowfall } from './weather';
 
-// The buddy's stage above the chat (docs/spec.md, 핵심 경험): the buddy walks around, waits by
+// The buddy's stage above the chat (docs/PROJECT.md, 핵심 경험): the buddy walks around, waits by
 // an empty bowl when hungry, leaves poops on the floor and sleeps at night. Tapping the bowl or a
 // poop takes care of it right there, and it reacts to what happens in the room: eating when fed,
 // straining when it poops, sparkling when cleaned, hopping at a new message, and evolving. Left

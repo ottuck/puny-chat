@@ -6,7 +6,7 @@
 
 **Chat with someone you like, and raise a tiny buddy together.**
 
-**[👀 Take a look, no sign-up](https://puny-chat.com/demo)** · [Start on the web](https://puny-chat.com) · [Product and server spec](docs/spec.md)
+**[👀 Take a look, no sign-up](https://puny-chat.com/demo)** · [Start on the web](https://puny-chat.com) · [Product and server spec](docs/PROJECT.md)
 
 <br>
 
@@ -65,7 +65,8 @@ at you, no daily missions. Just **having something to raise together** makes the
 - Left alone it dances and sings. Once a kid, it talks too: "Long time no see!", "Have you eaten?"
 - **It never dies.** Forget it for a few days and it's fine; a little care and it's back on its feet
 - A little after it grows up (Lv.12), it takes a job from how you two raised it (chef, gardener, radio DJ, writer, barista), each with its own look and spot on the stage. You can change it once each at level 20, 30, 40 and 50, and any time from 60. It dresses up for the season (bunny ears in spring, antlers at Christmas) and now and then a butterfly lands on it or a shooting star crosses the sky
-- Every level the room gets something: a toy box, a window whose sky follows your clock, a music box and a radio on the sill, a goldfish bowl, a low table that turns into a kotatsu in winter, plush friends, new rugs and floors, a tree that bears fruit, and guests at the window (a snail, a sparrow, a stray cat, an owl at night, a red dragonfly in autumn). From level 20 it can go its own way; keep it to level 60 and the room keeps growing (below)
+- Every level the room gets something: a toy box, a window whose sky follows your clock, a wall shelf with a music box and a radio, plush friends on the sill, a goldfish bowl, a low table that turns into a kotatsu in winter, new rugs and floors, a tree that bears fruit, and guests at the window (a snail, a sparrow, a stray cat, an owl at night, a red dragonfly in autumn). From level 20 it can go its own way; keep it to level 60 and the room keeps growing (below)
+- The same room in the light of the hour: a fresh morning, sunset light slanting through the panes, a night lit only by the lamp. At level 60, light comes down from the sky and a letter from the developer arrives in the stage's mailbox
 - **A hot spring** to send it to, and **a dream** of what it will become before the first egg (below)
 
 **🤝 For two**
@@ -86,7 +87,7 @@ at you, no daily missions. Just **having something to raise together** makes the
 Nothing is pushed out of the room: a spot not used yet fills, or a thing already there gets finer. When the buddy goes its own way it packs its things in a bundle, waves goodbye and walks off, and a new egg arrives in a bare room. Its photo goes into the memory album, opened from the button beside the hot spring.
 
 <div align="center">
-<img src="docs/images/room-story.png" width="640" alt="The room from level 9 to 40: a toy box, a music box on the windowsill, a snail, a dusk window, a sparrow, a cat's tail, a toy train, fireflies at night; then the buddy moving out with a bundle and a new egg in a bare room">
+<img src="docs/images/room-story.png" width="640" alt="The room from level 9 to 60: a toy box and a window, the wall shelf with its music box, sunset light through the panes, a morning sparrow, a night lit by the lamp, the New Year's kotatsu, the stray cat's face, a full room in summer; then the buddy moving out with a bundle and a new egg in a bare room">
 </div>
 
 <br>
@@ -158,7 +159,7 @@ flowchart LR
 
 Built **small**, to fit a small service. One server holds every real-time connection, so there is no Redis or other
 broker in between, and the Buddy's hunger and 💩 are **computed when looked at**, with no scheduler. The decisions
-and the reasons behind them are in the [spec](docs/spec.md) (Korean).
+and the reasons behind them are in the [spec](docs/PROJECT.md) (Korean).
 
 <br>
 
@@ -195,8 +196,9 @@ On an iPhone, open it with a development build. The commands are collected in [C
 - [x] Buddy pixel character and animations (eating · 💩 · evolving · reacting to messages)
 - [x] Web Push (the web added to the home screen)
 - [x] Jobs, seasonal looks, small happenings, the hot spring and the dream before the first egg
-- [ ] iPhone development build and push notifications
-- [ ] Sign in with Apple
+- [x] The room's things every level, seasonal things, the memory album, the mailbox, the light of the hour
+- [ ] iPhone build checked on a device (Sign in with Apple and push are written, not yet tried on an iPhone)
+- [ ] App Store release
 
 ## License
 

@@ -40,7 +40,7 @@ export const createInvitation = () =>
   api<Invitation>('/api/rooms/me/invitations', { method: 'POST' });
 
 // Accepting runs several steps on the server without a transaction. If it fails midway (network,
-// 5xx), the same user accepting the same code again finishes it (docs/spec.md), so it is
+// 5xx), the same user accepting the same code again finishes it (docs/PROJECT.md), so it is
 // retried a couple of times rather than leaving the friend's room half-joined.
 export async function acceptInvitation(code: string, leaveCurrentRoom: boolean): Promise<Room> {
   const request = () =>

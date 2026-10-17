@@ -1,6 +1,6 @@
 # App Store 출시
 
-iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할 것. 제품·서버는 `docs/spec.md`, 문의 운영은 `docs/support-operations.md`.
+iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할 것. 제품·서버·운영은 `docs/PROJECT.md`.
 
 인증 키·private key·토큰·Team ID 같은 값은 이 문서와 Git에 적지 않는다. 값은 각 콘솔(Apple, Firebase, EAS, 서버 `.env`)에만 둔다.
 콘솔 쪽 "완료"는 운영자가 직접 확인한 것이고 코드로는 검증할 수 없다.
@@ -54,7 +54,7 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
    - 개인정보처리방침 `https://puny-chat.com/privacy`, 지원 URL `https://puny-chat.com/support`
    - 개인정보 수집 항목(처리방침의 실제 수집 내용과 맞춘다), 연령 등급, 스크린샷, 설명, 키워드
    - 심사 메모: 초대 코드로 연결되는 최대 2인 텍스트 채팅이고, 신고·대화 종료·기존 초대 무효화가 있으며 콘텐츠 사전 필터와 서비스 전체
-     영구 차단은 없다(`docs/support-operations.md`의 "심사 설명에 쓸 사실"). Guideline 1.2를 모두 충족한다고 단정하지 않는다.
+     영구 차단은 없다(`docs/PROJECT.md` 운영의 "심사 설명에 쓸 사실"). Guideline 1.2를 모두 충족한다고 단정하지 않는다.
      심사자는 게스트로 바로 시작할 수 있다고 적는다.
 5. **제출.** 운영자가 최종 확인하고 직접 제출한다.
 

@@ -25,10 +25,10 @@ import reactor.core.publisher.Mono;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Push notifications for new messages (docs/spec.md, 푸시). A recipient is notified when
+ * Push notifications for new messages (docs/PROJECT.md, 푸시). A recipient is notified when
  * the message is still unread a moment after it was sent: someone looking at the chat marks it read
  * within a second, while an app in the background, suspended without a clean disconnect, or offline
- * does not. Buddy events are never pushed (docs/spec.md).
+ * does not. Buddy events are never pushed (docs/PROJECT.md).
  */
 @Service
 public class NotificationService {
@@ -116,7 +116,7 @@ public class NotificationService {
                 .then(Mono.zip(roomService.memberIds(message.roomId()), chatService.readMarks(message.roomId())))
                 .map(roomState -> roomState.getT1().stream()
                         .filter(memberId -> !memberId.equals(from.id()))
-                        // Ids compare in timeline order (docs/spec.md).
+                        // Ids compare in timeline order (docs/PROJECT.md).
                         .filter(memberId ->
                                 roomState.getT2().getOrDefault(memberId, "").compareTo(messageId) < 0)
                         .toList())

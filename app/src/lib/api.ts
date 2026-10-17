@@ -1,7 +1,7 @@
 import { auth } from './firebase';
 import { apiUrl } from './api-url';
 
-// A failure the server described with a stable code (docs/spec.md). UI copy for each
+// A failure the server described with a stable code (docs/PROJECT.md). UI copy for each
 // code lives in the app's messages.
 export class ApiError extends Error {
   constructor(

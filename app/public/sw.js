@@ -1,5 +1,5 @@
 // The web app's service worker: shows new-message notifications sent by the server (Web Push,
-// docs/spec.md) and opens the chat when one is tapped. Nothing is cached here.
+// docs/PROJECT.md) and opens the chat when one is tapped. Nothing is cached here.
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));

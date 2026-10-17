@@ -3,16 +3,16 @@
 1~2명이 작은 가상 생명체(Buddy)를 함께 키우며 쓰는 초경량 1:1 실시간 채팅 앱.
 **Chat first. Buddy makes it fun.** iOS가 기준 플랫폼이고 Web은 보조, Android는 나중.
 
-- 명세(제품 원칙·범위, Buddy, 컬렉션, API, WebSocket 프로토콜, 규칙, 인프라): `docs/spec.md` — 기능·범위·서버를 바꾸기 전에 읽는다.
-- Buddy의 직업·사건·기간 한정 모습·온천·방 소품·꿈, 그림 작업 규칙: `docs/fun-improvements.md`.
+- 명세(제품 원칙·범위, Buddy, 컬렉션, API, WebSocket 프로토콜, 규칙, 인프라, 문의·신고 운영): `docs/PROJECT.md` — 기능·범위·서버를 바꾸기 전에 읽는다.
+- Buddy의 직업·사건·기간 한정 모습·온천·방 소품·추억 앨범·방의 빛·우편함·꿈, 그림 작업 규칙: `docs/fun-improvements.md`.
 - 이 문서들이 기준(source of truth)이다. 결정이 바뀌면 코드와 같은 커밋에서 문서도 고친다. 일지처럼 쓰지 않고 지금 상태만 적는다.
 
 ## Repo layout
 
 - `app/` — Expo(React Native) + TypeScript + Expo Router. iOS / Web / Android 공용 코드.
-- `server/` — Java 25, Spring Boot 4.1 + WebFlux + Reactive MongoDB. 패키지는 기능 모듈(`auth`, `user`, `room`, `chat`, `buddy`, `realtime`).
+- `server/` — Java 25, Spring Boot 4.1 + WebFlux + Reactive MongoDB. 패키지는 기능 모듈(`auth`, `user`, `account`, `room`, `chat`, `buddy`, `realtime`, `notification`, `support`).
 - `infra/` — Terraform: MongoDB Atlas(DB, 시드니), Cloudflare(DNS, state는 R2). 서버는 AWS Lightsail 인스턴스(`quant-lab-02`, 시드니)에서 `server/deploy`의 Docker Compose로 돈다.
-- `docs/` — 명세(`spec.md`), Buddy 콘텐츠와 그림 작업(`fun-improvements.md`, 확인용 화면은 개발 빌드의 `/preview`), App Store 출시(`release.md`), 문의 운영(`support-operations.md`)
+- `docs/` — 명세와 운영(`PROJECT.md`), Buddy 콘텐츠와 그림 작업(`fun-improvements.md`, 확인용 화면은 개발 빌드의 `/preview`), App Store 출시(`release.md`), README 그림(`images/`)
 - `.github/workflows/ci.yml` — app(lint / typecheck / test / format), server(spotless / test). Actions 무료 분(월 2,000분)을 아끼려고 같은 코드를
   두 번만 돌린다: `dev`로 가는 PR과 `main` push(배포 관문). `dev` push와 `dev` → `main` PR에서는 돌지 않고, 문서·`infra/`만 바뀐 변경도 건너뛴다.
   `changes` 잡이 바뀐 파일을 보고 `app/`이 바뀌었을 때만 app 잡을, `server/`가 바뀌었을 때만 server 잡을 돌린다(그 밖의 파일이 바뀌면 둘 다).
@@ -24,7 +24,7 @@
 ## App commands (`app/`에서 실행)
 
 - `pnpm start` — Metro dev server · `pnpm web` — 웹
-- 아이폰은 **개발용 빌드**(`expo-dev-client`, bundle id `com.ottuck.buddychat`)로 연다. Expo Go에는 푸시가 없어 S8부터 쓰지 않는다.
+- 아이폰은 **개발용 빌드**(`expo-dev-client`, bundle id `com.ottuck.buddychat`)로 연다. Expo Go에는 푸시가 없어 쓰지 않는다.
   JS 수정은 Metro로 바로 반영되고, 네이티브 설정(패키지·config plugin·`app.json`)이 바뀔 때만 다시 빌드한다:
   `npx eas-cli build --profile development --platform ios`(Apple 계정 로그인이 필요해 사용자가 실행, `eas.json`).
 - 출시된 iOS 앱의 JS·그림·번역 변경은 EAS Update로 보낸다(`docs/release.md`의 앱 업데이트). 네이티브가 바뀌면 `app.json`의 `version`을 올리고 새로 빌드한다.
@@ -48,16 +48,17 @@
   `clientMessageId`로 바로 다시 보내며 히스토리 복구를 기다리지 않는다. 서버 에러 코드의 문구는 `errors.*` 번역 키로 보여준다.
 - web은 Node에서 미리 렌더링되므로 모듈 최상위에서 `window`에 접근하지 않는다.
 - Buddy 상태(레벨, 배고픔, 똥, 돌볼 수 있는지)는 서버가 계산한 `BuddyView`를 그대로 보여준다. 앱에서 규칙을 다시 계산하지 않는다.
-  무대 꾸미기(`stage-decor.tsx`의 `REWARDS`)는 서버가 준 레벨과 앨범으로 앱이 고른다(표시 규칙이라 서버에 없음). 도움말
-  (`app/guide.tsx`)과 Buddy 상세의 다음 보상도 같은 목록을 쓴다.
+  무대 꾸미기(`stage-decor.tsx`의 `REWARDS`)는 서버가 준 레벨로 앱이 고른다(표시 규칙이라 서버에 없음). 도움말
+  (`app/guide.tsx`)과 Buddy 상세의 다음 보상도 같은 목록을 쓴다. 철 따라 나오는 소품과 방의 빛은 기기 날짜·시각으로 정한다.
+  우편함(`features/mailbox`)의 공지·편지도 앱에 넣고(`mail.ts`, 번역 `mailbox.mail.*`) 배포로 보낸다. 읽음은 기기에 둔다.
   예외는 로그인 전 "구경하기"(`app/demo.tsx`, `features/demo`)뿐이다. 대본으로 채팅 화면 부품을 그대로 재생하고 서버를 쓰지 않는다.
 - Buddy 무대(`features/buddy/components/buddy-stage.tsx`): 채팅 화면 위쪽 약 1/3, 접히지 않는다(접었다 펴면 스크롤이 튐).
   마운트 전에 받은 반응은 재생하지 않는다. 한 단어 메시지("밥", "똥", "춤", "노래" 등, `chat-words.ts`)에 답한다.
   잠(밤 시간), 기쁨(쓰다듬기), 춤·노래, 말풍선(`use-buddy-talk.ts`, 꼬마부터)처럼 서버에 없는 모습은 앱이 정한다. 먹기·💩·청소·진화·상대 메시지 반응은 실시간으로 받은
-  메시지(`features/buddy/reactions.ts`)로 시작한다. 앱을 다시 열거나 재연결해서 채운 메시지에는 반응하지 않고, 진화만
-  내 읽음 위치보다 새로우면 한 번 보여준다.
+  메시지(`features/buddy/reactions.ts`)로 시작한다. 앱을 다시 열거나 재연결해서 채운 메시지에는 반응하지 않고, 최고 레벨과 진화만
+  내 읽음 위치보다 새로우면 한 번 보여준다(`missedMoment`).
 - 도트는 문자열 격자 → SVG 사각형(`features/buddy/pixel`). 비트맵을 쓰지 않아 iOS·웹 모두 선명하다. 격자 행 길이가 모두 같아야 하고,
-  격자 배열에는 `// prettier-ignore`를 붙여 모양을 유지한다.
+  손으로 쓴 격자 배열에는 `// prettier-ignore`를 붙여 모양을 유지한다(시계처럼 코드로 만드는 격자는 예외).
 
 ## Auth
 
@@ -78,7 +79,7 @@
   주 1회 지운다(`account/GuestCleanup`). 첫 화면과 설정에 안내하고
   마지막 7일은 채팅 위에 안내 줄을 띄운다. 문구는 "회원가입"이 아니라 "계정 연결".
 - 계정 삭제는 설정 맨 아래. 서버(`DELETE /api/me`)를 먼저 지우고 Firebase 계정은 앱이 `deleteUser`로 지운다. Google 연결
-  계정은 그 전에 다시 로그인한다(`features/auth/actions.ts`, 순서와 이유는 `docs/spec.md` 계정 삭제).
+  계정은 그 전에 다시 로그인한다(`features/auth/actions.ts`, 순서와 이유는 `docs/PROJECT.md` 계정 삭제).
 
 ## Server commands (`server/`에서 실행)
 
@@ -146,18 +147,18 @@
 ## Git workflow
 
 - 브랜치: `main`(검증된 코드, 릴리스 기준) ← `dev`(개발). 기본 작업 브랜치는 `dev`.
-  GitHub 기본 브랜치는 `main`이다(2026-10-14, `main` push CI가 캐시를 채워 `dev`로 가는 PR이 읽도록). 그래서 PR은 `--base dev`를 명시한다.
+  GitHub 기본 브랜치는 `main`이다(`main` push CI가 캐시를 채워 `dev`로 가는 PR이 읽도록). 그래서 PR은 `--base dev`를 명시한다.
 - 평소 작업은 `dev`에 바로 커밋·push한다. 기능 브랜치는 크거나 실험적인 작업일 때만 따로 만든다
   (feat/…, fix/…, chore/… 이름, `dev`로 PR). `dev`에 바로 push하면 CI가 돌지 않으므로 push 전에 로컬 검사
   (`pnpm check`, server는 `./gradlew spotlessCheck test`)를 한다. CI는 `dev`로 가는 PR과 `main` push에서만 돈다.
 - `main`에는 직접 커밋하지 않는다. 기능 묶음이 끝나거나 릴리스 전에 `dev` → `main` PR을 열고,
   **merge commit**으로 합친다(squash하면 `dev`와 `main` 히스토리가 어긋난다). 이 PR에서는 CI가 돌지 않는다
   (같은 코드를 `dev`로 가는 PR에서 이미 돌렸다). 합친 뒤 `main` push CI가 통과해야 배포되므로 그 결과와 배포를 확인한다.
-- Codex 자동 리뷰는 선택 사항이다(2026-10-14 사용자 지시). 완료를 기다리거나 재리뷰를 요청하지 않는다. 이미 달린 리뷰 댓글은 읽고 타당한 것만 반영한다.
+- Codex 자동 리뷰는 선택 사항이다. 완료를 기다리거나 재리뷰를 요청하지 않는다. 이미 달린 리뷰 댓글은 읽고 타당한 것만 반영한다.
 - (선택) 리뷰가 달렸다면 완료 상태·대상 커밋과 개별 댓글도 확인한다. CI 통과만으로 리뷰를 확인했다고 보지 않는다.
   지적은 최신 코드와 제품 요구에 맞춰 평가하고, 타당한 문제는 수정·검증한다. 리뷰 대상 이후 코드를 고쳤다면 바뀐 부분과
   기존 지적을 다시 확인한다. 반영한 내용과 반영하지 않은 이유는 PR 본문·사용자에게 요약한다.
-- 사용자가 일반 변경의 운영 배포까지 진행하도록 승인했다(2026-10-10). 큰 문제가 없는 변경은
+- 일반 변경은 운영 배포까지 진행해도 된다(사용자 승인). 큰 문제가 없는 변경은
   검증·커밋·push·PR·CI 확인·merge·운영 배포 확인까지 별도 재확인 없이 진행한다.
 - Conventional commit prefix: feat, fix, refactor, test, docs, chore. 커밋은 논리 단위로 나눈다.
 - 커밋 전 `pnpm check`(app 변경 시).

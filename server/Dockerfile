@@ -1,4 +1,4 @@
-# Server image, built by CI from this folder and run on the Lightsail instance (deploy/, docs/spec.md, 인프라).
+# Server image, built by CI from this folder and run on the Lightsail instance (deploy/, docs/PROJECT.md, 인프라).
 # docker build -t buddy-chat-server server/
 
 FROM eclipse-temurin:25-jdk AS build

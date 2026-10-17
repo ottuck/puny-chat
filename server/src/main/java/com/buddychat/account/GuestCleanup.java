@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 /**
- * Once a week, deletes guests that can never come back (docs/spec.md, 게스트 정리).
+ * Once a week, deletes guests that can never come back (docs/PROJECT.md, 게스트 정리).
  * Firebase deletes anonymous accounts 30 days after they were created, but their user, room and
  * messages stay on the server. A guest is deleted here like an account deleted in the app
  * ({@link AccountService}): a partner keeps the room and the buddy.

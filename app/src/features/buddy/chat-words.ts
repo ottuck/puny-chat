@@ -1,4 +1,4 @@
-// One-word messages the buddy answers (docs/spec.md, 채팅으로 돌보기): "밥", "청소" and "일" are care,
+// One-word messages the buddy answers (docs/PROJECT.md, 채팅으로 돌보기): "밥", "청소" and "일" are care,
 // done by the server (server: buddy/CareCommand, keep the lists in step); "춤" and "노래" are only
 // on the stage. Only the whole message counts; trailing "!", "~" or "." are fine.
 
