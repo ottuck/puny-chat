@@ -134,61 +134,55 @@ export const WINDOW_SILL_ROW = 16;
 
 // --- The wall clock (Lv.11) ---
 
-// A round clock in a wooden rim lit from the top left, a thin gold bezel, a cream face with long
-// ticks at 12, 3, 6 and 9 and dots between, a dark brown hour hand, a black minute hand and a gold
-// pin. Drawn finer than the room's other things (twice the cells for its size, CLOCK_FINE), being
-// one of the bigger ones on the wall.
-export const CLOCK_CELLS = 25;
+// A round clock in a wooden rim lit from the top left, a dark inner ring, a cream face with long
+// ticks at 12, 3, 6 and 9 and dots between, a brown hour hand, a black minute hand and a gold pin.
+// Drawn a little finer than the room's other things (CLOCK_FINE), not so much that it stands apart.
+export const CLOCK_CELLS = 19;
 // Its cells against the room's: the clock is as wide as 13 of those.
 export const CLOCK_FINE = 13 / CLOCK_CELLS;
-const CLOCK_MIDDLE = 12;
+const CLOCK_MIDDLE = 9;
 
 const CLOCK_FACE: Frame = Array.from({ length: CLOCK_CELLS }, (_, row) =>
   Array.from({ length: CLOCK_CELLS }, (_, col) => {
     const dy = row - CLOCK_MIDDLE;
     const dx = col - CLOCK_MIDDLE;
     const d = Math.hypot(dx, dy);
-    if (d > 12.4) return '.';
-    if (d > 11.4) return 'k';
+    if (d > 9.4) return '.';
+    if (d > 8.5) return 'k';
     // How much this point faces the light at the top left.
     const lit = d === 0 ? 0 : -(dx + dy) / (d * Math.SQRT2);
-    if (d > 9.5) {
-      if (d > 10.2 && d < 10.9 && lit > 0.75) return 'f';
-      return lit > 0.35 ? 'L' : lit < -0.35 ? 'q' : 'D';
-    }
-    if (d > 8.7) return lit < -0.3 ? 'Y' : 'y';
-    return d > 6.6 && lit < -0.55 ? 'e' : 'w';
+    if (d > 6.9) return lit > 0.35 ? 'L' : lit < -0.35 ? 'q' : 'D';
+    if (d > 6.1) return 'q';
+    return d > 4.9 && lit < -0.55 ? 'e' : 'W';
   }).join(''),
 );
 
-// The face at this time: the long hand for the minutes, the short thick one for the hour.
+// The face at this time: the long hand for the minutes, the short one for the hour.
 export function clockAt(hours: number, minutes: number): Frame {
   const cells = CLOCK_FACE.map((row) => row.split(''));
-  const at = (turns: number, radius: number, side = 0) => {
+  const at = (turns: number, radius: number) => {
     const angle = turns * 2 * Math.PI;
     return [
-      Math.round(CLOCK_MIDDLE - Math.cos(angle) * radius + Math.sin(angle) * side),
-      Math.round(CLOCK_MIDDLE + Math.sin(angle) * radius + Math.cos(angle) * side),
+      Math.round(CLOCK_MIDDLE - Math.cos(angle) * radius),
+      Math.round(CLOCK_MIDDLE + Math.sin(angle) * radius),
     ] as const;
   };
   for (let i = 0; i < 12; i++) {
-    const radii = i % 3 === 0 ? [6.6, 7.6] : [7.6];
+    const radii = i % 3 === 0 ? [4.7, 5.6] : [5.4];
     for (const radius of radii) {
       const [row, col] = at(i / 12, radius);
       cells[row][col] = i % 3 === 0 ? 'k' : 'n';
     }
   }
-  const hand = (turns: number, length: number, color: string, thick: boolean) => {
+  const hand = (turns: number, length: number, color: string) => {
     for (let t = 1; t <= length; t += 0.25) {
-      for (const side of thick ? [-0.45, 0.45] : [0]) {
-        const [row, col] = at(turns, t, side);
-        cells[row][col] = color;
-      }
+      const [row, col] = at(turns, t);
+      cells[row][col] = color;
     }
   };
-  hand(((hours % 12) + minutes / 60) / 12, 4.8, 'q', true);
-  hand(minutes / 60, 7.4, 'k', false);
-  cells[CLOCK_MIDDLE][CLOCK_MIDDLE] = 'y';
+  hand(((hours % 12) + minutes / 60) / 12, 3.3, 'q');
+  hand(minutes / 60, 5, 'k');
+  cells[CLOCK_MIDDLE][CLOCK_MIDDLE] = 'Y';
   return cells.map((row) => row.join(''));
 }
 

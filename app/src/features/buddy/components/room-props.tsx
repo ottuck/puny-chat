@@ -9,7 +9,6 @@ import { PixelSprite } from '../pixel/pixel-sprite';
 import {
   BALL,
   CAT_TAIL,
-  CLOCK_CELLS,
   CLOCK_FINE,
   clockAt,
   CRATE,
@@ -31,8 +30,8 @@ import {
   BUBBLE,
   CUCKOO,
   CUCKOO_DOOR,
-  CUCKOO_ROOF,
-  CUCKOO_ROOF_CELLS,
+  CUCKOO_CELLS,
+  cuckooAt,
   fishBowl,
   FURIN,
   GOLD_PALETTE,
@@ -41,7 +40,6 @@ import {
   LAMP_SHADE,
   LOW_TABLE,
   MOCHI,
-  PENDULUM,
   RADIO,
   SILL_POT,
   TEA,
@@ -514,11 +512,9 @@ export function WallClock({ scale, now }: { scale: number; now: Date }) {
   return <PixelSprite frame={face} palette={ROOM_PALETTE} scale={scale * CLOCK_FINE} />;
 }
 
-// The clock once a cuckoo clock (Lv.36): a roof over the face, the pendulum swinging below. The
-// cuckoo comes out on the hour and when the clock is tapped (`run` counts the taps).
-// In the room's cells, like the clock's 13.
-export const CUCKOO_CELLS = CUCKOO_ROOF_CELLS * CLOCK_FINE;
-const FACE_INSET = ((CUCKOO_ROOF_CELLS - CLOCK_CELLS) / 2) * CLOCK_FINE;
+// The clock once a cuckoo clock (Lv.36), its pendulum swinging. The cuckoo comes out on the hour
+// and when the clock is tapped (`run` counts the taps).
+export { CUCKOO_CELLS };
 
 export function CuckooClock({
   scale,
@@ -531,18 +527,14 @@ export function CuckooClock({
   tick: number;
   run: number;
 }) {
-  const onTheHour = now.getMinutes() === 0 ? now.getHours() : null;
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+  const swing = tick % 2 === 0 ? -2 : 2;
+  const frame = useMemo(() => cuckooAt(hours, minutes, swing), [hours, minutes, swing]);
+  const onTheHour = minutes === 0 ? hours : null;
   return (
-    <View style={{ width: CUCKOO_CELLS * scale }}>
-      <PixelSprite frame={CUCKOO_ROOF} palette={THINGS_PALETTE} scale={scale * CLOCK_FINE} />
-      <View style={{ marginLeft: FACE_INSET * scale, marginTop: -2 * scale * CLOCK_FINE }}>
-        <WallClock scale={scale} now={now} />
-        <PixelSprite
-          frame={PENDULUM[tick % 2]}
-          palette={THINGS_PALETTE}
-          scale={scale * CLOCK_FINE}
-        />
-      </View>
+    <View>
+      <PixelSprite frame={frame} palette={THINGS_PALETTE} scale={scale * CLOCK_FINE} />
       {run > 0 ? <CuckooOut key={`tap${run}`} scale={scale} /> : null}
       {onTheHour !== null ? <CuckooOut key={`hour${onTheHour}`} scale={scale} /> : null}
     </View>
