@@ -1,15 +1,24 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { type ComponentProps, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { type LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
+import {
+  Animated,
+  Easing,
+  type LayoutChangeEvent,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
 
 import { useColors } from '@/theme';
 
 import type { AlbumEntry } from '@/features/room/api';
 
 import type { BuddyView } from '../api';
-import { useMailbox } from '@/features/mailbox/mail';
+import { type Situation, useMailbox } from '@/features/mailbox/mail';
 import { MailboxSheet } from '@/features/mailbox/mailbox-sheet';
+import type { PushState } from '@/features/notifications/push';
 
 import { ALBUM_ICON, BATH_ICON, BATH_PALETTE, HOME_ICON, MAIL_ICON } from '../pixel/bath';
 import { isWinter } from '../pixel/looks';
@@ -58,7 +67,12 @@ type Props = ComponentProps<typeof BuddyStage> & {
   onBathe?: () => void;
   // Buddies gone their own way: the album's button sits beside the bath's once there are any.
   album?: AlbumEntry[];
+  // The account and device now, for the mail that is only for that (docs/fun-improvements.md, 우편함).
+  situation?: Situation;
+  onTurnOnPush?: () => Promise<PushState>;
 };
+
+const NATIVE_DRIVER = Platform.OS !== 'web';
 
 function CornerButton({
   icon,
@@ -69,24 +83,71 @@ function CornerButton({
   icon: typeof BATH_ICON;
   label: string;
   onPress: () => void;
-  // Something new inside (unread mail): a dot in its corner.
+  // Something new inside (unread mail): a dot in its corner, and every few seconds the button
+  // drops a little, as if a letter just fell in, and shakes, until it is read. Down rather than up:
+  // it sits at the stage's top edge, which clips.
   badge?: boolean;
 }) {
   const colors = useColors();
+  const [jump] = useState(() => new Animated.Value(0));
+  const [shake] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (!badge) return;
+    const step = (value: Animated.Value, toValue: number, duration: number) =>
+      Animated.timing(value, {
+        toValue,
+        duration,
+        easing: Easing.inOut(Easing.quad),
+        useNativeDriver: NATIVE_DRIVER,
+      });
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(900),
+        step(jump, 1, 160),
+        step(shake, -1, 70),
+        step(shake, 1, 90),
+        step(shake, -1, 90),
+        step(shake, 1, 90),
+        step(shake, 0, 70),
+        step(jump, 0, 200),
+        Animated.delay(1600),
+      ]),
+    );
+    loop.start();
+    return () => {
+      loop.stop();
+      jump.setValue(0);
+      shake.setValue(0);
+    };
+  }, [badge, jump, shake]);
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      hitSlop={6}
-      style={({ pressed }) => [
-        styles.button,
-        { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.7 : 1 },
-      ]}
+    <Animated.View
+      style={{
+        transform: [
+          { translateY: jump.interpolate({ inputRange: [0, 1], outputRange: [0, 6] }) },
+          { scale: jump.interpolate({ inputRange: [0, 1], outputRange: [1, 1.14] }) },
+          { rotate: shake.interpolate({ inputRange: [-1, 1], outputRange: ['-12deg', '12deg'] }) },
+        ],
+      }}
     >
-      <PixelSprite frame={icon} palette={BATH_PALETTE} scale={2} />
-      {badge ? <View style={[styles.badge, { borderColor: colors.surface }]} /> : null}
-    </Pressable>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        hitSlop={6}
+        style={({ pressed }) => [
+          styles.button,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
+            opacity: pressed ? 0.7 : 1,
+          },
+        ]}
+      >
+        <PixelSprite frame={icon} palette={BATH_PALETTE} scale={2} />
+        {badge ? <View style={[styles.badge, { borderColor: colors.surface }]} /> : null}
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -96,6 +157,8 @@ export function BuddyScene({
   startInBath = false,
   onBathe,
   album = [],
+  situation,
+  onTurnOnPush,
   ...props
 }: Props) {
   const { t } = useTranslation();
@@ -109,7 +172,7 @@ export function BuddyScene({
   const [kept, setKept] = useState<BuddyView | null>(startInBath ? props.buddy : null);
   // What home plays once the iris opens on the way back: a level up or an evolution missed.
   const [caughtUp, setCaughtUp] = useState<{ reaction: Reaction; after?: string } | null>(null);
-  const night = useSleeping(buddy.job);
+  const night = useSleeping(buddy.job, props.hour);
   // Where the buddy is at home, to close the iris on it; and where it closes this time.
   const buddyAt = useRef<number | null>(null);
   const onWalk = useCallback((middle: number) => {
@@ -118,7 +181,7 @@ export function BuddyScene({
   const [focusX, setFocusX] = useState<number | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [mailOpen, setMailOpen] = useState(false);
-  const mailbox = useMailbox(buddy.level);
+  const mailbox = useMailbox(buddy.level, situation);
 
   // The dream: only for an egg, only once on this device.
   const egg = buddy.stage === 'EGG';
@@ -331,6 +394,8 @@ export function BuddyScene({
         mails={mailbox.mails}
         read={mailbox.read}
         onClose={() => setMailOpen(false)}
+        guest={situation?.guestDaysLeft != null}
+        onTurnOnPush={onTurnOnPush}
       />
     </View>
   );

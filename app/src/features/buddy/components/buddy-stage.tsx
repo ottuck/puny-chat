@@ -420,9 +420,10 @@ function roomTime(clock: Date, hour?: number, date?: string): Date {
   );
 }
 
-// Local night hours, checked once a minute.
-export function useSleeping(job: BuddyJob | null): boolean {
-  const [hour, setHour] = useState(() => new Date().getHours());
+// Local night hours, checked once a minute. `at`: the hour to go by instead (the art preview).
+export function useSleeping(job: BuddyJob | null, at?: number): boolean {
+  const [now, setHour] = useState(() => new Date().getHours());
+  const hour = at ?? now;
   useEffect(() => {
     const timer = setInterval(() => setHour(new Date().getHours()), 60_000);
     return () => clearInterval(timer);
@@ -614,7 +615,7 @@ export function BuddyStage({
   const actTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tick = useTick(evolving || act === 'refuse' ? FAST_TICK_MS : TICK_MS);
   const job = buddy.job;
-  const night = useSleeping(job);
+  const night = useSleeping(job, hour);
   const season = useSeason(chosenSeason);
   const [width, setWidth] = useState(0);
   const [walking, setWalking] = useState(false);

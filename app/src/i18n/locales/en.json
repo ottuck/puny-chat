@@ -431,12 +431,8 @@
     "save": "Save"
   },
   "guest": {
-    "expiring_one": "{{count}} day left as a guest",
-    "expiring_other": "{{count}} days left as a guest",
-    "link": "Link account",
     "daysLeft_one": "{{count}} day left",
-    "daysLeft_other": "{{count}} days left",
-    "linkHint": "To keep chatting on another phone or browser"
+    "daysLeft_other": "{{count}} days left"
   },
   "demo": {
     "title": "Take a look",
@@ -467,15 +463,6 @@
     "endTitle": "{{buddy}} is all grown up!",
     "endBody": "Ready to raise your own buddy? Start right away, no sign-up.",
     "replay": "Watch again"
-  },
-  "push": {
-    "banner": {
-      "title": "🔔 Notifications are off",
-      "body": "On the web you turn them on yourself. Then you'll know when a message comes in.",
-      "turnOn": "Turn on notifications ›",
-      "installTitle": "🔔 Messages won't notify you here",
-      "installBody": "An iPhone notifies only from apps added to the home screen. Tap Safari's Share button → 'Add to Home Screen', then open puny-chat from your home screen."
-    }
   },
   "guide": {
     "title": "Raising your buddy",
@@ -607,7 +594,8 @@
     "unread": "Unread",
     "kind": {
       "letter": "Letter",
-      "notice": "News"
+      "notice": "News",
+      "guide": "Heads-up"
     },
     "mail": {
       "topLevelLetter": {
@@ -619,7 +607,41 @@
         "title": "The room changes every level",
         "body": "Every time your buddy levels up, something new comes to the room: guests at the window, a music box and a radio on the wall shelf, plush friends on the sill, a goldfish on the side table, a low table that turns into a kotatsu in winter. 50 in all.\n\nSome only come out in their season, like cherry petals, a wind chime, red dragonflies and kagami mochi. You can see when in the level rewards of the guide.\n\nThe top level is now 60, and the buddies who went their own way are in the memory album on the stage.",
         "from": "puny-chat"
+      },
+      "linkAccount": {
+        "title": "To keep chatting on another phone or browser",
+        "body": "You're using puny-chat as a guest. A guest lives only in this app (or browser): opened on another phone, in another browser or from the home screen, it starts over. After 30 days it's gone.\n\nLink an account in Settings and your buddy and chats stay with the account, wherever you open them.",
+        "from": "puny-chat"
+      },
+      "guestDays7": {
+        "title": "7 days left as a guest",
+        "body": "In 7 days the guest account goes away, and your buddy and chats with it.\n\nLink an account in Settings to keep everything as it is.",
+        "from": "puny-chat"
+      },
+      "guestDays3": {
+        "title": "3 days left as a guest",
+        "body": "In 3 days the guest account goes away, and your buddy and chats with it.\n\nLink an account in Settings to keep everything as it is.",
+        "from": "puny-chat"
+      },
+      "guestDays1": {
+        "title": "Your guest time ends tomorrow",
+        "body": "In a day the guest account goes away, and your buddy and chats with it.\n\nLink an account in Settings now to keep everything as it is.",
+        "from": "puny-chat"
+      },
+      "pushOff": {
+        "title": "Turn on message notifications",
+        "body": "On the web, notifications have to be turned on by you. With them on, you hear right away when your friend sends a message.",
+        "from": "puny-chat"
+      },
+      "pushInstall": {
+        "title": "Getting notifications on iPhone",
+        "body": "An iPhone sends notifications only to apps added to the home screen. Tap Safari's Share button → 'Add to Home Screen', then open puny-chat from the home screen.\n\nThe home-screen app keeps its own data, apart from Safari. If you're a guest, link an account first so the home-screen app opens the same buddy and chats.",
+        "from": "puny-chat"
       }
+    },
+    "action": {
+      "linkAccount": "Link an account",
+      "turnOnPush": "Turn on notifications"
     }
   },
   "room": {

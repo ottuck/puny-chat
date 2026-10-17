@@ -45,14 +45,14 @@ import tools.jackson.databind.json.JsonMapper;
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {"buddychat.push.grace-period=1s", "buddychat.push.receipt-delay=300ms"})
 @Import({TestcontainersConfiguration.class, TestJwtConfiguration.class, NotificationFlowTest.FakePush.class})
-class NotificationFlowTest {
+public class NotificationFlowTest {
 
     static final String YUKI_PHONE = "ExponentPushToken[yuki-phone]";
     static final String HENRY_PHONE = "ExponentPushToken[henry-phone]";
 
     /** Records what would have gone to Expo; tokens can be marked as rejected. */
-    static class FakeSender implements PushSender {
-        final List<PushMessage> sent = new CopyOnWriteArrayList<>();
+    public static class FakeSender implements PushSender {
+        public final List<PushMessage> sent = new CopyOnWriteArrayList<>();
         final Set<String> rejectedNow = ConcurrentHashMap.newKeySet();
         final Set<String> rejectedLater = ConcurrentHashMap.newKeySet();
 
@@ -76,9 +76,9 @@ class NotificationFlowTest {
     }
 
     /** Records what would have gone to browsers' push services; endpoints can be marked as gone. */
-    static class FakeWebPush extends WebPush {
+    public static class FakeWebPush extends WebPush {
         final List<String> sentTo = new CopyOnWriteArrayList<>();
-        final List<String> payloads = new CopyOnWriteArrayList<>();
+        public final List<String> payloads = new CopyOnWriteArrayList<>();
         final Set<String> gone = ConcurrentHashMap.newKeySet();
 
         FakeWebPush(NotificationProperties properties, Clock clock) throws GeneralSecurityException {
@@ -94,7 +94,7 @@ class NotificationFlowTest {
     }
 
     @TestConfiguration(proxyBeanMethods = false)
-    static class FakePush {
+    public static class FakePush {
         @Bean
         @Primary
         FakeSender fakeSender() {

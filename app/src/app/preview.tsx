@@ -200,7 +200,8 @@ const PAST_BUDDIES: AlbumEntry[] = (
 // before its job), &detail=1 (its details open, as from its name), &album=2 (that many buddies gone
 // their own way, in the memory album by the hot spring's button), &date=01-01 (the seasonal things
 // of that day), &cue=owl (a happening or a guest, two seconds in), &leave=1 (it goes its own way,
-// two seconds in).
+// two seconds in), &guest=7 (a guest with that many days left: the mailbox's letters for it),
+// &push=off or needsInstall (web: notifications not on, a letter about it).
 function Preview() {
   const colors = useColors();
   const params = useLocalSearchParams<{
@@ -212,6 +213,8 @@ function Preview() {
     job?: string;
     detail?: string;
     album?: string;
+    guest?: string;
+    push?: string;
     date?: string;
     cue?: string;
     leave?: string;
@@ -314,6 +317,11 @@ function Preview() {
               hour={hour}
               date={date}
               album={album}
+              situation={{
+                guestDaysLeft: params.guest ? Number(params.guest) : null,
+                push: params.push === 'off' || params.push === 'needsInstall' ? params.push : null,
+              }}
+              onTurnOnPush={async () => 'on'}
             />
             <View style={styles.foldRow}>
               <Chip

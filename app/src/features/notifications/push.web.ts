@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import i18n from '@/i18n';
 import { api } from '@/lib/api';
 
 // Web Push (docs/PROJECT.md, 웹 푸시): the browser subscribes with the server's key and the
@@ -72,7 +73,7 @@ async function subscribe(): Promise<void> {
   const { endpoint, keys } = subscription.toJSON();
   await api<void>('/api/me/web-push', {
     method: 'POST',
-    body: { endpoint, p256dh: keys?.p256dh, auth: keys?.auth },
+    body: { endpoint, p256dh: keys?.p256dh, auth: keys?.auth, language: i18n.language },
   });
 }
 

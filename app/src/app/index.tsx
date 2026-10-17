@@ -13,7 +13,6 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { PageTitle } from '@/components/page-title';
 import { useAuth } from '@/features/auth/auth-provider';
-import { GuestExpiryBanner } from '@/features/auth/components/guest-expiry-banner';
 import { useGuestDaysLeft } from '@/features/auth/guest-expiry';
 import { BuddySheet } from '@/features/buddy/components/buddy-sheet';
 import { BuddyScene } from '@/features/buddy/components/buddy-scene';
@@ -26,8 +25,7 @@ import { MessageComposer } from '@/features/chat/components/message-composer';
 import { EmptyChat } from '@/features/chat/components/empty-chat';
 import { MessageList } from '@/features/chat/components/message-list';
 import { useChat } from '@/features/chat/use-chat';
-import { PushBanner } from '@/features/notifications/components/push-banner';
-import { type PushState, registerForPush } from '@/features/notifications/push';
+import { type PushState, registerForPush, setPushEnabled } from '@/features/notifications/push';
 import { InviteSheet } from '@/features/room/components/invite-sheet';
 import type { Me, Room } from '@/features/room/api';
 import { useReadyRoom } from '@/features/room/room-provider';
@@ -83,7 +81,6 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
 
   // Asked here rather than at launch: by now the user knows what the app is for.
   const [push, setPush] = useState<PushState | null>(null);
-  const [pushBanner, setPushBanner] = useState(false);
   useEffect(() => {
     registerForPush()
       .then(setPush)
@@ -121,11 +118,17 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
           onPressHelp={() => router.push('/guide')}
           onPressPartner={partner ? () => setPartnerOpen(true) : undefined}
         />
-        <GuestExpiryBanner daysLeft={guestDaysLeft} onPress={() => router.push('/settings')} />
-        <PushBanner state={push} onChange={setPush} onVisible={setPushBanner} hold={dreaming} />
-        <GuideBanner hold={dreaming || pushBanner} onOpen={() => router.push('/guide')} />
+        <GuideBanner hold={dreaming} onOpen={() => router.push('/guide')} />
         <BuddyScene
           dreams
+          // Being a guest and notifications off come as letters in the stage's mailbox.
+          situation={{ guestDaysLeft, push }}
+          onTurnOnPush={() =>
+            setPushEnabled(true).then((next) => {
+              setPush(next);
+              return next;
+            })
+          }
           onDreaming={setDreaming}
           buddy={buddy}
           busy={busy}

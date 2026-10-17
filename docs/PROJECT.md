@@ -57,8 +57,9 @@ Yuki:  니가 치워
 - 게스트는 **30일**. Firebase의 익명 계정 자동 정리(30일)를 그대로 제품 정책으로 쓴다. 기기를 바꾸거나 브라우저 데이터를 지우면
   게스트 계정은 되찾을 수 없다.
 - 계정을 연결하면(웹 Google, 아이폰 Apple) uid가 그대로라 Buddy·방·대화가 이어진다. 이미 다른 사용자인 계정이면 합치지 않고 확인 후 전환한다.
-- 첫 화면에서 30일을 알리고, 설정에 남은 일수와 계정 연결 버튼. 마지막 7일은 채팅 위에 조용한 안내 줄(3일부터 강조색), 누르면 설정.
-  그 전에는 같은 자리에 "기기나 브라우저를 바꿔도 대화를 이어가려면 · 계정 연결" 줄을 닫을 때까지 둔다(닫은 것은 이 기기에 기억).
+- 첫 화면에서 30일을 알리고, 설정에 남은 일수와 계정 연결 버튼. 채팅 위를 가리지 않고 무대의 **우편함**으로 알린다(`docs/fun-improvements.md`의
+  우편함): 게스트인 동안 "기기를 바꿔도 대화를 이어가려면", 남은 날이 7·3·1일이 되면 그날의 편지(계정 연결 버튼). 같은 날은 푸시로도
+  보낸다(`account/GuestExpiryNotice`, 매일 19:00 일본 시간, 기기 언어로 한 번씩, 남은 날은 서버 사용자 생성 시각으로 앱처럼 올림).
   아이폰의 홈 화면 웹 앱은 Safari와 저장 공간이 달라 게스트로 다시 열면 새 사람이 된다. 그렇게 갈라진 사람은 아래 다시 초대로 잇는다.
   팝업으로 막지 않는다. 문구는 "회원가입"이 아니라 "계정 연결".
 - 만료된 게스트의 서버 데이터는 서버가 주 1회 지운다(아래 게스트 정리).
@@ -291,10 +292,10 @@ history_deletions  계정 삭제 중 영향받는 방 id(삭제 진행 표식)
 | POST | `/api/rooms/me/buddy/graduate` | 독립 `{ buddyName }` → 새 알의 Buddy |
 | POST | `/api/support/inquiries` | 문의 `{ requestId, description }` → 201 `{ id }` |
 | POST | `/api/rooms/me/partner-removal` | 상대 신고·내보내기 `{ requestId, roomId, targetId, report, reason?, description }` → 201 `{ id }` |
-| POST | `/api/me/push-tokens` | Expo 푸시 토큰 등록 `{ token }` → 204(다른 사용자의 토큰이면 옮긴다) |
+| POST | `/api/me/push-tokens` | Expo 푸시 토큰 등록 `{ token, language }` → 204(다른 사용자의 토큰이면 옮긴다) |
 | DELETE | `/api/me/push-tokens/{token}` | 토큰 삭제(자기 것만) → 204 |
 | GET | `/api/me/web-push/key` | VAPID 공개 키 `{ publicKey }` |
-| POST | `/api/me/web-push` | Web Push 구독 등록 `{ endpoint, p256dh, auth }` → 204 |
+| POST | `/api/me/web-push` | Web Push 구독 등록 `{ endpoint, p256dh, auth, language }` → 204 |
 | DELETE | `/api/me/web-push?endpoint=` | 구독 삭제(자기 것만) → 204 |
 
 | code | HTTP | 상황 |
@@ -466,7 +467,8 @@ App Store Guideline 5.1.1(v) 때문에 있다. 게스트는 Firebase가 30일 �
 
 ## 푸시 알림
 
-- **무엇을**: 상대의 새 텍스트 메시지만. 제목은 보낸 사람 이름, 본문은 메시지(180자까지).
+- **무엇을**: 상대의 새 텍스트 메시지. 제목은 보낸 사람 이름, 본문은 메시지(180자까지). 그리고 서버가 쓰는 안내(게스트의 남은 날):
+  기기마다 등록할 때 보낸 앱 언어(`language`, ko/ja/en)로 쓰고, 언어를 모르는 예전 토큰은 영어.
 - **누구에게**: 저장 **3초 뒤에도 그 메시지까지 읽지 않은** 다른 멤버의 모든 기기. 채팅을 보고 있는 앱은 1초 안에 읽음을 보내므로 가지 않는다.
   접속 여부로 판단하지 않는 이유: iOS가 앱을 멈춘 뒤 서버가 끊김을 알기까지 수십 초 동안 접속 중으로 보인다. 전송(ack)은 알림을 기다리지 않는다.
 - **앱 푸시**: 앱이 `expo-notifications`로 받은 Expo 푸시 토큰을 등록하고 서버가 Expo 푸시 API로 보낸다(APNs 키는 EAS가 관리). ticket과 약 15분 뒤의
@@ -477,10 +479,10 @@ App Store Guideline 5.1.1(v) 때문에 있다. 게스트는 Firebase가 30일 �
 ### 웹 푸시
 
 - 웹 앱은 `public/manifest.webmanifest`로 설치할 수 있고 `public/sw.js`(서비스 워커)가 알림을 띄우고 누르면 채팅을 연다. 권한은 이용자가 누를 때만
-  묻는다(브라우저 규칙): 설정의 알림 스위치나 채팅 위 안내 카드의 "알림 켜기". 켜면 서버 키로 구독해 등록하고, 끄거나 로그아웃하면 지운다. 앱을 열 때마다 다시 구독한다.
+  묻는다(브라우저 규칙): 설정의 알림 스위치나 우편함 편지의 "알림 켜기". 켜면 서버 키로 구독해 등록하고, 끄거나 로그아웃하면 지운다. 앱을 열 때마다 다시 구독한다.
 - 아이폰은 iOS 16.4부터, 홈 화면에 추가한 웹 앱에서만 받는다.
-- 웹은 알림이 꺼진 채 시작하므로, 알림이 꺼져 있거나(켜기 버튼) Safari라 받을 수 없으면(홈 화면에 추가하는 방법) 채팅 위에 안내 카드를 띄운다
-  (`notifications/components/push-banner.tsx`). 켜거나 닫을 때까지 보이고, 그동안 버디 안내 카드는 기다린다. 차단한 경우는 설정 카드만 안내한다.
+- 웹은 알림이 꺼진 채 시작하므로, 알림이 꺼져 있거나(켜기 버튼) Safari라 받을 수 없으면(홈 화면에 추가하는 방법, 게스트면 계정 연결 먼저)
+  우편함에 편지가 온다. 켜면 편지가 사라진다. 차단한 경우는 편지와 설정 카드가 브라우저 설정을 안내한다.
 - 서버(`notification/WebPush`, `WebPushCrypto`): RFC 8291(aes128gcm)로 암호화하고 VAPID(RFC 8292, ES256)로 서명해 WebClient로 보낸다. JDK 암호화만
   쓴다. 404/410이면 구독을 지운다. endpoint는 알려진 푸시 서비스(FCM, Mozilla, Apple, Windows)의 https 주소만 받는다(SSRF 방지).
 - VAPID 키는 Terraform `tls_private_key`(P-256)로 만들어 서버 `.env`에 넣는다. 없으면 실행마다 임시 키(로컬 개발).

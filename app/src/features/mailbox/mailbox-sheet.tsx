@@ -1,12 +1,15 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/button';
 import { WebFrame } from '@/components/web-frame';
+import type { PushState } from '@/features/notifications/push';
 import { useColors } from '@/theme';
 
-import { markRead, type Mail, type MailId } from './mail';
+import { markRead, type Mail, type MailAction, type MailId } from './mail';
 
 // The mailbox's list of letters and news, and one opened on a sheet of letter paper.
 
@@ -14,17 +17,24 @@ const PAPER = '#FFFBF2';
 const INK = '#4A3B33';
 const INK_LIGHT = '#8A7F78';
 const RULE = '#EFE3CF';
+const ICONS: Record<Mail['kind'], string> = { letter: '💌', notice: '📮', guide: '📌' };
 
 export function MailboxSheet({
   visible,
   mails,
   read,
   onClose,
+  guest = false,
+  onTurnOnPush,
 }: {
   visible: boolean;
   mails: (Mail & { date: string })[];
   read: MailId[];
   onClose: () => void;
+  // Whether the account button still has something to do.
+  guest?: boolean;
+  // Must run straight from the tap: the browser asks for permission only while handling one.
+  onTurnOnPush?: () => Promise<PushState>;
 }) {
   const colors = useColors();
   const { t, i18n } = useTranslation();
@@ -37,10 +47,25 @@ export function MailboxSheet({
       month: 'short',
       day: 'numeric',
     }).format(new Date(`${day}T00:00:00`));
+  const [denied, setDenied] = useState(false);
   const close = () => {
     setOpen(null);
+    setDenied(false);
     onClose();
   };
+  const act = (action: MailAction) => {
+    if (action === 'linkAccount') {
+      close();
+      router.push('/settings');
+      return;
+    }
+    onTurnOnPush?.()
+      .then((next) => setDenied(next === 'denied'))
+      .catch((e) => console.warn('turning on notifications failed', e));
+  };
+  const action = opened?.action;
+  const showAction =
+    action === 'turnOnPush' ? !!onTurnOnPush && !denied : action === 'linkAccount' && guest;
 
   return (
     <Modal
@@ -77,6 +102,14 @@ export function MailboxSheet({
                 <View style={styles.rule} />
                 <Text style={styles.paperBody}>{t(`mailbox.mail.${opened.id}.body`)}</Text>
                 <Text style={styles.paperSign}>{t(`mailbox.mail.${opened.id}.from`)}</Text>
+                {denied ? (
+                  <Text style={styles.paperNote}>{t('settings.notificationsDeniedWeb')}</Text>
+                ) : null}
+                {action && showAction ? (
+                  <View style={styles.paperAction}>
+                    <Button label={t(`mailbox.action.${action}`)} onPress={() => act(action)} />
+                  </View>
+                ) : null}
               </View>
             ) : (
               <>
@@ -97,7 +130,7 @@ export function MailboxSheet({
                           { backgroundColor: colors.surface, opacity: pressed ? 0.7 : 1 },
                         ]}
                       >
-                        <Text style={styles.icon}>{mail.kind === 'letter' ? '💌' : '📮'}</Text>
+                        <Text style={styles.icon}>{ICONS[mail.kind]}</Text>
                         <View style={styles.itemText}>
                           <Text style={[styles.kind, { color: colors.accent }]}>
                             {t(`mailbox.kind.${mail.kind}`)}
@@ -226,6 +259,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 26,
     color: INK,
+  },
+  paperNote: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: INK_LIGHT,
+    marginTop: 16,
+  },
+  paperAction: {
+    marginTop: 20,
   },
   paperSign: {
     alignSelf: 'flex-end',

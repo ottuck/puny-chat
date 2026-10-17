@@ -12,6 +12,8 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -36,6 +38,10 @@ public class NotificationService {
     private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
     private static final Pattern EXPO_TOKEN = Pattern.compile("^Expo(nent)?PushToken\\[[^\\]]{1,200}]$");
     private static final int MAX_BODY_LENGTH = 180;
+    private static final Set<String> LANGUAGES = Set.of("ko", "ja", "en");
+
+    /** A notice the server writes itself (not a message), in the device's language. */
+    public record Notice(String title, String body) {}
 
     private final ReactiveMongoTemplate mongo;
     private final PushSender sender;
@@ -66,25 +72,30 @@ public class NotificationService {
     }
 
     /** Remembers the device's token for the user, moving it from whoever had it before. */
-    Mono<Void> register(User user, @Nullable String token) {
+    Mono<Void> register(User user, @Nullable String token, @Nullable String language) {
         if (token == null || !EXPO_TOKEN.matcher(token).matches()) {
             return Mono.error(new ApiException(HttpStatus.BAD_REQUEST, "INVALID_REQUEST"));
         }
         return mongo.findAndReplace(
                         query(where("_id").is(token)),
-                        new PushToken(token, user.id(), Instant.now(clock), null, null),
+                        new PushToken(token, user.id(), Instant.now(clock), null, null, language(language)),
                         FindAndReplaceOptions.options().upsert())
                 .then();
     }
 
     /** Remembers a browser's Web Push subscription for the user, as with an app's token. */
-    Mono<Void> registerWeb(User user, @Nullable String endpoint, @Nullable String p256dh, @Nullable String auth) {
+    Mono<Void> registerWeb(
+            User user,
+            @Nullable String endpoint,
+            @Nullable String p256dh,
+            @Nullable String auth,
+            @Nullable String language) {
         if (endpoint == null || p256dh == null || auth == null || !WebPush.isPushService(endpoint)) {
             return Mono.error(new ApiException(HttpStatus.BAD_REQUEST, "INVALID_REQUEST"));
         }
         return mongo.findAndReplace(
                         query(where("_id").is(endpoint)),
-                        new PushToken(endpoint, user.id(), Instant.now(clock), p256dh, auth),
+                        new PushToken(endpoint, user.id(), Instant.now(clock), p256dh, auth, language(language)),
                         FindAndReplaceOptions.options().upsert())
                 .then();
     }
@@ -97,6 +108,57 @@ public class NotificationService {
     Mono<Void> unregister(User user, String token) {
         return mongo.remove(query(where("_id").is(token).and("userId").is(user.id())), PushToken.class)
                 .then();
+    }
+
+    /**
+     * Sends a notice to all of the user's devices, each written for its language (null when the
+     * device has not said). A failure only means a missed notice.
+     */
+    public Mono<Void> notify(String userId, Function<@Nullable String, Notice> write) {
+        return mongo.find(query(where("userId").is(userId)), PushToken.class)
+                .collectList()
+                .flatMap(tokens -> {
+                    List<PushToken> apps =
+                            tokens.stream().filter(token -> !token.isWeb()).toList();
+                    Mono<Void> toApps = apps.isEmpty()
+                            ? Mono.empty()
+                            : sender.send(apps.stream()
+                                            .map(token -> {
+                                                Notice notice = write.apply(token.language());
+                                                return new PushMessage(
+                                                        token.token(),
+                                                        notice.title(),
+                                                        notice.body(),
+                                                        "default",
+                                                        Map.of());
+                                            })
+                                            .toList())
+                                    .flatMap(sent -> {
+                                        checkReceiptsLater(sent.pending());
+                                        return forget(sent.invalidTokens());
+                                    });
+                    Mono<Void> toBrowsers = Flux.fromIterable(tokens)
+                            .filter(PushToken::isWeb)
+                            .flatMap(subscription -> {
+                                Notice notice = write.apply(subscription.language());
+                                String payload = json.writeValueAsString(
+                                        Map.of("title", notice.title(), "body", notice.body(), "url", "/"));
+                                return webPush.send(subscription, payload)
+                                        .filter(gone -> gone)
+                                        .map(gone -> subscription.token());
+                            })
+                            .collectList()
+                            .flatMap(this::forget);
+                    return Mono.when(toApps, toBrowsers);
+                })
+                .onErrorResume(e -> {
+                    log.warn("Could not send a notice: {}", e.toString());
+                    return Mono.empty();
+                });
+    }
+
+    private static @Nullable String language(@Nullable String language) {
+        return language != null && LANGUAGES.contains(language) ? language : null;
     }
 
     /** Forgets all of the user's devices (account deletion). */
