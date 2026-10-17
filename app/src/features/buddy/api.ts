@@ -13,7 +13,7 @@ export const GROWN_LEVEL = 20;
 // server: BuddyRules.BABY_AT, CHILD_AT, ADULT_AT, JOB_AT
 export const NEXT_STEP_AT: Record<BuddyStage, number> = { EGG: 3, BABY: 5, CHILD: 10, ADULT: 12 };
 // Levels where the job may be changed once (from the top level, any time). server: BuddyRules.JOB_CHANGE_FROM
-export const JOB_CHANGE_LEVELS = [20, 30, 40];
+export const JOB_CHANGE_LEVELS = [20, 30, 40, 50];
 
 // Computed by the server (server/src/main/java/com/buddychat/buddy/BuddyView.java); the app only
 // displays it and does not re-derive the rules.
@@ -37,7 +37,7 @@ export type BuddyView = {
   job: BuddyJob | null;
   // As a child, the job it is heading for so far.
   leaning: BuddyJob | null;
-  // The job may be changed now: once at 20, 30 and 40, any time from 50.
+  // The job may be changed now: once at 20, 30, 40 and 50, any time from 60.
   canChangeJob: boolean;
   // While it cannot: the level the next change opens at.
   jobChangeAt: number | null;

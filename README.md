@@ -64,8 +64,8 @@ at you, no daily missions. Just **having something to raise together** makes the
 - Over time it gets hungry and poops. Tap the bowl or the 💩, or just send "food" in the chat, and the chat notes who did it
 - Left alone it dances and sings. Once a kid, it talks too: "Long time no see!", "Have you eaten?"
 - **It never dies.** Forget it for a few days and it's fine; a little care and it's back on its feet
-- A little after it grows up (Lv.12), it takes a job from how you two raised it (chef, gardener, radio DJ, writer, barista), each with its own look and spot on the stage. You can change it once each at level 20, 30 and 40, and any time from 50. It dresses up for the season (bunny ears in spring, antlers at Christmas) and now and then a butterfly lands on it or a shooting star crosses the sky
-- Every level or two the room gets something: a toy box, a window whose sky follows your clock, a music box, new rugs and floors, a tree that bears fruit, and guests at the window (a snail, a sparrow, a stray cat). From level 20 it can go its own way; keep it to level 50 and the room keeps growing (below)
+- A little after it grows up (Lv.12), it takes a job from how you two raised it (chef, gardener, radio DJ, writer, barista), each with its own look and spot on the stage. You can change it once each at level 20, 30, 40 and 50, and any time from 60. It dresses up for the season (bunny ears in spring, antlers at Christmas) and now and then a butterfly lands on it or a shooting star crosses the sky
+- Every level the room gets something: a toy box, a window whose sky follows your clock, a music box and a radio on the sill, a goldfish bowl, a low table that turns into a kotatsu in winter, plush friends, new rugs and floors, a tree that bears fruit, and guests at the window (a snail, a sparrow, a stray cat, an owl at night, a red dragonfly in autumn). From level 20 it can go its own way; keep it to level 60 and the room keeps growing (below)
 - **A hot spring** to send it to, and **a dream** of what it will become before the first egg (below)
 
 **🤝 For two**
@@ -83,7 +83,7 @@ at you, no daily missions. Just **having something to raise together** makes the
 
 ### From an egg to its own way
 
-Nothing is pushed out of the room: a spot not used yet fills, or a thing already there gets finer. When the buddy goes its own way it packs its things in a bundle, waves goodbye and walks off, and a new egg arrives in a bare room. Only its portrait stays on the wall.
+Nothing is pushed out of the room: a spot not used yet fills, or a thing already there gets finer. When the buddy goes its own way it packs its things in a bundle, waves goodbye and walks off, and a new egg arrives in a bare room. Its photo goes into the memory album, opened from the button beside the hot spring.
 
 <div align="center">
 <img src="docs/images/room-story.png" width="640" alt="The room from level 9 to 40: a toy box, a music box on the windowsill, a snail, a dusk window, a sparrow, a cat's tail, a toy train, fireflies at night; then the buddy moving out with a bundle and a new egg in a bare room">

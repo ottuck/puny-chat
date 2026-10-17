@@ -9,7 +9,6 @@ import {
   CAT_TAIL,
   clockAt,
   CRATE,
-  CUSHION,
   FIREFLY,
   LAMP_LIT,
   LAMP,
@@ -25,6 +24,31 @@ import {
   WINDOW,
   WOOD_SWATCH,
 } from '../pixel/room';
+import {
+  BEAR,
+  BOOKS,
+  BUNNY,
+  CAT_FACE,
+  CUCKOO_ROOF,
+  DRAGONFLY,
+  fishBowl,
+  FURIN,
+  GOLD_PALETTE,
+  GRAMOPHONE,
+  KOTATSU,
+  LADYBUG,
+  LAMP_SHADE,
+  MOCHI,
+  OWL,
+  PETALS_ICON,
+  RADIO,
+  RAINBOW,
+  SILL_POT,
+  SQUIRREL,
+  SWALLOW,
+  TEA,
+  THINGS_PALETTE,
+} from '../pixel/room-things';
 import { bowl, PLANTS, PROP_PALETTE } from '../pixel/sprites';
 import { type Reward, REWARDS } from './stage-decor';
 
@@ -34,6 +58,7 @@ import { type Reward, REWARDS } from './stage-decor';
 
 const prop = (frame: Frame) => ({ frame, palette: PROP_PALETTE });
 const room = (frame: Frame) => ({ frame, palette: ROOM_PALETTE });
+const thing = (frame: Frame) => ({ frame, palette: THINGS_PALETTE });
 
 const REWARD_ICON: Record<Reward, { frame: Frame; palette: Palette }> = {
   plant1: prop(PLANTS[1][0]),
@@ -61,7 +86,31 @@ const REWARD_ICON: Record<Reward, { frame: Frame; palette: Palette }> = {
   catTail: room(CAT_TAIL[0]),
   plant5: prop(PLANTS[5][0]),
   bowl3: prop(bowl(true, 3)),
-  cushion: room(CUSHION),
+  ladybug: thing(LADYBUG[0]),
+  radio: thing(RADIO[1]),
+  sillPot: thing(SILL_POT[0]),
+  fishbowl: thing(fishBowl(0, false)),
+  furin: thing(FURIN[0]),
+  dragonfly: thing(DRAGONFLY[0]),
+  bear: thing(BEAR),
+  cuckoo: thing([...CUCKOO_ROOF, ...clockAt(10, 10).map((row) => `..${row}..`)]),
+  kotatsu: thing(KOTATSU),
+  swallow: thing(SWALLOW[0]),
+  sakura: thing(PETALS_ICON),
+  goldMusicBox: { frame: MUSIC_BOX[0], palette: GOLD_PALETTE },
+  tea: thing(TEA),
+  owl: thing(OWL[0]),
+  lampShade: { frame: [...LAMP_SHADE, ...LAMP.slice(LAMP_SHADE.length)], palette: LAMP_LIT },
+  mochi: thing(MOCHI),
+  rug4: room(RUGS[4]),
+  books: thing(BOOKS),
+  rainbow: thing(RAINBOW),
+  squirrel: thing(SQUIRREL),
+  gramophone: thing(GRAMOPHONE[0]),
+  waterPlants: thing(fishBowl(1, true)),
+  catFace: thing(CAT_FACE[0]),
+  bunny: thing(BUNNY),
+  sillFlower: thing(SILL_POT[1]),
 };
 
 export function rewardIcon(reward: Reward, size = 30) {

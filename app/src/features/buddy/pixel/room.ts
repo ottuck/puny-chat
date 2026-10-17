@@ -2,7 +2,7 @@ import type { Frame, Palette } from './pixel-sprite';
 
 // The room's things that come with levels (docs/fun-improvements.md, 방 소품): a crate that fills with
 // toys, a window whose sky follows the device's clock, a wall clock, a music box, rugs, a standing
-// lamp, a gold cushion, and the guests that drop by (a snail on the glass, a sparrow on the sill, a
+// lamp, and the guests that drop by (a snail on the glass, a sparrow on the sill, a
 // cat's tail, a toy train across the floor). And the bundle a buddy carries when it moves out.
 
 export const ROOM_PALETTE: Palette = {
@@ -49,7 +49,7 @@ export const ROOM_PALETTE: Palette = {
   K: '#5E6B4A', // the cloth edge
 };
 
-// --- The window (Lv.12) ---
+// --- The window (Lv.9) ---
 
 // Its sky follows the device's clock: day, dusk, night. One grid, three palettes: the sun and the
 // moon share a disc (`B` is lit by day and sky at night, which bites the crescent out of it), the
@@ -101,38 +101,38 @@ export const SKY_PALETTES: Record<SkyTime, Palette> = {
   night: { ...ROOM_PALETTE, ...SKIES.night },
 };
 
-// A cream frame with a cross of glazing bars and a sill; through it a cloud, the sun (or the moon
-// and stars) and green hills.
+// A cream frame with a cross of glazing bars and a sill, wide so the sky shows past what stands on
+// the sill; through it clouds, the sun (or the moon and stars) and green hills.
 // prettier-ignore
 export const WINDOW: Frame = [
-  '.kkkkkkkkkkkkkkkkkkkk.',
-  '.kffffffffffffffffffk.',
-  '.kfkkkkkkkkkkkkkkkkFk.',
-  '.kfkssssstfftssssskFk.',
-  '.kfksccsssffssbbsskFk.',
-  '.kfkcccccsffsbbbBskFk.',
-  '.kfkssssssffsbbBBskFk.',
-  '.kfkssstssffssbBsskFk.',
-  '.kfkssssssfftssssskFk.',
-  '.kfkffffffffffffffkFk.',
-  '.kfkSSSSSSffSSSSSSkFk.',
-  '.kfkSSSSggffggSSSSkFk.',
-  '.kfkSSggggffgggSSgkFk.',
-  '.kfkggggGgffgGggggkFk.',
-  '.kfkkkkkkkkkkkkkkkkFk.',
-  '.kFFFFFFFFFFFFFFFFFFk.',
-  'kkkkkkkkkkkkkkkkkkkkkk',
-  'kffffffffffffffffffffk',
-  'kFFFFFFFFFFFFFFFFFFFFk',
-  'kkkkkkkkkkkkkkkkkkkkkk',
+  '.kkkkkkkkkkkkkkkkkkkkkkkkkk.',
+  '.kffffffffffffffffffffffffk.',
+  '.kfkkkkkkkkkkkkkkkkkkkkkkFk.',
+  '.kfkssssssstsffsssssstsskFk.',
+  '.kfksccssssssffsssssbbsskFk.',
+  '.kfkcccccsstsffssssbbbBskFk.',
+  '.kfksssssssssfftsssbbBBskFk.',
+  '.kfkssstsssssffsssssbBsskFk.',
+  '.kfksssssssssffsstsssssskFk.',
+  '.kfkffffffffffffffffffffkFk.',
+  '.kfkSSSSSSSSSffSSSSSSSSSkFk.',
+  '.kfkSSSSSSgggffggSSSSSSSkFk.',
+  '.kfkSSSggggggffgggSSSSggkFk.',
+  '.kfkggggggGggffgGgggggGgkFk.',
+  '.kfkkkkkkkkkkkkkkkkkkkkkkFk.',
+  '.kFFFFFFFFFFFFFFFFFFFFFFFFk.',
+  'kkkkkkkkkkkkkkkkkkkkkkkkkkkk',
+  'kffffffffffffffffffffffffffk',
+  'kFFFFFFFFFFFFFFFFFFFFFFFFFFk',
+  'kkkkkkkkkkkkkkkkkkkkkkkkkkkk',
 ];
 
 // The glass, in the window's cells: where the guests at the window show.
-export const WINDOW_GLASS = { col: 4, row: 3, cols: 14, rows: 11 };
+export const WINDOW_GLASS = { col: 4, row: 3, cols: 20, rows: 11 };
 // The sill's top row, where a sparrow perches.
 export const WINDOW_SILL_ROW = 16;
 
-// --- The wall clock (Lv.18) ---
+// --- The wall clock (Lv.11) ---
 
 // A round wooden clock; the hands are drawn for the time.
 // prettier-ignore
@@ -177,7 +177,7 @@ export function clockAt(hours: number, minutes: number): Frame {
   return cells.map((row) => row.join(''));
 }
 
-// --- The left of the floor, until the job's station comes (Lv.6, Lv.9) ---
+// --- The left of the floor, until the job's station comes (Lv.4, Lv.8) ---
 
 // prettier-ignore
 const CRATE_ROWS: Frame = [
@@ -220,7 +220,7 @@ export const BALL: Frame = [
   '.kkkk.',
 ];
 
-// --- The music box (Lv.20) ---
+// --- The music box (Lv.15) ---
 
 // The lid up with its mirror, the comb's drum in gold, a heart inlaid in front and the crank at the
 // side. Playing, the drum's pins turn and the crank goes round.
@@ -259,7 +259,7 @@ export const MUSIC_BOX: [Frame, Frame] = [[
   'kkkkkkkkkkkkk..',
 ]];
 
-// --- The standing lamp (Lv.36) ---
+// --- The standing lamp (Lv.42): a tall floor lamp ---
 
 // prettier-ignore
 export const LAMP: Frame = [
@@ -282,6 +282,14 @@ export const LAMP: Frame = [
   '...kNk...',
   '...kNk...',
   '...kNk...',
+  '...kNk...',
+  '...kNk...',
+  '...kNk...',
+  '...kNk...',
+  '...kNk...',
+  '...kNk...',
+  '...kNk...',
+  '...kNk...',
   '..kkkkk..',
   '.knnnnnk.',
   'kNNNNNNNk',
@@ -291,25 +299,9 @@ export const LAMP: Frame = [
 // At night the shade glows.
 export const LAMP_LIT: Palette = { ...ROOM_PALETTE, l: '#FFF2BF', j: '#FFD166' };
 
-// --- The gold cushion (Lv.50) ---
+// --- Rugs (from the egg on; a new pattern at Lv.7, 16, 29, and the last at 51) ---
 
-// A square floor cushion seen a little from above: stitched across to a tuft in the middle, its
-// thick front edge below, tassels at the corners.
-// prettier-ignore
-export const CUSHION: Frame = [
-  'y.kkkkkkkkkkkkkk.y',
-  '.kzwwzzzzzzzzzzzk.',
-  'kzwzZzzzzzzzzZzzZk',
-  'kzzzzZzzzzzzZzzzZk',
-  'kzzzzzzzyyzzzzzZZk',
-  'kZzzzZzzzzzzZzzZZk',
-  '.kZZZZZZZZZZZZZZk.',
-  'y.kkkkkkkkkkkkkk.y',
-];
-
-// --- Rugs (from the egg on; a new pattern at Lv.16, 24, 31) ---
-
-export type RugTier = 0 | 1 | 2 | 3;
+export type RugTier = 0 | 1 | 2 | 3 | 4;
 
 // prettier-ignore
 export const RUGS: Record<RugTier, Frame> = {
@@ -342,6 +334,15 @@ export const RUGS: Record<RugTier, Frame> = {
     '.' + 'TWTTTTTTTTTT' + 'TppyyyppT' + 'TTTTTTTTTTWT' + '.',
     '..' + 'TTTTWTTTTTT' + 'TTppTppTT' + 'TTTTTTWTTTT' + '..',
     '.....' + 'T'.repeat(25) + '.....',
+  ],
+  // The last one: a big cream oval with a gold border and lavender and pink flowers.
+  4: [
+    '......' + 'y'.repeat(32) + '......',
+    '...yY' + 'W'.repeat(34) + 'Yy...',
+    '.yYW' + 'vWWpWW'.repeat(6) + 'WYy.',
+    '.yYW' + 'WpWWvW'.repeat(6) + 'WYy.',
+    '...yY' + 'W'.repeat(34) + 'Yy...',
+    '......' + 'y'.repeat(32) + '......',
   ],
 };
 

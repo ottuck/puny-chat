@@ -1,6 +1,6 @@
 import { randomUUID } from 'expo-crypto';
 import { Redirect, useLocalSearchParams } from 'expo-router';
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -38,6 +38,11 @@ const HAPPENINGS = [
   'sparrow',
   'catTail',
   'train',
+  'ladybug',
+  'dragonfly',
+  'swallow',
+  'owl',
+  'squirrel',
 ] as const;
 const MOODS: Mood[] = ['laugh', 'love', 'cheer', 'comfort', 'goodnight', 'morning'];
 const REACTIONS: ReactionKind[] = [
@@ -57,6 +62,9 @@ const REACTIONS: ReactionKind[] = [
 const LEVELS = [1, ...REWARDS.map((entry) => entry.level)];
 // The room's window and lamp by the hour: day, dusk, night.
 const HOURS = [12, 18, 22];
+// Days for the room's seasonal things (stage-decor.tsx, SEASONAL): the New Year (kotatsu, mochi),
+// spring (petals), summer (wind chime), autumn (dragonflies).
+const DATES = ['01-01', '04-01', '08-01', '10-01'];
 
 function buddyOf(
   stage: BuddyStage,
@@ -159,19 +167,26 @@ function PoseSheet({
   );
 }
 
-// Buddies gone their own way, for the photos on the wall (&album=).
-const PAST_BUDDIES: AlbumEntry[] = ['Mochi', 'Dango', 'Kinako'].map((name, i) => ({
+// Buddies gone their own way, for the memory album (&album=): two with jobs, one without.
+const PAST_BUDDIES: AlbumEntry[] = (
+  [
+    ['Mochi', 'GARDENER'],
+    ['Dango', 'BARISTA'],
+    ['Kinako', null],
+  ] as const
+).map(([name, job], i) => ({
   name,
   bornAt: `2026-0${i + 1}-01T00:00:00Z`,
-  graduatedAt: `2026-0${i + 2}-01T00:00:00Z`,
-  job: null,
+  graduatedAt: `2026-0${i + 2}-0${i + 3}T00:00:00Z`,
+  job,
 }));
 
 // A link can open it on a scene, for taking pictures of it (README):
 // /preview?scene=bath, ?scene=bath&season=CHRISTMAS (snowing), ?scene=cut2 (a cut of the dream),
 // ?stage=CHILD&level=8 (the room at that level), &hour=22 (the room at night), &job=none (a grown-up
 // before its job), &detail=1 (its details open, as from its name), &album=2 (that many buddies gone
-// their own way, their photos on the wall).
+// their own way, in the memory album by the hot spring's button), &date=01-01 (the seasonal things
+// of that day), &cue=owl (a happening or a guest, two seconds in).
 function Preview() {
   const colors = useColors();
   const params = useLocalSearchParams<{
@@ -183,6 +198,8 @@ function Preview() {
     job?: string;
     detail?: string;
     album?: string;
+    date?: string;
+    cue?: string;
   }>();
   const linkedCut = params.scene?.startsWith('cut') ? Number(params.scene.slice(3)) - 1 : null;
   const linkedSeason = SEASONS.find((s) => s === params.season);
@@ -196,6 +213,14 @@ function Preview() {
   const [hungry, setHungry] = useState(false);
   const [poops, setPoops] = useState(0);
   const [cue, setCue] = useState<Cue | null>(null);
+  // A happening named in the link (&cue=owl), shortly after the stage is up: it ignores what was
+  // asked before it mounted.
+  const linkedCue = HAPPENINGS.find((h) => h === params.cue);
+  useEffect(() => {
+    if (!linkedCue) return;
+    const timer = setTimeout(() => setCue({ id: randomUUID(), kind: linkedCue }), 2000);
+    return () => clearTimeout(timer);
+  }, [linkedCue]);
   const [reaction, setReaction] = useState<Reaction | null>(null);
   const [partnerPet, setPartnerPet] = useState<{ id: string } | null>(null);
   const [partnerHere, setPartnerHere] = useState(false);
@@ -215,6 +240,9 @@ function Preview() {
   const [hour, setHour] = useState<number | undefined>(
     params.hour ? Number(params.hour) : undefined,
   );
+
+  // The day of the room's seasonal things (undefined: today).
+  const [date, setDate] = useState<string | undefined>(params.date);
 
   const album = PAST_BUDDIES.slice(0, Number(params.album ?? 0));
 
@@ -251,6 +279,7 @@ function Preview() {
           season={season}
           plantKind={plantKind}
           hour={hour}
+          date={date}
           album={album}
         />
         <BuddySheet
@@ -295,6 +324,12 @@ function Preview() {
           <Chip label="now" onPress={() => setHour(undefined)} active={hour === undefined} />
           {HOURS.map((h) => (
             <Chip key={h} label={`${h}:10`} onPress={() => setHour(h)} active={h === hour} />
+          ))}
+        </Group>
+        <Group title="day (seasonal things)">
+          <Chip label="today" onPress={() => setDate(undefined)} active={date === undefined} />
+          {DATES.map((d) => (
+            <Chip key={d} label={d} onPress={() => setDate(d)} active={d === date} />
           ))}
         </Group>
         <Group title="plant kind (Lv.13–18)">

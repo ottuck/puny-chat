@@ -158,7 +158,6 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
           work();
           setCue({ id: randomUUID(), kind: 'work' });
         }}
-        album={room.album}
         together={
           partner
             ? { myId: me.id, partnerId: partner.id, partnerName: partner.displayName ?? '' }

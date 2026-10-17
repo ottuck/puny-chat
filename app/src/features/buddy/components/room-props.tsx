@@ -11,7 +11,6 @@ import {
   CAT_TAIL,
   clockAt,
   CRATE,
-  CUSHION,
   LAMP,
   LAMP_LIT,
   MUSIC_BOX,
@@ -26,7 +25,36 @@ import {
   WINDOW_GLASS,
   WINDOW_SILL_ROW,
 } from '../pixel/room';
+import {
+  BUBBLE,
+  CUCKOO,
+  CUCKOO_ROOF,
+  fishBowl,
+  FURIN,
+  GOLD_PALETTE,
+  GRAMOPHONE,
+  KOTATSU,
+  LAMP_SHADE,
+  LOW_TABLE,
+  MOCHI,
+  PENDULUM,
+  RADIO,
+  SILL_POT,
+  TEA,
+  THINGS_PALETTE,
+} from '../pixel/room-things';
 import { BUDDY_PALETTE, NOTE, PROP_PALETTE, SPARKLE } from '../pixel/sprites';
+import {
+  CatFace,
+  Dragonfly,
+  type Glass,
+  Ladybug,
+  Owl,
+  Petals,
+  Rainbow,
+  Squirrel,
+  Swallow,
+} from './window-things';
 
 // The room's things that come with levels (docs/fun-improvements.md, 방 소품), drawn on the stage:
 // what stands and hangs in the room (stage-decor.tsx places them), the guests that drop by, and
@@ -34,13 +62,30 @@ import { BUDDY_PALETTE, NOTE, PROP_PALETTE, SPARKLE } from '../pixel/sprites';
 
 const NATIVE_DRIVER = Platform.OS !== 'web';
 
-// The guests that come now and then, like the small happenings (buddy-stage.tsx picks them).
-export type Guest = 'snail' | 'sparrow' | 'catTail' | 'train';
+// The guests that come now and then, like the small happenings (buddy-stage.tsx picks them). All
+// but the train come to the window.
+export const GUESTS = [
+  'snail',
+  'sparrow',
+  'catTail',
+  'train',
+  'ladybug',
+  'dragonfly',
+  'swallow',
+  'owl',
+  'squirrel',
+] as const;
+export type Guest = (typeof GUESTS)[number];
 export const GUEST_MS: Record<Guest, number> = {
   snail: 7000,
   sparrow: 4200,
   catTail: 4200,
   train: 4200,
+  ladybug: 6000,
+  dragonfly: 5000,
+  swallow: 2600,
+  owl: 5000,
+  squirrel: 4200,
 };
 
 // The time, checked once a minute: the window's sky, the clock's hands, the lamp and the fireflies
@@ -219,13 +264,25 @@ const TAP_SPARKLES = [
 
 // --- On the wall ---
 
-// The window (Lv.12): the sky by the device's clock, and the guests at the glass.
+// What the window has grown into (stage-decor.tsx, decorFor).
+export type WindowThings = {
+  // In their season: the wind chime, the cherry petals.
+  furin: boolean;
+  petals: boolean;
+  // Just after the rain.
+  rainbow: boolean;
+  // The stray cat shows its face instead of its tail.
+  catFace: boolean;
+};
+
+// The window (Lv.9): the sky by the device's clock, and the guests at the glass.
 export function RoomWindow({
   scale,
   now,
   guest,
   run,
   tick,
+  things,
 }: {
   scale: number;
   now: Date;
@@ -233,6 +290,7 @@ export function RoomWindow({
   // A new visit each time (the stage's count of its acts).
   run: number;
   tick: number;
+  things: WindowThings;
 }) {
   const glass = {
     left: WINDOW_GLASS.col * scale,
@@ -242,24 +300,53 @@ export function RoomWindow({
   };
   // The guests are drawn a little finer than the window.
   const small = Math.max(2, scale - 1);
+  const visit = { glass, scale: small, tick, ms: guest ? GUEST_MS[guest] : 0 };
   return (
     <View>
       <PixelSprite frame={WINDOW} palette={SKY_PALETTES[skyAt(now.getHours())]} scale={scale} />
       <View style={[styles.glass, glass]}>
+        {things.rainbow ? <Rainbow glass={glass} scale={Math.max(1, scale - 2)} /> : null}
+        {things.petals ? <Petals glass={glass} scale={small} /> : null}
         {guest === 'snail' ? (
           <Snail key={run} glass={glass} scale={small} tick={tick} />
+        ) : guest === 'catTail' && things.catFace ? (
+          <CatFace key={run} {...visit} />
         ) : guest === 'catTail' ? (
           <CatTail key={run} glass={glass} scale={small} tick={tick} />
+        ) : guest === 'ladybug' ? (
+          <Ladybug key={run} {...visit} />
+        ) : guest === 'dragonfly' ? (
+          <Dragonfly key={run} {...visit} />
+        ) : guest === 'swallow' ? (
+          <Swallow key={run} {...visit} />
+        ) : guest === 'owl' ? (
+          <Owl key={run} {...visit} />
+        ) : guest === 'squirrel' ? (
+          <Squirrel key={run} {...visit} />
         ) : null}
       </View>
+      {/* The wind chime hangs in the glass's top left; its strip swings now and then. */}
+      {things.furin ? (
+        <View
+          style={[
+            styles.at,
+            styles.passThrough,
+            { left: (WINDOW_GLASS.col + 3) * scale, top: (WINDOW_GLASS.row - 1) * scale },
+          ]}
+        >
+          <PixelSprite
+            frame={FURIN[Math.floor(tick / 2) % 2]}
+            palette={THINGS_PALETTE}
+            scale={small}
+          />
+        </View>
+      ) : null}
       {guest === 'sparrow' ? (
         <Sparrow key={run} windowScale={scale} scale={small} tick={tick} />
       ) : null}
     </View>
   );
 }
-
-type Glass = { width: number; height: number };
 
 // Crawling across the glass from right to left, over the hills.
 function Snail({ glass, scale, tick }: { glass: Glass; scale: number; tick: number }) {
@@ -414,12 +501,82 @@ function Sparrow({
   );
 }
 
-// The wall clock (Lv.18), at the device's time.
+// The wall clock (Lv.11), at the device's time.
 export function WallClock({ scale, now }: { scale: number; now: Date }) {
   const hours = now.getHours();
   const minutes = now.getMinutes();
   const face = useMemo(() => clockAt(hours, minutes), [hours, minutes]);
   return <PixelSprite frame={face} palette={ROOM_PALETTE} scale={scale} />;
+}
+
+// The clock once a cuckoo clock (Lv.36): a roof over the face, the pendulum swinging below. The
+// cuckoo comes out on the hour and when the clock is tapped (`run` counts the taps).
+export const CUCKOO_CELLS = CUCKOO_ROOF[0].length;
+const FACE_INSET = (CUCKOO_CELLS - 13) / 2;
+
+export function CuckooClock({
+  scale,
+  now,
+  tick,
+  run,
+}: {
+  scale: number;
+  now: Date;
+  tick: number;
+  run: number;
+}) {
+  const onTheHour = now.getMinutes() === 0 ? now.getHours() : null;
+  return (
+    <View style={{ width: CUCKOO_CELLS * scale }}>
+      <PixelSprite frame={CUCKOO_ROOF} palette={THINGS_PALETTE} scale={scale} />
+      <View style={{ marginLeft: FACE_INSET * scale }}>
+        <WallClock scale={scale} now={now} />
+        <PixelSprite frame={PENDULUM[tick % 2]} palette={THINGS_PALETTE} scale={scale} />
+      </View>
+      {run > 0 ? <CuckooOut key={`tap${run}`} scale={scale} /> : null}
+      {onTheHour !== null ? <CuckooOut key={`hour${onTheHour}`} scale={scale} /> : null}
+    </View>
+  );
+}
+
+const CUCKOO_OUT_MS = 1600;
+
+// Out of its door for a moment, with a hop.
+function CuckooOut({ scale }: { scale: number }) {
+  const [out, setOut] = useState(true);
+  const [hop] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    const move = Animated.sequence([
+      Animated.timing(hop, { toValue: 1, duration: 200, useNativeDriver: NATIVE_DRIVER }),
+      Animated.timing(hop, { toValue: 0, duration: 200, useNativeDriver: NATIVE_DRIVER }),
+      Animated.timing(hop, { toValue: 1, duration: 200, useNativeDriver: NATIVE_DRIVER }),
+      Animated.timing(hop, { toValue: 0, duration: 200, useNativeDriver: NATIVE_DRIVER }),
+    ]);
+    move.start();
+    const timer = setTimeout(() => setOut(false), CUCKOO_OUT_MS);
+    return () => {
+      move.stop();
+      clearTimeout(timer);
+    };
+  }, [hop]);
+  if (!out) return null;
+  return (
+    <Animated.View
+      style={[
+        styles.at,
+        styles.passThrough,
+        {
+          left: 6 * scale,
+          top: 2 * scale,
+          transform: [
+            { translateY: hop.interpolate({ inputRange: [0, 1], outputRange: [0, -2 * scale] }) },
+          ],
+        },
+      ]}
+    >
+      <PixelSprite frame={CUCKOO} palette={THINGS_PALETTE} scale={scale} />
+    </Animated.View>
+  );
 }
 
 // --- On the floor ---
@@ -498,19 +655,8 @@ export function FloorToy({
   );
 }
 
-// The music box (Lv.20): plays while the buddy sings, and a tap makes it sing.
-export function MusicBox({
-  scale,
-  playing,
-  tick,
-  onPlay,
-}: {
-  scale: number;
-  playing: boolean;
-  tick: number;
-  onPlay: () => void;
-}) {
-  const { t } = useTranslation();
+// Notes rising from a thing that plays (the music box, the radio), one side then the other.
+function Notes({ playing, tick, at }: { playing: boolean; tick: number; at: [number, number] }) {
   const [notes] = useState(() => new Animated.Value(0));
   useEffect(() => {
     if (!playing) return;
@@ -528,37 +674,255 @@ export function MusicBox({
       notes.setValue(0);
     };
   }, [playing, notes]);
+  if (!playing) return null;
+  return (
+    <Animated.View
+      style={[
+        styles.at,
+        styles.passThrough,
+        {
+          left: at[tick % 2],
+          top: -12,
+          opacity: notes.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 1, 0] }),
+          transform: [
+            { translateY: notes.interpolate({ inputRange: [0, 1], outputRange: [0, -24] }) },
+          ],
+        },
+      ]}
+    >
+      <PixelSprite frame={NOTE} palette={BUDDY_PALETTE} scale={3} />
+    </Animated.View>
+  );
+}
+
+// The music box (Lv.15, gold from Lv.43): plays while the buddy sings, and a tap makes it sing.
+export function MusicBox({
+  scale,
+  playing,
+  tick,
+  gold,
+  onPlay,
+}: {
+  scale: number;
+  playing: boolean;
+  tick: number;
+  gold: boolean;
+  onPlay: () => void;
+}) {
+  const { t } = useTranslation();
   return (
     <Pressable
       onPress={onPlay}
       accessibilityRole="button"
       accessibilityLabel={t('buddy.room.music')}
     >
-      <PixelSprite frame={MUSIC_BOX[playing ? tick % 2 : 0]} palette={ROOM_PALETTE} scale={scale} />
-      {playing ? (
-        <Animated.View
-          style={[
-            styles.at,
-            styles.passThrough,
-            {
-              left: (tick % 2 === 0 ? 2 : 8) * scale,
-              top: -4 * scale,
-              opacity: notes.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 1, 0] }),
-              transform: [
-                { translateY: notes.interpolate({ inputRange: [0, 1], outputRange: [0, -24] }) },
-              ],
-            },
-          ]}
-        >
-          <PixelSprite frame={NOTE} palette={BUDDY_PALETTE} scale={3} />
-        </Animated.View>
-      ) : null}
+      <PixelSprite
+        frame={MUSIC_BOX[playing ? tick % 2 : 0]}
+        palette={gold ? GOLD_PALETTE : ROOM_PALETTE}
+        scale={scale}
+      />
+      <Notes playing={playing} tick={tick} at={[2 * scale, 8 * scale]} />
     </Pressable>
   );
 }
 
-// The standing lamp (Lv.36): lit in the evening and at night, with a soft glow around its shade.
-export function StandingLamp({ scale, lit }: { scale: number; lit: boolean }) {
+// The radio on the shelf (Lv.25), a gramophone from Lv.55: it plays while the buddy dances, and a
+// tap turns it on for a while and starts the dance.
+const RADIO_MS = 3000;
+
+export function Radio({
+  gramophone,
+  scale,
+  playing,
+  tick,
+  onPlay,
+}: {
+  gramophone: boolean;
+  scale: number;
+  playing: boolean;
+  tick: number;
+  onPlay: () => void;
+}) {
+  const { t } = useTranslation();
+  const [on, setOn] = useState(false);
+  const [run, setRun] = useState(0);
+  useEffect(() => {
+    if (run === 0) return;
+    const timer = setTimeout(() => setOn(false), RADIO_MS);
+    return () => clearTimeout(timer);
+  }, [run]);
+  const sounding = playing || on;
+  const frame = gramophone
+    ? GRAMOPHONE[sounding ? tick % 2 : 0]
+    : RADIO[sounding ? 1 + (tick % 2) : 0];
+  return (
+    <Pressable
+      onPress={() => {
+        setOn(true);
+        setRun((n) => n + 1);
+        onPlay();
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={t(gramophone ? 'buddy.room.gramophone' : 'buddy.room.radio')}
+    >
+      <PixelSprite frame={frame} palette={THINGS_PALETTE} scale={scale} />
+      <Notes
+        playing={sounding}
+        tick={tick}
+        at={gramophone ? [0, 3 * scale] : [2 * scale, 7 * scale]}
+      />
+    </Pressable>
+  );
+}
+
+// The little pot on the sill (Lv.26), in flower from Lv.59.
+export function SillPot({ flowers, scale }: { flowers: boolean; scale: number }) {
+  return <PixelSprite frame={SILL_POT[flowers ? 1 : 0]} palette={THINGS_PALETTE} scale={scale} />;
+}
+
+// The goldfish bowl on its side table (Lv.28; plants and a second fish from Lv.56). The fish swim
+// about with the tick; a tap sends up bubbles.
+export function FishBowl({
+  plants,
+  scale,
+  tick,
+  onTap,
+}: {
+  plants: boolean;
+  scale: number;
+  tick: number;
+  onTap: () => void;
+}) {
+  const { t } = useTranslation();
+  const frame = useMemo(() => fishBowl(Math.floor(tick / 3), plants), [tick, plants]);
+  const [run, setRun] = useState(0);
+  return (
+    <Pressable
+      onPress={() => {
+        setRun((n) => n + 1);
+        onTap();
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={t('buddy.room.fish')}
+    >
+      <PixelSprite frame={frame} palette={THINGS_PALETTE} scale={scale} />
+      {run > 0 ? <Bubbles key={run} scale={scale} /> : null}
+    </Pressable>
+  );
+}
+
+const BUBBLES = [
+  { col: 4, delay: 0 },
+  { col: 6, delay: 250 },
+  { col: 5, delay: 500 },
+] as const;
+
+function Bubbles({ scale }: { scale: number }) {
+  return (
+    <>
+      {BUBBLES.map((bubble) => (
+        <Bubble key={bubble.delay} scale={scale} {...bubble} />
+      ))}
+    </>
+  );
+}
+
+function Bubble({ scale, col, delay }: { scale: number; col: number; delay: number }) {
+  const [rise] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    const move = Animated.sequence([
+      Animated.delay(delay),
+      Animated.timing(rise, {
+        toValue: 1,
+        duration: 900,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: NATIVE_DRIVER,
+      }),
+    ]);
+    move.start();
+    return () => move.stop();
+  }, [rise, delay]);
+  return (
+    <Animated.View
+      style={[
+        styles.at,
+        styles.passThrough,
+        {
+          left: col * scale,
+          top: 4 * scale,
+          opacity: rise.interpolate({ inputRange: [0, 0.1, 0.8, 1], outputRange: [0, 1, 1, 0] }),
+          transform: [
+            { translateY: rise.interpolate({ inputRange: [0, 1], outputRange: [0, -9 * scale] }) },
+          ],
+        },
+      ]}
+    >
+      <PixelSprite frame={BUBBLE} palette={THINGS_PALETTE} scale={scale * 0.7} />
+    </Animated.View>
+  );
+}
+
+// The low table on the rug (Lv.38), a kotatsu in winter, with tea (Lv.44) and, at the New Year,
+// kagami mochi (Lv.49). The tea steams.
+export const TABLE_CELLS = LOW_TABLE[0].length;
+
+export function LowTable({
+  kotatsu,
+  tea,
+  mochi,
+  scale,
+  tick,
+}: {
+  kotatsu: boolean;
+  tea: boolean;
+  mochi: boolean;
+  scale: number;
+  tick: number;
+}) {
+  const table = kotatsu ? KOTATSU : LOW_TABLE;
+  // What stands on it stands on its top, one cell into the board.
+  const onTop = (table.length - 1) * scale;
+  return (
+    <View style={{ width: TABLE_CELLS * scale, height: table.length * scale }}>
+      <View style={[styles.at, { bottom: 0 }]}>
+        <PixelSprite frame={table} palette={THINGS_PALETTE} scale={scale} />
+      </View>
+      {mochi ? (
+        <View style={[styles.at, { left: 2 * scale, bottom: onTop }]}>
+          <PixelSprite frame={MOCHI} palette={THINGS_PALETTE} scale={scale} />
+        </View>
+      ) : null}
+      {tea ? (
+        <View style={[styles.at, { right: 2 * scale, bottom: onTop }]}>
+          <View
+            style={[
+              styles.puff,
+              {
+                width: scale,
+                height: scale,
+                right: (tick % 2 === 0 ? 1 : 2) * scale,
+                top: (tick % 2 === 0 ? -2 : -3) * scale,
+              },
+            ]}
+          />
+          <PixelSprite frame={TEA} palette={THINGS_PALETTE} scale={scale} />
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+// The standing lamp (Lv.42; a dotted shade with a gold fringe from Lv.47): lit in the evening and
+// at night, with a soft glow around its shade.
+export function StandingLamp({
+  scale,
+  lit,
+  shade,
+}: {
+  scale: number;
+  lit: boolean;
+  shade: boolean;
+}) {
   const glow = 22 * scale;
   return (
     <View>
@@ -577,16 +941,16 @@ export function StandingLamp({ scale, lit }: { scale: number; lit: boolean }) {
         />
       ) : null}
       <PixelSprite frame={LAMP} palette={lit ? LAMP_LIT : ROOM_PALETTE} scale={scale} />
+      {shade ? (
+        <View style={styles.at}>
+          <PixelSprite frame={LAMP_SHADE} palette={lit ? LAMP_LIT : ROOM_PALETTE} scale={scale} />
+        </View>
+      ) : null}
     </View>
   );
 }
 
-// The gold cushion (Lv.50), on the rug.
-export function Cushion({ scale }: { scale: number }) {
-  return <PixelSprite frame={CUSHION} palette={ROOM_PALETTE} scale={scale} />;
-}
-
-// The floor itself, once it changes (Lv.27, 35): boards, then tatami. Drawn across the stage's
+// The floor itself, once it changes (Lv.17, 37): boards, then tatami. Drawn across the stage's
 // floor strip, in the theme's colors so it sits right in the dark too.
 export function FloorPattern({
   kind,
@@ -680,7 +1044,7 @@ export function Train({ width, scale, tick }: { width: number; scale: number; ti
   );
 }
 
-// Fireflies at night (Lv.28): three small glows drifting about the room, blinking.
+// Fireflies at night (Lv.22): three small glows drifting about the room, blinking.
 const FIREFLIES = [
   { x: 0.22, y: 0.42, ms: 7000 },
   { x: 0.58, y: 0.26, ms: 9000 },
@@ -744,7 +1108,7 @@ function Firefly({ left, top, ms }: { left: number; top: number; ms: number }) {
   );
 }
 
-// The top level (Lv.50): the room sparkles all over for a moment.
+// The top level (Lv.60): the room sparkles all over for a moment.
 const TWINKLES = [
   [0.08, 0.3],
   [0.22, 0.12],
@@ -789,6 +1153,9 @@ const styles = StyleSheet.create({
   glass: {
     position: 'absolute',
     overflow: 'hidden',
+  },
+  column: {
+    alignItems: 'center',
   },
   glow: {
     position: 'absolute',

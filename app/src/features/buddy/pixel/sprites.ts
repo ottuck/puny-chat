@@ -962,7 +962,8 @@ const PLANT_3: Frame = [
   '..kkkkkkkkk..',
 ];
 
-// A small tree in a big glazed pot, and later the same tree hung with oranges.
+// A small tree in a big glazed pot, and later the same tree hung with oranges: a tall crown on a
+// long trunk, taller than it is wide.
 // prettier-ignore
 const PLANT_4: Frame = [
   '.....kkkkk.....',
@@ -972,10 +973,20 @@ const PLANT_4: Frame = [
   '.kPgggGgggggGk.',
   'kPggggggggGggGk',
   'kPgGgggggggGGGk',
+  'kPgggGggggggGGk',
+  'kggggggGgggGGGk',
+  'kPggggGgggggGGk',
+  'kggGgggggGggGGk',
   'kggggGggGgggGGk',
   '.kgggggggggGGk.',
   '.kGgggGgggGGGk.',
   '..kkGGGGGGGkk..',
+  '......kDqk.....',
+  '......kDqk.....',
+  '......kDqk.....',
+  '......kDqk.....',
+  '......kDqk.....',
+  '......kDqk.....',
   '......kDqk.....',
   '......kDqk.....',
   '.....kDDqqk....',
@@ -998,10 +1009,20 @@ const PLANT_5: Frame = [
   '.kPggOOGgggggk.',
   'kPggggggggOlgGk',
   'kPglOgggggOOGGk',
+  'kPgggGggggggGGk',
+  'kggggggGgggGGGk',
+  'kPggggGgggggGGk',
+  'kggGgggggGggGGk',
   'kggOOGggGgggGGk',
   '.kgggggOlggGGk.',
   '.kGgggGOOgGGGk.',
   '..kkGGGGGGGkk..',
+  '......kDqk.....',
+  '......kDqk.....',
+  '......kDqk.....',
+  '......kDqk.....',
+  '......kDqk.....',
+  '......kDqk.....',
   '......kDqk.....',
   '......kDqk.....',
   '.....kDDqqk....',
