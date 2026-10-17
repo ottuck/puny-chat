@@ -58,6 +58,11 @@ export type Line =
   | 'sparrow'
   | 'catTail'
   | 'train'
+  | 'ladybug'
+  | 'dragonfly'
+  | 'swallow'
+  | 'owl'
+  | 'squirrel'
   | 'farewell'
   // A tap on a thing in the room (buddy-stage.tsx, touchProp).
   | 'plant'
@@ -66,6 +71,10 @@ export type Line =
   | 'windowDay'
   | 'windowDusk'
   | 'windowNight'
+  | 'fish'
+  | 'plush'
+  | 'table'
+  | 'kotatsu'
   // A job's own words (JOB_LINES), and what it says at its own moments.
   | 'chef1'
   | 'chef2'

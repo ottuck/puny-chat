@@ -60,13 +60,23 @@ import type { Reaction, ReactionKind } from '../reactions';
 import type { ChatWord, Mood } from '../chat-words';
 import { JOB_LINES, type Line, pick, useBuddyTalk } from '../use-buddy-talk';
 import { SpeechBubble } from './speech-bubble';
-import { Arrive, GUEST_MS, type Guest, RoomSparkle, Tappable, Train } from './room-props';
+import {
+  Arrive,
+  GUEST_MS,
+  type Guest,
+  GUESTS,
+  RoomSparkle,
+  Tappable,
+  Train,
+  useNow,
+} from './room-props';
 import {
   decorFor,
-  LAMP_ROOM,
+  FrontDecor,
   Plant,
   plantRoom as plantRoomFor,
   type RoomProp,
+  sideRoom,
   WallDecor,
 } from './stage-decor';
 import { RAIN_GAP, rainDrops, Snowfall } from './weather';
@@ -125,12 +135,17 @@ const HAPPENINGS = [
   'sparrow',
   'catTail',
   'train',
+  'ladybug',
+  'dragonfly',
+  'swallow',
+  'owl',
+  'squirrel',
 ] as const;
 type Happening = (typeof HAPPENINGS)[number];
 const isHappening = (kind: string): kind is Happening =>
   (HAPPENINGS as readonly string[]).includes(kind);
 const isGuest = (act: Act | null): act is Guest =>
-  act === 'snail' || act === 'sparrow' || act === 'catTail' || act === 'train';
+  act !== null && (GUESTS as readonly string[]).includes(act);
 export type Cue = { id: string; kind: ChatWord | Mood | 'job' | Happening };
 // How long a mood from the chat ("사랑해", "ㅋㅋ", …, chat-words.ts) shows, and what the buddy says.
 type StageMood = Mood | 'coPet';
@@ -220,6 +235,11 @@ const ACT_LINE: Partial<Record<Act, Line>> = {
   sparrow: 'sparrow',
   catTail: 'catTail',
   train: 'train',
+  ladybug: 'ladybug',
+  dragonfly: 'dragonfly',
+  swallow: 'swallow',
+  owl: 'owl',
+  squirrel: 'squirrel',
 };
 // What it says looking out of the window, by the sky (room.ts, skyAt).
 const WINDOW_LINE = { day: 'windowDay', dusk: 'windowDusk', night: 'windowNight' } as const;
@@ -368,7 +388,22 @@ type Props = {
   leaving?: boolean;
   // The hour the room's window, clock and lamp show instead of the device's (the art preview).
   hour?: number;
+  // The day ("MM-DD") the room's seasonal things go by instead of today (the art preview).
+  date?: string;
 };
+
+// The room's time: the device's, or the hour and day the art preview picks.
+function roomTime(clock: Date, hour?: number, date?: string): Date {
+  if (hour === undefined && !date) return clock;
+  const [month, day] = date ? date.split('-').map(Number) : [clock.getMonth() + 1, clock.getDate()];
+  return new Date(
+    clock.getFullYear(),
+    month - 1,
+    day,
+    hour ?? clock.getHours(),
+    hour === undefined ? clock.getMinutes() : 10,
+  );
+}
 
 // Local night hours, checked once a minute.
 export function useSleeping(job: BuddyJob | null): boolean {
@@ -545,6 +580,7 @@ export function BuddyStage({
   onWalk,
   leaving = false,
   hour,
+  date,
 }: Props) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -588,6 +624,8 @@ export function BuddyStage({
   const [rainFall] = useState(() => new Animated.Value(0));
   const [dusk] = useState(() => new Animated.Value(0));
   const [rainX, setRainX] = useState<number | null>(null);
+  // How many showers have ended (the window shows a rainbow after one).
+  const [rainEnded, setRainEnded] = useState(0);
   // Which half of the stage the buddy is heading to, so its speech bubble opens toward the middle.
   const [onRightHalf, setOnRightHalf] = useState(false);
 
@@ -602,14 +640,17 @@ export function BuddyStage({
   const bowlWidth = 12 * PROP_SCALE;
   // A child or grown-up has hands: no bowl stands about, a table comes out for the meal.
   const atTable = buddy.stage === 'CHILD' || buddy.stage === 'ADULT';
-  const decor = decorFor(buddy.level, album ?? [], buddy.name, plantKind);
+  const clock = useNow();
+  const now = roomTime(clock, hour, date);
+  const decor = decorFor(buddy.level, album ?? [], buddy.name, plantKind, now);
   // The season's corner stands in for the plant that week.
   const corner = season ? SEASON_CORNER[season] : undefined;
   const plantRoom = corner
     ? Math.ceil(corner.frame[0].length * corner.size * scale) + 8
     : plantRoomFor(decor);
-  // The bowl stands by the plant (and the lamp) on the right; the poops land left of it.
-  const bowlRight = 16 + plantRoom + (decor.lamp ? LAMP_ROOM : 0);
+  // The bowl stands by the plant (and the lamp and the side table) on the right; the poops land
+  // left of it.
+  const bowlRight = 16 + plantRoom + sideRoom(decor);
   const guests = decor.guests.join(',');
   const poopRight = atTable ? bowlRight : bowlRight + bowlWidth + 12;
   // The walkable strip: from the left (in front of a job's station) up to the bowl.
@@ -632,6 +673,7 @@ export function BuddyStage({
   // A station that comes while the stage is open (the job settled at Lv.12, or changed) pops in.
   const [jobAtMount] = useState(job);
   const stationX = station ? STATION_LEFT + station.standAt * scale : 0;
+  const stationRight = station ? STATION_LEFT + station.frames[0][0].length * scale : 0;
   const eating = active?.kind === 'fed';
   const settled = sleeping || buddy.hungry || egg || eating || evolving || dream || leaving;
   const acting = act !== null;
@@ -1021,6 +1063,7 @@ export function BuddyStage({
       rainFall.setValue(0);
       dusk.setValue(0);
       setRainX(null);
+      if (act === 'rain') setRainEnded((n) => n + 1);
     };
   }, [act, actRun, flutter, rainFall, dusk, x]);
 
@@ -1475,8 +1518,7 @@ export function BuddyStage({
       if (isGuest(act)) return say(act);
       const atWindow = decor.guests.filter((guest) => guest !== 'train');
       if (atWindow.length > 0) return perform(pick(atWindow), true);
-      const hours = hour ?? new Date().getHours();
-      return perform('lookAround', true, WINDOW_LINE[skyAt(hours)]);
+      return perform('lookAround', true, WINDOW_LINE[skyAt(now.getHours())]);
     }
     if (prop === 'clock') return perform('startle', true, 'clock');
     say(prop);
@@ -1542,16 +1584,18 @@ export function BuddyStage({
         top={34}
         width={width}
         height={height}
-        hasStation={!!station}
+        stationRight={stationRight}
         plantRoom={plantRoom}
         guest={isGuest(act) ? act : null}
         run={actRun}
         tick={tick}
-        playing={act === 'sing'}
+        singing={act === 'sing'}
+        dancing={act === 'dance'}
+        rainEnded={rainEnded}
         onToy={() => play('dance')}
         onMusic={() => play('sing')}
         onProp={touchProp}
-        hour={hour}
+        now={now}
       />
       {corner ? (
         <View style={[styles.poop, { bottom: FLOOR - 2, right: 8 }]}>
@@ -2006,6 +2050,13 @@ export function BuddyStage({
         />
       ) : null}
 
+      <FrontDecor
+        decor={decor}
+        width={width}
+        stationRight={stationRight}
+        plantRoom={plantRoom}
+        onProp={touchProp}
+      />
       {act === 'train' && width > 0 ? (
         <Train key={actRun} width={width} scale={3} tick={tick} />
       ) : null}
