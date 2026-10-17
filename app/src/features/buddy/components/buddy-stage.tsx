@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 
 import { ProgressBar } from '@/components/progress-bar';
-import { useColors } from '@/theme';
+import { useColorMode, useColors } from '@/theme';
 
 import { type BuddyJob, type BuddyView, JOB_CHANGE_LEVELS, NEXT_STEP_AT } from '../api';
 import {
@@ -57,8 +57,9 @@ import {
 import type { Reaction, ReactionKind } from '../reactions';
 import type { ChatWord, Mood } from '../chat-words';
 import { JOB_LINES, type Line, pick, useBuddyTalk } from '../use-buddy-talk';
+import { RoomLight, roomHour } from './room-light';
 import { SpeechBubble } from './speech-bubble';
-import { Feathers, TOP_NOTE_MS, TopLevelNotes, TopLevelRays } from './top-level';
+import { Feathers, TOP_NOTE_MS, TopLevelLight, TopLevelNotes } from './top-level';
 import {
   Arrive,
   GUEST_MS,
@@ -71,6 +72,8 @@ import {
 } from './room-props';
 import {
   decorFor,
+  glassOf,
+  lampShadeAt,
   Plant,
   plantRoom as plantRoomFor,
   type RoomProp,
@@ -90,6 +93,8 @@ import { RAIN_GAP, rainDrops, Snowfall } from './weather';
 export const FLOOR = 22;
 // The corner button's square (buddy-scene.tsx).
 export const CORNER_SIZE = 36;
+// Where the wall's things begin, below the name and level.
+const WALL_TOP = 34;
 const PROP_SCALE = 3;
 // How wide the meal table is, in its pixels (sprites.ts, mealTable).
 const TABLE_CELLS = 27;
@@ -583,6 +588,7 @@ export function BuddyStage({
   onOpenMail,
 }: Props) {
   const colors = useColors();
+  const colorMode = useColorMode();
   const { t } = useTranslation();
   // The stage mounts again each time it unfolds; what happened before that is not news. Without
   // this, focusing the composer and leaving it replayed the last evolution every time.
@@ -643,6 +649,9 @@ export function BuddyStage({
   const clock = useNow();
   const now = roomTime(clock, hour, date);
   const decor = decorFor(buddy.level, buddy.name, plantKind, now);
+  // The lamp, lit in the evening and at night unless switched (until the stage opens again).
+  const [lampOn, setLampOn] = useState<boolean | null>(null);
+  const lampLit = lampOn ?? skyAt(now.getHours()) !== 'day';
   // The season's corner stands in for the plant that week.
   const corner = season ? SEASON_CORNER[season] : undefined;
   const plantRoom = corner
@@ -1598,7 +1607,7 @@ export function BuddyStage({
       <WallDecor
         decor={decor}
         floor={FLOOR}
-        top={34}
+        top={WALL_TOP}
         width={width}
         height={height}
         stationRight={stationRight}
@@ -1613,6 +1622,8 @@ export function BuddyStage({
         onMusic={() => play('sing')}
         onProp={touchProp}
         now={now}
+        lit={lampLit}
+        onLamp={setLampOn}
       />
       {corner ? (
         <View
@@ -1799,7 +1810,13 @@ export function BuddyStage({
         ]}
       >
         {topOn ? (
-          <TopLevelRays key={topId} width={spriteWidth} height={spriteHeight} ms={topMs} />
+          <TopLevelLight
+            key={topId}
+            width={spriteWidth}
+            height={spriteHeight}
+            stageHeight={height}
+            ms={topMs}
+          />
         ) : null}
         {evolving ? (
           <Animated.View
@@ -2120,6 +2137,18 @@ export function BuddyStage({
         />
       ))}
 
+      {/* The light of the hour over the room and the buddy (room-light.tsx). */}
+      {!dream ? (
+        <RoomLight
+          hour={roomHour(now.getHours())}
+          width={width}
+          height={height}
+          floorTop={height - FLOOR}
+          glass={glassOf(decor, width, height, WALL_TOP)}
+          lamp={decor.lamp && lampLit ? lampShadeAt(width, height, FLOOR, plantRoom) : null}
+          dark={colorMode === 'dark'}
+        />
+      ) : null}
       {topOn && width > 0 ? <Feathers key={`f${topId}`} width={width} height={height} /> : null}
       {topOn ? <TopLevelNotes key={`n${topId}`} notes={topNotes} /> : null}
       {noticeShown ? (
@@ -2157,7 +2186,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    zIndex: 1,
+    // Over the room's light (room-light.tsx).
+    zIndex: 2,
   },
   name: {
     fontSize: 14,

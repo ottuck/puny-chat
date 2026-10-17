@@ -1,12 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Polygon } from 'react-native-svg';
+import Svg, {
+  Defs,
+  Ellipse,
+  LinearGradient,
+  Polygon,
+  RadialGradient,
+  Stop,
+} from 'react-native-svg';
 
 import { useColors } from '@/theme';
 
 import { type Frame, PixelSprite } from '../pixel/pixel-sprite';
 
-// Reaching the top level (docs/fun-improvements.md, 최고 레벨): rays of light turning slowly behind
+// Reaching the top level (docs/fun-improvements.md, 최고 레벨): light coming down from the sky onto
 // the buddy, white feathers drifting down over the room, and three notes one after another: the top
 // level reached, a letter from the developer in the mailbox (tap to read), and the job free to change.
 
@@ -14,70 +21,152 @@ const NATIVE_DRIVER = Platform.OS !== 'web';
 // Each note shows this long; the whole moment lasts while they do.
 export const TOP_NOTE_MS = 2800;
 
-// --- Rays ---
+// --- Light from the sky ---
 
-const RAYS = 12;
-
-// Behind the buddy, centered on it: soft gold wedges, turning, fading in and out.
-export function TopLevelRays({ width, height, ms }: { width: number; height: number; ms: number }) {
-  const size = Math.round(height * 2.6);
-  const [turn] = useState(() => new Animated.Value(0));
-  const [shown] = useState(() => new Animated.Value(0));
+// A column of light coming down from the top of the stage onto the buddy, as if from the sky:
+// brighter in its core, a glow pooling at its feet, specks of light drifting down it. It grows down
+// from the top, shimmers, and fades. Drawn with the buddy (behind it), so it stays over the buddy.
+export function TopLevelLight({
+  width,
+  height,
+  stageHeight,
+  ms,
+}: {
+  width: number;
+  height: number;
+  stageHeight: number;
+  ms: number;
+}) {
+  const id = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const tall = stageHeight + 20;
+  const wide = Math.round(width * 2);
+  const [down] = useState(() => new Animated.Value(0));
+  const [shimmer] = useState(() => new Animated.Value(0));
   useEffect(() => {
-    const spin = Animated.loop(
-      Animated.timing(turn, {
+    const show = Animated.sequence([
+      Animated.timing(down, {
         toValue: 1,
-        duration: 14_000,
-        easing: Easing.linear,
+        duration: 900,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: NATIVE_DRIVER,
       }),
-    );
-    const fade = Animated.sequence([
-      Animated.timing(shown, { toValue: 1, duration: 700, useNativeDriver: NATIVE_DRIVER }),
-      Animated.delay(ms - 1700),
-      Animated.timing(shown, { toValue: 0, duration: 1000, useNativeDriver: NATIVE_DRIVER }),
+      Animated.delay(ms - 1900),
+      Animated.timing(down, { toValue: 2, duration: 1000, useNativeDriver: NATIVE_DRIVER }),
     ]);
-    spin.start();
-    fade.start();
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmer, { toValue: 1, duration: 900, useNativeDriver: NATIVE_DRIVER }),
+        Animated.timing(shimmer, { toValue: 0, duration: 900, useNativeDriver: NATIVE_DRIVER }),
+      ]),
+    );
+    show.start();
+    pulse.start();
     return () => {
-      spin.stop();
-      fade.stop();
+      show.stop();
+      pulse.stop();
     };
-  }, [turn, shown, ms]);
-  const half = size / 2;
-  const wedges = Array.from({ length: RAYS }, (_, i) => {
-    const angle = (i / RAYS) * 2 * Math.PI;
-    const spread = Math.PI / RAYS / 1.6;
-    const point = (a: number) => `${half + Math.cos(a) * half},${half + Math.sin(a) * half}`;
-    return `${half},${half} ${point(angle - spread)} ${point(angle + spread)}`;
-  });
+  }, [down, shimmer, ms]);
+  const mid = wide / 2;
+  const column = (top: number, bottom: number) =>
+    `${mid - top / 2},0 ${mid + top / 2},0 ${mid + bottom / 2},${tall} ${mid - bottom / 2},${tall}`;
   return (
     <Animated.View
       style={[
         styles.at,
         styles.passThrough,
         {
-          width: size,
-          height: size,
-          left: (width - size) / 2,
-          top: (height - size) / 2,
-          opacity: shown,
+          width: wide,
+          height: tall,
+          left: (width - wide) / 2,
+          top: height - tall + 6,
+          transformOrigin: 'center top',
+          opacity: down.interpolate({ inputRange: [0, 0.3, 1, 2], outputRange: [0, 1, 1, 0] }),
           transform: [
-            { rotate: turn.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) },
+            { scaleY: down.interpolate({ inputRange: [0, 1, 2], outputRange: [0, 1, 1] }) },
           ],
         },
       ]}
     >
-      <Svg width={size} height={size}>
-        {wedges.map((points, i) => (
-          <Polygon
-            key={i}
-            points={points}
-            fill={i % 2 === 0 ? 'rgba(255, 214, 110, 0.38)' : 'rgba(255, 240, 190, 0.3)'}
-          />
-        ))}
-      </Svg>
+      <Animated.View
+        style={{ opacity: shimmer.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }}
+      >
+        <Svg width={wide} height={tall}>
+          <Defs>
+            <LinearGradient id={`halo${id}`} x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor="#FFF3C4" stopOpacity={0.35} />
+              <Stop offset="0.6" stopColor="#FFE39A" stopOpacity={0.55} />
+              <Stop offset="1" stopColor="#FFD873" stopOpacity={0.6} />
+            </LinearGradient>
+            <LinearGradient id={`core${id}`} x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor="#FFFFFF" stopOpacity={0.6} />
+              <Stop offset="1" stopColor="#FFFDF2" stopOpacity={0.8} />
+            </LinearGradient>
+            <RadialGradient id={`pool${id}`} cx="50%" cy="50%" r="50%">
+              <Stop offset="0" stopColor="#FFF4C2" stopOpacity={0.9} />
+              <Stop offset="1" stopColor="#FFE08A" stopOpacity={0} />
+            </RadialGradient>
+          </Defs>
+          <Polygon points={column(wide * 0.4, wide * 0.95)} fill={`url(#halo${id})`} />
+          <Polygon points={column(wide * 0.16, wide * 0.5)} fill={`url(#core${id})`} />
+          <Ellipse cx={mid} cy={tall - 10} rx={wide * 0.5} ry={14} fill={`url(#pool${id})`} />
+        </Svg>
+      </Animated.View>
+      {SPECKS.map((speck) => (
+        <Speck key={speck.x} left={mid + speck.x * wide * 0.4} tall={tall} {...speck} />
+      ))}
     </Animated.View>
+  );
+}
+
+// Specks of light drifting down the column.
+const SPECKS = [
+  { x: -0.6, delay: 0, ms: 2400 },
+  { x: -0.2, delay: 700, ms: 2800 },
+  { x: 0.25, delay: 300, ms: 2200 },
+  { x: 0.6, delay: 1100, ms: 2600 },
+  { x: 0.05, delay: 1600, ms: 3000 },
+] as const;
+
+function Speck({
+  left,
+  tall,
+  delay,
+  ms,
+}: {
+  left: number;
+  tall: number;
+  delay: number;
+  ms: number;
+}) {
+  const [fall] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(fall, {
+          toValue: 1,
+          duration: ms,
+          easing: Easing.linear,
+          useNativeDriver: NATIVE_DRIVER,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [fall, delay, ms]);
+  return (
+    <Animated.View
+      style={[
+        styles.speck,
+        {
+          left,
+          opacity: fall.interpolate({ inputRange: [0, 0.2, 0.8, 1], outputRange: [0, 1, 1, 0] }),
+          transform: [
+            { translateY: fall.interpolate({ inputRange: [0, 1], outputRange: [0, tall - 20] }) },
+          ],
+        },
+      ]}
+    />
   );
 }
 
@@ -241,6 +330,13 @@ const styles = StyleSheet.create({
   },
   boxOnly: {
     pointerEvents: 'box-none',
+  },
+  speck: {
+    position: 'absolute',
+    top: 0,
+    width: 3,
+    height: 3,
+    backgroundColor: '#FFFFFF',
   },
   notes: {
     position: 'absolute',

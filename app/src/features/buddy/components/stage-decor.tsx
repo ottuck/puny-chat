@@ -12,6 +12,7 @@ import {
   ROOM_PALETTE,
   skyAt,
   WINDOW,
+  WINDOW_GLASS,
   WINDOW_SILL_ROW,
 } from '../pixel/room';
 import {
@@ -352,12 +353,52 @@ type WallProps = {
   onProp: (prop: RoomProp) => void;
   // The room's time: the device's, or the art preview's.
   now: Date;
+  // The lamp is on (the stage keeps it: the room's light follows it too), and a tap to switch it.
+  lit: boolean;
+  onLamp: (on: boolean) => void;
 };
 
 // The table and what is in front of it stand in the middle of the floor left free: between the
 // station and the things on the right (on a narrow stage the station takes a good part of it).
 function middleOf(decor: Decor, width: number, stationRight: number, plantSpace: number) {
   return (stationRight + width - 8 - plantSpace - sideRoom(decor)) / 2;
+}
+
+// Where the window goes (and the sizes around it): smaller on a short stage, so it stays above a
+// grown-up's head; in the middle, but clear of the shelf and the clock.
+export function windowPlace(decor: Decor, width: number, height: number) {
+  const wall = height >= 250 ? 4 : height >= 220 ? 3 : 2;
+  const clockScale = Math.min(3, wall);
+  const windowWidth = WINDOW[0].length * wall;
+  const shelfScale = wall >= 4 ? 2.5 : 2;
+  const shelfWidth = SHELF[0].length * shelfScale;
+  const shelfLeft = decor.musicBox ? width - SHELF_RIGHT - shelfWidth : width;
+  const clockRight = CLOCK_LEFT + (decor.cuckoo ? CUCKOO_CELLS : 13) * clockScale;
+  const windowLeft = Math.max(
+    clockRight + 12,
+    Math.min((width - windowWidth) / 2, shelfLeft - 10 - windowWidth),
+  );
+  return { wall, clockScale, windowWidth, windowLeft, shelfScale, shelfWidth };
+}
+
+// The window's glass on the stage (for the light it lets in, room-light.tsx); `top` as WallDecor's.
+export function glassOf(decor: Decor, width: number, height: number, top: number) {
+  if (!decor.window) return null;
+  const { wall, windowLeft } = windowPlace(decor, width, height);
+  return {
+    left: windowLeft + WINDOW_GLASS.col * wall,
+    top: top + 4 + WINDOW_GLASS.row * wall,
+    width: WINDOW_GLASS.cols * wall,
+    height: WINDOW_GLASS.rows * wall,
+  };
+}
+
+// The middle of the standing lamp's shade, from the stage's top left.
+export function lampShadeAt(width: number, height: number, floor: number, plantSpace: number) {
+  return {
+    x: width - 8 - plantSpace - (LAMP_ROOM - 6) / 2,
+    y: height - (floor - 2) - LAMP.length * FLOOR_SCALE + 3 * FLOOR_SCALE,
+  };
 }
 
 // Behind the buddy: the floor, the rug, the window and clock on the wall, the shelf (the music box
@@ -381,26 +422,20 @@ export function WallDecor({
   onMusic,
   onProp,
   now,
+  lit,
+  onLamp,
 }: WallProps) {
   const { t } = useTranslation();
   // What came after the stage opened pops in; what was there already does not.
   const [openedAt] = useState(decor.level);
   const fresh = (reward: Reward) => rewardLevel(reward) > openedAt;
   const sky = skyAt(now.getHours());
-  // Smaller on a short stage, so the window stays above a grown-up's head.
-  const wall = height >= 250 ? 4 : height >= 220 ? 3 : 2;
-  const clockScale = Math.min(3, wall);
-  const windowWidth = WINDOW[0].length * wall;
-  const shelfScale = wall >= 4 ? 2.5 : 2;
-  const shelfWidth = SHELF[0].length * shelfScale;
-  const shelfLeft = decor.musicBox ? width - SHELF_RIGHT - shelfWidth : width;
-  const radioWidth = (decor.radio === 2 ? GRAMOPHONE : RADIO)[0][0].length * shelfScale;
-  const clockRight = CLOCK_LEFT + (decor.cuckoo ? CUCKOO_CELLS : 13) * clockScale;
-  // In the middle, but clear of the shelf and the clock.
-  const windowLeft = Math.max(
-    clockRight + 12,
-    Math.min((width - windowWidth) / 2, shelfLeft - 10 - windowWidth),
+  const { wall, clockScale, windowWidth, windowLeft, shelfScale, shelfWidth } = windowPlace(
+    decor,
+    width,
+    height,
   );
+  const radioWidth = (decor.radio === 2 ? GRAMOPHONE : RADIO)[0][0].length * shelfScale;
   const toyShown = stationRight === 0 && decor.toy > 0;
   // On the sill: the plush friends side by side at its left end, the little pot at the right end.
   const sillScale = wall >= 4 ? 2 : wall === 3 ? 1.5 : 1;
@@ -414,9 +449,6 @@ export function WallDecor({
   const tableWidth = TABLE_CELLS * FLOOR_SCALE;
   const tableLeft = middleOf(decor, width, stationRight, plantSpace) - tableWidth / 2;
   const guestHere = guest && guest !== 'train' ? guest : null;
-  // A tap on the lamp switches it on or off, until the stage opens again.
-  const [lampOn, setLampOn] = useState<boolean | null>(null);
-  const lit = lampOn ?? sky !== 'day';
   // The cuckoo comes out when the clock is tapped.
   const [cuckooRun, setCuckooRun] = useState(0);
   // A rainbow after the rain, by day.
@@ -623,7 +655,7 @@ export function WallDecor({
           style={[styles.at, { right: 8 + plantSpace, bottom: floor - 2 }]}
         >
           <Arrive fresh={fresh(decor.lampShade ? 'lampShade' : 'lamp')} width={LAMP_ROOM}>
-            <Tappable label={t('buddy.room.lamp')} onTap={() => setLampOn(!lit)}>
+            <Tappable label={t('buddy.room.lamp')} onTap={() => onLamp(!lit)}>
               <StandingLamp scale={FLOOR_SCALE} lit={lit} shade={decor.lampShade} />
             </Tappable>
           </Arrive>
