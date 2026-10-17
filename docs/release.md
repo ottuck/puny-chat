@@ -25,8 +25,8 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 - 앱 안 계정 삭제(Guideline 5.1.1(v)), 개인정보처리방침·지원 페이지(로그인 없이, 세 언어), 문의·상대 신고·내보내기.
 - 푸시: `expo-notifications`, EAS projectId 연결. 아이콘·스플래시: `app/assets/README.md`.
 - 수출 규정: `ios.infoPlist`의 `ITSAppUsesNonExemptEncryption: false`(표준 암호화만 쓴다. 업로드마다 묻지 않게).
-- `pnpm dlx expo-doctor`는 20/21이다. SDK 57의 최신 패치(2026-10-15 공개)가 아직 pnpm의 최소 공개 기간(하루) 안이라 버전 확인 하나가 남는다.
-  기간이 지나면 `app/`에서 `pnpm exec expo install --fix`로 맞춘다. 기간을 우회하는 `minimumReleaseAgeExclude`가 `pnpm-workspace.yaml`에 생기면 되돌리고 기다린다.
+- `pnpm dlx expo-doctor` 21/21(SDK 57 최신 패치). 패치는 `app/`에서 `pnpm exec expo install --fix`로 맞춘다. 막 나온 패치는 pnpm의
+  최소 공개 기간(하루) 안이라 설치되지 않는다. 기간을 우회하는 `minimumReleaseAgeExclude`가 `pnpm-workspace.yaml`에 생기면 되돌리고 기다린다.
 - EAS Update(`expo-updates`): 아래 앱 업데이트.
 - EAS development·production 환경에 공개 클라이언트 설정 5개(`EXPO_PUBLIC_API_URL`, Firebase 4개), `eas.json`에서 환경을 고른다.
 - Gmail 발송(OAuth 앱 Production, `gmail.send`)과 서버 환경변수 설정.
