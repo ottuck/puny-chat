@@ -1625,7 +1625,10 @@ export function BuddyStage({
   return (
     <View
       onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}
-      style={[bare ? null : styles.stage, { height, backgroundColor: colors.stage }]}
+      style={[
+        bare ? null : [styles.stage, { borderColor: colors.border }],
+        { height, backgroundColor: colors.stage },
+      ]}
     >
       <Pressable
         onPress={onOpenDetail}
@@ -2238,10 +2241,9 @@ export function BuddyStage({
 }
 
 const styles = StyleSheet.create({
+  // Same as BuddyScene's frame (the demo uses the stage alone).
   stage: {
-    marginHorizontal: 12,
-    marginTop: 8,
-    borderRadius: 20,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
   },
   info: {
