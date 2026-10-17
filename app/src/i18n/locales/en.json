@@ -462,6 +462,15 @@
     "endBody": "Ready to raise your own buddy? Start right away, no sign-up.",
     "replay": "Watch again"
   },
+  "push": {
+    "banner": {
+      "title": "🔔 Notifications are off",
+      "body": "On the web you turn them on yourself. Then you'll know when a message comes in.",
+      "turnOn": "Turn on notifications ›",
+      "installTitle": "🔔 Messages won't notify you here",
+      "installBody": "An iPhone notifies only from apps added to the home screen. Tap Safari's Share button → 'Add to Home Screen', then open puny-chat from your home screen."
+    }
+  },
   "guide": {
     "title": "Raising your buddy",
     "banner": {

@@ -25,7 +25,8 @@ import { MessageComposer } from '@/features/chat/components/message-composer';
 import { EmptyChat } from '@/features/chat/components/empty-chat';
 import { MessageList } from '@/features/chat/components/message-list';
 import { useChat } from '@/features/chat/use-chat';
-import { registerForPush } from '@/features/notifications/push';
+import { PushBanner } from '@/features/notifications/components/push-banner';
+import { type PushState, registerForPush } from '@/features/notifications/push';
 import { InviteSheet } from '@/features/room/components/invite-sheet';
 import type { Me, Room } from '@/features/room/api';
 import { useReadyRoom } from '@/features/room/room-provider';
@@ -67,8 +68,12 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
   const guestDaysLeft = useGuestDaysLeft(user);
 
   // Asked here rather than at launch: by now the user knows what the app is for.
+  const [push, setPush] = useState<PushState | null>(null);
+  const [pushBanner, setPushBanner] = useState(false);
   useEffect(() => {
-    registerForPush().catch((e) => console.warn('push registration failed', e));
+    registerForPush()
+      .then(setPush)
+      .catch((e) => console.warn('push registration failed', e));
   }, []);
   const [inviteOpen, setInviteOpen] = useState(false);
   // The guide waits for the dream before the first egg to end.
@@ -103,7 +108,8 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
           onPressPartner={partner ? () => setPartnerOpen(true) : undefined}
         />
         <GuestExpiryBanner daysLeft={guestDaysLeft} onPress={() => router.push('/settings')} />
-        <GuideBanner hold={dreaming} onOpen={() => router.push('/guide')} />
+        <PushBanner state={push} onChange={setPush} onVisible={setPushBanner} hold={dreaming} />
+        <GuideBanner hold={dreaming || pushBanner} onOpen={() => router.push('/guide')} />
         <BuddyScene
           dreams
           onDreaming={setDreaming}
