@@ -199,7 +199,8 @@ const PAST_BUDDIES: AlbumEntry[] = (
 // ?stage=CHILD&level=8 (the room at that level), &hour=22 (the room at night), &job=none (a grown-up
 // before its job), &detail=1 (its details open, as from its name), &album=2 (that many buddies gone
 // their own way, in the memory album by the hot spring's button), &date=01-01 (the seasonal things
-// of that day), &cue=owl (a happening or a guest, two seconds in).
+// of that day), &cue=owl (a happening or a guest, two seconds in), &leave=1 (it goes its own way,
+// two seconds in).
 function Preview() {
   const colors = useColors();
   const params = useLocalSearchParams<{
@@ -213,6 +214,7 @@ function Preview() {
     album?: string;
     date?: string;
     cue?: string;
+    leave?: string;
   }>();
   const linkedCut = params.scene?.startsWith('cut') ? Number(params.scene.slice(3)) - 1 : null;
   const linkedSeason = SEASONS.find((s) => s === params.season);
@@ -234,6 +236,16 @@ function Preview() {
     const timer = setTimeout(() => setCue({ id: randomUUID(), kind: linkedCue }), 2000);
     return () => clearTimeout(timer);
   }, [linkedCue]);
+  // &leave=1: the buddy goes its own way two seconds in (moving out, then the new egg).
+  const leaves = params.leave === '1';
+  useEffect(() => {
+    if (!leaves) return;
+    const timer = setTimeout(() => {
+      setStage('EGG');
+      setLevel(null);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [leaves]);
   const [reaction, setReaction] = useState<Reaction | null>(null);
   const [partnerPet, setPartnerPet] = useState<{ id: string } | null>(null);
   const [partnerHere, setPartnerHere] = useState(false);
