@@ -16,6 +16,7 @@
     "ALREADY_IN_ROOM": "You're already chatting with someone in another room.",
     "BUDDY_NOT_GROWN": "A new egg is already here.",
     "PARTNER_CHANGED": "The partner or room has changed. Please try again from your current conversation.",
+    "INVITATION_RATE_LIMIT": "Too many wrong codes. Please try again in 10 minutes.",
     "SUPPORT_RATE_LIMIT": "Too many submissions. Please try again later.",
     "ROOM_NOT_FOUND": "This conversation has ended. Please reload your current room.",
     "JOB_CHANGE_LOCKED": "The job can't be changed right now. You can change it once each at level 20, 30, 40 and 50, and any time from 60.",
@@ -40,7 +41,7 @@
   },
   "join": {
     "title": "Join with a code",
-    "hint": "Enter the 8-character code your friend shared.",
+    "hint": "Enter the 4-character code your friend shared. Pasting the whole invite message works too.",
     "submit": "Join",
     "leaveTitle": "Leave your buddy?",
     "leaveMessage": "If you join this room, the buddy you're raising now and its chat will be gone.",

@@ -13,6 +13,8 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
@@ -28,7 +30,12 @@ class InvitationService {
     static final Duration VALIDITY = Duration.ofHours(24);
     // No 0/O or 1/I/L: codes are read aloud and typed by hand.
     private static final String ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
-    private static final int CODE_LENGTH = 8;
+    // Short enough to type from a chat bubble that cannot be copied in part. Few codes are live at a
+    // time (24 hours, single use), and wrong guesses are limited below.
+    private static final int CODE_LENGTH = 4;
+    // Kept in memory: there is one server. A restart only resets the count.
+    static final int MAX_MISSES = 10;
+    private static final Duration MISS_WINDOW = Duration.ofMinutes(10);
 
     private final InvitationRepository invitations;
     private final RoomService roomService;
@@ -37,6 +44,9 @@ class InvitationService {
     private final RoomHub hub;
     private final Clock clock;
     private final SecureRandom random = new SecureRandom();
+    private final Map<String, Misses> misses = new ConcurrentHashMap<>();
+
+    private record Misses(Instant since, int count) {}
 
     InvitationService(
             InvitationRepository invitations,
@@ -75,9 +85,15 @@ class InvitationService {
     Mono<RoomView> accept(User user, String rawCode, boolean leaveCurrentRoom) {
         String code = rawCode.trim().toUpperCase(Locale.ROOT);
         Instant now = Instant.now(clock);
+        if (tooManyMisses(user.id(), now)) {
+            return Mono.error(new ApiException(HttpStatus.TOO_MANY_REQUESTS, "INVITATION_RATE_LIMIT"));
+        }
         return invitations
                 .findByCode(code)
-                .switchIfEmpty(Mono.error(new ApiException(HttpStatus.NOT_FOUND, "INVITATION_NOT_FOUND")))
+                .switchIfEmpty(Mono.defer(() -> {
+                    miss(user.id(), now);
+                    return Mono.error(new ApiException(HttpStatus.NOT_FOUND, "INVITATION_NOT_FOUND"));
+                }))
                 .flatMap(invitation -> {
                     boolean resuming = user.id().equals(invitation.usedBy());
                     boolean alreadyHere = invitation.roomId().equals(user.roomId());
@@ -214,6 +230,23 @@ class InvitationService {
 
     private static ApiException alreadyInRoom() {
         return new ApiException(HttpStatus.CONFLICT, "ALREADY_IN_ROOM");
+    }
+
+    private boolean tooManyMisses(String userId, Instant now) {
+        Misses current = misses.get(userId);
+        return current != null && current.since().plus(MISS_WINDOW).isAfter(now) && current.count() >= MAX_MISSES;
+    }
+
+    private void miss(String userId, Instant now) {
+        if (misses.size() > 10_000) {
+            misses.values().removeIf(m -> !m.since().plus(MISS_WINDOW).isAfter(now));
+        }
+        misses.compute(
+                userId,
+                (id, current) ->
+                        current == null || !current.since().plus(MISS_WINDOW).isAfter(now)
+                                ? new Misses(now, 1)
+                                : new Misses(current.since(), current.count() + 1));
     }
 
     private String newCode() {

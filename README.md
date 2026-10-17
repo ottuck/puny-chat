@@ -42,7 +42,7 @@ at you, no daily missions. Just **having something to raise together** makes the
 <table>
   <tr>
     <td align="center"><img src="docs/images/empty.png" width="200" alt="A room started alone: the buddy has hatched, with an invite button"><br><sub><b>Start on your own</b><br>The egg hatches, straight into the chat</sub></td>
-    <td align="center"><img src="docs/images/invite.png" width="200" alt="An 8-character invite code"><br><sub><b>Invite one friend</b><br>8-character code, single use</sub></td>
+    <td align="center"><img src="docs/images/invite.png" width="200" alt="A 4-character invite code"><br><sub><b>Invite one friend</b><br>4-character code, single use</sub></td>
     <td align="center"><img src="docs/images/chat.png" width="200" alt="A conversation with Buddy events in between"><br><sub><b>Chat and care together</b><br>Typing · read · online</sub></td>
     <td align="center"><img src="docs/images/buddy.png" width="200" alt="Buddy details: EXP, fullness, cleanliness, feed, clean up"><br><sub><b>Look after the Buddy</b><br>Feed · clean up</sub></td>
   </tr>
