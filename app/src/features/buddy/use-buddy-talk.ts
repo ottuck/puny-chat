@@ -66,7 +66,6 @@ export type Line =
   | 'farewell'
   // A tap on a thing in the room (buddy-stage.tsx, touchProp).
   | 'plant'
-  | 'portrait'
   | 'clock'
   | 'windowDay'
   | 'windowDusk'

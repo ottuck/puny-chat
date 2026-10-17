@@ -173,7 +173,6 @@
       "train": "Choo choo!",
       "farewell": "Thanks for everything!",
       "plant": "Grow, grow!",
-      "portrait": "I hope they are doing well",
       "clock": "Look at the time!",
       "windowDay": "What a nice day",
       "windowDusk": "What a pretty sunset",
@@ -198,9 +197,12 @@
       "confirm": "Let it go"
     },
     "album": {
-      "title": "Album",
+      "title": "Memory album",
       "together_one": "{{from}} – {{to}} · {{count}} day together",
-      "together_other": "{{from}} – {{to}} · {{count}} days together"
+      "together_other": "{{from}} – {{to}} · {{count}} days together",
+      "open": "Memory album",
+      "count_one": "{{count}} buddy gone its own way",
+      "count_other": "{{count}} buddies gone their own way"
     },
     "reward": {
       "plant1": "Sprout pot",
@@ -217,7 +219,6 @@
       "wood": "Wooden floor",
       "sparrow": "A sparrow drops by",
       "plant3": "Flowers in a glazed pot",
-      "curtains": "Window curtains",
       "firefly": "Fireflies drop by",
       "ladybug": "A ladybug drops by",
       "train": "Toy train",
@@ -252,8 +253,7 @@
       "waterPlants": "Water plants for the goldfish",
       "catFace": "The stray cat's face",
       "bunny": "A bunny plush",
-      "sillFlower": "The succulent in flower",
-      "cushion": "Gold cushion"
+      "sillFlower": "The succulent in flower"
     },
     "nextReward_one": "Next reward: Lv.{{level}} {{reward}} · {{count}} level to go",
     "nextReward_other": "Next reward: Lv.{{level}} {{reward}} · {{count}} levels to go",
@@ -323,8 +323,6 @@
       "lamp": "Lamp",
       "crate": "Crate",
       "rug": "Rug",
-      "cushion": "Cushion",
-      "portrait": "Photo of {{name}}",
       "corner": "Seasonal decoration",
       "radio": "Radio",
       "gramophone": "Gramophone",
@@ -333,7 +331,8 @@
       "kotatsu": "Kotatsu",
       "table": "Low table",
       "bear": "Teddy bear",
-      "bunny": "Bunny plush"
+      "bunny": "Bunny plush",
+      "books": "Books"
     },
     "notice": {
       "jobChangeOpen": "The job can be changed once! Pick one in the buddy details",
@@ -483,7 +482,7 @@
     "graduate": {
       "title": "🎓 Its own way",
       "top": "From level 20 you can let your buddy go its own way from its details. It is your choice, you can keep raising it: up to the top level, 60, the room gets new and better things every level, and EXP keeps counting after it.",
-      "album": "It stays in the album and hangs on the wall in a frame. A new egg comes to the stage.",
+      "album": "It stays as a photo in the memory album on the stage. A new egg comes to the stage.",
       "keep": "It takes its things when it moves out. The new egg’s room starts bare and fills up again."
     }
   },

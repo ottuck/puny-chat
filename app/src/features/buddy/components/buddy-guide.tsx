@@ -9,7 +9,6 @@ import {
   CAT_TAIL,
   clockAt,
   CRATE,
-  CUSHION,
   FIREFLY,
   LAMP_LIT,
   LAMP,
@@ -31,7 +30,6 @@ import {
   BUNNY,
   CAT_FACE,
   CUCKOO_ROOF,
-  CURTAINS,
   DRAGONFLY,
   fishBowl,
   FURIN,
@@ -88,7 +86,6 @@ const REWARD_ICON: Record<Reward, { frame: Frame; palette: Palette }> = {
   catTail: room(CAT_TAIL[0]),
   plant5: prop(PLANTS[5][0]),
   bowl3: prop(bowl(true, 3)),
-  curtains: thing(CURTAINS),
   ladybug: thing(LADYBUG[0]),
   radio: thing(RADIO[1]),
   sillPot: thing(SILL_POT[0]),
@@ -114,7 +111,6 @@ const REWARD_ICON: Record<Reward, { frame: Frame; palette: Palette }> = {
   catFace: thing(CAT_FACE[0]),
   bunny: thing(BUNNY),
   sillFlower: thing(SILL_POT[1]),
-  cushion: room(CUSHION),
 };
 
 export function rewardIcon(reward: Reward, size = 30) {

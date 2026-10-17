@@ -1,6 +1,6 @@
 import type { BuddyJob, BuddyStage } from '../api';
-import type { Frame } from './pixel-sprite';
-import { buddyFrame, type Pose } from './sprites';
+import type { Frame, Palette } from './pixel-sprite';
+import { buddyFrame, type Pose, PROP_PALETTE } from './sprites';
 
 // What the buddy wears and what happens around it (docs/fun-improvements.md): a job's look
 // for a grown-up, a week's look for the season, and the pictures of the small happenings. The
@@ -469,9 +469,9 @@ const CHERRY_TREE: Frame = [
   '...f......kLDqk..........',
   '..........kLDqk......H...',
   '..........kLDqk..........',
-  '......H..kLDDDqk.........',
-  '.........kLDDDqk...f.....',
-  '.f.H..f...kkkkk...H..f.F.',
+  '.........kLLDDqk.........',
+  '.......kkLDDqDDqkk.......',
+  '.f.H..kqDDkkkkkDDqk..H.f.',
 ];
 // A maple in its autumn colors, leaves on the ground (autumn).
 // prettier-ignore
@@ -504,9 +504,9 @@ const MAPLE_TREE: Frame = [
   '.........kLDqk.........',
   '.........kLDqk.........',
   '...y.....kLDqk......O..',
-  '........kLDDDqk........',
-  '........kLDDDqk........',
-  '.O.Q..y..kkkkk..Q..O.E.',
+  '........kLLDDqk........',
+  '......kkLDDqDDqkk......',
+  '.O.Q.kqDDkkkkkDDqk.O.E.',
 ];
 // Shopping bags: a black one with a gold band, a pink one with tissue paper, a small kraft one
 // (Black Friday).
@@ -534,12 +534,23 @@ const SHOPPING_BAGS: Frame = [
   '.kkkkkkk.....kkkkkkkkkk.',
 ];
 
-// In PROP_PALETTE, at `size` times the buddy's pixel size (the pumpkin and the bags a little
-// finer, like the plant; the trees as tall as the gardener's plant). Summer keeps the plant.
-export const SEASON_CORNER: Partial<Record<Season, { frame: Frame; size: number }>> = {
-  SPRING: { frame: CHERRY_TREE, size: 1 },
+// The blossom and the maple outlined in a deep shade of their own colors instead of black, the
+// crown in rose or rust, the trunk and its roots in dark bark (`T`): finer at this size.
+function outlined(frame: Frame, trunkFrom: number): Frame {
+  return frame.map((row, i) => (i >= trunkFrom ? row.split('k').join('T') : row));
+}
+const CHERRY_PALETTE: Palette = { ...PROP_PALETTE, k: '#B04A72', T: '#5B3A28' };
+const MAPLE_PALETTE: Palette = { ...PROP_PALETTE, k: '#8E3324', T: '#5B3A28' };
+
+// At `size` times the buddy's pixel size (the pumpkin and the bags a little finer, like the plant;
+// the trees as tall as the gardener's plant), in PROP_PALETTE unless given. `sink`: pixels into the
+// floor, so the trees' roots stand on it. Summer keeps the plant.
+export const SEASON_CORNER: Partial<
+  Record<Season, { frame: Frame; size: number; palette?: Palette; sink?: number }>
+> = {
+  SPRING: { frame: outlined(CHERRY_TREE, 20), size: 0.85, palette: CHERRY_PALETTE, sink: 2 },
   HALLOWEEN: { frame: PUMPKIN, size: 0.72 },
-  AUTUMN: { frame: MAPLE_TREE, size: 1 },
+  AUTUMN: { frame: outlined(MAPLE_TREE, 20), size: 0.85, palette: MAPLE_PALETTE, sink: 2 },
   BLACK_FRIDAY: { frame: SHOPPING_BAGS, size: 0.8 },
   CHRISTMAS: { frame: TREE, size: 1 },
 };

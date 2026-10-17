@@ -2,12 +2,9 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import type { AlbumEntry } from '@/features/room/api';
-
 import { PixelSprite } from '../pixel/pixel-sprite';
 import {
   CRATE,
-  CUSHION,
   LAMP,
   MUSIC_BOX,
   type RugTier,
@@ -17,23 +14,22 @@ import {
   WINDOW,
   WINDOW_SILL_ROW,
 } from '../pixel/room';
-import { BEAR, fishBowl, GRAMOPHONE, RADIO, SILL_POT } from '../pixel/room-things';
 import {
-  BUDDY_PALETTE,
-  type BowlTier,
-  buddyFrame,
-  HEART,
-  PLANTS,
-  type PlantTier,
-  PROP_PALETTE,
-} from '../pixel/sprites';
+  BEAR,
+  BOOKS,
+  BUNNY,
+  fishBowl,
+  GRAMOPHONE,
+  RADIO,
+  SHELF,
+  SILL_POT,
+  THINGS_PALETTE,
+} from '../pixel/room-things';
+import { type BowlTier, PLANTS, type PlantTier, PROP_PALETTE } from '../pixel/sprites';
 import {
   Arrive,
-  Bear,
-  Bunny,
   CUCKOO_CELLS,
   CuckooClock,
-  Cushion,
   Fireflies,
   FishBowl,
   FloorPattern,
@@ -57,7 +53,7 @@ import {
 // its sill, the side table, the middle of the rug), or a thing already there gets finer (the pot,
 // the bowl, the rug, the floor, the clock, the radio). Nothing pushes anything out, one thing to a
 // spot. A few are only out in their season. They belong to the buddy: when it goes its own way it
-// takes them along, the new egg's room starts bare, and only its portrait stays on the wall.
+// takes them along, the new egg's room starts bare, and its photo goes into the album (album-gallery.tsx).
 
 export type Reward =
   | 'plant1'
@@ -84,7 +80,6 @@ export type Reward =
   | 'catTail'
   | 'plant5'
   | 'bowl3'
-  | 'curtains'
   | 'ladybug'
   | 'radio'
   | 'sillPot'
@@ -109,12 +104,11 @@ export type Reward =
   | 'waterPlants'
   | 'catFace'
   | 'bunny'
-  | 'sillFlower'
-  | 'cushion';
+  | 'sillFlower';
 
 // Shown in the guide and the buddy sheet ("next: Lv.9 window") as well. One for every level that
 // brings nothing of its own: a new stage (3, 5, 10), the job (12) and the job's changes (20, 30, 40,
-// 50) bring no thing for the room; the top one, 60, ends with the gold cushion.
+// 50) bring no thing for the room, nor does the top one, 60, where the whole room sparkles.
 export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 2, reward: 'plant1' },
   { level: 4, reward: 'crate' },
@@ -130,7 +124,6 @@ export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 17, reward: 'wood' },
   { level: 18, reward: 'sparrow' },
   { level: 19, reward: 'plant3' },
-  { level: 21, reward: 'curtains' },
   { level: 22, reward: 'firefly' },
   { level: 23, reward: 'ladybug' },
   { level: 24, reward: 'train' },
@@ -166,7 +159,6 @@ export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 57, reward: 'catFace' },
   { level: 58, reward: 'bunny' },
   { level: 59, reward: 'sillFlower' },
-  { level: 60, reward: 'cushion' },
 ];
 
 export function rewardLevel(reward: Reward): number {
@@ -212,8 +204,6 @@ export function inSeason(thing: keyof typeof SEASONAL, date: Date): boolean {
   return from <= to ? day >= from && day <= to : day >= from || day <= to;
 }
 
-const FRAMES_SHOWN = 3;
-
 // Which kind a pot grows into, drawn once per room and buddy: the same on both phones and every
 // time the app opens (a hash of the buddy's name and the tier, not a fresh random number).
 function kindOf(seed: string, tier: PlantTier, kinds: number): number {
@@ -230,19 +220,12 @@ function tierOf<T extends number>(has: (reward: Reward) => boolean, chain: Rewar
 
 // `seed`: the buddy's name. `kind`: a kind to show regardless (the art preview). `now`: the room's
 // time, for what is out in its season and which guests come (the owl only at night).
-export function decorFor(
-  level: number,
-  album: AlbumEntry[],
-  seed = '',
-  kind?: number,
-  now = new Date(),
-) {
+export function decorFor(level: number, seed = '', kind?: number, now = new Date()) {
   const has = (reward: Reward) => level >= rewardLevel(reward);
   const plant = tierOf<PlantTier>(has, ['plant1', 'plant2', 'plant3', 'plant4', 'plant5']);
   const kinds = plant === 0 ? 1 : PLANTS[plant].length;
   const night = skyAt(now.getHours()) === 'night';
   const windowThings: WindowThings = {
-    curtains: has('curtains'),
     furin: has('furin') && inSeason('furin', now),
     petals: has('sakura') && inSeason('sakura', now),
     rainbow: has('rainbow'),
@@ -281,7 +264,6 @@ export function decorFor(
     bunny: has('bunny'),
     lamp: has('lamp'),
     lampShade: has('lampShade'),
-    cushion: has('cushion'),
     fireflies: has('firefly'),
     guests: GUESTS.filter(
       (guest) =>
@@ -289,8 +271,6 @@ export function decorFor(
         (guest !== 'dragonfly' || inSeason('dragonfly', now)) &&
         (guest !== 'owl' || night),
     ),
-    // The latest ones, newest on the right.
-    portraits: album.slice(-FRAMES_SHOWN),
   };
 }
 
@@ -336,24 +316,15 @@ export function sideRoom(decor: Decor): number {
 
 const TOY_LEFT = 14;
 const TOY_WIDTH = CRATE[0].length * FLOOR_SCALE;
-// A portrait's frame: the picture at 1.5 with its padding and border.
-const PORTRAIT_WIDTH = buddyFrame('ADULT', 'happy')[0].length * 1.5 + 12;
-const PORTRAIT_GAP = 52;
 const CLOCK_LEFT = 16;
-// In front of the low table, nearer the front of the floor: the gold cushion, and the plush
-// friends either side of it (where it will be, before it comes).
-const FRONT_ROW = 6;
-const CUSHION_SCALE = 2;
-const CUSHION_WIDTH = CUSHION[0].length * CUSHION_SCALE;
-const PLUSH_SCALE = 2;
-const PLUSH_GAP = 3;
-const PLUSH_WIDTH = BEAR[0].length * PLUSH_SCALE;
+// The shelf, under the corner's buttons (CORNER_SIZE in buddy-stage.tsx, 4 from the top).
+const SHELF_RIGHT = 12;
+const SHELF_TOP = 48;
 // How long a rainbow stays after the rain.
 const RAINBOW_MS = 20_000;
 
 // The things in the room the buddy answers when tapped (buddy-stage.tsx); the rest only move.
-export type RoomProp =
-  'plant' | 'clock' | 'window' | 'portrait' | 'fish' | 'plush' | 'kotatsu' | 'table';
+export type RoomProp = 'plant' | 'clock' | 'window' | 'fish' | 'plush' | 'kotatsu' | 'table';
 
 type WallProps = {
   decor: Decor;
@@ -389,8 +360,8 @@ function middleOf(decor: Decor, width: number, stationRight: number, plantSpace:
   return (stationRight + width - 8 - plantSpace - sideRoom(decor)) / 2;
 }
 
-// Behind the buddy: the floor, the rug, the window and clock on the wall, portraits of buddies gone
-// their own way, the things on the floor and the sill. The plant and the bowl are drawn by the
+// Behind the buddy: the floor, the rug, the window and clock on the wall, the shelf of plush
+// friends, the things on the floor and the sill. The plant and the bowl are drawn by the
 // stage, and so is the train, which passes in front.
 export function WallDecor({
   decor,
@@ -420,15 +391,14 @@ export function WallDecor({
   const wall = height >= 250 ? 4 : height >= 220 ? 3 : 2;
   const clockScale = Math.min(3, wall);
   const windowWidth = WINDOW[0].length * wall;
-  const portraitsLeft =
-    decor.portraits.length === 0
-      ? width
-      : width - 14 - (decor.portraits.length - 1) * PORTRAIT_GAP - PORTRAIT_WIDTH;
+  const shelfScale = wall >= 4 ? 2.5 : 2;
+  const shelfWidth = SHELF[0].length * shelfScale;
+  const shelfLeft = decor.bear ? width - SHELF_RIGHT - shelfWidth : width;
   const clockRight = CLOCK_LEFT + (decor.cuckoo ? CUCKOO_CELLS : 13) * clockScale;
-  // In the middle, but clear of the portraits and the clock.
+  // In the middle, but clear of the shelf and the clock.
   const windowLeft = Math.max(
     clockRight + 12,
-    Math.min((width - windowWidth) / 2, portraitsLeft - 10 - windowWidth),
+    Math.min((width - windowWidth) / 2, shelfLeft - 10 - windowWidth),
   );
   const toyShown = stationRight === 0 && decor.toy > 0;
   // On the sill: the music box at its left end (up there the buddy never hides it), the radio at the
@@ -578,38 +548,45 @@ export function WallDecor({
         </View>
       ) : null}
 
-      {/* Snapshots of buddies gone their own way: smiling, in a pastel frame pinned at a tilt, with
-          a heart, like a photo on a fridge rather than a formal portrait. */}
-      {decor.portraits.map((entry, i) => (
-        <View
-          key={entry.graduatedAt}
-          style={[
-            styles.at,
-            {
-              top: top + 8,
-              right: 14 + (decor.portraits.length - 1 - i) * PORTRAIT_GAP,
-              transform: [{ rotate: i % 2 === 0 ? '-6deg' : '5deg' }],
-            },
-          ]}
-        >
-          <Tappable
-            kind="swing"
-            label={t('buddy.room.portrait', { name: entry.name })}
-            onTap={() => onProp('portrait')}
-          >
-            <View style={styles.frame}>
-              <PixelSprite
-                frame={buddyFrame('ADULT', 'happy')}
-                palette={BUDDY_PALETTE}
-                scale={1.5}
-              />
+      {/* The shelf in the top right, under the corner's buttons: the bear, the books, the bunny. */}
+      {decor.bear ? (
+        <View style={[styles.at, { right: SHELF_RIGHT, top: SHELF_TOP }]}>
+          <Arrive fresh={fresh('bear')} width={shelfWidth}>
+            <View style={[styles.shelfRow, { paddingHorizontal: 2 * shelfScale }]}>
+              <View key={`bear${decor.books}`}>
+                <Tappable kind="squish" label={t('buddy.room.bear')} onTap={() => onProp('plush')}>
+                  <PixelSprite frame={BEAR} palette={THINGS_PALETTE} scale={shelfScale} />
+                </Tappable>
+              </View>
+              {decor.books ? (
+                <Arrive fresh={fresh('books')} width={BOOKS[0].length * shelfScale}>
+                  <Tappable kind="rattle" label={t('buddy.room.books')}>
+                    <PixelSprite frame={BOOKS} palette={THINGS_PALETTE} scale={shelfScale} />
+                  </Tappable>
+                </Arrive>
+              ) : (
+                <View style={{ width: BOOKS[0].length * shelfScale }} />
+              )}
+              {decor.bunny ? (
+                <Arrive fresh={fresh('bunny')} width={BUNNY[0].length * shelfScale}>
+                  <Tappable
+                    kind="squish"
+                    label={t('buddy.room.bunny')}
+                    onTap={() => onProp('plush')}
+                  >
+                    <PixelSprite frame={BUNNY} palette={THINGS_PALETTE} scale={shelfScale} />
+                  </Tappable>
+                </Arrive>
+              ) : (
+                <View style={{ width: BUNNY[0].length * shelfScale }} />
+              )}
             </View>
-            <View style={styles.heart}>
-              <PixelSprite frame={HEART} palette={PROP_PALETTE} scale={1.5} />
+            <View style={{ marginTop: -shelfScale }}>
+              <PixelSprite frame={SHELF} palette={THINGS_PALETTE} scale={shelfScale} />
             </View>
-          </Tappable>
+          </Arrive>
         </View>
-      ))}
+      ) : null}
 
       {/* The rug is there from the egg on: it warms the room and keeps the empty stage balanced. */}
       <View
@@ -625,7 +602,7 @@ export function WallDecor({
           </Tappable>
         </Arrive>
       </View>
-      {/* The middle of the rug: the low table at the back (in front of it, FrontDecor). */}
+      {/* The middle of the rug: the low table. */}
       {decor.table ? (
         <View key={decor.table} style={[styles.at, { left: tableLeft, bottom: floor - 2 }]}>
           <Arrive fresh={fresh('kotatsu')} width={tableWidth}>
@@ -694,59 +671,6 @@ export function WallDecor({
   );
 }
 
-// Nearer the front of the floor than the buddy and the station, so drawn over them (buddy-stage.tsx
-// puts it after the station): the gold cushion in front of the low table, the plush friends sitting
-// either side of it, small, so they fit on a narrow stage too.
-export function FrontDecor({
-  decor,
-  width,
-  stationRight,
-  plantRoom: plantSpace,
-  onProp,
-}: Pick<WallProps, 'decor' | 'width' | 'stationRight' | 'plantRoom' | 'onProp'>) {
-  const { t } = useTranslation();
-  const [openedAt] = useState(decor.level);
-  const fresh = (reward: Reward) => rewardLevel(reward) > openedAt;
-  const cushionLeft = middleOf(decor, width, stationRight, plantSpace) - CUSHION_WIDTH / 2;
-  if (!decor.cushion && !decor.bear && !decor.bunny) return null;
-  return (
-    <View style={[StyleSheet.absoluteFill, styles.passThrough]}>
-      {decor.cushion ? (
-        <View style={[styles.at, { left: cushionLeft, bottom: FRONT_ROW }]}>
-          <Arrive fresh={fresh('cushion')} width={CUSHION_WIDTH}>
-            <Tappable kind="squish" label={t('buddy.room.cushion')}>
-              <Cushion scale={CUSHION_SCALE} />
-            </Tappable>
-          </Arrive>
-        </View>
-      ) : null}
-      {decor.bear ? (
-        <View
-          key={decor.books ? 'books' : 'bear'}
-          style={[styles.at, { left: cushionLeft - PLUSH_GAP - PLUSH_WIDTH, bottom: FRONT_ROW }]}
-        >
-          <Arrive fresh={fresh(decor.books ? 'books' : 'bear')} width={PLUSH_WIDTH}>
-            <Tappable kind="squish" label={t('buddy.room.bear')} onTap={() => onProp('plush')}>
-              <Bear books={decor.books} scale={PLUSH_SCALE} />
-            </Tappable>
-          </Arrive>
-        </View>
-      ) : null}
-      {decor.bunny ? (
-        <View
-          style={[styles.at, { left: cushionLeft + CUSHION_WIDTH + PLUSH_GAP, bottom: FRONT_ROW }]}
-        >
-          <Arrive fresh={fresh('bunny')} width={PLUSH_WIDTH}>
-            <Tappable kind="squish" label={t('buddy.room.bunny')} onTap={() => onProp('plush')}>
-              <Bunny scale={PLUSH_SCALE} />
-            </Tappable>
-          </Arrive>
-        </View>
-      ) : null}
-    </View>
-  );
-}
-
 export function Plant({ tier, kind, scale }: { tier: PlantTier; kind: number; scale: number }) {
   return <PixelSprite frame={PLANTS[tier][kind]} palette={PROP_PALETTE} scale={scale} />;
 }
@@ -768,16 +692,9 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
-  frame: {
-    padding: 3,
-    borderWidth: 3,
-    borderRadius: 8,
-    borderColor: '#FF9EB5',
-    backgroundColor: '#FFF4F7',
-  },
-  heart: {
-    position: 'absolute',
-    top: -7,
-    right: -7,
+  shelfRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
   },
 });

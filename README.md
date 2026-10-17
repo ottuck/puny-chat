@@ -83,7 +83,7 @@ at you, no daily missions. Just **having something to raise together** makes the
 
 ### From an egg to its own way
 
-Nothing is pushed out of the room: a spot not used yet fills, or a thing already there gets finer. When the buddy goes its own way it packs its things in a bundle, waves goodbye and walks off, and a new egg arrives in a bare room. Only its portrait stays on the wall.
+Nothing is pushed out of the room: a spot not used yet fills, or a thing already there gets finer. When the buddy goes its own way it packs its things in a bundle, waves goodbye and walks off, and a new egg arrives in a bare room. Its photo goes into the memory album, opened from the button beside the hot spring.
 
 <div align="center">
 <img src="docs/images/room-story.png" width="640" alt="The room from level 9 to 40: a toy box, a music box on the windowsill, a snail, a dusk window, a sparrow, a cat's tail, a toy train, fireflies at night; then the buddy moving out with a bundle and a new egg in a bare room">

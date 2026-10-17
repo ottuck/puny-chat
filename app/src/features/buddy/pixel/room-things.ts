@@ -1,16 +1,14 @@
 import type { Frame, Palette } from './pixel-sprite';
 import { ROOM_PALETTE } from './room';
 
-// The room's later things (docs/fun-improvements.md, 방 소품): what the window grows into (curtains,
-// a wind chime, petals, a rainbow, more guests at the glass), what stands on its sill (a pot, a
+// The room's later things (docs/fun-improvements.md, 방 소품): what the window grows into (a wind
+// chime, petals, a rainbow, more guests at the glass), what stands on its sill (a pot, a
 // radio that turns into a gramophone), the side table with a goldfish bowl, the low table in the
-// middle (a kotatsu in winter) with tea and New Year's mochi, the plush friends beside it, a cuckoo
+// middle (a kotatsu in winter) with tea and New Year's mochi, the shelf of plush friends, a cuckoo
 // clock and a fringed lamp shade. The last rug is with the others (room.ts).
 
 export const THINGS_PALETTE: Palette = {
   ...ROOM_PALETTE,
-  C: '#F6C7CF', // curtain
-  M: '#E59DB0', // curtain, folds
   c: '#CFEFFA', // water
   d: '#9FD3EA', // water, deep
   g: '#8CCB72', // leaf
@@ -32,30 +30,6 @@ export const GOLD_PALETTE: Palette = {
 };
 
 // --- At the window ---
-
-// Curtains (Lv.21) tied back on both sides of the glass, on a rod with gold knobs. Drawn over the
-// window, the same width.
-const DRAPE = [
-  '.kCCMCk',
-  '.kCCMCk',
-  '.kCCMCk',
-  '.kCCMk.',
-  '.kCMCk.',
-  '.kCMCk.',
-  '.kCMk..',
-  '.kCMk..',
-  '.kyyk..',
-  '.kCMk..',
-  '.kCCMk.',
-  '.kCCMCk',
-  '.kCMCMk',
-  '.kCMCMk',
-  '.kkkkkk',
-];
-export const CURTAINS: Frame = [
-  'yqqqqqqqqqqqqqqqqqqqqy',
-  ...DRAPE.map((left) => left + '........' + [...left].reverse().join('')),
-];
 
 // A glass wind chime (Lv.31, in summer) at the top of the glass: a red pattern on the bell, the
 // clapper, and its paper strip swinging in the breeze.
@@ -459,7 +433,7 @@ export const MOCHI: Frame = [
   'kkkkkkkkkk',
 ];
 
-// Plush friends sitting by the table: a bear (Lv.34) with a red bow, a white bunny (Lv.58).
+// Plush friends on the shelf: a bear (Lv.34) with a red bow, a white bunny (Lv.58).
 // prettier-ignore
 export const BEAR: Frame = [
   '.kk...kk.',
@@ -489,20 +463,31 @@ export const BUNNY: Frame = [
   '.kk...kk.',
 ];
 
-// A stack of books the bear sits on (Lv.52).
+// Books standing on the shelf (Lv.52), one taller than the others.
 // prettier-ignore
 export const BOOKS: Frame = [
-  '..kkkkkk.',
-  '..kaaaWk.',
-  'kkkkkkkkk',
-  'kuuuuuuWk',
-  'kkkkkkkkk',
-  '.kTTTTTWk',
-  '.kkkkkkkk',
-  'kvvvvvvWk',
-  'kkkkkkkkk',
+  '...kkkk...',
+  '...kuuk...',
+  'kkkkuuk...',
+  'kaakuukkkk',
+  'kaakuukTTk',
+  'kaakyykTTk',
+  'kaakuukWWk',
+  'kaakuukTTk',
+  'kaakuukTTk',
+  'kkkkkkkkkk',
 ];
 
+// The shelf on the wall at the top right (Lv.34): a plank on two brackets, for the plush friends
+// and the books.
+export const SHELF: Frame = [
+  'k'.repeat(36),
+  'k' + 'L'.repeat(34) + 'k',
+  'k' + 'D'.repeat(34) + 'k',
+  'k'.repeat(36),
+  '....kqk' + '.'.repeat(22) + 'kqk....',
+  '.....kk' + '.'.repeat(22) + 'kk.....',
+];
 // --- On the wall ---
 
 // The wall clock grown into a cuckoo clock (Lv.36): a roof with a little door over the face, and

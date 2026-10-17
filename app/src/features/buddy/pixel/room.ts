@@ -101,34 +101,34 @@ export const SKY_PALETTES: Record<SkyTime, Palette> = {
   night: { ...ROOM_PALETTE, ...SKIES.night },
 };
 
-// A cream frame with a cross of glazing bars and a sill; through it a cloud, the sun (or the moon
-// and stars) and green hills.
+// A cream frame with a cross of glazing bars and a sill, wide so the sky shows past what stands on
+// the sill; through it clouds, the sun (or the moon and stars) and green hills.
 // prettier-ignore
 export const WINDOW: Frame = [
-  '.kkkkkkkkkkkkkkkkkkkk.',
-  '.kffffffffffffffffffk.',
-  '.kfkkkkkkkkkkkkkkkkFk.',
-  '.kfkssssstfftssssskFk.',
-  '.kfksccsssffssbbsskFk.',
-  '.kfkcccccsffsbbbBskFk.',
-  '.kfkssssssffsbbBBskFk.',
-  '.kfkssstssffssbBsskFk.',
-  '.kfkssssssfftssssskFk.',
-  '.kfkffffffffffffffkFk.',
-  '.kfkSSSSSSffSSSSSSkFk.',
-  '.kfkSSSSggffggSSSSkFk.',
-  '.kfkSSggggffgggSSgkFk.',
-  '.kfkggggGgffgGggggkFk.',
-  '.kfkkkkkkkkkkkkkkkkFk.',
-  '.kFFFFFFFFFFFFFFFFFFk.',
-  'kkkkkkkkkkkkkkkkkkkkkk',
-  'kffffffffffffffffffffk',
-  'kFFFFFFFFFFFFFFFFFFFFk',
-  'kkkkkkkkkkkkkkkkkkkkkk',
+  '.kkkkkkkkkkkkkkkkkkkkkkkkkk.',
+  '.kffffffffffffffffffffffffk.',
+  '.kfkkkkkkkkkkkkkkkkkkkkkkFk.',
+  '.kfkssssssstsffsssssstsskFk.',
+  '.kfksccssssssffsssssbbsskFk.',
+  '.kfkcccccsstsffssssbbbBskFk.',
+  '.kfksssssssssfftsssbbBBskFk.',
+  '.kfkssstsssssffsssssbBsskFk.',
+  '.kfksssssssssffsstsssssskFk.',
+  '.kfkffffffffffffffffffffkFk.',
+  '.kfkSSSSSSSSSffSSSSSSSSSkFk.',
+  '.kfkSSSSSSgggffggSSSSSSSkFk.',
+  '.kfkSSSggggggffgggSSSSggkFk.',
+  '.kfkggggggGggffgGgggggGgkFk.',
+  '.kfkkkkkkkkkkkkkkkkkkkkkkFk.',
+  '.kFFFFFFFFFFFFFFFFFFFFFFFFk.',
+  'kkkkkkkkkkkkkkkkkkkkkkkkkkkk',
+  'kffffffffffffffffffffffffffk',
+  'kFFFFFFFFFFFFFFFFFFFFFFFFFFk',
+  'kkkkkkkkkkkkkkkkkkkkkkkkkkkk',
 ];
 
 // The glass, in the window's cells: where the guests at the window show.
-export const WINDOW_GLASS = { col: 4, row: 3, cols: 14, rows: 11 };
+export const WINDOW_GLASS = { col: 4, row: 3, cols: 20, rows: 11 };
 // The sill's top row, where a sparrow perches.
 export const WINDOW_SILL_ROW = 16;
 
@@ -259,7 +259,7 @@ export const MUSIC_BOX: [Frame, Frame] = [[
   'kkkkkkkkkkkkk..',
 ]];
 
-// --- The standing lamp (Lv.42) ---
+// --- The standing lamp (Lv.42): a tall floor lamp ---
 
 // prettier-ignore
 export const LAMP: Frame = [
@@ -282,6 +282,14 @@ export const LAMP: Frame = [
   '...kNk...',
   '...kNk...',
   '...kNk...',
+  '...kNk...',
+  '...kNk...',
+  '...kNk...',
+  '...kNk...',
+  '...kNk...',
+  '...kNk...',
+  '...kNk...',
+  '...kNk...',
   '..kkkkk..',
   '.knnnnnk.',
   'kNNNNNNNk',
@@ -290,22 +298,6 @@ export const LAMP: Frame = [
 
 // At night the shade glows.
 export const LAMP_LIT: Palette = { ...ROOM_PALETTE, l: '#FFF2BF', j: '#FFD166' };
-
-// --- The gold cushion (Lv.60) ---
-
-// A square floor cushion seen a little from above: stitched across to a tuft in the middle, its
-// thick front edge below, tassels at the corners.
-// prettier-ignore
-export const CUSHION: Frame = [
-  'y.kkkkkkkkkkkkkk.y',
-  '.kzwwzzzzzzzzzzzk.',
-  'kzwzZzzzzzzzzZzzZk',
-  'kzzzzZzzzzzzZzzzZk',
-  'kzzzzzzzyyzzzzzZZk',
-  'kZzzzZzzzzzzZzzZZk',
-  '.kZZZZZZZZZZZZZZk.',
-  'y.kkkkkkkkkkkkkk.y',
-];
 
 // --- Rugs (from the egg on; a new pattern at Lv.7, 16, 29, and the last at 51) ---
 

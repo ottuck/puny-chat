@@ -5,12 +5,15 @@ import { type LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-nativ
 
 import { useColors } from '@/theme';
 
+import type { AlbumEntry } from '@/features/room/api';
+
 import type { BuddyView } from '../api';
-import { BATH_ICON, BATH_PALETTE, HOME_ICON } from '../pixel/bath';
+import { ALBUM_ICON, BATH_ICON, BATH_PALETTE, HOME_ICON } from '../pixel/bath';
 import { isWinter } from '../pixel/looks';
 import { PixelSprite } from '../pixel/pixel-sprite';
 import { buddyFrame } from '../pixel/sprites';
 import type { Reaction } from '../reactions';
+import { AlbumGallery } from './album-gallery';
 import { BathStage } from './bath-stage';
 import { BuddyDream } from './buddy-dream';
 import {
@@ -50,6 +53,8 @@ type Props = ComponentProps<typeof BuddyStage> & {
   startInBath?: boolean;
   // On the way to the bath, once it is there: EXP if it has been a while.
   onBathe?: () => void;
+  // Buddies gone their own way: the album's button sits beside the bath's once there are any.
+  album?: AlbumEntry[];
 };
 
 function CornerButton({
@@ -83,6 +88,7 @@ export function BuddyScene({
   onDreaming,
   startInBath = false,
   onBathe,
+  album = [],
   ...props
 }: Props) {
   const { t } = useTranslation();
@@ -103,6 +109,7 @@ export function BuddyScene({
     buddyAt.current = middle;
   }, []);
   const [focusX, setFocusX] = useState<number | null>(null);
+  const [galleryOpen, setGalleryOpen] = useState(false);
 
   // The dream: only for an egg, only once on this device.
   const egg = buddy.stage === 'EGG';
@@ -237,6 +244,7 @@ export function BuddyScene({
   const spriteHeight = grid.length * gridScale(height, grid.length);
   const focus = { x: focusX ?? width / 2, y: height - FLOOR - spriteHeight / 2 };
   const canBathe = !egg && !night && !dreaming && !moving;
+  const hasAlbum = album.length > 0 && !dreaming && !moving;
 
   let scene;
   if (dream === 'checking') {
@@ -244,9 +252,6 @@ export function BuddyScene({
   } else if (dream === 'playing') {
     scene = <BuddyDream buddy={buddy} height={height} onEnd={wakeUp} />;
   } else if (moving) {
-    // Its portrait is already on the wall of the new room; not yet in the one it is leaving.
-    const album =
-      props.album?.at(-1)?.name === moving.name ? props.album.slice(0, -1) : props.album;
     scene = (
       <BuddyStage
         {...props}
@@ -254,7 +259,6 @@ export function BuddyScene({
         bare
         leaving
         buddy={moving}
-        album={album}
         reaction={null}
         corner={undefined}
       />
@@ -278,9 +282,21 @@ export function BuddyScene({
         onWalk={onWalk}
         buddy={shown}
         reaction={reaction}
+        corners={(canBathe ? 1 : 0) + (hasAlbum ? 1 : 0)}
         corner={
-          canBathe ? (
-            <CornerButton icon={BATH_ICON} label={t('buddy.bath.go')} onPress={toBath} />
+          canBathe || hasAlbum ? (
+            <View style={styles.corners}>
+              {hasAlbum ? (
+                <CornerButton
+                  icon={ALBUM_ICON}
+                  label={t('buddy.album.open')}
+                  onPress={() => setGalleryOpen(true)}
+                />
+              ) : null}
+              {canBathe ? (
+                <CornerButton icon={BATH_ICON} label={t('buddy.bath.go')} onPress={toBath} />
+              ) : null}
+            </View>
           ) : undefined
         }
       />
@@ -294,6 +310,7 @@ export function BuddyScene({
     >
       {scene}
       <Iris run={iris} width={width} height={height} focus={focus} spot={spriteHeight * 0.62} />
+      <AlbumGallery visible={galleryOpen} album={album} onClose={() => setGalleryOpen(false)} />
     </View>
   );
 }
@@ -304,6 +321,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
     borderRadius: 20,
     overflow: 'hidden',
+  },
+  corners: {
+    flexDirection: 'row',
+    gap: 6,
   },
   button: {
     width: CORNER_SIZE,

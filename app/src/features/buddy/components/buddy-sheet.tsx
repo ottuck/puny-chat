@@ -14,7 +14,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProgressBar } from '@/components/progress-bar';
 import { WebFrame } from '@/components/web-frame';
-import type { AlbumEntry } from '@/features/room/api';
 import { errorMessage } from '@/features/room/error-message';
 import { confirm } from '@/lib/confirm';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
@@ -37,8 +36,6 @@ type Props = {
   onClean: () => void;
   // A grown-up's work at its station, in place of cleaning up (it no longer poops).
   onWork?: () => void;
-  // Buddies gone their own way; none in the tour.
-  album?: AlbumEntry[];
   // At the top level: the buddy goes into the album and a new egg with this name arrives.
   onGraduate?: (newName: string) => Promise<void>;
   // An adult's job, changed once a day; none in the tour.
@@ -49,8 +46,8 @@ type Props = {
 
 const MAX_NAME_LENGTH = 12; // server: Buddy.MAX_NAME_LENGTH
 
-// Buddy detail: stats, the two care actions, going its own way once grown, and the album
-// (docs/spec.md). A native page sheet on iOS, so it can be swiped down.
+// Buddy detail: stats, the two care actions, and going its own way once grown (docs/spec.md); the
+// buddies gone their own way are in the memory album (album-gallery.tsx). A native page sheet on iOS, so it can be swiped down.
 export function BuddySheet({
   visible,
   buddy,
@@ -59,7 +56,6 @@ export function BuddySheet({
   onFeed,
   onClean,
   onWork,
-  album,
   onGraduate,
   onChangeJob,
   together,
@@ -163,8 +159,6 @@ export function BuddySheet({
             <NextReward level={buddy.level} />
 
             <Text style={[styles.hint, { color: colors.textMuted }]}>{t('buddy.growthHint')}</Text>
-
-            {album && album.length > 0 ? <AlbumCard album={album} /> : null}
           </ScrollView>
         </View>
       </WebFrame>
@@ -439,46 +433,6 @@ function GraduateCard({
   );
 }
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-// Newest first: the one who just left is on top.
-function AlbumCard({ album }: { album: AlbumEntry[] }) {
-  const colors = useColors();
-  const { t, i18n } = useTranslation();
-  const date = new Intl.DateTimeFormat(i18n.language, { month: 'short', day: 'numeric' });
-  return (
-    <View style={[styles.card, { backgroundColor: colors.surface }]}>
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>📖 {t('buddy.album.title')}</Text>
-      {[...album].reverse().map((entry) => {
-        const job = entry.job ?? undefined;
-        const born = new Date(entry.bornAt);
-        const left = new Date(entry.graduatedAt);
-        const days = Math.max(1, Math.ceil((left.getTime() - born.getTime()) / DAY_MS));
-        return (
-          <View key={entry.graduatedAt} style={styles.albumRow}>
-            <View style={[styles.portrait, { borderColor: colors.border }]}>
-              <BuddyAvatar stage="ADULT" size={36} />
-            </View>
-            <View style={styles.albumText}>
-              <Text style={[styles.statLabel, { color: colors.text }]}>
-                {entry.name}
-                {isJob(job) ? ` · ${JOB_ICON[job]} ${t(`buddy.job.${job}`)}` : ''}{' '}
-              </Text>
-              <Text style={[styles.statValue, { color: colors.textMuted }]}>
-                {t('buddy.album.together', {
-                  from: date.format(born),
-                  to: date.format(left),
-                  count: days,
-                })}
-              </Text>
-            </View>
-          </View>
-        );
-      })}
-    </View>
-  );
-}
-
 function Stat(props: { label: string; value: string; progress: number; color?: string }) {
   const colors = useColors();
   return (
@@ -556,20 +510,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 16,
-  },
-  albumRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  portrait: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 4,
-  },
-  albumText: {
-    flex: 1,
-    gap: 2,
   },
   topBar: {
     flexDirection: 'row',

@@ -202,6 +202,23 @@ export const BATH_ICON: Frame = [
   '.kkkkkkkkkk.',
 ];
 
+// The button to the album of buddies gone their own way: a framed picture with a heart, hung on a
+// nail.
+// prettier-ignore
+export const ALBUM_ICON: Frame = [
+  '.....kk.....',
+  '....k..k....',
+  'kkkkkkkkkkkk',
+  'kWWWWWWWWWWk',
+  'kWqqqqqqqqWk',
+  'kWqRRqqRRqWk',
+  'kWqRRRRRRqWk',
+  'kWqqRRRRqqWk',
+  'kWqqqRRqqqWk',
+  'kWWWWWWWWWWk',
+  'kkkkkkkkkkkk',
+];
+
 // The button back home: a little house.
 // prettier-ignore
 export const HOME_ICON: Frame = [

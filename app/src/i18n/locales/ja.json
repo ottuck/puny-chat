@@ -173,7 +173,6 @@
       "train": "シュッシュッポッポ!",
       "farewell": "今までありがとう!",
       "plant": "すくすく育ってね",
-      "portrait": "元気にしてるかな?",
       "clock": "もうこんな時間!",
       "windowDay": "いい天気~",
       "windowDusk": "夕焼けきれい",
@@ -198,9 +197,12 @@
       "confirm": "独り立ちさせる"
     },
     "album": {
-      "title": "アルバム",
+      "title": "思い出アルバム",
       "together_one": "{{from}}〜{{to}} · {{count}}日いっしょ",
-      "together_other": "{{from}}〜{{to}} · {{count}}日いっしょ"
+      "together_other": "{{from}}〜{{to}} · {{count}}日いっしょ",
+      "open": "思い出アルバム",
+      "count_one": "独り立ちしたBuddy {{count}}匹",
+      "count_other": "独り立ちしたBuddy {{count}}匹"
     },
     "reward": {
       "plant1": "芽の鉢植え",
@@ -217,7 +219,6 @@
       "wood": "フローリング",
       "sparrow": "スズメのお客さん",
       "plant3": "花咲く陶器の鉢植え",
-      "curtains": "窓のカーテン",
       "firefly": "ホタルのお客さん",
       "ladybug": "テントウムシのお客さん",
       "train": "おもちゃの汽車",
@@ -252,8 +253,7 @@
       "waterPlants": "水草の金魚鉢",
       "catFace": "野良猫の顔",
       "bunny": "うさぎのぬいぐるみ",
-      "sillFlower": "花が咲いた多肉植物",
-      "cushion": "金色の座布団"
+      "sillFlower": "花が咲いた多肉植物"
     },
     "nextReward_one": "次のごほうび：Lv.{{level}} {{reward}} · あと{{count}}レベル",
     "nextReward_other": "次のごほうび：Lv.{{level}} {{reward}} · あと{{count}}レベル",
@@ -323,8 +323,6 @@
       "lamp": "ランプ",
       "crate": "木箱",
       "rug": "ラグ",
-      "cushion": "座布団",
-      "portrait": "{{name}}の写真",
       "corner": "季節の飾り",
       "radio": "ラジオ",
       "gramophone": "蓄音機",
@@ -333,7 +331,8 @@
       "kotatsu": "こたつ",
       "table": "ちゃぶ台",
       "bear": "くまのぬいぐるみ",
-      "bunny": "うさぎのぬいぐるみ"
+      "bunny": "うさぎのぬいぐるみ",
+      "books": "本"
     },
     "notice": {
       "jobChangeOpen": "職業を1回変えられます!バディの詳細で選んでみてね",
@@ -483,7 +482,7 @@
     "graduate": {
       "title": "🎓 独り立ち",
       "top": "20レベルからBuddyの詳細で独り立ちさせられます。独り立ちは選べるので、育て続けてもかまいません。最高レベルの60まではレベルごとにお部屋の小物が増えて良くなり、経験値はその先も貯まります。",
-      "album": "独り立ちしたBuddyはアルバムに残り、壁に額縁で飾られます。ステージには新しいたまごが来ます。",
+      "album": "独り立ちしたBuddyは、ステージの思い出アルバムに写真で残ります。ステージには新しいたまごが来ます。",
       "keep": "小物は独り立ちするBuddyが引っ越しで持っていきます。新しいたまごのお部屋は、また一から飾ります。"
     }
   },

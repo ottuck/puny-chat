@@ -11,7 +11,6 @@ import {
   CAT_TAIL,
   clockAt,
   CRATE,
-  CUSHION,
   LAMP,
   LAMP_LIT,
   MUSIC_BOX,
@@ -27,13 +26,9 @@ import {
   WINDOW_SILL_ROW,
 } from '../pixel/room';
 import {
-  BEAR,
-  BOOKS,
   BUBBLE,
-  BUNNY,
   CUCKOO,
   CUCKOO_ROOF,
-  CURTAINS,
   fishBowl,
   FURIN,
   GOLD_PALETTE,
@@ -271,7 +266,6 @@ const TAP_SPARKLES = [
 
 // What the window has grown into (stage-decor.tsx, decorFor).
 export type WindowThings = {
-  curtains: boolean;
   // In their season: the wind chime, the cherry petals.
   furin: boolean;
   petals: boolean;
@@ -331,11 +325,6 @@ export function RoomWindow({
           <Squirrel key={run} {...visit} />
         ) : null}
       </View>
-      {things.curtains ? (
-        <View style={[styles.at, styles.passThrough]}>
-          <PixelSprite frame={CURTAINS} palette={THINGS_PALETTE} scale={scale} />
-        </View>
-      ) : null}
       {/* The wind chime hangs in the glass's top left; its strip swings now and then. */}
       {things.furin ? (
         <View
@@ -923,24 +912,6 @@ export function LowTable({
   );
 }
 
-// Plush friends by the table: the bear (Lv.34), on a stack of books from Lv.52; the bunny (Lv.58).
-export function Bear({ books, scale }: { books: boolean; scale: number }) {
-  return (
-    <View style={styles.column}>
-      <PixelSprite frame={BEAR} palette={THINGS_PALETTE} scale={scale} />
-      {books ? (
-        <View style={{ marginTop: -scale }}>
-          <PixelSprite frame={BOOKS} palette={THINGS_PALETTE} scale={scale} />
-        </View>
-      ) : null}
-    </View>
-  );
-}
-
-export function Bunny({ scale }: { scale: number }) {
-  return <PixelSprite frame={BUNNY} palette={THINGS_PALETTE} scale={scale} />;
-}
-
 // The standing lamp (Lv.42; a dotted shade with a gold fringe from Lv.47): lit in the evening and
 // at night, with a soft glow around its shade.
 export function StandingLamp({
@@ -977,11 +948,6 @@ export function StandingLamp({
       ) : null}
     </View>
   );
-}
-
-// The gold cushion (Lv.60), on the rug in front of the table.
-export function Cushion({ scale }: { scale: number }) {
-  return <PixelSprite frame={CUSHION} palette={ROOM_PALETTE} scale={scale} />;
 }
 
 // The floor itself, once it changes (Lv.17, 37): boards, then tatami. Drawn across the stage's

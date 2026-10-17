@@ -167,20 +167,26 @@ function PoseSheet({
   );
 }
 
-// Buddies gone their own way, for the photos on the wall (&album=).
-const PAST_BUDDIES: AlbumEntry[] = ['Mochi', 'Dango', 'Kinako'].map((name, i) => ({
+// Buddies gone their own way, for the memory album (&album=): two with jobs, one without.
+const PAST_BUDDIES: AlbumEntry[] = (
+  [
+    ['Mochi', 'GARDENER'],
+    ['Dango', 'BARISTA'],
+    ['Kinako', null],
+  ] as const
+).map(([name, job], i) => ({
   name,
   bornAt: `2026-0${i + 1}-01T00:00:00Z`,
-  graduatedAt: `2026-0${i + 2}-01T00:00:00Z`,
-  job: null,
+  graduatedAt: `2026-0${i + 2}-0${i + 3}T00:00:00Z`,
+  job,
 }));
 
 // A link can open it on a scene, for taking pictures of it (README):
 // /preview?scene=bath, ?scene=bath&season=CHRISTMAS (snowing), ?scene=cut2 (a cut of the dream),
 // ?stage=CHILD&level=8 (the room at that level), &hour=22 (the room at night), &job=none (a grown-up
 // before its job), &detail=1 (its details open, as from its name), &album=2 (that many buddies gone
-// their own way, their photos on the wall), &date=01-01 (the seasonal things of that day), &cue=owl
-// (a happening or a guest, two seconds in).
+// their own way, in the memory album by the hot spring's button), &date=01-01 (the seasonal things
+// of that day), &cue=owl (a happening or a guest, two seconds in).
 function Preview() {
   const colors = useColors();
   const params = useLocalSearchParams<{

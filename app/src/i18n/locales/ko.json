@@ -173,7 +173,6 @@
       "train": "칙칙폭폭!",
       "farewell": "그동안 고마웠어!",
       "plant": "쑥쑥 자라라~",
-      "portrait": "잘 지내고 있겠지?",
       "clock": "벌써 시간이 이렇게!",
       "windowDay": "날씨 좋다~",
       "windowDusk": "노을 예쁘다",
@@ -198,9 +197,12 @@
       "confirm": "독립시키기"
     },
     "album": {
-      "title": "앨범",
+      "title": "추억 앨범",
       "together_one": "{{from}} ~ {{to}} · {{count}}일 함께",
-      "together_other": "{{from}} ~ {{to}} · {{count}}일 함께"
+      "together_other": "{{from}} ~ {{to}} · {{count}}일 함께",
+      "open": "추억 앨범",
+      "count_one": "독립한 버디 {{count}}명",
+      "count_other": "독립한 버디 {{count}}명"
     },
     "reward": {
       "plant1": "새싹 화분",
@@ -217,7 +219,6 @@
       "wood": "마루 바닥",
       "sparrow": "참새 손님",
       "plant3": "꽃 핀 도자기 화분",
-      "curtains": "창문 커튼",
       "firefly": "반딧불이 손님",
       "ladybug": "무당벌레 손님",
       "train": "장난감 기차",
@@ -252,8 +253,7 @@
       "waterPlants": "수초 어항",
       "catFace": "길고양이 얼굴",
       "bunny": "토끼 인형",
-      "sillFlower": "꽃 핀 다육이",
-      "cushion": "금빛 방석"
+      "sillFlower": "꽃 핀 다육이"
     },
     "nextReward_one": "다음 보상: Lv.{{level}} {{reward}} · {{count}}레벨 남았어요",
     "nextReward_other": "다음 보상: Lv.{{level}} {{reward}} · {{count}}레벨 남았어요",
@@ -323,8 +323,6 @@
       "lamp": "무드등",
       "crate": "나무 상자",
       "rug": "러그",
-      "cushion": "방석",
-      "portrait": "{{name}}의 사진",
       "corner": "계절 장식",
       "radio": "라디오",
       "gramophone": "축음기",
@@ -333,7 +331,8 @@
       "kotatsu": "코타츠",
       "table": "좌탁",
       "bear": "곰 인형",
-      "bunny": "토끼 인형"
+      "bunny": "토끼 인형",
+      "books": "책"
     },
     "notice": {
       "jobChangeOpen": "직업을 한 번 바꿀 수 있어요! Buddy 상세에서 골라 보세요",
@@ -483,7 +482,7 @@
     "graduate": {
       "title": "🎓 독립",
       "top": "20레벨부터 버디 상세에서 독립시킬 수 있어요. 독립은 선택이라 계속 키워도 돼요. 최고 레벨 60까지는 레벨마다 방 소품이 계속 생기고 좋아지고, 경험치는 그 뒤에도 쌓여요.",
-      "album": "독립한 버디는 앨범에 남고 벽에 액자로 걸려요. 무대에는 새 알이 와요.",
+      "album": "독립한 버디는 무대 위 추억 앨범에 사진으로 남아요. 무대에는 새 알이 와요.",
       "keep": "소품은 독립하는 버디가 가지고 이사가요. 새 알의 방은 처음부터 다시 꾸며져요."
     }
   },

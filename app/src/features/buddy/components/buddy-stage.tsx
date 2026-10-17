@@ -17,8 +17,6 @@ import {
 import { ProgressBar } from '@/components/progress-bar';
 import { useColors } from '@/theme';
 
-import type { AlbumEntry } from '@/features/room/api';
-
 import { type BuddyJob, type BuddyView, JOB_CHANGE_LEVELS, NEXT_STEP_AT } from '../api';
 import {
   BUTTERFLY,
@@ -72,7 +70,6 @@ import {
 } from './room-props';
 import {
   decorFor,
-  FrontDecor,
   Plant,
   plantRoom as plantRoomFor,
   type RoomProp,
@@ -368,12 +365,11 @@ type Props = {
   onPet?: () => void;
   // The partner is connected too: the buddy is a little more lively.
   partnerHere?: boolean;
-  // Buddies gone their own way: their portraits hang on the wall, and the decorations stay.
-  album?: AlbumEntry[];
   // The season's look (pixel/looks.ts): by the date unless given (the art preview picks one).
   season?: Season | null;
-  // A button in the top right corner (the way to the hot spring, buddy-scene.tsx).
+  // Buttons in the top right corner (the hot spring, the album: buddy-scene.tsx), and how many.
   corner?: ReactNode;
+  corners?: number;
   // Without its own margins and rounded frame: buddy-scene.tsx draws them around the scenes.
   bare?: boolean;
   // A cut of the dream (buddy-dream.tsx): no name or level, and the buddy stays in the middle.
@@ -571,9 +567,9 @@ export function BuddyStage({
   partnerPet: latestPartnerPet,
   onPet,
   partnerHere = false,
-  album,
   season: chosenSeason,
   corner: cornerButton,
+  corners = 1,
   bare = false,
   dream = false,
   plantKind,
@@ -642,7 +638,7 @@ export function BuddyStage({
   const atTable = buddy.stage === 'CHILD' || buddy.stage === 'ADULT';
   const clock = useNow();
   const now = roomTime(clock, hour, date);
-  const decor = decorFor(buddy.level, album ?? [], buddy.name, plantKind, now);
+  const decor = decorFor(buddy.level, buddy.name, plantKind, now);
   // The season's corner stands in for the plant that week.
   const corner = season ? SEASON_CORNER[season] : undefined;
   const plantRoom = corner
@@ -1542,7 +1538,7 @@ export function BuddyStage({
         accessibilityLabel={t('buddy.open', { buddy: buddy.name })}
         style={[
           styles.info,
-          cornerButton ? styles.infoBesideCorner : null,
+          cornerButton ? { right: 14 + corners * (CORNER_SIZE + 6) } : null,
           dream ? styles.hidden : null,
         ]}
       >
@@ -1598,9 +1594,18 @@ export function BuddyStage({
         now={now}
       />
       {corner ? (
-        <View style={[styles.poop, { bottom: FLOOR - 2, right: 8 }]}>
+        <View
+          style={[
+            styles.poop,
+            { bottom: FLOOR - 2 - (corner.sink ?? 0) * scale * corner.size, right: 8 },
+          ]}
+        >
           <Tappable kind="sway" shine label={t('buddy.room.corner')}>
-            <PixelSprite frame={corner.frame} palette={PROP_PALETTE} scale={scale * corner.size} />
+            <PixelSprite
+              frame={corner.frame}
+              palette={corner.palette ?? PROP_PALETTE}
+              scale={scale * corner.size}
+            />
           </Tappable>
         </View>
       ) : decor.plant ? (
@@ -2050,13 +2055,6 @@ export function BuddyStage({
         />
       ) : null}
 
-      <FrontDecor
-        decor={decor}
-        width={width}
-        stationRight={stationRight}
-        plantRoom={plantRoom}
-        onProp={touchProp}
-      />
       {act === 'train' && width > 0 ? (
         <Train key={actRun} width={width} scale={3} tick={tick} />
       ) : null}
@@ -2183,9 +2181,6 @@ const styles = StyleSheet.create({
   above: {
     position: 'absolute',
     top: -24,
-  },
-  infoBesideCorner: {
-    right: 14 + CORNER_SIZE + 6,
   },
   corner: {
     position: 'absolute',
