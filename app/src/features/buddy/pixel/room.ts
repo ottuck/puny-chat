@@ -134,7 +134,7 @@ export const WINDOW_SILL_ROW = 16;
 
 // --- The wall clock (Lv.11) ---
 
-// A round clock in a wooden rim lit from the top left, a dark inner ring, a cream face with long
+// A round clock in a slim wooden rim lit from the top left, a dark inner ring, a white face with long
 // ticks at 12, 3, 6 and 9 and dots between, a brown hour hand, a black minute hand and a gold pin.
 // Drawn a little finer than the room's other things (CLOCK_FINE), not so much that it stands apart.
 export const CLOCK_CELLS = 19;
@@ -151,9 +151,9 @@ const CLOCK_FACE: Frame = Array.from({ length: CLOCK_CELLS }, (_, row) =>
     if (d > 8.5) return 'k';
     // How much this point faces the light at the top left.
     const lit = d === 0 ? 0 : -(dx + dy) / (d * Math.SQRT2);
-    if (d > 6.9) return lit > 0.35 ? 'L' : lit < -0.35 ? 'q' : 'D';
-    if (d > 6.1) return 'q';
-    return d > 4.9 && lit < -0.55 ? 'e' : 'W';
+    if (d > 7.5) return lit > 0.35 ? 'L' : lit < -0.35 ? 'q' : 'D';
+    if (d > 6.9) return 'q';
+    return d > 5.8 && lit < -0.6 ? 'e' : 'w';
   }).join(''),
 );
 
@@ -168,7 +168,7 @@ export function clockAt(hours: number, minutes: number): Frame {
     ] as const;
   };
   for (let i = 0; i < 12; i++) {
-    const radii = i % 3 === 0 ? [4.7, 5.6] : [5.4];
+    const radii = i % 3 === 0 ? [5.2, 6.1] : [6];
     for (const radius of radii) {
       const [row, col] = at(i / 12, radius);
       cells[row][col] = i % 3 === 0 ? 'k' : 'n';
@@ -180,8 +180,8 @@ export function clockAt(hours: number, minutes: number): Frame {
       cells[row][col] = color;
     }
   };
-  hand(((hours % 12) + minutes / 60) / 12, 3.3, 'q');
-  hand(minutes / 60, 5, 'k');
+  hand(((hours % 12) + minutes / 60) / 12, 3.6, 'q');
+  hand(minutes / 60, 5.5, 'k');
   cells[CLOCK_MIDDLE][CLOCK_MIDDLE] = 'Y';
   return cells.map((row) => row.join(''));
 }

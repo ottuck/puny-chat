@@ -580,7 +580,9 @@ const CASE_ROWS = 23;
 const FACE_TOP = CASE_TOP + 2;
 const FACE_LEFT = 4;
 const CHAINS_TOP = CASE_TOP + CASE_ROWS;
-export const CUCKOO_CELLS = CUCKOO_WIDTH * CLOCK_FINE;
+// Drawn a little smaller than the wall clock's cells, so the whole piece is not too big on the wall.
+export const CUCKOO_FINE = CLOCK_FINE * 0.8;
+export const CUCKOO_CELLS = CUCKOO_WIDTH * CUCKOO_FINE;
 export const CUCKOO_DOOR = { col: CUCKOO_MIDDLE, row: 5 };
 
 // A pine cone, for the weights; a leaf for the pendulum's bob.
