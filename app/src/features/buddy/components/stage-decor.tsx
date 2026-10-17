@@ -402,15 +402,13 @@ export function WallDecor({
     Math.min((width - windowWidth) / 2, shelfLeft - 10 - windowWidth),
   );
   const toyShown = stationRight === 0 && decor.toy > 0;
-  // On the sill: the bear at its left end, the bunny at the right, the little pot between them.
+  // On the sill: the plush friends side by side at its left end, the little pot at the right end.
   const sillScale = wall >= 4 ? 2 : wall === 3 ? 1.5 : 1;
   const sillTop = top + 4 + (WINDOW_SILL_ROW + 1) * wall;
   const bearLeft = windowLeft + wall;
-  const bearRight = bearLeft + (decor.bear ? BEAR[0].length * sillScale : 0);
-  const bunnyLeft = windowLeft + windowWidth - wall - BUNNY[0].length * sillScale;
+  const bunnyLeft = bearLeft + (BEAR[0].length - 1) * sillScale;
   const potWidth = SILL_POT[0][0].length * sillScale;
-  const potLeft =
-    (bearRight + (decor.bunny ? bunnyLeft : windowLeft + windowWidth)) / 2 - potWidth / 2;
+  const potLeft = windowLeft + windowWidth - wall - potWidth;
   const rug = RUGS[decor.rug];
   const rugWidth = rug[0].length * 3;
   const tableWidth = TABLE_CELLS * FLOOR_SCALE;
