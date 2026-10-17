@@ -18,6 +18,7 @@ import { PageTitle } from '@/components/page-title';
 import { isCancelledSignIn, signInAsGuest } from '@/features/auth/actions';
 import { BuddySheet } from '@/features/buddy/components/buddy-sheet';
 import { BuddyStage } from '@/features/buddy/components/buddy-stage';
+import { StageShade } from '@/features/buddy/components/stage-shade';
 import { ChatHeader } from '@/features/chat/components/chat-header';
 import { MessageComposer } from '@/features/chat/components/message-composer';
 import { MessageList } from '@/features/chat/components/message-list';
@@ -110,6 +111,7 @@ function DemoScreen({ onReplay }: { onReplay: () => void }) {
           greets={false}
           cue={demo.cue}
         />
+        <StageShade />
         <View style={styles.list}>
           <MessageList
             messages={demo.messages}

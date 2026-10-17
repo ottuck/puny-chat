@@ -16,6 +16,7 @@ import { useAuth } from '@/features/auth/auth-provider';
 import { useGuestDaysLeft } from '@/features/auth/guest-expiry';
 import { BuddySheet } from '@/features/buddy/components/buddy-sheet';
 import { BuddyScene } from '@/features/buddy/components/buddy-scene';
+import { StageShade } from '@/features/buddy/components/stage-shade';
 import type { Cue } from '@/features/buddy/components/buddy-stage';
 import { GuideBanner } from '@/features/buddy/components/guide-banner';
 import { changeJob, graduateBuddy } from '@/features/buddy/api';
@@ -146,6 +147,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
           partnerHere={status === 'online' && !!partner && online.includes(partner.id)}
           album={room.album}
         />
+        <StageShade />
         <View style={styles.list}>
           {chat.loaded && messages.length === 0 ? (
             <EmptyChat
