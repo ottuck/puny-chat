@@ -386,7 +386,12 @@ export function BathStage({
                 ],
               }}
             >
-              <PixelSprite frame={bathFrame(stage, pose)} palette={BUDDY_PALETTE} scale={scale} />
+              <PixelSprite
+                frame={bathFrame(stage, pose)}
+                palette={BUDDY_PALETTE}
+                scale={scale}
+                smooth
+              />
             </Animated.View>
             {line ? (
               <SpeechBubble

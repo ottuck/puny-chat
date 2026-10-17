@@ -9,6 +9,33 @@ export type Palette = Readonly<Record<string, string>>;
 
 type Run = { x: number; y: number; width: number; color: string };
 
+const at = (frame: Frame, x: number, y: number) =>
+  y < 0 || y >= frame.length || x < 0 || x >= frame[0].length ? '.' : frame[y][x];
+
+// Twice the pixels by Scale2x (EPX): each pixel becomes four, and where two neighbors that meet at
+// a corner match (and the other two do not), that quarter takes their color. Stairs on diagonals
+// and round outlines join up; no new colors, and the drawn size stays the same.
+export function smoothFrame(frame: Frame): Frame {
+  const rows: string[] = [];
+  frame.forEach((row, y) => {
+    let top = '';
+    let bottom = '';
+    for (let x = 0; x < row.length; x++) {
+      const p = row[x];
+      const up = at(frame, x, y - 1);
+      const right = at(frame, x + 1, y);
+      const left = at(frame, x - 1, y);
+      const down = at(frame, x, y + 1);
+      const quarter = (a: string, b: string, c: string, d: string) =>
+        a === b && a !== c && a !== d ? a : p;
+      top += quarter(left, up, down, right) + quarter(up, right, left, down);
+      bottom += quarter(down, left, right, up) + quarter(right, down, up, left);
+    }
+    rows.push(top, bottom);
+  });
+  return rows;
+}
+
 // Adjacent pixels of one color in a row become one rectangle.
 function toRuns(frame: Frame, palette: Palette): Run[] {
   const runs: Run[] = [];
@@ -33,17 +60,26 @@ type Props = {
   scale: number;
   // Mirror horizontally (facing the other way).
   flipped?: boolean;
+  // Drawn at twice the pixels with diagonals joined up (smoothFrame): the buddy, which is round.
+  smooth?: boolean;
 };
 
-export const PixelSprite = memo(function PixelSprite({ frame, palette, scale, flipped }: Props) {
-  const runs = useMemo(() => toRuns(frame, palette), [frame, palette]);
+export const PixelSprite = memo(function PixelSprite({
+  frame,
+  palette,
+  scale,
+  flipped,
+  smooth = false,
+}: Props) {
+  const drawn = useMemo(() => (smooth ? smoothFrame(frame) : frame), [frame, smooth]);
+  const runs = useMemo(() => toRuns(drawn, palette), [drawn, palette]);
   const width = frame[0]?.length ?? 0;
   const height = frame.length;
   return (
     <Svg
       width={width * scale}
       height={height * scale}
-      viewBox={`0 0 ${width} ${height}`}
+      viewBox={`0 0 ${drawn[0]?.length ?? 0} ${drawn.length}`}
       style={flipped ? { transform: [{ scaleX: -1 }] } : undefined}
     >
       {runs.map((run) => (

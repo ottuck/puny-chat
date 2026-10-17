@@ -460,7 +460,13 @@ function LayerSprite({
   const col = flipped ? gridWidth - layer.col - layer.frame[0].length : layer.col;
   return (
     <View style={[styles.layer, styles.passThrough, { left: col * scale, top: layer.row * scale }]}>
-      <PixelSprite frame={layer.frame} palette={palette} scale={scale} flipped={flipped} />
+      <PixelSprite
+        frame={layer.frame}
+        palette={palette}
+        scale={scale}
+        flipped={flipped}
+        smooth={palette === BUDDY_PALETTE}
+      />
     </View>
   );
 }
@@ -1859,7 +1865,7 @@ export function BuddyStage({
 
       {companionEgg ? (
         <View style={[styles.poop, { bottom: FLOOR - 2, right: poopRight + 4 }]}>
-          <PixelSprite frame={buddyFrame('EGG', 'idle')} palette={BUDDY_PALETTE} scale={3} />
+          <PixelSprite frame={buddyFrame('EGG', 'idle')} palette={BUDDY_PALETTE} scale={3} smooth />
         </View>
       ) : null}
 
@@ -2025,7 +2031,13 @@ export function BuddyStage({
           accessibilityRole="button"
           accessibilityLabel={thinking ? t('buddy.feed') : t('buddy.pet', { buddy: buddy.name })}
         >
-          <PixelSprite frame={frame} palette={BUDDY_PALETTE} scale={scale} flipped={flipped} />
+          <PixelSprite
+            frame={frame}
+            palette={BUDDY_PALETTE}
+            scale={scale}
+            flipped={flipped}
+            smooth
+          />
         </Pressable>
         {front ? (
           <LayerSprite

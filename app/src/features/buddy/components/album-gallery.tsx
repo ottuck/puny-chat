@@ -99,6 +99,7 @@ function Photo({ entry, turn }: { entry: AlbumEntry; turn: number }) {
               frame={dressedFrame('ADULT', 'happy', job, null)}
               palette={BUDDY_PALETTE}
               scale={PHOTO_SCALE}
+              smooth
             />
           </View>
         </View>
