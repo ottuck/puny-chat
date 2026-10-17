@@ -25,15 +25,15 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 - 앱 안 계정 삭제(Guideline 5.1.1(v)), 개인정보처리방침·지원 페이지(로그인 없이, 세 언어), 문의·상대 신고·내보내기.
 - 푸시: `expo-notifications`, EAS projectId 연결. 아이콘·스플래시: `app/assets/README.md`.
 - 수출 규정: `ios.infoPlist`의 `ITSAppUsesNonExemptEncryption: false`(표준 암호화만 쓴다. 업로드마다 묻지 않게).
-- `pnpm dlx expo-doctor`는 20/21이다. SDK 57의 최신 패치 5개가 아직 pnpm의 최소 공개 기간 안이라 버전 확인 하나가 남는다.
-  기간이 지나면 `pnpm exec expo install --fix`로 맞춘다. 기간을 우회하는 `minimumReleaseAgeExclude`는 쓰지 않는다.
+- `pnpm dlx expo-doctor` 21/21(SDK 57 최신 패치). 패치는 `app/`에서 `pnpm exec expo install --fix`로 맞춘다. 막 나온 패치는 pnpm의
+  최소 공개 기간(하루) 안이라 설치되지 않는다. 기간을 우회하는 `minimumReleaseAgeExclude`가 `pnpm-workspace.yaml`에 생기면 되돌리고 기다린다.
 - EAS Update(`expo-updates`): 아래 앱 업데이트.
 - EAS development·production 환경에 공개 클라이언트 설정 5개(`EXPO_PUBLIC_API_URL`, Firebase 4개), `eas.json`에서 환경을 고른다.
 - Gmail 발송(OAuth 앱 Production, `gmail.send`)과 서버 환경변수 설정.
 
 ## 순서
 
-1. **개발용 빌드.** 첫 빌드 전에 `app.json`·의존성을 확정해 빌드 횟수를 아낀다(무료 플랜은 월 제한).
+1. **개발용 빌드.** 첫 빌드 전에 `app.json`·의존성을 확정해 빌드 횟수를 아낀다(무료 플랜은 월 제한). `app/`에서 `pnpm dlx expo-doctor`가 21/21인지 본다.
    ```bash
    npx eas-cli device:create
    ```
@@ -66,7 +66,7 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 - **채널.** `eas.json`의 preview·production 빌드가 같은 이름의 채널을 본다. 개발용 빌드는 Metro로 바로 받는다.
 - **runtimeVersion은 `appVersion` 정책.** 업데이트는 `app.json`의 `version`(지금 1.0.0)이 같은 빌드에만 간다. 네이티브가 바뀌면(패키지 추가·업그레이드,
   config plugin, `app.json`의 네이티브 설정) `version`을 올리고 새로 빌드해 심사받는다. 올리지 않으면 옛 빌드에 맞지 않는 업데이트가 가서 앱이 깨질 수 있다.
-- **보내기.** main CI·웹 배포를 확인한 뒤, 같은 커밋에서:
+- **보내기.** main CI·웹 배포를 확인한 뒤, 같은 커밋의 `app/` 폴더에서(저장소 최상위에서는 "Run this command inside a project directory"로 실패한다):
   ```bash
   npx eas-cli update --channel production --environment production --message "방 소품 탭 반응"
   ```
