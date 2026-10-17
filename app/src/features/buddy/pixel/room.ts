@@ -2,7 +2,7 @@ import type { Frame, Palette } from './pixel-sprite';
 
 // The room's things that come with levels (docs/fun-improvements.md, 방 소품): a crate that fills with
 // toys, a window whose sky follows the device's clock, a wall clock, a music box, rugs, a standing
-// lamp, a gold cushion, and the guests that drop by (a snail on the glass, a sparrow on the sill, a
+// lamp, and the guests that drop by (a snail on the glass, a sparrow on the sill, a
 // cat's tail, a toy train across the floor). And the bundle a buddy carries when it moves out.
 
 export const ROOM_PALETTE: Palette = {

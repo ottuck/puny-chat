@@ -2,10 +2,11 @@ import type { Frame, Palette } from './pixel-sprite';
 import { ROOM_PALETTE } from './room';
 
 // The room's later things (docs/fun-improvements.md, 방 소품): what the window grows into (a wind
-// chime, petals, a rainbow, more guests at the glass), what stands on its sill (a pot, a
-// radio that turns into a gramophone), the side table with a goldfish bowl, the low table in the
-// middle (a kotatsu in winter) with tea and New Year's mochi, the shelf of plush friends, a cuckoo
-// clock and a fringed lamp shade. The last rug is with the others (room.ts).
+// chime, petals, a rainbow, more guests at the glass), what sits on its sill (a pot, the plush
+// friends), the shelf on the wall (books by the music box and a radio that turns into a
+// gramophone), the side table with a goldfish bowl, the low table in the middle (a kotatsu in
+// winter) with tea and New Year's mochi, a cuckoo clock and a fringed lamp shade. The last rug is
+// with the others (room.ts).
 
 export const THINGS_PALETTE: Palette = {
   ...ROOM_PALETTE,
@@ -433,7 +434,8 @@ export const MOCHI: Frame = [
   'kkkkkkkkkk',
 ];
 
-// Plush friends on the shelf: a bear (Lv.34) with a red bow, a white bunny (Lv.58).
+// Plush friends sitting at either end of the windowsill: a bear (Lv.34) with a red bow, a white
+// bunny (Lv.58).
 // prettier-ignore
 export const BEAR: Frame = [
   '.kk...kk.',
@@ -463,7 +465,8 @@ export const BUNNY: Frame = [
   '.kk...kk.',
 ];
 
-// Books standing on the shelf (Lv.52), one taller than the others.
+// Books standing on the shelf between the music box and the radio (Lv.52), one taller than the
+// others.
 // prettier-ignore
 export const BOOKS: Frame = [
   '...kkkk...',
@@ -478,17 +481,16 @@ export const BOOKS: Frame = [
   'kkkkkkkkkk',
 ];
 
-// The shelf on the wall at the top right (Lv.34): a plank on two brackets, for the plush friends
-// and the books.
+// The shelf on the wall at the top right (with the music box, Lv.15): a plank on two brackets, for
+// the music box, the books and the radio.
 export const SHELF: Frame = [
-  'k'.repeat(36),
-  'k' + 'L'.repeat(34) + 'k',
-  'k' + 'D'.repeat(34) + 'k',
-  'k'.repeat(36),
-  '....kqk' + '.'.repeat(22) + 'kqk....',
-  '.....kk' + '.'.repeat(22) + 'kk.....',
-];
-// --- On the wall ---
+  'k'.repeat(44),
+  'k' + 'L'.repeat(42) + 'k',
+  'k' + 'D'.repeat(42) + 'k',
+  'k'.repeat(44),
+  '....kqk' + '.'.repeat(30) + 'kqk....',
+  '.....kk' + '.'.repeat(30) + 'kk.....',
+]; // --- On the wall ---
 
 // The wall clock grown into a cuckoo clock (Lv.36): a roof with a little door over the face, and
 // below it the pendulum swinging between two pine-cone weights.

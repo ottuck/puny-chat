@@ -726,7 +726,7 @@ export function MusicBox({
   );
 }
 
-// The radio on the sill (Lv.25), a gramophone from Lv.55: it plays while the buddy dances, and a
+// The radio on the shelf (Lv.25), a gramophone from Lv.55: it plays while the buddy dances, and a
 // tap turns it on for a while and starts the dance.
 const RADIO_MS = 3000;
 

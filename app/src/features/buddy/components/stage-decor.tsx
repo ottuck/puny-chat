@@ -360,8 +360,8 @@ function middleOf(decor: Decor, width: number, stationRight: number, plantSpace:
   return (stationRight + width - 8 - plantSpace - sideRoom(decor)) / 2;
 }
 
-// Behind the buddy: the floor, the rug, the window and clock on the wall, the shelf of plush
-// friends, the things on the floor and the sill. The plant and the bowl are drawn by the
+// Behind the buddy: the floor, the rug, the window and clock on the wall, the shelf (the music box
+// and the radio), the things on the floor and the sill (the plush friends). The plant and the bowl are drawn by the
 // stage, and so is the train, which passes in front.
 export function WallDecor({
   decor,
@@ -393,7 +393,8 @@ export function WallDecor({
   const windowWidth = WINDOW[0].length * wall;
   const shelfScale = wall >= 4 ? 2.5 : 2;
   const shelfWidth = SHELF[0].length * shelfScale;
-  const shelfLeft = decor.bear ? width - SHELF_RIGHT - shelfWidth : width;
+  const shelfLeft = decor.musicBox ? width - SHELF_RIGHT - shelfWidth : width;
+  const radioWidth = (decor.radio === 2 ? GRAMOPHONE : RADIO)[0][0].length * shelfScale;
   const clockRight = CLOCK_LEFT + (decor.cuckoo ? CUCKOO_CELLS : 13) * clockScale;
   // In the middle, but clear of the shelf and the clock.
   const windowLeft = Math.max(
@@ -401,18 +402,15 @@ export function WallDecor({
     Math.min((width - windowWidth) / 2, shelfLeft - 10 - windowWidth),
   );
   const toyShown = stationRight === 0 && decor.toy > 0;
-  // On the sill: the music box at its left end (up there the buddy never hides it), the radio at the
-  // right, the little pot between them.
+  // On the sill: the bear at its left end, the bunny at the right, the little pot between them.
   const sillScale = wall >= 4 ? 2 : wall === 3 ? 1.5 : 1;
   const sillTop = top + 4 + (WINDOW_SILL_ROW + 1) * wall;
-  const musicLeft = windowLeft + wall;
-  const musicRight = musicLeft + (decor.musicBox ? MUSIC_BOX[0][0].length * sillScale : 0);
-  const radioFrame = decor.radio === 2 ? GRAMOPHONE[0] : RADIO[0];
-  const radioWidth = radioFrame[0].length * sillScale;
-  const radioLeft = windowLeft + windowWidth - wall - radioWidth;
+  const bearLeft = windowLeft + wall;
+  const bearRight = bearLeft + (decor.bear ? BEAR[0].length * sillScale : 0);
+  const bunnyLeft = windowLeft + windowWidth - wall - BUNNY[0].length * sillScale;
   const potWidth = SILL_POT[0][0].length * sillScale;
   const potLeft =
-    (musicRight + (decor.radio ? radioLeft : windowLeft + windowWidth)) / 2 - potWidth / 2;
+    (bearRight + (decor.bunny ? bunnyLeft : windowLeft + windowWidth)) / 2 - potWidth / 2;
   const rug = RUGS[decor.rug];
   const rugWidth = rug[0].length * 3;
   const tableWidth = TABLE_CELLS * FLOOR_SCALE;
@@ -461,26 +459,12 @@ export function WallDecor({
           </Arrive>
         </View>
       ) : null}
-      {decor.window && decor.musicBox ? (
-        <View
-          style={[
-            styles.at,
-            styles.box,
-            { left: musicLeft, top: sillTop - MUSIC_BOX[0].length * sillScale },
-          ]}
-        >
-          <Arrive
-            fresh={fresh(decor.goldMusicBox ? 'goldMusicBox' : 'musicBox')}
-            width={MUSIC_BOX[0][0].length * sillScale}
-            key={decor.goldMusicBox ? 'gold' : 'wood'}
-          >
-            <MusicBox
-              scale={sillScale}
-              playing={singing}
-              tick={tick}
-              gold={decor.goldMusicBox}
-              onPlay={onMusic}
-            />
+      {decor.window && decor.bear ? (
+        <View style={[styles.at, { left: bearLeft, top: sillTop - BEAR.length * sillScale }]}>
+          <Arrive fresh={fresh('bear')} width={BEAR[0].length * sillScale}>
+            <Tappable kind="squish" label={t('buddy.room.bear')} onTap={() => onProp('plush')}>
+              <PixelSprite frame={BEAR} palette={THINGS_PALETTE} scale={sillScale} />
+            </Tappable>
           </Arrive>
         </View>
       ) : null}
@@ -501,23 +485,12 @@ export function WallDecor({
           </Arrive>
         </View>
       ) : null}
-      {decor.window && decor.radio ? (
-        <View
-          key={`radio${decor.radio}`}
-          style={[
-            styles.at,
-            styles.box,
-            { left: radioLeft, top: sillTop - radioFrame.length * sillScale },
-          ]}
-        >
-          <Arrive fresh={fresh(decor.radio === 2 ? 'gramophone' : 'radio')} width={radioWidth}>
-            <Radio
-              gramophone={decor.radio === 2}
-              scale={sillScale}
-              playing={dancing}
-              tick={tick}
-              onPlay={onToy}
-            />
+      {decor.window && decor.bunny ? (
+        <View style={[styles.at, { left: bunnyLeft, top: sillTop - BUNNY.length * sillScale }]}>
+          <Arrive fresh={fresh('bunny')} width={BUNNY[0].length * sillScale}>
+            <Tappable kind="squish" label={t('buddy.room.bunny')} onTap={() => onProp('plush')}>
+              <PixelSprite frame={BUNNY} palette={THINGS_PALETTE} scale={sillScale} />
+            </Tappable>
           </Arrive>
         </View>
       ) : null}
@@ -548,16 +521,26 @@ export function WallDecor({
         </View>
       ) : null}
 
-      {/* The shelf in the top right, under the corner's buttons: the bear, the books, the bunny. */}
-      {decor.bear ? (
-        <View style={[styles.at, { right: SHELF_RIGHT, top: SHELF_TOP }]}>
-          <Arrive fresh={fresh('bear')} width={shelfWidth}>
+      {/* The shelf in the top right, under the corner's buttons, comes with the music box: the music
+          box at its left end, the radio at the right, the books between them. Up there the buddy
+          never hides them. */}
+      {decor.musicBox ? (
+        <View style={[styles.at, styles.box, { right: SHELF_RIGHT, top: SHELF_TOP }]}>
+          <Arrive fresh={fresh('musicBox')} width={shelfWidth}>
             <View style={[styles.shelfRow, { paddingHorizontal: 2 * shelfScale }]}>
-              <View key={`bear${decor.books}`}>
-                <Tappable kind="squish" label={t('buddy.room.bear')} onTap={() => onProp('plush')}>
-                  <PixelSprite frame={BEAR} palette={THINGS_PALETTE} scale={shelfScale} />
-                </Tappable>
-              </View>
+              <Arrive
+                key={decor.goldMusicBox ? 'gold' : 'wood'}
+                fresh={decor.goldMusicBox && fresh('goldMusicBox')}
+                width={MUSIC_BOX[0][0].length * shelfScale}
+              >
+                <MusicBox
+                  scale={shelfScale}
+                  playing={singing}
+                  tick={tick}
+                  gold={decor.goldMusicBox}
+                  onPlay={onMusic}
+                />
+              </Arrive>
               {decor.books ? (
                 <Arrive fresh={fresh('books')} width={BOOKS[0].length * shelfScale}>
                   <Tappable kind="rattle" label={t('buddy.room.books')}>
@@ -567,18 +550,22 @@ export function WallDecor({
               ) : (
                 <View style={{ width: BOOKS[0].length * shelfScale }} />
               )}
-              {decor.bunny ? (
-                <Arrive fresh={fresh('bunny')} width={BUNNY[0].length * shelfScale}>
-                  <Tappable
-                    kind="squish"
-                    label={t('buddy.room.bunny')}
-                    onTap={() => onProp('plush')}
-                  >
-                    <PixelSprite frame={BUNNY} palette={THINGS_PALETTE} scale={shelfScale} />
-                  </Tappable>
+              {decor.radio ? (
+                <Arrive
+                  key={`radio${decor.radio}`}
+                  fresh={fresh(decor.radio === 2 ? 'gramophone' : 'radio')}
+                  width={radioWidth}
+                >
+                  <Radio
+                    gramophone={decor.radio === 2}
+                    scale={shelfScale}
+                    playing={dancing}
+                    tick={tick}
+                    onPlay={onToy}
+                  />
                 </Arrive>
               ) : (
-                <View style={{ width: BUNNY[0].length * shelfScale }} />
+                <View style={{ width: radioWidth }} />
               )}
             </View>
             <View style={{ marginTop: -shelfScale }}>
