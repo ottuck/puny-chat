@@ -58,6 +58,8 @@ Yuki:  니가 치워
   게스트 계정은 되찾을 수 없다.
 - 계정을 연결하면(웹 Google, 아이폰 Apple) uid가 그대로라 Buddy·방·대화가 이어진다. 이미 다른 사용자인 계정이면 합치지 않고 확인 후 전환한다.
 - 첫 화면에서 30일을 알리고, 설정에 남은 일수와 계정 연결 버튼. 마지막 7일은 채팅 위에 조용한 안내 줄(3일부터 강조색), 누르면 설정.
+  그 전에는 같은 자리에 "기기나 브라우저를 바꿔도 대화를 이어가려면 · 계정 연결" 줄을 닫을 때까지 둔다(닫은 것은 이 기기에 기억).
+  아이폰의 홈 화면 웹 앱은 Safari와 저장 공간이 달라 게스트로 다시 열면 새 사람이 된다. 그렇게 갈라진 사람은 아래 다시 초대로 잇는다.
   팝업으로 막지 않는다. 문구는 "회원가입"이 아니라 "계정 연결".
 - 만료된 게스트의 서버 데이터는 서버가 주 1회 지운다(아래 게스트 정리).
 
@@ -245,7 +247,7 @@ rooms          { _id, memberIds [1..2], memberCount, createdAt, closureId?, hist
                          job?, jobChangedLevel? } }
 messages       { _id, roomId, senderId?, type (TEXT | SYSTEM | BUDDY_EVENT), text?, buddyEvent?, systemEvent?, actorId?,
                  clientMessageId, createdAt }
-invitations    { _id, roomId, code (unique), createdBy, createdAt, expiresAt, usedAt?, usedBy?, previousRoomId? }
+invitations    { _id, roomId, code (unique), createdBy, createdAt, expiresAt, usedAt?, usedBy?, previousRoomId?, replacesId? }
 reads          { _id: "<roomId>:<userId>", roomId, userId, messageId, updatedAt }
 push_tokens    { _id: <Expo push token | Web Push endpoint>, userId, updatedAt, p256dh?, auth? }
 settings       { _id: "buddy", expPerLevel }
@@ -277,7 +279,7 @@ history_deletions  계정 삭제 중 영향받는 방 id(삭제 진행 표식)
 | DELETE | `/api/me` | 계정 삭제 → 204. Firebase 계정은 앱이 이어서 지운다 |
 | POST | `/api/rooms` | 내 room 생성(solo, 알) |
 | GET | `/api/rooms/me` | 내 room, 멤버, Buddy 상태, 앨범 |
-| POST | `/api/rooms/me/invitations` | 초대 코드 발급 |
+| POST | `/api/rooms/me/invitations` | 초대 코드 발급. 2명 room이면 상대를 다시 부르는 코드(`replacesId`) |
 | POST | `/api/invitations/{code}/accept` | 초대 수락 → room 참가(`leaveCurrentRoom`) |
 | POST | `/api/rooms/me/leave` | room 나가기 → 204 |
 | GET | `/api/rooms/me/messages?before=&after=&limit=` | 타임라인(최신순, limit ≤ 50) `{ messages, hasMore }` |
@@ -303,7 +305,7 @@ history_deletions  계정 삭제 중 영향받는 방 id(삭제 진행 표식)
 | `INVITATION_RATE_LIMIT` | 429 | 10분에 틀린 코드 10번 |
 | `INVITATION_EXPIRED` / `INVITATION_USED` | 410 | 만료 / 이미 사용 |
 | `ROOM_ALREADY_EXISTS` | 409 | 이미 room이 있는데 만들려고 함 |
-| `ROOM_FULL` | 409 | 2명이 찬 room |
+| `ROOM_FULL` | 409 | 2명이 찬 room에 참가(같은 자리의 다시 초대를 다른 사람이 먼저 씀) |
 | `ALREADY_MEMBER` | 409 | 자기 room의 초대를 수락 |
 | `ALREADY_IN_ROOM` | 409 | 2명 room의 멤버가 다른 room에 참가 |
 | `LEAVE_CONFIRMATION_REQUIRED` | 409 | solo room을 두고 참가하려면 확인 필요 |
@@ -333,7 +335,7 @@ server → client
   { type: "message", message }                    상대 메시지, Buddy 이벤트
   { type: "member", userId, displayName }         친구가 참가(solo → duo)
   { type: "left", userId }                         친구가 나감(duo → solo)
-  { type: "historyChanged", historyVersion, deletedUserId }  계정 삭제로 기록이 바뀜. 다시 읽는다
+  { type: "historyChanged", historyVersion, deletedUserId }  계정 삭제·다시 초대로 기록이 바뀜. 다시 읽는다
   { type: "buddy", buddy }                         Buddy 상태 변경
   { type: "typing", userId, typing }              다른 멤버에게만. 6초 동안 안 오면 앱이 지운다
   { type: "presence", userId, online }            그 사용자의 첫 연결이 열리거나 마지막 연결이 닫힐 때
@@ -343,7 +345,8 @@ server → client
   { type: "pong" }
 ```
 
-- 연결 종료 에러: `UNAUTHORIZED`, `AUTH_TIMEOUT`, `ROOM_NOT_FOUND`, `TOKEN_EXPIRED`(토큰의 `exp`가 되면, 앱이 새 토큰으로 재연결).
+- 연결 종료 에러: `UNAUTHORIZED`, `AUTH_TIMEOUT`, `ROOM_NOT_FOUND`, `TOKEN_EXPIRED`(토큰의 `exp`가 되면, 앱이 새 토큰으로 재연결),
+  `SEAT_TAKEN`(다시 초대 코드로 다른 곳에서 이 자리에 들어옴, 앱이 알리고 방 없는 화면으로).
   연결 유지 에러: `INVALID_MESSAGE`(빈 문자열·2000자 초과), `INVALID_EVENT`, `INVALID_REQUEST`.
 - 토큰은 연결할 때 한 번 확인한다. 즉시 폐기는 토큰 수명(1시간)만큼 늦는 걸 허용한다.
 - 연결은 인증 시점의 room에 묶인다. room이 바뀌면 앱이 다시 연결한다. 한 연결의 이벤트는 순서대로 처리한다.
@@ -416,6 +419,15 @@ togetherToday, job, leaning, canChangeJob, jobChangeAt, grown)를 그대로 보�
 - **참가 동시성**: 초대 사용(`usedAt: null`) → 사용자 예약(`roomJoinId`) → 참가(`memberCount < 2`) → 예약과 기존 roomId를 확인하며 새 roomId 설정
   → 기존 room 나가기. 진 쪽은 자기 초대 사용과 예약을 되돌린다. 예약 중에는 방 생성도 거절하고, 예약만으로는 새 room에 접근할 수 없다.
   초대에 `previousRoomId`를 남겨 중간 실패 뒤 같은 코드로 다시 수락하면 이어서 끝낸다.
+- **다시 초대**: 상대가 다른 앱·브라우저·기기에서 새 사람으로 시작했을 때(계정 연결 없이) 같은 방으로 잇는다. 상대 이름을 눌러 여는 시트의
+  "○○님 다시 초대하기"가 코드를 만든다. 2명 room에서 만든 코드는 모두 상대를 위한 것이다(`replacesId` = 상대).
+  - 수락하면 그 자리를 넘겨받는다. 방에 만든 사람과 상대 둘만 있을 때 한 번의 조건부 update로 `memberIds`의 상대를 바꾼다(순서 유지).
+    같은 자리를 두 코드가 동시에 노리면 하나만 되고 나머지는 `ROOM_FULL`. 상대가 이미 나갔으면 빈자리로 참가하고, 만든 사람이 나갔으면
+    `INVITATION_EXPIRED`.
+  - 넘겨받은 사람에게 그 방의 상대 메시지(`senderId`)·이름 남긴 기록(`actorId`)·읽음 위치·오늘 대화한 사람(`buddy.talkers`)이 옮겨 오고,
+    기록이 바뀌었으니 `historyChanged`. SYSTEM `MEMBER_RETURNED`(text = 새 이름)와 `member`를 보낸다. 예전 계정은 방이 비워지고,
+    만들어 둔 그 방 코드가 지워지며, 연결된 기기는 `SEAT_TAKEN`으로 끊긴다. 모든 단계는 다시 수락하면 이어서 끝낸다(알림 줄은 한 번).
+  - 상대의 동의 없이 자리를 넘길 수 있다. 1:1로 아는 사이이고 남은 사람은 원래 대화를 다 보던 사람이라 막지 않고, 예전 기기에 알린다.
 
 ## 문의·신고와 상대 내보내기
 

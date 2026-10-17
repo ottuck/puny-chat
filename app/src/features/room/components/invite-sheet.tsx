@@ -33,7 +33,15 @@ export function InviteSheet({ visible, onClose }: Props) {
   );
 }
 
-function InviteContent({ onClose }: { onClose: () => void }) {
+// `partnerName`: in a full room, a code for the partner to come back from another app, browser or
+// phone. Whoever uses it takes their seat and the conversation so far (docs/PROJECT.md).
+export function InviteContent({
+  onClose,
+  partnerName,
+}: {
+  onClose: () => void;
+  partnerName?: string;
+}) {
   const colors = useColors();
   const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -62,7 +70,11 @@ function InviteContent({ onClose }: { onClose: () => void }) {
     const link = `${siteUrl()}/join?code=${invitation.code}`;
     try {
       await Share.share({
-        message: t('invite.shareMessage', { link, code: invitation.code, time: expires }),
+        message: t(partnerName ? 'invite.rejoinShareMessage' : 'invite.shareMessage', {
+          link,
+          code: invitation.code,
+          time: expires,
+        }),
       });
     } catch {
       // Sharing is unavailable on some browsers; the code can be copied instead.
@@ -89,8 +101,12 @@ function InviteContent({ onClose }: { onClose: () => void }) {
           </Pressable>
         </View>
 
-        <Text style={[styles.title, { color: colors.text }]}>{t('invite.title')}</Text>
-        <Text style={[styles.hint, { color: colors.textMuted }]}>{t('invite.hint')}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>
+          {partnerName ? t('invite.rejoinTitle', { name: partnerName }) : t('invite.title')}
+        </Text>
+        <Text style={[styles.hint, { color: colors.textMuted }]}>
+          {partnerName ? t('invite.rejoinHint', { name: partnerName }) : t('invite.hint')}
+        </Text>
 
         <View style={[styles.codeCard, { backgroundColor: colors.surface }]}>
           {invitation ? (

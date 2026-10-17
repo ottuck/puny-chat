@@ -75,7 +75,11 @@
     "share": "코드 보내기",
     "shareMessage": "puny-chat에서 같이 Buddy 키워요! 🥚\n\n👉 {{link}}\n\n링크를 누르면 바로 들어올 수 있어요.\n초대 코드: {{code}} ({{time}}까지)",
     "copy": "복사",
-    "copied": "복사됨 ✓"
+    "copied": "복사됨 ✓",
+    "rejoinButton": "{{name}}님 다시 초대하기",
+    "rejoinTitle": "{{name}}님 다시 초대",
+    "rejoinHint": "{{name}}님이 다른 앱이나 브라우저, 기기에서 들어올 때 쓰는 코드예요. 이 코드로 들어오면 지금까지의 대화를 이어받고, 원래 쓰던 곳은 방에서 나가요.",
+    "rejoinShareMessage": "puny-chat 방으로 다시 들어와요 🥚\n\n👉 {{link}}\n\n링크를 누르면 지금까지의 대화를 이어서 볼 수 있어요.\n초대 코드: {{code}} ({{time}}까지)"
   },
   "buddy": {
     "level": "Lv.{{level}}",
@@ -416,7 +420,8 @@
     "notificationsInstall": "iPhone에서는 홈 화면에 추가한 앱에서 알림을 받을 수 있어요. Safari의 공유 버튼 → '홈 화면에 추가'를 누른 뒤, 홈 화면의 puny-chat에서 알림을 켜 주세요."
   },
   "systemEvent": {
-    "MEMBER_LEFT": "{{name}}님이 나갔어요"
+    "MEMBER_LEFT": "{{name}}님이 나갔어요",
+    "MEMBER_RETURNED": "{{name}}님이 이어서 들어왔어요"
   },
   "name": {
     "title": "뭐라고 불러드릴까요?",
@@ -430,7 +435,8 @@
     "expiring_other": "게스트 이용 기간이 {{count}}일 남았어요",
     "link": "계정 연결",
     "daysLeft_one": "{{count}}일 남음",
-    "daysLeft_other": "{{count}}일 남음"
+    "daysLeft_other": "{{count}}일 남음",
+    "linkHint": "기기나 브라우저를 바꿔도 대화를 이어가려면"
   },
   "demo": {
     "title": "구경하기",
@@ -615,5 +621,9 @@
         "from": "puny-chat"
       }
     }
+  },
+  "room": {
+    "seatTakenTitle": "다른 곳에서 이어서 쓰고 있어요",
+    "seatTaken": "초대 코드로 다른 앱이나 브라우저, 기기에서 이 방에 들어와서, 여기서는 방을 나왔어요."
   }
 }

@@ -120,11 +120,19 @@ function RootNavigator() {
         <Stack.Screen name="name" />
         <Stack.Screen
           name="settings"
-          options={{ headerShown: true, title: t('settings.title'), headerBackTitle: '' }}
+          options={{
+            headerShown: true,
+            title: t('settings.title'),
+            headerBackButtonDisplayMode: 'minimal',
+          }}
         />
         <Stack.Screen
           name="guide"
-          options={{ headerShown: true, title: t('guide.title'), headerBackTitle: '' }}
+          options={{
+            headerShown: true,
+            title: t('guide.title'),
+            headerBackButtonDisplayMode: 'minimal',
+          }}
         />
       </Stack.Protected>
       <Stack.Protected guard={signedIn && named}>
@@ -133,7 +141,7 @@ function RootNavigator() {
           options={{
             headerShown: true,
             title: t('join.title'),
-            headerBackTitle: '',
+            headerBackButtonDisplayMode: 'minimal',
             presentation: 'modal',
           }}
         />
@@ -144,11 +152,19 @@ function RootNavigator() {
       </Stack.Protected>
       <Stack.Screen
         name="privacy"
-        options={{ headerShown: true, title: t('privacy.title'), headerBackTitle: '' }}
+        options={{
+          headerShown: true,
+          title: t('privacy.title'),
+          headerBackButtonDisplayMode: 'minimal',
+        }}
       />
       <Stack.Screen
         name="support"
-        options={{ headerShown: true, title: t('support.title'), headerBackTitle: '' }}
+        options={{
+          headerShown: true,
+          title: t('support.title'),
+          headerBackButtonDisplayMode: 'minimal',
+        }}
       />
     </Stack>
   );

@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { WebFrame } from '@/components/web-frame';
+import { InviteContent } from '@/features/room/components/invite-sheet';
 import { errorMessage } from '@/features/room/error-message';
 import { confirm } from '@/lib/confirm';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
@@ -35,6 +36,12 @@ export function PartnerSheet({
   const removing = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The partner is coming back from somewhere else: the sheet shows a code for them instead.
+  const [rejoin, setRejoin] = useState(false);
+  const close = () => {
+    setRejoin(false);
+    onClose();
+  };
 
   const remove = async () => {
     if (removing.current) return;
@@ -73,45 +80,58 @@ export function PartnerSheet({
       visible={visible}
       animationType="slide"
       presentationStyle="pageSheet"
-      onRequestClose={() => !busy && onClose()}
+      onRequestClose={() => !busy && close()}
     >
       <WebFrame>
-        <View style={[styles.screen, { backgroundColor: colors.background }]}>
-          <View style={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
-            <Pressable
-              onPress={onClose}
-              disabled={busy}
-              accessibilityRole="button"
-              style={styles.close}
-            >
-              <Text style={{ color: colors.accent }}>{t('common.close')}</Text>
-            </Pressable>
-            <Text style={[styles.name, { color: colors.text }]}>{partnerName}</Text>
-            <Text style={[styles.body, { color: colors.textMuted }]}>
-              {t('support.partnerHelp')}
-            </Text>
-            <Button
-              label={t('support.reportAndRemove')}
-              disabled={busy}
-              onPress={() => {
-                onClose();
-                router.push({ pathname: '/support', params: { type: 'report', roomId, targetId } });
-              }}
-            />
-            <Button
-              label={t('support.remove')}
-              disabled={busy}
-              variant="secondary"
-              onPress={remove}
-            />
-            {busy ? <ActivityIndicator color={colors.accent} /> : null}
-            {error ? (
-              <Text accessibilityRole="alert" style={{ color: colors.accent }}>
-                {error}
+        {rejoin ? (
+          <InviteContent onClose={close} partnerName={partnerName} />
+        ) : (
+          <View style={[styles.screen, { backgroundColor: colors.background }]}>
+            <View style={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
+              <Pressable
+                onPress={close}
+                disabled={busy}
+                accessibilityRole="button"
+                style={styles.close}
+              >
+                <Text style={{ color: colors.accent }}>{t('common.close')}</Text>
+              </Pressable>
+              <Text style={[styles.name, { color: colors.text }]}>{partnerName}</Text>
+              <Button
+                label={t('invite.rejoinButton', { name: partnerName })}
+                disabled={busy}
+                variant="secondary"
+                onPress={() => setRejoin(true)}
+              />
+              <Text style={[styles.body, { color: colors.textMuted }]}>
+                {t('support.partnerHelp')}
               </Text>
-            ) : null}
+              <Button
+                label={t('support.reportAndRemove')}
+                disabled={busy}
+                onPress={() => {
+                  onClose();
+                  router.push({
+                    pathname: '/support',
+                    params: { type: 'report', roomId, targetId },
+                  });
+                }}
+              />
+              <Button
+                label={t('support.remove')}
+                disabled={busy}
+                variant="secondary"
+                onPress={remove}
+              />
+              {busy ? <ActivityIndicator color={colors.accent} /> : null}
+              {error ? (
+                <Text accessibilityRole="alert" style={{ color: colors.accent }}>
+                  {error}
+                </Text>
+              ) : null}
+            </View>
           </View>
-        </View>
+        )}
       </WebFrame>
     </Modal>
   );

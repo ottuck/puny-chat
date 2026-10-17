@@ -185,6 +185,29 @@ public class ChatService {
                 .then();
     }
 
+    /**
+     * A member's seat went to another account (a code made for them, docs/PROJECT.md): their
+     * messages, named notes and read mark in the room follow it. Clients fetch the history again.
+     */
+    public Mono<Void> handOverHistory(String roomId, String fromId, String toId) {
+        Mono<Void> readMark = mongo.findById(ReadMark.key(roomId, fromId), ReadMark.class)
+                .flatMap(mark -> mongo.insert(new ReadMark(
+                                ReadMark.key(roomId, toId), roomId, toId, mark.messageId(), Instant.now(clock)))
+                        .onErrorResume(DuplicateKeyException.class, e -> Mono.empty())
+                        .then(mongo.remove(query(where("_id").is(mark.id())), ReadMark.class)))
+                .then();
+        return mongo.updateMulti(
+                        query(where("roomId").is(roomId).and("senderId").is(fromId)),
+                        Update.update("senderId", toId),
+                        Message.class)
+                .then(mongo.updateMulti(
+                        query(where("roomId").is(roomId).and("actorId").is(fromId)),
+                        Update.update("actorId", toId),
+                        Message.class))
+                .then(readMark)
+                .then(access.invalidateHistory(List.of(roomId), null));
+    }
+
     /** Removes a deleted room's timeline and read marks. */
     public Mono<Void> deleteRoomHistory(String roomId) {
         return Mono.when(

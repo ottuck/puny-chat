@@ -43,7 +43,9 @@ export default function NameScreen() {
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
       <PageTitle title={t('name.title')} />
       {/* A back button only when coming from settings; first-time naming has nowhere to go back to. */}
-      <Stack.Screen options={{ headerShown: editing, title: '', headerBackTitle: '' }} />
+      <Stack.Screen
+        options={{ headerShown: editing, title: '', headerBackButtonDisplayMode: 'minimal' }}
+      />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.column}

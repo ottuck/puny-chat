@@ -1,6 +1,7 @@
 import { randomUUID } from 'expo-crypto';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -30,14 +31,27 @@ import { type PushState, registerForPush } from '@/features/notifications/push';
 import { InviteSheet } from '@/features/room/components/invite-sheet';
 import type { Me, Room } from '@/features/room/api';
 import { useReadyRoom } from '@/features/room/room-provider';
+import { notice } from '@/lib/confirm';
 import { PartnerSheet } from '@/features/support/components/partner-sheet';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
 export default function ChatRoute() {
   const { me, room, reload, refreshRoom } = useReadyRoom();
+  const { t } = useTranslation();
+  const onRoomLost = (code?: string) => {
+    // The partner's code let them in from another app, browser or phone; this one is out.
+    if (code === 'SEAT_TAKEN') notice(t('room.seatTakenTitle'), t('room.seatTaken'));
+    return reload();
+  };
   // Keyed by room: joining another room starts over with a new connection and timeline.
   return (
-    <ChatScreen key={room.id} me={me} room={room} onRoomLost={reload} onRoomChanged={refreshRoom} />
+    <ChatScreen
+      key={room.id}
+      me={me}
+      room={room}
+      onRoomLost={onRoomLost}
+      onRoomChanged={refreshRoom}
+    />
   );
 }
 
@@ -64,8 +78,8 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
   const { messages, status, online, typing, reads, unreadWhileAway } = chat;
   const [buddyOpen, setBuddyOpen] = useState(false);
   const [partnerOpen, setPartnerOpen] = useState(false);
-  const { user } = useAuth();
-  const guestDaysLeft = useGuestDaysLeft(user);
+  const { account } = useAuth();
+  const guestDaysLeft = useGuestDaysLeft(account);
 
   // Asked here rather than at launch: by now the user knows what the app is for.
   const [push, setPush] = useState<PushState | null>(null);

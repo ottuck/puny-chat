@@ -75,7 +75,11 @@
     "share": "コードを送る",
     "shareMessage": "puny-chatで一緒にBuddyを育てよう！🥚\n\n👉 {{link}}\n\nリンクを開くとすぐ参加できます。\n招待コード：{{code}}（{{time}}まで）",
     "copy": "コピー",
-    "copied": "コピーしました ✓"
+    "copied": "コピーしました ✓",
+    "rejoinButton": "{{name}}さんをもう一度招待",
+    "rejoinTitle": "{{name}}さんをもう一度招待",
+    "rejoinHint": "{{name}}さんが別のアプリやブラウザ、端末から入るときのコードです。このコードで入ると今までの会話を引き継ぎ、元の場所はルームから退出します。",
+    "rejoinShareMessage": "puny-chatのルームにもう一度入ってね 🥚\n\n👉 {{link}}\n\nリンクを押すと今までの会話の続きから見られます。\n招待コード: {{code}}（{{time}}まで）"
   },
   "buddy": {
     "level": "Lv.{{level}}",
@@ -416,7 +420,8 @@
     "notificationsInstall": "iPhoneではホーム画面に追加したアプリで通知を受け取れます。Safariの共有ボタン →「ホーム画面に追加」を押して、ホーム画面のpuny-chatから通知をオンにしてください。"
   },
   "systemEvent": {
-    "MEMBER_LEFT": "{{name}}さんが退出しました"
+    "MEMBER_LEFT": "{{name}}さんが退出しました",
+    "MEMBER_RETURNED": "{{name}}さんが続きから参加しました"
   },
   "name": {
     "title": "何と呼べばいいですか？",
@@ -430,7 +435,8 @@
     "expiring_other": "ゲスト利用期間は残り{{count}}日です",
     "link": "アカウント連携",
     "daysLeft_one": "残り{{count}}日",
-    "daysLeft_other": "残り{{count}}日"
+    "daysLeft_other": "残り{{count}}日",
+    "linkHint": "端末やブラウザを変えても会話を続けるには"
   },
   "demo": {
     "title": "見てみる",
@@ -615,5 +621,9 @@
         "from": "puny-chat"
       }
     }
+  },
+  "room": {
+    "seatTakenTitle": "別の場所で続きを使っています",
+    "seatTaken": "招待コードで別のアプリやブラウザ、端末からこのルームに入ったため、ここではルームを退出しました。"
   }
 }

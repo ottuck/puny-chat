@@ -53,7 +53,8 @@ export type SocketListener = {
 };
 
 const MAX_BACKOFF_MS = 30_000;
-const FATAL_CODES = new Set(['ROOM_NOT_FOUND']);
+// SEAT_TAKEN: a code made for this member let someone (them, elsewhere) take their seat.
+const FATAL_CODES = new Set(['ROOM_NOT_FOUND', 'SEAT_TAKEN']);
 
 /**
  * One WebSocket to the chat server that keeps itself connected: it authenticates with the first

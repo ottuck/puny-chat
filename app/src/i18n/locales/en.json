@@ -75,7 +75,11 @@
     "share": "Share code",
     "shareMessage": "Let's raise a Buddy together on puny-chat! 🥚\n\n👉 {{link}}\n\nOpen the link to join right away.\nInvite code: {{code}} (until {{time}})",
     "copy": "Copy",
-    "copied": "Copied ✓"
+    "copied": "Copied ✓",
+    "rejoinButton": "Invite {{name}} back",
+    "rejoinTitle": "Invite {{name}} back",
+    "rejoinHint": "A code for {{name}} to come in from another app, browser or phone. Whoever comes in with it picks up the conversation so far, and the old place leaves the room.",
+    "rejoinShareMessage": "Come back to our puny-chat room 🥚\n\n👉 {{link}}\n\nOpen the link to pick up where we left off.\nInvite code: {{code}} (until {{time}})"
   },
   "buddy": {
     "level": "Lv.{{level}}",
@@ -416,7 +420,8 @@
     "notificationsInstall": "On iPhone, notifications come to the app on your home screen. In Safari, tap Share → “Add to Home Screen”, then turn notifications on in puny-chat from your home screen."
   },
   "systemEvent": {
-    "MEMBER_LEFT": "{{name}} left"
+    "MEMBER_LEFT": "{{name}} left",
+    "MEMBER_RETURNED": "{{name}} is back"
   },
   "name": {
     "title": "What should we call you?",
@@ -430,7 +435,8 @@
     "expiring_other": "{{count}} days left as a guest",
     "link": "Link account",
     "daysLeft_one": "{{count}} day left",
-    "daysLeft_other": "{{count}} days left"
+    "daysLeft_other": "{{count}} days left",
+    "linkHint": "To keep chatting on another phone or browser"
   },
   "demo": {
     "title": "Take a look",
@@ -615,5 +621,9 @@
         "from": "puny-chat"
       }
     }
+  },
+  "room": {
+    "seatTakenTitle": "Continued somewhere else",
+    "seatTaken": "An invite code brought this room to another app, browser or phone, so it has left the room here."
   }
 }

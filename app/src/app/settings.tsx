@@ -18,7 +18,6 @@ import { AccountInUseError, switchToExisting } from '@/features/auth/account-in-
 import {
   deleteAccount,
   isCancelledSignIn,
-  linkedProvider,
   noteAccountLinked,
   signOut,
   switchAccount,
@@ -46,11 +45,11 @@ import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 export default function SettingsScreen() {
   const colors = useColors();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { account } = useAuth();
   const { state } = useRoom();
   const me = state.status === 'ready' || state.status === 'none' ? state.me : null;
-  const guest = !!user?.isAnonymous;
-  const daysLeft = useGuestDaysLeft(user);
+  const guest = !!account?.guest;
+  const daysLeft = useGuestDaysLeft(account);
 
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -125,9 +124,9 @@ export default function SettingsScreen() {
         </View>
 
         <AccountCard
-          provider={user ? linkedProvider(user) : null}
+          provider={account?.provider ?? null}
           daysLeft={daysLeft}
-          email={user?.email ?? null}
+          email={account?.email ?? null}
         />
 
         <DisplayCard />

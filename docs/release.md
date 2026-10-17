@@ -11,10 +11,11 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 | --- | --- | --- |
 | Apple Developer Program 가입, App ID(`com.ottuck.buddychat`), Sign in with Apple 켜기 | 운영자 | 완료 |
 | Sign in with Apple 키, Services ID, Firebase Apple 제공업체 | 운영자 | 완료 |
+| Firebase iOS 앱(번들 ID `com.ottuck.buddychat`) 등록. 앱의 Apple 토큰은 수신자가 번들 ID라 이 등록이 없으면 `auth/invalid-credential` | CLI | 완료 |
 | App Store Connect 앱 등록 | 운영자 | 완료 |
 | 코드 쪽 준비(아래) | 코드 | 완료 |
-| EAS iOS 개발용 빌드·설치 | 운영자(Apple 인증, 기기 등록) | 예정 |
-| iPhone 실기기 검증 | 운영자 조작, 결과에 따른 코드 수정 | 예정 |
+| EAS iOS 개발용 빌드·설치 | 운영자(Apple 인증, 기기 등록) | 완료 |
+| iPhone 실기기 검증 | 운영자 조작, 결과에 따른 코드 수정 | 진행 중 |
 | production 빌드·TestFlight | 운영자 인증, CLI는 지원 | 예정 |
 | 스토어 정보 입력·심사 제출 | 문안은 지원, 최종 확인·제출은 운영자 | 예정 |
 
