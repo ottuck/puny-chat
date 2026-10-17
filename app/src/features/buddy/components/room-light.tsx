@@ -4,12 +4,18 @@ import Svg, { Defs, LinearGradient, Polygon, RadialGradient, Rect, Stop } from '
 
 // The light in the room by the hour (docs/fun-improvements.md, 방의 빛): one room, colored by the
 // time instead of drawn again. Morning is fresh and a little blue, the sun slanting in through the
-// window with motes of dust glinting in it; the day is as it is; at dusk the room goes warm orange and the window lets
-// in long golden light; at night it goes dark blue, and only the standing lamp (or the moon at the
-// window) lights it, softly, around itself. Over the room and the buddy; under the name, the
-// buttons and the notes.
+// window with motes of dust glinting in it; the day is as it is; at dusk the room
+// keeps its colors while the window glows orange and throws shafts of light, bright where they land;
+// at night it goes dark blue, and only the standing lamp (or the moon at the window) lights it,
+// softly, around itself. Over the room and the buddy; under the name, the buttons and the notes.
 
 const NATIVE_DRIVER = Platform.OS !== 'web';
+// The window's panes, in the glass's cells (room.ts, WINDOW_GLASS): left of the mullion, and right.
+const GLASS_CELLS = 20;
+const PANES = [
+  [0, 9],
+  [11, 20],
+] as const;
 
 export type RoomHour = 'morning' | 'day' | 'dusk' | 'night';
 
@@ -47,18 +53,38 @@ export function RoomLight({
   const id = useId().replace(/[^a-zA-Z0-9]/g, '');
   if (hour === 'day' || width === 0) return null;
   const soften = dark ? 0.6 : 1;
-  // The window's light falls toward the floor, leaning away from the sun: right in the morning,
-  // left at dusk.
-  const lean = hour === 'morning' ? 0.55 : -0.7;
-  const beam = glass
-    ? (() => {
-        const drop = floorTop - glass.top;
-        const dx = drop * lean;
-        return `${glass.left},${glass.top} ${glass.left + glass.width},${glass.top} ${
-          glass.left + glass.width + dx
-        },${floorTop + 6} ${glass.left + dx},${floorTop + 6}`;
-      })()
-    : null;
+  // The window's light falls toward the floor in straight shafts, one through each pane (the
+  // mullion between them leaves a strip of shade), leaning away from the sun: right in the morning,
+  // left at dusk. Where it reaches the floor it lies there as a patch.
+  const lean = hour === 'morning' ? 0.55 : -0.45;
+  const shafts: string[] = [];
+  const patches: string[] = [];
+  if (glass) {
+    const cell = glass.width / GLASS_CELLS;
+    const drop = floorTop - glass.top;
+    const dx = drop * lean;
+    const ddx = (height - floorTop) * lean;
+    for (const [from, to] of PANES) {
+      const x1 = glass.left + from * cell;
+      const x2 = glass.left + to * cell;
+      shafts.push(
+        `${x1},${glass.top} ${x2},${glass.top} ${x2 + dx},${floorTop} ${x1 + dx},${floorTop}`,
+      );
+      patches.push(
+        `${x1 + dx},${floorTop} ${x2 + dx},${floorTop} ${x2 + dx + ddx},${height} ${x1 + dx + ddx},${height}`,
+      );
+    }
+  }
+  const beamStops: [string, string, number][] =
+    hour === 'dusk'
+      ? [
+          ['0', '#FFD08A', 0.5],
+          ['1', '#FFB866', 0.14],
+        ]
+      : [
+          ['0', hour === 'morning' ? '#F2FAFF' : '#BFD3FF', hour === 'night' ? 0.16 : 0.55],
+          ['1', '#FFFFFF', 0],
+        ];
   // At night the light comes from the lamp, or else faintly from the moon at the window.
   const glow =
     lamp ?? (glass ? { x: glass.left + glass.width / 2, y: glass.top + glass.height / 2 } : null);
@@ -66,14 +92,26 @@ export function RoomLight({
     <View style={[StyleSheet.absoluteFill, styles.passThrough]}>
       <Svg width={width} height={height}>
         <Defs>
+          {/* In the morning the light thins out toward the floor; at dusk it stays strong. */}
           <LinearGradient id={`beam${id}`} x1="0" y1="0" x2="0" y2="1">
-            <Stop
-              offset="0"
-              stopColor={hour === 'morning' ? '#F2FAFF' : hour === 'dusk' ? '#FFC27A' : '#BFD3FF'}
-              stopOpacity={(hour === 'night' ? 0.16 : hour === 'dusk' ? 0.5 : 0.55) * soften}
-            />
-            <Stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
+            {beamStops.map(([offset, color, opacity]) => (
+              <Stop key={offset} offset={offset} stopColor={color} stopOpacity={opacity * soften} />
+            ))}
           </LinearGradient>
+          {/* The sunset glowing on the wall around the window. */}
+          {glass ? (
+            <RadialGradient
+              id={`sunset${id}`}
+              cx={glass.left + glass.width / 2}
+              cy={glass.top + glass.height / 2}
+              r={glass.width * 1.5}
+              gradientUnits="userSpaceOnUse"
+            >
+              <Stop offset="0" stopColor="#FFB060" stopOpacity={0.45 * soften} />
+              <Stop offset="0.45" stopColor="#FFB868" stopOpacity={0.16 * soften} />
+              <Stop offset="1" stopColor="#FFC27A" stopOpacity={0} />
+            </RadialGradient>
+          ) : null}
           {glow ? (
             <RadialGradient
               id={`night${id}`}
@@ -108,18 +146,25 @@ export function RoomLight({
           ) : (
             <Rect x={0} y={0} width={width} height={height} fill="#2C40A0" opacity={0.3 * soften} />
           )
+        ) : hour === 'dusk' ? (
+          // At dusk the room keeps its own colors, only a breath warmer; the glow around the window
+          // and the light it throws stand out against them.
+          <Rect x={0} y={0} width={width} height={height} fill="#FFE2C2" opacity={0.1 * soften} />
         ) : (
-          // The whole room a shade warmer at dusk, a touch of cool blue in the fresh morning.
-          <Rect
-            x={0}
-            y={0}
-            width={width}
-            height={height}
-            fill={hour === 'dusk' ? '#FF8A3D' : '#9FD0FF'}
-            opacity={(hour === 'dusk' ? 0.2 : 0.12) * soften}
-          />
+          // A touch of cool blue in the fresh morning.
+          <Rect x={0} y={0} width={width} height={height} fill="#9FD0FF" opacity={0.12 * soften} />
         )}
-        {beam ? <Polygon points={beam} fill={`url(#beam${id})`} /> : null}
+        {shafts.map((points) => (
+          <Polygon key={points} points={points} fill={`url(#beam${id})`} />
+        ))}
+        {hour === 'dusk' && glass ? (
+          <Rect x={0} y={0} width={width} height={height} fill={`url(#sunset${id})`} />
+        ) : null}
+        {hour === 'dusk'
+          ? patches.map((points) => (
+              <Polygon key={points} points={points} fill="#FFAD52" opacity={0.6 * soften} />
+            ))
+          : null}
       </Svg>
       {hour === 'morning' && glass ? <Motes glass={glass} lean={lean} floorTop={floorTop} /> : null}
     </View>
