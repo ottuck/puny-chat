@@ -20,6 +20,14 @@ export const THINGS_PALETTE: Palette = {
   B: '#9E6B3F', // the bear, shaded
   V: '#76C1B0', // the radio
   t: '#4E9C8B', // the radio, shaded
+  // The hanging plant: leaves from light to dark, its vines, the ropes, the pot's lit edge.
+  '1': '#BFE79A',
+  '2': '#7DC466',
+  '3': '#4F9447',
+  '4': '#3F7A3A',
+  '5': '#D9C3A0',
+  '6': '#B49A72',
+  '7': '#FFC08A',
 };
 
 // The music box once it turns gold (Lv.43).
@@ -60,6 +68,73 @@ export const FURIN: [Frame, Frame] = [[
   '..kWk.',
   '..kkk.',
 ]];
+
+// A trailing plant hung at the window's top right corner (Lv.21), drawn finer than the window
+// (HANGING_PLANT_FINE): a terracotta pot on two ropes, leaves spilling over its rim and three vines
+// falling along the frame in gentle curves, leaves on alternate sides.
+export const HANGING_PLANT_FINE = 9 / 16;
+// It hangs with its middle over the frame's right edge, the vines falling mostly past the glass.
+// Where it hangs, in the window's cells: its left column and how far above the window's top.
+export const HANGING_PLANT_AT = { col: 22, above: 2 };
+
+// A small leaf, light at its top, and its mirror.
+const LEAF = ['12.', '223', '.3.'];
+const LEAF_LEFT = ['.21', '322', '.3.'];
+
+export const HANGING_PLANT: Frame = (() => {
+  const width = 12;
+  const rows = Array.from({ length: 27 }, () => Array<string>(width).fill('.'));
+  const set = (row: number, col: number, cell: string) => {
+    if (row >= 0 && row < rows.length && col >= 0 && col < width) rows[row][col] = cell;
+  };
+  const put = (frame: string[], top: number, left: number) =>
+    frame.forEach((line, dy) =>
+      [...line].forEach((cell, dx) => {
+        if (cell !== '.') set(top + dy, left + dx, cell);
+      }),
+    );
+  // The hook and the ropes down to the pot's rim.
+  set(0, 5, '6');
+  set(0, 6, '6');
+  for (let row = 1; row <= 5; row++) {
+    set(row, 5 - Math.round((row - 1) * 0.75), '5');
+    set(row, 6 + Math.round((row - 1) * 0.75), '5');
+  }
+  // The pot: a rim, then rounding in, lit on the left.
+  const pot = [
+    [6, 2, 'kkkkkkkk'],
+    [7, 2, 'k7oooOOk'],
+    [8, 2, 'kkkkkkkk'],
+    [9, 3, 'k7oOOk'],
+    [10, 4, 'kkkk'],
+  ] as const;
+  for (const [row, col, line] of pot) [...line].forEach((cell, i) => set(row, col + i, cell));
+  // Leaves spilling over the rim.
+  put(LEAF_LEFT, 4, 0);
+  put(LEAF, 4, 8);
+  put(LEAF, 5, 4);
+  // Vines from both sides of the pot, the right one longest, and a short one from its middle.
+  const vines = [
+    { from: 8, col: 2, to: 21, sway: 1, phase: 0 },
+    { from: 10, col: 5, to: 16, sway: 1, phase: 1.6 },
+    { from: 8, col: 9, to: 25, sway: 1, phase: 3.1 },
+  ];
+  for (const vine of vines) {
+    let last = vine.col;
+    for (let row = vine.from; row <= vine.to; row++) {
+      const t = row - vine.from;
+      const col = Math.round(vine.col + Math.sin(t / 3 + vine.phase) * vine.sway);
+      last = col;
+      set(row, col, '4');
+      if (t > 1 && t % 3 === 0) {
+        if ((t / 3) % 2 === 0) put(LEAF, row - 1, col + 1);
+        else put(LEAF_LEFT, row - 1, col - 3);
+      }
+    }
+    put(LEAF, vine.to - 1, last - 1);
+  }
+  return rows.map((line) => line.join(''));
+})();
 
 // A cherry petal drifting past the glass (Lv.41, in spring).
 // prettier-ignore
@@ -492,41 +567,77 @@ export const SHELF: Frame = [
   '.....kk' + '.'.repeat(30) + 'kk.....',
 ]; // --- On the wall ---
 
-// The wall clock grown into a cuckoo clock (Lv.36): a roof with a little door over the face, and
-// below it the pendulum swinging between two pine-cone weights.
-// prettier-ignore
-export const CUCKOO_ROOF: Frame = [
-  '........k........',
-  '.......kqk.......',
-  '......kqqqk......',
-  '.....kqkkkqk.....',
-  '....kqqkNkqqk....',
-  '...kqqqkkkqqqk...',
-  'kkkkkkkkkkkkkkkkk',
-];
+// The wall clock grown into a cuckoo clock (Lv.36), drawn as finely as the clock (CLOCK_FINE): a
+// shingled roof with a little arched door and carved leaves hanging from its eaves over the face,
+// and below it the pendulum swinging between two pine-cone weights on chains.
+export const CUCKOO_ROOF_CELLS = 33;
+const ROOF_MIDDLE = 16;
+export const CUCKOO_DOOR = { col: ROOF_MIDDLE, row: 7 };
 
-// prettier-ignore
-export const PENDULUM: [Frame, Frame] = [[
-  '......k......',
-  '......k......',
-  '..k..k....k..',
-  '..k..k....k..',
-  '..k.kyk...k..',
-  '.kDkkyk..kDk.',
-  '.kDk.k...kDk.',
-  '.kqk.....kqk.',
-  '..k.......k..',
-], [
-  '......k......',
-  '......k......',
-  '..k....k..k..',
-  '..k....k..k..',
-  '..k...kyk.k..',
-  '.kDk..kykkDk.',
-  '.kDk...k.kDk.',
-  '.kqk.....kqk.',
-  '..k.......k..',
-]];
+const ROOF_ROWS = 13;
+export const CUCKOO_ROOF: Frame = Array.from({ length: ROOF_ROWS + 4 }, (_, row) =>
+  Array.from({ length: CUCKOO_ROOF_CELLS }, (_, col) => {
+    const dx = Math.abs(col - ROOF_MIDDLE);
+    if (row < ROOF_ROWS) {
+      // The roof: wider toward the eaves; shingles in rows two cells tall with staggered seams.
+      const half = Math.min(ROOF_MIDDLE, Math.round(1 + row * 1.3));
+      if (dx > half) return '.';
+      if (dx === half || row === 0) return 'k';
+      // The door, an arch in the middle.
+      if (row >= CUCKOO_DOOR.row - 2 && row <= CUCKOO_DOOR.row + 3 && dx <= 2) {
+        if (row === CUCKOO_DOOR.row - 2) return dx <= 1 ? 'L' : '.';
+        if (dx === 2) return 'L';
+        return row === CUCKOO_DOOR.row + 3 ? 'L' : 'N';
+      }
+      if (row <= 2) return 'q';
+      const seam = (col + (Math.floor(row / 2) % 2) * 2) % 4 === 0;
+      if (seam) return 'q';
+      return row % 2 === 1 ? 'L' : 'D';
+    }
+    // The eaves' beam, lit on top, with leaves hanging from both ends.
+    const beam = row - ROOF_ROWS;
+    const end = col === 0 || col === CUCKOO_ROOF_CELLS - 1;
+    if (beam === 0) return 'k';
+    if (beam === 1) return end ? 'k' : 'L';
+    if (beam === 2) {
+      if (col <= 4 || col >= CUCKOO_ROOF_CELLS - 5) return col % 2 === 0 ? 'g' : 'G';
+      return end ? 'k' : 'D';
+    }
+    if (col === 1 || col === 3 || col === CUCKOO_ROOF_CELLS - 2 || col === CUCKOO_ROOF_CELLS - 4)
+      return 'G';
+    return dx <= ROOF_MIDDLE - 5 ? 'k' : '.';
+  }).join(''),
+);
+
+// A pine cone on its chain, for the weights.
+const CONE = ['.kkk.', 'kDLDk', 'kLDLk', 'kDLDk', 'kLDLk', 'kDLDk', '.kDk.', '..k..'];
+// A leaf-shaped bob at the end of the rod.
+const BOB = ['.kyk.', 'kyyYk', 'kyYYk', '.kYk.', '..k..'];
+
+function pendulum(swing: number): Frame {
+  const width = 25;
+  const rows = Array.from({ length: 21 }, () => Array<string>(width).fill('.'));
+  const put = (frame: string[], top: number, left: number) =>
+    frame.forEach((line, dy) =>
+      [...line].forEach((cell, dx) => {
+        if (cell !== '.') rows[top + dy][left + dx] = cell;
+      }),
+    );
+  // Chains, link by link, down to the weights.
+  for (const col of [6, 18]) {
+    for (let row = 0; row < 11; row++) rows[row][col] = row % 2 === 0 ? 'N' : 'n';
+    put(CONE, 11, col - 2);
+  }
+  // The rod from the middle, its end swung to one side.
+  const length = 14;
+  for (let t = 0; t <= length; t++) {
+    rows[t][Math.round(12 + (swing * t) / length)] = 'Y';
+  }
+  put(BOB, length, 12 + swing - 2);
+  return rows.map((line) => line.join(''));
+}
+
+export const PENDULUM: [Frame, Frame] = [pendulum(-2), pendulum(2)];
 
 // The cuckoo, out of its door.
 // prettier-ignore

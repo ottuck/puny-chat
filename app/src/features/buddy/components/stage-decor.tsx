@@ -21,6 +21,9 @@ import {
   BUNNY,
   fishBowl,
   GRAMOPHONE,
+  HANGING_PLANT,
+  HANGING_PLANT_AT,
+  HANGING_PLANT_FINE,
   RADIO,
   SHELF,
   SILL_POT,
@@ -81,6 +84,7 @@ export type Reward =
   | 'catTail'
   | 'plant5'
   | 'bowl3'
+  | 'hangingPlant'
   | 'ladybug'
   | 'radio'
   | 'sillPot'
@@ -125,6 +129,7 @@ export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 17, reward: 'wood' },
   { level: 18, reward: 'sparrow' },
   { level: 19, reward: 'plant3' },
+  { level: 21, reward: 'hangingPlant' },
   { level: 22, reward: 'firefly' },
   { level: 23, reward: 'ladybug' },
   { level: 24, reward: 'train' },
@@ -243,6 +248,7 @@ export function decorFor(level: number, seed = '', kind?: number, now = new Date
     rug: tierOf<Exclude<RugTier, 0>>(has, ['rug1', 'rug2', 'rug3', 'rug4']) as RugTier,
     floor: has('tatami') ? ('tatami' as const) : has('wood') ? ('wood' as const) : null,
     window: has('window'),
+    hangingPlant: has('hangingPlant'),
     windowThings,
     clock: has('clock'),
     cuckoo: has('cuckoo'),
@@ -484,6 +490,35 @@ export function WallDecor({
                 run={run}
                 tick={tick}
                 things={things}
+              />
+            </Tappable>
+          </Arrive>
+        </View>
+      ) : null}
+      {/* Hung at the window's top right, swinging from its strings when tapped. */}
+      {decor.window && decor.hangingPlant ? (
+        <View
+          style={[
+            styles.at,
+            {
+              left: windowLeft + HANGING_PLANT_AT.col * wall,
+              top: top + 4 - HANGING_PLANT_AT.above * wall,
+            },
+          ]}
+        >
+          <Arrive
+            fresh={fresh('hangingPlant')}
+            width={HANGING_PLANT[0].length * wall * HANGING_PLANT_FINE}
+          >
+            <Tappable
+              kind="swing"
+              label={t('buddy.room.hangingPlant')}
+              onTap={() => onProp('plant')}
+            >
+              <PixelSprite
+                frame={HANGING_PLANT}
+                palette={THINGS_PALETTE}
+                scale={wall * HANGING_PLANT_FINE}
               />
             </Tappable>
           </Arrive>

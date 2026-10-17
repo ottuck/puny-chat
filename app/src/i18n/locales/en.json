@@ -220,6 +220,7 @@
       "wood": "Wooden floor",
       "sparrow": "A sparrow drops by",
       "plant3": "Flowers in a glazed pot",
+      "hangingPlant": "A hanging plant at the window",
       "firefly": "Fireflies drop by",
       "ladybug": "A ladybug drops by",
       "train": "Toy train",
@@ -333,7 +334,8 @@
       "table": "Low table",
       "bear": "Teddy bear",
       "bunny": "Bunny plush",
-      "books": "Books"
+      "books": "Books",
+      "hangingPlant": "Hanging plant"
     },
     "notice": {
       "jobChangeOpen": "The job can be changed once! Pick one in the buddy details",
@@ -599,7 +601,7 @@
       },
       "roomUpdate": {
         "title": "The room changes every level",
-        "body": "Every time your buddy levels up, something new comes to the room: guests at the window, a music box and a radio on the wall shelf, plush friends on the sill, a goldfish on the side table, a low table that turns into a kotatsu in winter. 49 in all.\n\nSome only come out in their season, like cherry petals, a wind chime, red dragonflies and kagami mochi. You can see when in the level rewards of the guide.\n\nThe top level is now 60, and the buddies who went their own way are in the memory album on the stage.",
+        "body": "Every time your buddy levels up, something new comes to the room: guests at the window, a music box and a radio on the wall shelf, plush friends on the sill, a goldfish on the side table, a low table that turns into a kotatsu in winter. 50 in all.\n\nSome only come out in their season, like cherry petals, a wind chime, red dragonflies and kagami mochi. You can see when in the level rewards of the guide.\n\nThe top level is now 60, and the buddies who went their own way are in the memory album on the stage.",
         "from": "puny-chat"
       }
     }
