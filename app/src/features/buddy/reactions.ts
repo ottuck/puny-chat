@@ -44,17 +44,17 @@ export function reactionTo(message: ServerMessage, myId: string): Reaction | nul
   return kind ? { id: message.id, kind } : null;
 }
 
-// The buddy evolved while this user was away (in messages loaded on opening or reconnecting,
-// newer than what they had read): worth showing once, the other care events are not. Someone
-// who never read anything here just joined, and the buddy's past is not news to them.
-export function missedEvolution(
-  loaded: ServerMessage[],
-  myRead: string | undefined,
-): Reaction | null {
+// The buddy reached the top level or evolved while this user was away (in messages loaded on
+// opening or reconnecting, newer than what they had read): worth showing once, the other care
+// events are not. The top level first, it is the bigger moment. Someone who never read anything
+// here just joined, and the buddy's past is not news to them.
+export function missedMoment(loaded: ServerMessage[], myRead: string | undefined): Reaction | null {
   if (!myRead) return null;
   // Hex ids sort by time (docs/spec.md).
-  const evolved = loaded.find(
-    (m) => m.type === 'BUDDY_EVENT' && m.buddyEvent === 'EVOLVED' && m.id > myRead,
-  );
+  const newer = (event: string) =>
+    loaded.find((m) => m.type === 'BUDDY_EVENT' && m.buddyEvent === event && m.id > myRead);
+  const top = newer('MAX_LEVEL');
+  if (top) return { id: top.id, kind: 'maxLevel' };
+  const evolved = newer('EVOLVED');
   return evolved ? { id: evolved.id, kind: 'evolved' } : null;
 }

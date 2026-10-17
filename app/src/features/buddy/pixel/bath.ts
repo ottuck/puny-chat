@@ -219,6 +219,20 @@ export const ALBUM_ICON: Frame = [
   'kkkkkkkkkkkk',
 ];
 
+// The mailbox's button (docs/fun-improvements.md, 우편함): an envelope sealed with a heart.
+// prettier-ignore
+export const MAIL_ICON: Frame = [
+  'kkkkkkkkkkkk',
+  'kkWWWWWWWWkk',
+  'kWkWWWWWWkWk',
+  'kWWkWWWWkWWk',
+  'kWWWkRRkWWWk',
+  'kWWWWRRWWWWk',
+  'kWWWWWWWWWWk',
+  'kWWWWWWWWWWk',
+  'kkkkkkkkkkkk',
+];
+
 // The button back home: a little house.
 // prettier-ignore
 export const HOME_ICON: Frame = [

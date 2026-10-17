@@ -8,7 +8,10 @@ import { useColors } from '@/theme';
 import type { AlbumEntry } from '@/features/room/api';
 
 import type { BuddyView } from '../api';
-import { ALBUM_ICON, BATH_ICON, BATH_PALETTE, HOME_ICON } from '../pixel/bath';
+import { useMailbox } from '@/features/mailbox/mail';
+import { MailboxSheet } from '@/features/mailbox/mailbox-sheet';
+
+import { ALBUM_ICON, BATH_ICON, BATH_PALETTE, HOME_ICON, MAIL_ICON } from '../pixel/bath';
 import { isWinter } from '../pixel/looks';
 import { PixelSprite } from '../pixel/pixel-sprite';
 import { buddyFrame } from '../pixel/sprites';
@@ -61,10 +64,13 @@ function CornerButton({
   icon,
   label,
   onPress,
+  badge = false,
 }: {
   icon: typeof BATH_ICON;
   label: string;
   onPress: () => void;
+  // Something new inside (unread mail): a dot in its corner.
+  badge?: boolean;
 }) {
   const colors = useColors();
   return (
@@ -79,6 +85,7 @@ function CornerButton({
       ]}
     >
       <PixelSprite frame={icon} palette={BATH_PALETTE} scale={2} />
+      {badge ? <View style={[styles.badge, { borderColor: colors.surface }]} /> : null}
     </Pressable>
   );
 }
@@ -110,6 +117,8 @@ export function BuddyScene({
   }, []);
   const [focusX, setFocusX] = useState<number | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [mailOpen, setMailOpen] = useState(false);
+  const mailbox = useMailbox(buddy.level);
 
   // The dream: only for an egg, only once on this device.
   const egg = buddy.stage === 'EGG';
@@ -282,22 +291,28 @@ export function BuddyScene({
         onWalk={onWalk}
         buddy={shown}
         reaction={reaction}
-        corners={(canBathe ? 1 : 0) + (hasAlbum ? 1 : 0)}
+        onOpenMail={() => setMailOpen(true)}
+        corners={1 + (canBathe ? 1 : 0) + (hasAlbum ? 1 : 0)}
         corner={
-          canBathe || hasAlbum ? (
-            <View style={styles.corners}>
-              {hasAlbum ? (
-                <CornerButton
-                  icon={ALBUM_ICON}
-                  label={t('buddy.album.open')}
-                  onPress={() => setGalleryOpen(true)}
-                />
-              ) : null}
-              {canBathe ? (
-                <CornerButton icon={BATH_ICON} label={t('buddy.bath.go')} onPress={toBath} />
-              ) : null}
-            </View>
-          ) : undefined
+          <View style={styles.corners}>
+            {/* The mailbox is always there: news may come any time. */}
+            <CornerButton
+              icon={MAIL_ICON}
+              label={t('mailbox.open')}
+              badge={mailbox.unread > 0}
+              onPress={() => setMailOpen(true)}
+            />
+            {hasAlbum ? (
+              <CornerButton
+                icon={ALBUM_ICON}
+                label={t('buddy.album.open')}
+                onPress={() => setGalleryOpen(true)}
+              />
+            ) : null}
+            {canBathe ? (
+              <CornerButton icon={BATH_ICON} label={t('buddy.bath.go')} onPress={toBath} />
+            ) : null}
+          </View>
         }
       />
     );
@@ -311,6 +326,12 @@ export function BuddyScene({
       {scene}
       <Iris run={iris} width={width} height={height} focus={focus} spot={spriteHeight * 0.62} />
       <AlbumGallery visible={galleryOpen} album={album} onClose={() => setGalleryOpen(false)} />
+      <MailboxSheet
+        visible={mailOpen}
+        mails={mailbox.mails}
+        read={mailbox.read}
+        onClose={() => setMailOpen(false)}
+      />
     </View>
   );
 }
@@ -325,6 +346,16 @@ const styles = StyleSheet.create({
   corners: {
     flexDirection: 'row',
     gap: 6,
+  },
+  badge: {
+    position: 'absolute',
+    top: -3,
+    right: -3,
+    width: 11,
+    height: 11,
+    borderRadius: 6,
+    borderWidth: 2,
+    backgroundColor: '#FF5A5F',
   },
   button: {
     width: CORNER_SIZE,

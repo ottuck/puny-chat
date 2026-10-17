@@ -63,6 +63,8 @@ export type Line =
   | 'swallow'
   | 'owl'
   | 'squirrel'
+  // Sitting down on the rug.
+  | 'sit'
   | 'farewell'
   // A tap on a thing in the room (buddy-stage.tsx, touchProp).
   | 'plant'

@@ -5,7 +5,7 @@ import { AppState, Platform } from 'react-native';
 import type { BuddyView } from '@/features/buddy/api';
 import { chatMood, chatWord } from '@/features/buddy/chat-words';
 import type { Cue } from '@/features/buddy/components/buddy-stage';
-import { missedEvolution, type Reaction, reactionTo } from '@/features/buddy/reactions';
+import { missedMoment, type Reaction, reactionTo } from '@/features/buddy/reactions';
 import { ApiError } from '@/lib/api';
 
 import { fetchNewer, fetchNewest, fetchOlder } from './api';
@@ -159,7 +159,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
         }
       },
       onSynced: (fetched, myRead) => {
-        const missed = missedEvolution(fetched, myRead);
+        const missed = missedMoment(fetched, myRead);
         if (missed) setReaction(missed);
       },
       onSyncing: (next) => {

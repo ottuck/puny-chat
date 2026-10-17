@@ -9,6 +9,8 @@ import { PixelSprite } from '../pixel/pixel-sprite';
 import {
   BALL,
   CAT_TAIL,
+  CLOCK_CELLS,
+  CLOCK_FINE,
   clockAt,
   CRATE,
   LAMP,
@@ -28,7 +30,9 @@ import {
 import {
   BUBBLE,
   CUCKOO,
+  CUCKOO_DOOR,
   CUCKOO_ROOF,
+  CUCKOO_ROOF_CELLS,
   fishBowl,
   FURIN,
   GOLD_PALETTE,
@@ -506,13 +510,15 @@ export function WallClock({ scale, now }: { scale: number; now: Date }) {
   const hours = now.getHours();
   const minutes = now.getMinutes();
   const face = useMemo(() => clockAt(hours, minutes), [hours, minutes]);
-  return <PixelSprite frame={face} palette={ROOM_PALETTE} scale={scale} />;
+  // `scale` is the room's; the clock is drawn finer (CLOCK_FINE).
+  return <PixelSprite frame={face} palette={ROOM_PALETTE} scale={scale * CLOCK_FINE} />;
 }
 
 // The clock once a cuckoo clock (Lv.36): a roof over the face, the pendulum swinging below. The
 // cuckoo comes out on the hour and when the clock is tapped (`run` counts the taps).
-export const CUCKOO_CELLS = CUCKOO_ROOF[0].length;
-const FACE_INSET = (CUCKOO_CELLS - 13) / 2;
+// In the room's cells, like the clock's 13.
+export const CUCKOO_CELLS = CUCKOO_ROOF_CELLS * CLOCK_FINE;
+const FACE_INSET = ((CUCKOO_ROOF_CELLS - CLOCK_CELLS) / 2) * CLOCK_FINE;
 
 export function CuckooClock({
   scale,
@@ -528,10 +534,14 @@ export function CuckooClock({
   const onTheHour = now.getMinutes() === 0 ? now.getHours() : null;
   return (
     <View style={{ width: CUCKOO_CELLS * scale }}>
-      <PixelSprite frame={CUCKOO_ROOF} palette={THINGS_PALETTE} scale={scale} />
-      <View style={{ marginLeft: FACE_INSET * scale }}>
+      <PixelSprite frame={CUCKOO_ROOF} palette={THINGS_PALETTE} scale={scale * CLOCK_FINE} />
+      <View style={{ marginLeft: FACE_INSET * scale, marginTop: -2 * scale * CLOCK_FINE }}>
         <WallClock scale={scale} now={now} />
-        <PixelSprite frame={PENDULUM[tick % 2]} palette={THINGS_PALETTE} scale={scale} />
+        <PixelSprite
+          frame={PENDULUM[tick % 2]}
+          palette={THINGS_PALETTE}
+          scale={scale * CLOCK_FINE}
+        />
       </View>
       {run > 0 ? <CuckooOut key={`tap${run}`} scale={scale} /> : null}
       {onTheHour !== null ? <CuckooOut key={`hour${onTheHour}`} scale={scale} /> : null}
@@ -566,8 +576,9 @@ function CuckooOut({ scale }: { scale: number }) {
         styles.at,
         styles.passThrough,
         {
-          left: 6 * scale,
-          top: 2 * scale,
+          // In the door of the roof.
+          left: CUCKOO_DOOR.col * CLOCK_FINE * scale - 3 * scale,
+          top: CUCKOO_DOOR.row * CLOCK_FINE * scale - 2 * scale,
           transform: [
             { translateY: hop.interpolate({ inputRange: [0, 1], outputRange: [0, -2 * scale] }) },
           ],
