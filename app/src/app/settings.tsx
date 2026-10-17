@@ -323,6 +323,20 @@ function NotificationsCard() {
   const colors = useColors();
   const { t } = useTranslation();
   const [state, setState] = useState<PushState | null>(null);
+  // Where it cannot be turned on (Safari before the home screen), the switch still answers a tap:
+  // it moves, goes back, and then says how.
+  const [bouncing, setBouncing] = useState(false);
+  const [hint, setHint] = useState(false);
+  const blocked = state === 'unavailable' || state === 'needsInstall';
+
+  useEffect(() => {
+    if (!bouncing) return;
+    const timer = setTimeout(() => {
+      setBouncing(false);
+      setHint(true);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [bouncing]);
 
   useEffect(() => {
     let cancelled = false;
@@ -339,6 +353,10 @@ function NotificationsCard() {
   }, []);
 
   const toggle = (enabled: boolean) => {
+    if (blocked) {
+      if (enabled) setBouncing(true);
+      return;
+    }
     setState(enabled ? 'on' : 'off');
     setPushEnabled(enabled)
       .then(setState)
@@ -358,9 +376,9 @@ function NotificationsCard() {
           </Text>
         </View>
         <Switch
-          value={state === 'on'}
+          value={state === 'on' || bouncing}
           onValueChange={toggle}
-          disabled={state === null || state === 'unavailable' || state === 'needsInstall'}
+          disabled={state === null}
           trackColor={{ false: colors.switchTrack, true: colors.accent }}
           ios_backgroundColor={colors.switchTrack}
           thumbColor={Platform.OS === 'ios' ? undefined : colors.onAccent}
@@ -387,14 +405,14 @@ function NotificationsCard() {
             </Text>
           </Pressable>
         </>
-      ) : state === 'needsInstall' ? (
+      ) : state === 'needsInstall' && hint ? (
         <Text
           lineBreakStrategyIOS="hangul-word"
           style={[styles.email, styles.section, { color: colors.textMuted }]}
         >
           {t('settings.notificationsInstall')}
         </Text>
-      ) : state === 'unavailable' ? (
+      ) : state === 'unavailable' && hint ? (
         <Text style={[styles.email, styles.section, { color: colors.textMuted }]}>
           {t('settings.notificationsUnavailable')}
         </Text>
