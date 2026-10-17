@@ -36,17 +36,23 @@ export const createRoom = (buddyName: string) =>
 // Leaves the room: the partner keeps the room and buddy; a solo room is deleted.
 export const leaveRoom = () => api<void>('/api/rooms/me/leave', { method: 'POST' });
 
-export const createInvitation = () =>
-  api<Invitation>('/api/rooms/me/invitations', { method: 'POST' });
+// `self`: a code for me, to go on somewhere else (another app, browser or phone) in my seat.
+export const createInvitation = (self = false) =>
+  api<Invitation>('/api/rooms/me/invitations', { method: 'POST', body: { self } });
 
 // Accepting runs several steps on the server without a transaction. If it fails midway (network,
 // 5xx), the same user accepting the same code again finishes it (docs/PROJECT.md), so it is
 // retried a couple of times rather than leaving the friend's room half-joined.
-export async function acceptInvitation(code: string, leaveCurrentRoom: boolean): Promise<Room> {
+// `takeSeat`: said yes to coming in as the one a code is for (it takes their seat).
+export async function acceptInvitation(
+  code: string,
+  leaveCurrentRoom: boolean,
+  takeSeat = false,
+): Promise<Room> {
   const request = () =>
     api<Room>(`/api/invitations/${encodeURIComponent(code.trim())}/accept`, {
       method: 'POST',
-      body: { leaveCurrentRoom },
+      body: { leaveCurrentRoom, takeSeat },
     });
   for (let attempt = 1; ; attempt++) {
     try {

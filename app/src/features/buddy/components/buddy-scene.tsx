@@ -383,7 +383,7 @@ export function BuddyScene({
 
   return (
     <View
-      style={[styles.frame, { height, borderColor: colors.border }]}
+      style={[styles.frame, { height, borderColor: colors.stageLine }]}
       onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}
     >
       {scene}
@@ -404,8 +404,10 @@ export function BuddyScene({
 const styles = StyleSheet.create({
   // Edge to edge with a line under it: the room holds its part of the screen and the chat
   // starts below, instead of a card the messages seem to slide under.
+  // Edge to edge, closed at the bottom by the floor's own line color (a hairline in the border
+  // color disappeared at night); StageShade lays a soft shadow under it.
   frame: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: 2,
     overflow: 'hidden',
   },
   corners: {

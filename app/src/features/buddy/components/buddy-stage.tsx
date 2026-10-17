@@ -1633,7 +1633,7 @@ export function BuddyStage({
     <View
       onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}
       style={[
-        bare ? null : [styles.stage, { borderColor: colors.border }],
+        bare ? null : [styles.stage, { borderColor: colors.stageLine }],
         { height, backgroundColor: colors.stage },
       ]}
     >
@@ -2256,7 +2256,7 @@ export function BuddyStage({
 const styles = StyleSheet.create({
   // Same as BuddyScene's frame (the demo uses the stage alone).
   stage: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: 2,
     overflow: 'hidden',
   },
   info: {

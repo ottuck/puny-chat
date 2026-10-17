@@ -7,6 +7,8 @@ export class ApiError extends Error {
   constructor(
     readonly status: number,
     readonly code: string,
+    // A value for the message, when the server gives one (e.g. whose seat a code is for).
+    readonly detail?: string,
   ) {
     super(code);
   }
@@ -38,8 +40,11 @@ export async function api<T>(
     throw new ApiError(0, 'NETWORK');
   }
   if (!response.ok) {
-    const body = (await response.json().catch(() => null)) as { code?: string } | null;
-    throw new ApiError(response.status, body?.code ?? 'UNKNOWN');
+    const body = (await response.json().catch(() => null)) as {
+      code?: string;
+      detail?: string;
+    } | null;
+    throw new ApiError(response.status, body?.code ?? 'UNKNOWN', body?.detail);
   }
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;

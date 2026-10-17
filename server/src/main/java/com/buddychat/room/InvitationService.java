@@ -12,6 +12,7 @@ import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -63,15 +64,20 @@ class InvitationService {
         this.clock = clock;
     }
 
-    Mono<Invitation> create(User user) {
+    /**
+     * A code for the room. {@code self}: for the user making it, to go on somewhere else (their
+     * seat). Otherwise, in a full room, for the other member to come back from somewhere else.
+     */
+    Mono<Invitation> create(User user, boolean self) {
         return roomService.findMine(user).flatMap(room -> {
-            // In a full room the code is for the other member, to come back from somewhere else.
-            String replaces = room.isFull()
-                    ? room.memberIds().stream()
-                            .filter(id -> !id.equals(user.id()))
-                            .findFirst()
-                            .orElse(null)
-                    : null;
+            String replaces = self
+                    ? user.id()
+                    : room.isFull()
+                            ? room.memberIds().stream()
+                                    .filter(id -> !id.equals(user.id()))
+                                    .findFirst()
+                                    .orElse(null)
+                            : null;
             Instant now = Instant.now(clock);
             // A new random code per attempt; the unique index catches the rare collision.
             return Mono.defer(() -> invitations.insert(new Invitation(
@@ -97,7 +103,7 @@ class InvitationService {
      * accepting the same code again picks up where it stopped instead of being told the code is
      * used, so a half-done accept never leaves a ghost member holding the room's last slot.
      */
-    Mono<RoomView> accept(User user, String rawCode, boolean leaveCurrentRoom) {
+    Mono<RoomView> accept(User user, String rawCode, boolean leaveCurrentRoom, boolean takeSeat) {
         String code = rawCode.trim().toUpperCase(Locale.ROOT);
         Instant now = Instant.now(clock);
         if (tooManyMisses(user.id(), now)) {
@@ -118,7 +124,8 @@ class InvitationService {
                     if (!resuming && invitation.usedAt() != null) return Mono.error(invitationUsed());
                     if (!resuming && !invitation.expiresAt().isAfter(now))
                         return Mono.error(new ApiException(HttpStatus.GONE, "INVITATION_EXPIRED"));
-                    return (alreadyHere ? Mono.<Void>empty() : checkCanLeaveCurrentRoom(user, leaveCurrentRoom))
+                    return (resuming ? Mono.<Void>empty() : checkTakesSeat(invitation, takeSeat))
+                            .then(alreadyHere ? Mono.<Void>empty() : checkCanLeaveCurrentRoom(user, leaveCurrentRoom))
                             .then(claim(invitation, user, now))
                             .flatMap(claimed -> reserve(claimed, user)
                                     .then(seat(claimed, user))
@@ -175,6 +182,20 @@ class InvitationService {
                 .flatMap(roomService::toView)
                 .doOnNext(room ->
                         hub.publish(room.id(), new ServerEvent.MemberJoined(user.id(), user.displayName()), null));
+    }
+
+    // A code for someone's seat is said out loud first: whoever uses it takes over that person (e.g.
+    // using one's own code for the partner by mistake would push the partner out). The name goes
+    // with the error so the app can ask "come in as them?".
+    private Mono<Void> checkTakesSeat(Invitation invitation, boolean takeSeat) {
+        String replaced = invitation.replacesId();
+        if (replaced == null || takeSeat) return Mono.empty();
+        return userService
+                .findAllById(List.of(replaced))
+                .next()
+                .map(User::displayName)
+                .defaultIfEmpty("")
+                .flatMap(name -> Mono.error(new ApiException(HttpStatus.CONFLICT, "SEAT_CONFIRMATION_REQUIRED", name)));
     }
 
     private Mono<Void> checkCanLeaveCurrentRoom(User user, boolean leaveCurrentRoom) {

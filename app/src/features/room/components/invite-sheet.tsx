@@ -15,11 +15,13 @@ import { errorMessage } from '../error-message';
 type Props = {
   visible: boolean;
   onClose: () => void;
+  // A code for me, to go on somewhere else (settings).
+  self?: boolean;
 };
 
 // Creates a fresh invite code each time it opens (codes are single-use, 24h): the content is
 // mounted only while visible, so every opening starts from a blank state.
-export function InviteSheet({ visible, onClose }: Props) {
+export function InviteSheet({ visible, onClose, self = false }: Props) {
   return (
     <Modal
       visible={visible}
@@ -28,19 +30,22 @@ export function InviteSheet({ visible, onClose }: Props) {
       onRequestClose={onClose}
     >
       {/* Web shows the sheet in the same frame as the app (components/web-frame.web.tsx). */}
-      <WebFrame>{visible ? <InviteContent onClose={onClose} /> : null}</WebFrame>
+      <WebFrame>{visible ? <InviteContent onClose={onClose} self={self} /> : null}</WebFrame>
     </Modal>
   );
 }
 
 // `partnerName`: in a full room, a code for the partner to come back from another app, browser or
-// phone. Whoever uses it takes their seat and the conversation so far (docs/PROJECT.md).
+// phone. `self`: one for me, to go on somewhere else. Whoever uses it takes that seat and the
+// conversation so far (docs/PROJECT.md, 다시 초대).
 export function InviteContent({
   onClose,
   partnerName,
+  self = false,
 }: {
   onClose: () => void;
   partnerName?: string;
+  self?: boolean;
 }) {
   const colors = useColors();
   const { t, i18n } = useTranslation();
@@ -50,10 +55,10 @@ export function InviteContent({
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    createInvitation()
+    createInvitation(self)
       .then(setInvitation)
       .catch((e) => setError(errorMessage(t, e)));
-  }, [t]);
+  }, [t, self]);
 
   const expires = invitation
     ? new Intl.DateTimeFormat(i18n.language, {
@@ -70,11 +75,18 @@ export function InviteContent({
     const link = `${siteUrl()}/join?code=${invitation.code}`;
     try {
       await Share.share({
-        message: t(partnerName ? 'invite.rejoinShareMessage' : 'invite.shareMessage', {
-          link,
-          code: invitation.code,
-          time: expires,
-        }),
+        message: t(
+          self
+            ? 'invite.moveShareMessage'
+            : partnerName
+              ? 'invite.rejoinShareMessage'
+              : 'invite.shareMessage',
+          {
+            link,
+            code: invitation.code,
+            time: expires,
+          },
+        ),
       });
     } catch {
       // Sharing is unavailable on some browsers; the code can be copied instead.
@@ -102,10 +114,18 @@ export function InviteContent({
         </View>
 
         <Text style={[styles.title, { color: colors.text }]}>
-          {partnerName ? t('invite.rejoinTitle', { name: partnerName }) : t('invite.title')}
+          {self
+            ? t('invite.moveTitle')
+            : partnerName
+              ? t('invite.rejoinTitle', { name: partnerName })
+              : t('invite.title')}
         </Text>
         <Text style={[styles.hint, { color: colors.textMuted }]}>
-          {partnerName ? t('invite.rejoinHint', { name: partnerName }) : t('invite.hint')}
+          {self
+            ? t('invite.moveHint')
+            : partnerName
+              ? t('invite.rejoinHint', { name: partnerName })
+              : t('invite.hint')}
         </Text>
 
         <View style={[styles.codeCard, { backgroundColor: colors.surface }]}>
