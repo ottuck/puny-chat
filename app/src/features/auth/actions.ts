@@ -1,16 +1,12 @@
 import { FirebaseError } from 'firebase/app';
-import {
-  deleteUser,
-  signInAnonymously,
-  signOut as firebaseSignOut,
-  type User,
-} from 'firebase/auth';
+import { deleteUser, signInAnonymously, signOut as firebaseSignOut } from 'firebase/auth';
 
 import { unregisterPush } from '@/features/notifications/push';
 import { api } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 
 import { reauthenticateApple } from './apple-sign-in';
+import { linkedProvider } from './auth-provider';
 import { reauthenticateGoogle } from './google-sign-in';
 
 // "Start now": a Firebase anonymous account, so there is a uid for the server like any other
@@ -56,12 +52,6 @@ export async function deleteAccount(): Promise<void> {
   // in and can try again. The server steps run again harmlessly, and a request in between only
   // creates an empty user that the retry deletes.
   await deleteUser(user);
-}
-
-// Which account a signed-in user has linked; null for a guest.
-export function linkedProvider(user: User): 'google' | 'apple' | null {
-  if (user.isAnonymous) return null;
-  return user.providerData.some((p) => p.providerId === 'apple.com') ? 'apple' : 'google';
 }
 
 // The user closed the popup or Apple's sheet, or started another one; not worth an error message.

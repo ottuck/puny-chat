@@ -64,8 +64,8 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
   const { messages, status, online, typing, reads, unreadWhileAway } = chat;
   const [buddyOpen, setBuddyOpen] = useState(false);
   const [partnerOpen, setPartnerOpen] = useState(false);
-  const { user } = useAuth();
-  const guestDaysLeft = useGuestDaysLeft(user);
+  const { account } = useAuth();
+  const guestDaysLeft = useGuestDaysLeft(account);
 
   // Asked here rather than at launch: by now the user knows what the app is for.
   const [push, setPush] = useState<PushState | null>(null);
