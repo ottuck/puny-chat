@@ -35,6 +35,7 @@ import {
 } from '@/features/notifications/push';
 import { DisplayCard } from '@/features/preferences/components/display-card';
 import { leaveRoom, type Room } from '@/features/room/api';
+import { InviteSheet } from '@/features/room/components/invite-sheet';
 import { errorMessage } from '@/features/room/error-message';
 import { useRoom } from '@/features/room/room-provider';
 import { confirm } from '@/lib/confirm';
@@ -133,7 +134,9 @@ export default function SettingsScreen() {
 
         {pushSupported ? <NotificationsCard /> : null}
 
-        {state.status === 'ready' ? <RoomCard room={state.room} myId={state.me.id} /> : null}
+        {state.status === 'ready' ? (
+          <RoomCard room={state.room} myId={state.me.id} guest={guest} />
+        ) : null}
 
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <Text style={[styles.label, { color: colors.textMuted }]}>
@@ -420,11 +423,13 @@ function NotificationsCard() {
   );
 }
 
-function RoomCard({ room, myId }: { room: Room; myId: string }) {
+function RoomCard({ room, myId, guest }: { room: Room; myId: string; guest: boolean }) {
   const colors = useColors();
   const { t, i18n } = useTranslation();
   const { reload } = useRoom();
   const [leaving, setLeaving] = useState(false);
+  // A guest lives only in this app or browser: a code to go on elsewhere (an account just signs in).
+  const [moving, setMoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const partner = room.members.find((member) => member.id !== myId);
   const since = new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(
@@ -475,6 +480,12 @@ function RoomCard({ room, myId }: { room: Room; myId: string }) {
           {member.displayName ?? t('chat.guestName')}
         </Text>
       ))}
+      {guest ? (
+        <Pressable onPress={() => setMoving(true)} accessibilityRole="button" style={styles.leave}>
+          <Text style={[styles.signOut, { color: colors.accent }]}>{t('invite.moveTitle')}</Text>
+        </Pressable>
+      ) : null}
+      <InviteSheet visible={moving} onClose={() => setMoving(false)} self />
       {partner ? (
         <Pressable
           onPress={() =>

@@ -44,7 +44,11 @@ class RoomController {
     record InvitationResponse(String code, Instant expiresAt) {}
 
     // Optional in the body; absent means "do not leave my current room".
-    record AcceptRequest(@Nullable Boolean leaveCurrentRoom) {}
+    record AcceptRequest(
+            @Nullable Boolean leaveCurrentRoom, @Nullable Boolean takeSeat) {}
+
+    // self: a code for the one making it, to go on somewhere else (docs/PROJECT.md, 다시 초대).
+    record InviteRequest(@Nullable Boolean self) {}
 
     @PostMapping("/api/rooms")
     @ResponseStatus(HttpStatus.CREATED)
@@ -71,10 +75,12 @@ class RoomController {
 
     @PostMapping("/api/rooms/me/invitations")
     @ResponseStatus(HttpStatus.CREATED)
-    Mono<InvitationResponse> invite(@AuthenticationPrincipal Jwt jwt) {
+    Mono<InvitationResponse> invite(
+            @AuthenticationPrincipal Jwt jwt, @RequestBody(required = false) @Nullable InviteRequest request) {
+        boolean self = request != null && Boolean.TRUE.equals(request.self());
         return userService
                 .current(jwt)
-                .flatMap(invitationService::create)
+                .flatMap(user -> invitationService.create(user, self))
                 .map(invitation -> new InvitationResponse(invitation.code(), invitation.expiresAt()));
     }
 
@@ -84,6 +90,7 @@ class RoomController {
             @PathVariable String code,
             @RequestBody(required = false) @Nullable AcceptRequest request) {
         boolean leave = request != null && Boolean.TRUE.equals(request.leaveCurrentRoom());
-        return userService.current(jwt).flatMap(user -> invitationService.accept(user, code, leave));
+        boolean takeSeat = request != null && Boolean.TRUE.equals(request.takeSeat());
+        return userService.current(jwt).flatMap(user -> invitationService.accept(user, code, leave, takeSeat));
     }
 }

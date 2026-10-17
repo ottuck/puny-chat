@@ -45,7 +45,10 @@
     "submit": "Join",
     "leaveTitle": "Leave your buddy?",
     "leaveMessage": "If you join this room, the buddy you're raising now and its chat will be gone.",
-    "leaveConfirm": "Join anyway"
+    "leaveConfirm": "Join anyway",
+    "seatTitle": "Come in as {{name}}?",
+    "seatMessage": "This code takes over {{name}}'s seat. You pick up the conversation so far, and the place {{name}} used before leaves the room.\n\nIf you're not {{name}}, cancel.",
+    "seatConfirm": "Come in"
   },
   "chat": {
     "composerPlaceholder": "Message",
@@ -79,7 +82,10 @@
     "rejoinButton": "Invite {{name}} back",
     "rejoinTitle": "Invite {{name}} back",
     "rejoinHint": "A code for {{name}} to come in from another app, browser or phone. Whoever comes in with it picks up the conversation so far, and the old place leaves the room.",
-    "rejoinShareMessage": "Come back to our puny-chat room 🥚\n\n👉 {{link}}\n\nOpen the link to pick up where we left off.\nInvite code: {{code}} (until {{time}})"
+    "rejoinShareMessage": "Come back to our puny-chat room 🥚\n\n👉 {{link}}\n\nOpen the link to pick up where we left off.\nInvite code: {{code}} (until {{time}})",
+    "moveTitle": "Continue somewhere else",
+    "moveHint": "Enter this code in another app, browser or phone to go on with this buddy and chat there. This place leaves the room. With a linked account, just sign in instead — no code needed.",
+    "moveShareMessage": "puny-chat code to continue: {{code}} (until {{time}})\n👉 {{link}}"
   },
   "buddy": {
     "level": "Lv.{{level}}",

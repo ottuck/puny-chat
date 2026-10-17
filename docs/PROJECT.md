@@ -41,7 +41,7 @@ Yuki:  니가 치워
 - **Solo → Duo.** 혼자 시작할 수 있고(room 멤버 1명), 친구를 초대하면 2명이 되며 Buddy는 그대로 이어진다. room은 최대 2명.
 - **한 화면.** 헤더에 상대(접속·입력 중)와 도움말·설정, 그 아래 화면 높이의 약 1/3이 Buddy 무대, 나머지가 대화. 하단 탭은 없다.
   무대는 입력 중에도, 위로 스크롤해도 접히지 않는다(접었다 펴면 손가락 아래에서 대화가 움직여 스크롤이 튄다).
-  무대는 화면 폭을 꽉 채우고 아래에 선을 둔다. 떠 있는 둥근 카드로 두면 대화가 그 밑으로 들어가는 것처럼 보인다.- 첫 흐름: 바로 시작하기(게스트) → 이름 → Buddy 이름 짓기(알 탄생) → 혼자 채팅 화면 → 언제든 초대 링크·코드로 친구 초대.
+  무대는 화면 폭을 꽉 채우고 아래를 바닥 선 색(`stageLine`)의 2px 줄로 닫으며, 그 아래 채팅 위로 옅은 그림자(`StageShade`)를 깐다(말풍선이 방 밑으로 지나가는 느낌). 떠 있는 둥근 카드로 두면 대화가 그 밑으로 들어가는 것처럼 보인다.- 첫 흐름: 바로 시작하기(게스트) → 이름 → Buddy 이름 짓기(알 탄생) → 혼자 채팅 화면 → 언제든 초대 링크·코드로 친구 초대.
 - **푸시는 상대 메시지용이다.** Buddy 상태로 알림을 보내지 않는다("배고파요!" 등).
 
 ## 구경하기
@@ -280,8 +280,8 @@ history_deletions  계정 삭제 중 영향받는 방 id(삭제 진행 표식)
 | DELETE | `/api/me` | 계정 삭제 → 204. Firebase 계정은 앱이 이어서 지운다 |
 | POST | `/api/rooms` | 내 room 생성(solo, 알) |
 | GET | `/api/rooms/me` | 내 room, 멤버, Buddy 상태, 앨범 |
-| POST | `/api/rooms/me/invitations` | 초대 코드 발급. 2명 room이면 상대를 다시 부르는 코드(`replacesId`) |
-| POST | `/api/invitations/{code}/accept` | 초대 수락 → room 참가(`leaveCurrentRoom`) |
+| POST | `/api/rooms/me/invitations` | 초대 코드 발급 `{ self? }`. 2명 room이면 상대를 다시 부르는 코드, `self`면 나를 옮기는 코드(`replacesId`) |
+| POST | `/api/invitations/{code}/accept` | 초대 수락 → room 참가 `{ leaveCurrentRoom, takeSeat }` |
 | POST | `/api/rooms/me/leave` | room 나가기 → 204 |
 | GET | `/api/rooms/me/messages?before=&after=&limit=` | 타임라인(최신순, limit ≤ 50) `{ messages, hasMore }` |
 | POST | `/api/rooms/me/buddy/feed` | 밥 → `{ buddy, changed }` |
@@ -310,6 +310,7 @@ history_deletions  계정 삭제 중 영향받는 방 id(삭제 진행 표식)
 | `ALREADY_MEMBER` | 409 | 자기 room의 초대를 수락 |
 | `ALREADY_IN_ROOM` | 409 | 2명 room의 멤버가 다른 room에 참가 |
 | `LEAVE_CONFIRMATION_REQUIRED` | 409 | solo room을 두고 참가하려면 확인 필요 |
+| `SEAT_CONFIRMATION_REQUIRED` | 409 | 누군가의 자리를 잇는 코드: 그 사람으로 들어갈지 확인 필요(`detail` = 그 사람 이름) |
 | `BUDDY_NOT_GROWN` | 409 | 20레벨이 안 됐는데 독립 |
 | `BUDDY_NOT_ADULT` / `JOB_UNCHANGED` / `JOB_CHANGE_LOCKED` | 409 | 직업 바꾸기 불가(직업이 정해지기 전, 같은 직업, 바꿀 수 있는 레벨이 아님) |
 | `PARTNER_CHANGED` | 409 | 같은 `requestId`로 다른 신고 |
@@ -420,9 +421,13 @@ togetherToday, job, leaning, canChangeJob, jobChangeAt, grown)를 그대로 보�
 - **참가 동시성**: 초대 사용(`usedAt: null`) → 사용자 예약(`roomJoinId`) → 참가(`memberCount < 2`) → 예약과 기존 roomId를 확인하며 새 roomId 설정
   → 기존 room 나가기. 진 쪽은 자기 초대 사용과 예약을 되돌린다. 예약 중에는 방 생성도 거절하고, 예약만으로는 새 room에 접근할 수 없다.
   초대에 `previousRoomId`를 남겨 중간 실패 뒤 같은 코드로 다시 수락하면 이어서 끝낸다.
-- **다시 초대**: 상대가 다른 앱·브라우저·기기에서 새 사람으로 시작했을 때(계정 연결 없이) 같은 방으로 잇는다. 상대 이름을 눌러 여는 시트의
-  "○○님 다시 초대하기"가 코드를 만든다. 2명 room에서 만든 코드는 모두 상대를 위한 것이다(`replacesId` = 상대).
-  - 수락하면 그 자리를 넘겨받는다. 방에 만든 사람과 상대 둘만 있을 때 한 번의 조건부 update로 `memberIds`의 상대를 바꾼다(순서 유지).
+- **다시 초대와 옮기기**: 다른 앱·브라우저·기기에서 새 사람으로 시작했을 때(계정 연결 없이) 같은 방의 같은 자리로 잇는다. 코드가 누구의 자리인지
+  `replacesId`에 적는다.
+  - 상대를 위한 코드: 상대 이름을 눌러 여는 시트의 "○○님 다시 초대하기". 2명 room에서 만든 보통 코드도 모두 상대를 위한 것이다.
+  - 나를 위한 코드: 게스트의 설정(방) "다른 곳에서 이어서 쓰기"(`self`). 예전 곳에서 만들어 새 곳에서 넣으면 상대 도움 없이 나만 옮긴다. 혼자 방도 된다.
+  - 누군가의 자리를 잇는 코드는 먼저 `SEAT_CONFIRMATION_REQUIRED`(그 사람 이름)로 "○○님으로 이어서 들어갈까요?"를 확인받고 `takeSeat: true`로
+    다시 받는다. 내가 상대를 위해 만든 코드를 내가 다른 곳에서 넣어 상대를 밀어내는 실수를 막는다. 그다음 지금 방을 떠나는 확인이 이어질 수 있다.
+  - 수락하면 그 자리를 넘겨받는다. 만든 사람과 그 자리의 사람이 방에 있을 때 한 번의 조건부 update로 `memberIds`의 그 자리를 바꾼다(순서 유지).
     같은 자리를 두 코드가 동시에 노리면 하나만 되고 나머지는 `ROOM_FULL`. 상대가 이미 나갔으면 빈자리로 참가하고, 만든 사람이 나갔으면
     `INVITATION_EXPIRED`.
   - 넘겨받은 사람에게 그 방의 상대 메시지(`senderId`)·이름 남긴 기록(`actorId`)·읽음 위치·오늘 대화한 사람(`buddy.talkers`)이 옮겨 오고,

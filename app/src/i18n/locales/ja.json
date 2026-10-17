@@ -45,7 +45,10 @@
     "submit": "参加する",
     "leaveTitle": "いまのBuddyとお別れしますか？",
     "leaveMessage": "このルームに参加すると、いま育てているBuddyとそのトークは消えてしまいます。",
-    "leaveConfirm": "参加する"
+    "leaveConfirm": "参加する",
+    "seatTitle": "{{name}}さんとして続きから入りますか？",
+    "seatMessage": "このコードは{{name}}さんの席を引き継ぐコードです。今までの会話を引き継ぎ、{{name}}さんが元々使っていた場所はルームから退出します。\n\n{{name}}さんでなければキャンセルしてください。",
+    "seatConfirm": "続きから入る"
   },
   "chat": {
     "composerPlaceholder": "メッセージ",
@@ -79,7 +82,10 @@
     "rejoinButton": "{{name}}さんをもう一度招待",
     "rejoinTitle": "{{name}}さんをもう一度招待",
     "rejoinHint": "{{name}}さんが別のアプリやブラウザ、端末から入るときのコードです。このコードで入ると今までの会話を引き継ぎ、元の場所はルームから退出します。",
-    "rejoinShareMessage": "puny-chatのルームにもう一度入ってね 🥚\n\n👉 {{link}}\n\nリンクを押すと今までの会話の続きから見られます。\n招待コード: {{code}}（{{time}}まで）"
+    "rejoinShareMessage": "puny-chatのルームにもう一度入ってね 🥚\n\n👉 {{link}}\n\nリンクを押すと今までの会話の続きから見られます。\n招待コード: {{code}}（{{time}}まで）",
+    "moveTitle": "別の場所で続きを使う",
+    "moveHint": "別のアプリやブラウザ、端末でこのコードを入力すると、今のBuddyと会話をそのまま続けられます。ここではルームから退出します。アカウントを連携すれば、コードなしでログインするだけで続けられます。",
+    "moveShareMessage": "puny-chat 続きを使うコード: {{code}}（{{time}}まで）\n👉 {{link}}"
   },
   "buddy": {
     "level": "Lv.{{level}}",

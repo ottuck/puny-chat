@@ -1,5 +1,7 @@
 package com.buddychat.common;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -9,11 +11,16 @@ import org.springframework.web.bind.support.WebExchangeBindException;
 @RestControllerAdvice
 class ApiExceptionHandler {
 
-    record ErrorResponse(String code) {}
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    record ErrorResponse(String code, @Nullable String detail) {
+        ErrorResponse(String code) {
+            this(code, null);
+        }
+    }
 
     @ExceptionHandler(ApiException.class)
     ResponseEntity<ErrorResponse> handle(ApiException e) {
-        return ResponseEntity.status(e.status()).body(new ErrorResponse(e.code()));
+        return ResponseEntity.status(e.status()).body(new ErrorResponse(e.code(), e.detail()));
     }
 
     @ExceptionHandler(WebExchangeBindException.class)

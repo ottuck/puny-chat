@@ -45,7 +45,10 @@
     "submit": "참가하기",
     "leaveTitle": "지금 Buddy와 헤어질까요?",
     "leaveMessage": "이 방에 참가하면 지금 키우던 Buddy와 대화 내용이 사라져요.",
-    "leaveConfirm": "참가하기"
+    "leaveConfirm": "참가하기",
+    "seatTitle": "{{name}}님으로 이어서 들어갈까요?",
+    "seatMessage": "이 코드는 {{name}}님 자리를 이어받는 코드예요. 지금까지의 대화를 이어받고, {{name}}님이 원래 쓰던 곳은 방에서 나가요.\n\n{{name}}님이 아니라면 취소해 주세요.",
+    "seatConfirm": "이어서 들어가기"
   },
   "chat": {
     "composerPlaceholder": "메시지",
@@ -79,7 +82,10 @@
     "rejoinButton": "{{name}}님 다시 초대하기",
     "rejoinTitle": "{{name}}님 다시 초대",
     "rejoinHint": "{{name}}님이 다른 앱이나 브라우저, 기기에서 들어올 때 쓰는 코드예요. 이 코드로 들어오면 지금까지의 대화를 이어받고, 원래 쓰던 곳은 방에서 나가요.",
-    "rejoinShareMessage": "puny-chat 방으로 다시 들어와요 🥚\n\n👉 {{link}}\n\n링크를 누르면 지금까지의 대화를 이어서 볼 수 있어요.\n초대 코드: {{code}} ({{time}}까지)"
+    "rejoinShareMessage": "puny-chat 방으로 다시 들어와요 🥚\n\n👉 {{link}}\n\n링크를 누르면 지금까지의 대화를 이어서 볼 수 있어요.\n초대 코드: {{code}} ({{time}}까지)",
+    "moveTitle": "다른 곳에서 이어서 쓰기",
+    "moveHint": "다른 앱이나 브라우저, 기기에서 이 코드를 넣으면 지금의 버디와 대화를 그대로 이어서 써요. 여기서는 방을 나가요. 계정을 연결하면 코드 없이 로그인만으로 이어져요.",
+    "moveShareMessage": "puny-chat 이어서 쓰기 코드: {{code}} ({{time}}까지)\n👉 {{link}}"
   },
   "buddy": {
     "level": "Lv.{{level}}",

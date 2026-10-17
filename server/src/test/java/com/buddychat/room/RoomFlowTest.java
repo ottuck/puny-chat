@@ -72,6 +72,8 @@ class RoomFlowTest {
 
     record Error(String code) {}
 
+    record SeatError(String code, String detail) {}
+
     record Invite(String code, Instant expiresAt) {}
 
     @BeforeEach
@@ -238,7 +240,7 @@ class RoomFlowTest {
 
         // Yuki started over in another app (a new guest with a new egg), then used the code.
         createRoom("yuki2", "Egg");
-        RoomView joined = accept("yuki2", code, true)
+        RoomView joined = acceptSeat("yuki2", code, true)
                 .expectStatus()
                 .isOk()
                 .expectBody(RoomView.class)
@@ -270,6 +272,59 @@ class RoomFlowTest {
     }
 
     @Test
+    void aCodeForSomeonesSeatAsksWhoseItIsFirst() {
+        createRoom("henry", "Mugi");
+        accept("yuki", invite("henry"), false).expectStatus().isOk();
+        String code = invite("henry");
+
+        // Henry, in another browser, about to use his own code for yuki by mistake.
+        EntityExchangeResult<SeatError> asked = accept("henry2", code, false)
+                .expectStatus()
+                .isEqualTo(HttpStatus.CONFLICT)
+                .expectBody(SeatError.class)
+                .returnResult();
+
+        assertThat(asked.getResponseBody()).isEqualTo(new SeatError("SEAT_CONFIRMATION_REQUIRED", "yuki"));
+        assertThat(rooms.findAll().blockFirst().memberIds()).containsExactly(userId("henry"), userId("yuki"));
+        assertThat(invitations.findByCode(code).block().usedBy()).isNull();
+    }
+
+    @Test
+    void aCodeForOneselfMovesOnlyTheOneWhoMadeIt() {
+        RoomView room = createRoom("henry", "Mugi");
+        accept("yuki", invite("henry"), false).expectStatus().isOk();
+        String code = post("yuki", "/api/rooms/me/invitations", Map.of("self", true))
+                .expectStatus()
+                .isCreated()
+                .expectBody(Invite.class)
+                .returnResult()
+                .getResponseBody()
+                .code();
+
+        assertError(accept("yuki2", code, false), HttpStatus.CONFLICT, "SEAT_CONFIRMATION_REQUIRED");
+        acceptSeat("yuki2", code, false).expectStatus().isOk();
+
+        assertThat(rooms.findById(room.id()).block().memberIds()).containsExactly(userId("henry"), userId("yuki2"));
+        get("yuki", "/api/rooms/me").expectStatus().isNotFound();
+        get("henry", "/api/rooms/me").expectStatus().isOk();
+    }
+
+    @Test
+    void aCodeForOneselfAlsoMovesASoloRoom() {
+        RoomView room = createRoom("henry", "Mugi");
+        String code = post("henry", "/api/rooms/me/invitations", Map.of("self", true))
+                .expectBody(Invite.class)
+                .returnResult()
+                .getResponseBody()
+                .code();
+
+        acceptSeat("henry2", code, false).expectStatus().isOk();
+
+        assertThat(rooms.findById(room.id()).block().memberIds()).containsExactly(userId("henry2"));
+        get("henry", "/api/rooms/me").expectStatus().isNotFound();
+    }
+
+    @Test
     void ofTwoCodesForTheSameSeatOnlyOneGetsIt() {
         for (int round = 0; round < 5; round++) {
             clean();
@@ -279,7 +334,7 @@ class RoomFlowTest {
 
             List<Integer> statuses = race(
                     2,
-                    i -> accept("new" + i, codes.get(i), false)
+                    i -> acceptSeat("new" + i, codes.get(i), false)
                             .returnResult(Void.class)
                             .getStatus()
                             .value());
@@ -298,7 +353,7 @@ class RoomFlowTest {
         String code = invite("henry");
         post("henry", "/api/rooms/me/leave", null).expectStatus().isNoContent();
 
-        assertError(accept("yuki2", code, false), HttpStatus.GONE, "INVITATION_EXPIRED");
+        assertError(acceptSeat("yuki2", code, false), HttpStatus.GONE, "INVITATION_EXPIRED");
         assertThat(rooms.findAll().blockFirst().memberIds()).containsExactly(userId("yuki"));
         // Handed back, like any code that was not used.
         assertThat(invitations.findByCode(code).block().usedBy()).isNull();
@@ -314,7 +369,7 @@ class RoomFlowTest {
         String code = invite("henry");
         post("yuki", "/api/rooms/me/leave", null).expectStatus().isNoContent();
 
-        accept("yuki2", code, false).expectStatus().isOk();
+        acceptSeat("yuki2", code, false).expectStatus().isOk();
 
         assertThat(rooms.findById(room.id()).block().memberIds()).containsExactly(userId("henry"), userId("yuki2"));
         assertThat(mongo.find(
@@ -491,7 +546,7 @@ class RoomFlowTest {
         User stale = userService.getOrCreate("yuki", "yuki").block();
         List<String> results = Flux.fromIterable(codes)
                 .flatMap(code -> invitationService
-                        .accept(stale, code, false)
+                        .accept(stale, code, false, false)
                         .map(RoomView::id)
                         .onErrorResume(ApiException.class, e -> Mono.just(e.code())))
                 .collectList()
@@ -524,7 +579,7 @@ class RoomFlowTest {
         User stale = userService.getOrCreate("yuki", "yuki").block();
         List<String> results = Flux.fromIterable(codes)
                 .flatMap(code -> invitationService
-                        .accept(stale, code, true)
+                        .accept(stale, code, true, false)
                         .map(RoomView::id)
                         .onErrorResume(ApiException.class, e -> Mono.just(e.code())))
                 .collectList()
@@ -545,9 +600,9 @@ class RoomFlowTest {
         createRoom("henry", "Mugi");
         String code = invite("henry");
         User stale = userService.getOrCreate("yuki", "yuki").block();
-        invitationService.accept(stale, code, false).block();
+        invitationService.accept(stale, code, false, false).block();
 
-        invitationService.accept(stale, code, false).block();
+        invitationService.accept(stale, code, false, false).block();
         assertThat(invitations.findByCode(code).block().usedBy()).isEqualTo(stale.id());
         assertError(accept("mika", code, false), HttpStatus.GONE, "INVITATION_USED");
     }
@@ -637,6 +692,11 @@ class RoomFlowTest {
 
     private WebTestClient.ResponseSpec accept(String uid, String code, boolean leave) {
         return post(uid, "/api/invitations/" + code + "/accept", Map.of("leaveCurrentRoom", leave));
+    }
+
+    // Having said yes to coming in as the one whose seat the code is for.
+    private WebTestClient.ResponseSpec acceptSeat(String uid, String code, boolean leave) {
+        return post(uid, "/api/invitations/" + code + "/accept", Map.of("leaveCurrentRoom", leave, "takeSeat", true));
     }
 
     private WebTestClient.ResponseSpec get(String uid, String path) {

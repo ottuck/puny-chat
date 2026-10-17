@@ -103,7 +103,7 @@ class LeaveRoomFlowTest {
         String code = invite("henry");
 
         createRoom("yuki2"); // the same friend, started over in the home-screen app
-        post("yuki2", "/api/invitations/" + code + "/accept", Map.of("leaveCurrentRoom", true))
+        post("yuki2", "/api/invitations/" + code + "/accept", Map.of("leaveCurrentRoom", true, "takeSeat", true))
                 .expectStatus()
                 .isOk();
 

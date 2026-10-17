@@ -39,23 +39,44 @@ export default function JoinScreen() {
     setBusy(true);
     setError(null);
     try {
+      // Up to two questions, each asked once: coming in as the one a code is for (their seat), and
+      // leaving the room this person has now.
+      let leave = false;
+      let takeSeat = false;
       let room;
-      try {
-        room = await acceptInvitation(code, false);
-      } catch (e) {
-        if (!(e instanceof ApiError && e.code === 'LEAVE_CONFIRMATION_REQUIRED')) throw e;
-        const ok = await confirm({
-          title: t('join.leaveTitle'),
-          message: t('join.leaveMessage'),
-          confirmLabel: t('join.leaveConfirm'),
-          cancelLabel: t('common.cancel'),
-          destructive: true,
-        });
-        if (!ok) {
-          setBusy(false);
-          return;
+      while (!room) {
+        try {
+          room = await acceptInvitation(code, leave, takeSeat);
+        } catch (e) {
+          if (!(e instanceof ApiError)) throw e;
+          let ok;
+          if (e.code === 'SEAT_CONFIRMATION_REQUIRED' && !takeSeat) {
+            const name = e.detail || t('chat.guestName');
+            ok = await confirm({
+              title: t('join.seatTitle', { name }),
+              message: t('join.seatMessage', { name }),
+              confirmLabel: t('join.seatConfirm'),
+              cancelLabel: t('common.cancel'),
+              destructive: true,
+            });
+            takeSeat = true;
+          } else if (e.code === 'LEAVE_CONFIRMATION_REQUIRED' && !leave) {
+            ok = await confirm({
+              title: t('join.leaveTitle'),
+              message: t('join.leaveMessage'),
+              confirmLabel: t('join.leaveConfirm'),
+              cancelLabel: t('common.cancel'),
+              destructive: true,
+            });
+            leave = true;
+          } else {
+            throw e;
+          }
+          if (!ok) {
+            setBusy(false);
+            return;
+          }
         }
-        room = await acceptInvitation(code, true);
       }
       setRoom(room);
       router.dismissTo('/');
