@@ -172,6 +172,7 @@ function PoseSheet({
             frame={dressedFrame(stage, pose, stage === 'ADULT' ? job : null, season)}
             palette={BUDDY_PALETTE}
             scale={stage === 'ADULT' ? 4 : 5}
+            smooth
           />
           <Text style={[styles.poseName, { color: colors.textMuted }]}>{pose}</Text>
         </View>

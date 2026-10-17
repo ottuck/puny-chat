@@ -6,5 +6,7 @@ import { BUDDY_PALETTE, buddyFrame } from '../pixel/sprites';
 // stage's grid size.
 export function BuddyAvatar({ stage, size }: { stage: BuddyStage; size: number }) {
   const frame = buddyFrame(stage, 'idle');
-  return <PixelSprite frame={frame} palette={BUDDY_PALETTE} scale={size / frame[0].length} />;
+  return (
+    <PixelSprite frame={frame} palette={BUDDY_PALETTE} scale={size / frame[0].length} smooth />
+  );
 }
