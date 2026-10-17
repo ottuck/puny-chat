@@ -1,5 +1,5 @@
 import type { Frame, Palette } from './pixel-sprite';
-import { ROOM_PALETTE } from './room';
+import { CLOCK_FINE, clockAt, ROOM_PALETTE } from './room';
 
 // The room's later things (docs/fun-improvements.md, 방 소품): what the window grows into (a wind
 // chime, petals, a rainbow, more guests at the glass), what sits on its sill (a pot, the plush
@@ -567,77 +567,83 @@ export const SHELF: Frame = [
   '.....kk' + '.'.repeat(30) + 'kk.....',
 ]; // --- On the wall ---
 
-// The wall clock grown into a cuckoo clock (Lv.36), drawn as finely as the clock (CLOCK_FINE): a
-// shingled roof with a little arched door and carved leaves hanging from its eaves over the face,
-// and below it the pendulum swinging between two pine-cone weights on chains.
-export const CUCKOO_ROOF_CELLS = 33;
-const ROOF_MIDDLE = 16;
-export const CUCKOO_DOOR = { col: ROOF_MIDDLE, row: 7 };
+// The wall clock grown into a cuckoo clock (Lv.36), one carved wooden piece drawn as finely as
+// the clock (CLOCK_FINE): a shingled roof with a little arched door, leaves at the ends of its eaves,
+// a wooden case the clock face sits in, and below, two pine-cone weights on chains with a leaf-shaped
+// pendulum swinging between them. Made for the time (cuckooAt), like the clock.
+const CUCKOO_WIDTH = 27;
+const CUCKOO_MIDDLE = 13;
+const ROOF_ROWS = 10;
+// The case: from just under the eaves, around the face.
+const CASE_TOP = ROOF_ROWS + 2;
+const CASE_ROWS = 23;
+const FACE_TOP = CASE_TOP + 2;
+const FACE_LEFT = 4;
+const CHAINS_TOP = CASE_TOP + CASE_ROWS;
+export const CUCKOO_CELLS = CUCKOO_WIDTH * CLOCK_FINE;
+export const CUCKOO_DOOR = { col: CUCKOO_MIDDLE, row: 5 };
 
-const ROOF_ROWS = 13;
-export const CUCKOO_ROOF: Frame = Array.from({ length: ROOF_ROWS + 4 }, (_, row) =>
-  Array.from({ length: CUCKOO_ROOF_CELLS }, (_, col) => {
-    const dx = Math.abs(col - ROOF_MIDDLE);
-    if (row < ROOF_ROWS) {
-      // The roof: wider toward the eaves; shingles in rows two cells tall with staggered seams.
-      const half = Math.min(ROOF_MIDDLE, Math.round(1 + row * 1.3));
-      if (dx > half) return '.';
-      if (dx === half || row === 0) return 'k';
-      // The door, an arch in the middle.
-      if (row >= CUCKOO_DOOR.row - 2 && row <= CUCKOO_DOOR.row + 3 && dx <= 2) {
-        if (row === CUCKOO_DOOR.row - 2) return dx <= 1 ? 'L' : '.';
-        if (dx === 2) return 'L';
-        return row === CUCKOO_DOOR.row + 3 ? 'L' : 'N';
-      }
-      if (row <= 2) return 'q';
-      const seam = (col + (Math.floor(row / 2) % 2) * 2) % 4 === 0;
-      if (seam) return 'q';
-      return row % 2 === 1 ? 'L' : 'D';
-    }
-    // The eaves' beam, lit on top, with leaves hanging from both ends.
-    const beam = row - ROOF_ROWS;
-    const end = col === 0 || col === CUCKOO_ROOF_CELLS - 1;
-    if (beam === 0) return 'k';
-    if (beam === 1) return end ? 'k' : 'L';
-    if (beam === 2) {
-      if (col <= 4 || col >= CUCKOO_ROOF_CELLS - 5) return col % 2 === 0 ? 'g' : 'G';
-      return end ? 'k' : 'D';
-    }
-    if (col === 1 || col === 3 || col === CUCKOO_ROOF_CELLS - 2 || col === CUCKOO_ROOF_CELLS - 4)
-      return 'G';
-    return dx <= ROOF_MIDDLE - 5 ? 'k' : '.';
-  }).join(''),
-);
+// A pine cone, for the weights; a leaf for the pendulum's bob.
+const CONE = ['.kkk.', 'kDLDk', 'kLDLk', 'kDLDk', 'kLDLk', '.kDk.', '..k..'];
+const BOB = ['.kyk.', 'kyyYk', '.kYk.', '..k..'];
 
-// A pine cone on its chain, for the weights.
-const CONE = ['.kkk.', 'kDLDk', 'kLDLk', 'kDLDk', 'kLDLk', 'kDLDk', '.kDk.', '..k..'];
-// A leaf-shaped bob at the end of the rod.
-const BOB = ['.kyk.', 'kyyYk', 'kyYYk', '.kYk.', '..k..'];
-
-function pendulum(swing: number): Frame {
-  const width = 25;
-  const rows = Array.from({ length: 21 }, () => Array<string>(width).fill('.'));
-  const put = (frame: string[], top: number, left: number) =>
+export function cuckooAt(hours: number, minutes: number, swing: number): Frame {
+  const rows = Array.from({ length: CHAINS_TOP + 15 }, () => Array<string>(CUCKOO_WIDTH).fill('.'));
+  const set = (row: number, col: number, cell: string) => {
+    if (row >= 0 && row < rows.length && col >= 0 && col < CUCKOO_WIDTH) rows[row][col] = cell;
+  };
+  const put = (frame: readonly string[], top: number, left: number) =>
     frame.forEach((line, dy) =>
       [...line].forEach((cell, dx) => {
-        if (cell !== '.') rows[top + dy][left + dx] = cell;
+        if (cell !== '.') set(top + dy, left + dx, cell);
       }),
     );
-  // Chains, link by link, down to the weights.
-  for (const col of [6, 18]) {
-    for (let row = 0; row < 11; row++) rows[row][col] = row % 2 === 0 ? 'N' : 'n';
-    put(CONE, 11, col - 2);
+  // The roof, wider toward the eaves, in rows of shingles with staggered seams.
+  for (let row = 0; row < ROOF_ROWS; row++) {
+    const half = Math.min(CUCKOO_MIDDLE, Math.round(1 + row * 1.35));
+    for (let dx = -half; dx <= half; dx++) {
+      const col = CUCKOO_MIDDLE + dx;
+      const edge = Math.abs(dx) === half || row === 0;
+      const seam = (col + (Math.floor(row / 2) % 2) * 2) % 4 === 0;
+      set(row, col, edge ? 'k' : row <= 1 ? 'q' : seam ? 'q' : row % 2 === 1 ? 'L' : 'D');
+    }
   }
-  // The rod from the middle, its end swung to one side.
-  const length = 14;
+  // The arched door the cuckoo comes out of.
+  put(['.LLL.', 'LNNNL', 'LNNNL', 'LNNNL', 'LLLLL'], CUCKOO_DOOR.row - 1, CUCKOO_MIDDLE - 2);
+  // The eaves' beam, and leaves hanging at its ends.
+  for (let col = 0; col < CUCKOO_WIDTH; col++) {
+    set(ROOF_ROWS, col, 'k');
+    set(ROOF_ROWS + 1, col, col === 0 || col === CUCKOO_WIDTH - 1 ? 'k' : 'L');
+  }
+  for (const left of [0, CUCKOO_WIDTH - 3]) put(['gGg', 'G.G', 'g.g'], ROOF_ROWS + 2, left);
+  // The case: carved wood, lit on its left, a darker edge on its right, round at the bottom.
+  for (let row = CASE_TOP; row < CASE_TOP + CASE_ROWS; row++) {
+    const bottom = row === CASE_TOP + CASE_ROWS - 1;
+    const inset = row >= CASE_TOP + CASE_ROWS - 2 ? 2 : 1;
+    for (let col = 2 + inset - 1; col <= CUCKOO_WIDTH - 2 - inset; col++) {
+      const edge = col === 2 + inset - 1 || col === CUCKOO_WIDTH - 2 - inset || bottom;
+      set(
+        row,
+        col,
+        edge ? 'k' : col <= 3 + inset ? 'L' : col >= CUCKOO_WIDTH - 4 - inset ? 'q' : 'D',
+      );
+    }
+  }
+  // The face in it.
+  put(clockAt(hours, minutes), FACE_TOP, FACE_LEFT);
+  // Chains down to the weights, and the pendulum between them, its bob swung to one side.
+  for (const col of [7, 19]) {
+    for (let row = CHAINS_TOP; row < CHAINS_TOP + 7; row++)
+      set(row, col, row % 2 === 0 ? 'N' : 'n');
+    put(CONE, CHAINS_TOP + 7, col - 2);
+  }
+  const length = 10;
   for (let t = 0; t <= length; t++) {
-    rows[t][Math.round(12 + (swing * t) / length)] = 'Y';
+    set(CHAINS_TOP + t, Math.round(CUCKOO_MIDDLE + (swing * t) / length), 'Y');
   }
-  put(BOB, length, 12 + swing - 2);
+  put(BOB, CHAINS_TOP + length, CUCKOO_MIDDLE + swing - 2);
   return rows.map((line) => line.join(''));
 }
-
-export const PENDULUM: [Frame, Frame] = [pendulum(-2), pendulum(2)];
 
 // The cuckoo, out of its door.
 // prettier-ignore
