@@ -712,12 +712,17 @@ class BuddyFlowTest {
         setExp(roomId, BuddyRules.minExp(40));
         changeJob("henry", "GARDENER").isOk();
         changeJob("yuki", "CHEF").isEqualTo(409);
+        assertThat(room("henry").buddy().jobChangeAt()).isEqualTo(50);
+
+        setExp(roomId, BuddyRules.minExp(50));
+        changeJob("henry", "BARISTA").isOk();
+        changeJob("yuki", "CHEF").isEqualTo(409);
         assertThat(room("henry").buddy().jobChangeAt()).isEqualTo(BuddyRules.MAX_LEVEL);
 
         setExp(roomId, BuddyRules.minExp(BuddyRules.MAX_LEVEL));
         changeJob("henry", "CHEF").isOk();
-        changeJob("yuki", "BARISTA").isOk();
-        assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.BARISTA);
+        changeJob("yuki", "DJ").isOk();
+        assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.DJ);
         assertThat(room("henry").buddy().canChangeJob()).isTrue();
     }
 
