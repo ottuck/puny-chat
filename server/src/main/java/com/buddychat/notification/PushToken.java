@@ -12,6 +12,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
  *
  * @param p256dh for Web Push: the browser's public key; null for Expo tokens
  * @param auth for Web Push: the browser's authentication secret; null for Expo tokens
+ * @param language the app's language on that device (ko, ja or en) for notices the server writes;
+ *     null on tokens registered before, until the app registers again
  */
 @Document("push_tokens")
 record PushToken(
@@ -19,7 +21,8 @@ record PushToken(
         String userId,
         Instant updatedAt,
         @Nullable String p256dh,
-        @Nullable String auth) {
+        @Nullable String auth,
+        @Nullable String language) {
 
     boolean isWeb() {
         return p256dh != null;

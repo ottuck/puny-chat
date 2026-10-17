@@ -26,12 +26,14 @@ class PushTokenController {
         this.userService = userService;
     }
 
-    record RegisterRequest(@Nullable String token) {}
+    record RegisterRequest(@Nullable String token, @Nullable String language) {}
 
     @PostMapping("/api/me/push-tokens")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     Mono<Void> register(@AuthenticationPrincipal Jwt jwt, @RequestBody RegisterRequest request) {
-        return userService.current(jwt).flatMap(user -> notifications.register(user, request.token()));
+        return userService
+                .current(jwt)
+                .flatMap(user -> notifications.register(user, request.token(), request.language()));
     }
 
     // Web Push (docs/PROJECT.md, 웹 푸시): the key browsers subscribe with, then their
@@ -41,7 +43,8 @@ class PushTokenController {
     record WebSubscriptionRequest(
             @Nullable String endpoint,
             @Nullable String p256dh,
-            @Nullable String auth) {}
+            @Nullable String auth,
+            @Nullable String language) {}
 
     @GetMapping("/api/me/web-push/key")
     WebKeyResponse webPushKey() {
@@ -53,7 +56,8 @@ class PushTokenController {
     Mono<Void> registerWeb(@AuthenticationPrincipal Jwt jwt, @RequestBody WebSubscriptionRequest request) {
         return userService
                 .current(jwt)
-                .flatMap(user -> notifications.registerWeb(user, request.endpoint(), request.p256dh(), request.auth()));
+                .flatMap(user -> notifications.registerWeb(
+                        user, request.endpoint(), request.p256dh(), request.auth(), request.language()));
     }
 
     @DeleteMapping("/api/me/web-push")

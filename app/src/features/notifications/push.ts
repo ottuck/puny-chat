@@ -3,6 +3,7 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 
+import i18n from '@/i18n';
 import { api } from '@/lib/api';
 
 // Push notifications for new messages (docs/PROJECT.md, 푸시 알림). Needs a development
@@ -49,7 +50,11 @@ export async function registerForPush(): Promise<PushState> {
   }
   if (status !== 'granted') return 'denied';
   const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
-  await api<void>('/api/me/push-tokens', { method: 'POST', body: { token } });
+  // The language too: the server writes some notices itself (a guest's days left).
+  await api<void>('/api/me/push-tokens', {
+    method: 'POST',
+    body: { token, language: i18n.language },
+  });
   registeredToken = token;
   return 'on';
 }

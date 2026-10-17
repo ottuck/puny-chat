@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Update;
@@ -104,6 +105,30 @@ public class UserService {
                         .and("lastSeenAt")
                         .lt(seenBefore)),
                 User.class);
+    }
+
+    /** Guests created in this window, oldest first (the days-left pushes). */
+    public Flux<User> findGuestsCreatedBetween(Instant after, Instant before) {
+        return mongo.find(
+                query(where("guest").is(true).and("createdAt").gt(after).lte(before))
+                        .with(Sort.by("createdAt")),
+                User.class);
+    }
+
+    /**
+     * Notes that the push for {@code days} left goes out now; false if it (or a later one) already
+     * went. Only one of two overlapping runs sends it.
+     */
+    public Mono<Boolean> claimGuestNotice(String userId, int days) {
+        return mongo.updateFirst(
+                        query(where("_id")
+                                .is(userId)
+                                .orOperator(
+                                        where("guestNoticeDays").isNull(),
+                                        where("guestNoticeDays").gt(days))),
+                        Update.update("guestNoticeDays", days),
+                        User.class)
+                .map(result -> result.getModifiedCount() == 1);
     }
 
     public Flux<User> findAllById(Collection<String> ids) {
