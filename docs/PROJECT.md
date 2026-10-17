@@ -464,9 +464,11 @@ App Store Guideline 5.1.1(v) 때문에 있다. 게스트는 Firebase가 30일 �
 
 ### 웹 푸시
 
-- 웹 앱은 `public/manifest.webmanifest`로 설치할 수 있고 `public/sw.js`(서비스 워커)가 알림을 띄우고 누르면 채팅을 연다. 설정의 알림 스위치에서만 권한을
-  묻는다. 켜면 서버 키로 구독해 등록하고, 끄거나 로그아웃하면 지운다. 앱을 열 때마다 다시 구독한다.
-- 아이폰은 iOS 16.4부터, 홈 화면에 추가한 웹 앱에서만 받는다(Safari에서는 설정 카드가 방법을 안내한다).
+- 웹 앱은 `public/manifest.webmanifest`로 설치할 수 있고 `public/sw.js`(서비스 워커)가 알림을 띄우고 누르면 채팅을 연다. 권한은 이용자가 누를 때만
+  묻는다(브라우저 규칙): 설정의 알림 스위치나 채팅 위 안내 카드의 "알림 켜기". 켜면 서버 키로 구독해 등록하고, 끄거나 로그아웃하면 지운다. 앱을 열 때마다 다시 구독한다.
+- 아이폰은 iOS 16.4부터, 홈 화면에 추가한 웹 앱에서만 받는다.
+- 웹은 알림이 꺼진 채 시작하므로, 알림이 꺼져 있거나(켜기 버튼) Safari라 받을 수 없으면(홈 화면에 추가하는 방법) 채팅 위에 안내 카드를 띄운다
+  (`notifications/components/push-banner.tsx`). 켜거나 닫을 때까지 보이고, 그동안 버디 안내 카드는 기다린다. 차단한 경우는 설정 카드만 안내한다.
 - 서버(`notification/WebPush`, `WebPushCrypto`): RFC 8291(aes128gcm)로 암호화하고 VAPID(RFC 8292, ES256)로 서명해 WebClient로 보낸다. JDK 암호화만
   쓴다. 404/410이면 구독을 지운다. endpoint는 알려진 푸시 서비스(FCM, Mozilla, Apple, Windows)의 https 주소만 받는다(SSRF 방지).
 - VAPID 키는 Terraform `tls_private_key`(P-256)로 만들어 서버 `.env`에 넣는다. 없으면 실행마다 임시 키(로컬 개발).
