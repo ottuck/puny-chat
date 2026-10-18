@@ -120,7 +120,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
           onPressHelp={() => router.push('/guide')}
           onPressPartner={partner ? () => setPartnerOpen(true) : undefined}
         />
-        <GuideBanner hold={dreaming} onOpen={() => router.push('/guide')} />
+        <GuideBanner roomId={room.id} hold={dreaming} onOpen={() => router.push('/guide')} />
         <BuddyScene
           dreams
           // Being a guest and notifications off come as letters in the stage's mailbox.
