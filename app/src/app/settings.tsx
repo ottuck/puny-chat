@@ -26,6 +26,8 @@ import { appleSignInSupported, linkApple } from '@/features/auth/apple-sign-in';
 import { ChevronRightIcon } from '@/components/icons';
 import { useAuth } from '@/features/auth/auth-provider';
 import { useGuestDaysLeft } from '@/features/auth/guest-expiry';
+import { currentGuestPlace } from '@/features/auth/guest-place';
+import { isInAppBrowser } from '@/features/auth/guest-place-ua';
 import { AppleButton } from '@/features/auth/components/apple-button';
 import { googleSignInSupported, linkGoogle } from '@/features/auth/google-sign-in';
 import {
@@ -218,6 +220,8 @@ function AccountCard({
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Where this guest lives, so they know where to open puny-chat to find it again.
+  const [place] = useState(currentGuestPlace);
 
   const link = async (linkAccount: () => Promise<void>) => {
     setBusy(true);
@@ -263,6 +267,13 @@ function AccountCard({
             style={[styles.email, { color: colors.textMuted }]}
           >
             {t('settings.guestBody')}
+          </Text>
+          <Text
+            lineBreakStrategyIOS="hangul-word"
+            style={[styles.email, styles.section, { color: colors.textMuted }]}
+          >
+            {t('settings.guestPlace', { place: t(`settings.places.${place}`) })}
+            {isInAppBrowser(place) ? ` ${t('settings.guestPlaceInApp')}` : ''}
           </Text>
           {googleSignInSupported ? (
             <Pressable
