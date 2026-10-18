@@ -121,6 +121,8 @@ jobs:
       - name: Build
         run: pnpm build:web
         env:
+          # The deploy's version: open web apps reload when it changes (app/src/lib/web-update.web.ts).
+          EXPO_PUBLIC_WEB_VERSION: ${{ github.sha }}
           EXPO_PUBLIC_API_URL: ${{ vars.EXPO_PUBLIC_API_URL }}
           EXPO_PUBLIC_FIREBASE_API_KEY: ${{ vars.EXPO_PUBLIC_FIREBASE_API_KEY }}
           EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ vars.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN }}

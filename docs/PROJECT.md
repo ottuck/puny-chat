@@ -527,7 +527,8 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
 - **DB**: Atlas M0(무료, 512MB, 초당 100 ops), 서버와 같은 시드니. 접근 목록은 Lightsail 고정 IP 하나, 비밀번호(Terraform이 만들어 서버 `.env`로만)와 TLS.
   인스턴스를 바꾸면 고정 IP를 옮기거나 `var.server_ip`를 바꿔 다시 apply한다. M0는 자동 백업이 없다.
 - **웹 앱**: Cloudflare Worker의 정적 자산(`app/wrangler.jsonc`). `pnpm build:web`이 `expo export -p web` 뒤에 `scripts/worker-assets.mjs`로 404 페이지와
-  `_headers`(서비스 워커 no-cache 등)를 만든다. 커스텀 도메인은 wrangler 배포가 붙인다(같은 이름의 CNAME이 있으면 안 된다).
+  `_headers`(서비스 워커 no-cache 등), 배포 버전(`version.json`, 커밋 sha)을 만든다. 홈 화면에 추가한 웹 앱은 새로고침 버튼이 없고 닫아도
+  멈춰 있을 뿐이라, 앱이 다시 보일 때(1분에 한 번까지) 번들에 넣은 버전과 `version.json`을 비교해 다르면 새로 불러온다(`lib/web-update`). 커스텀 도메인은 wrangler 배포가 붙인다(같은 이름의 CNAME이 있으면 안 된다).
 - **도메인**: 웹 `puny-chat.com`(Worker), 서버 `api.puny-chat.com`(고정 IP를 가리키는 A 레코드, 프록시 없음, 인증서는 Caddy가 HTTP-01로). Cloudflare Registrar.
   Firebase 승인된 도메인에 웹 도메인이 있어야 Google 로그인이 된다. 서버 CORS에는 웹 도메인과 로컬 Expo dev 서버.
 - **Terraform**(`infra/`, `infra/README.md`): Atlas 프로젝트·M0·DB 사용자·접근 목록, Cloudflare DNS, VAPID 키. state는 R2, 인증 정보는 `infra/.env`.
