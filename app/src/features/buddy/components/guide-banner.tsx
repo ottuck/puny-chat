@@ -5,8 +5,10 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useColors } from '@/theme';
 
-// Above the chat until opened or closed once on this device: what the buddy is about and that
-// levels bring rewards, so there is something to look forward to from the first day.
+// Above the chat until tapped once on this device: what the buddy is about and what levels bring
+// (a job at 12, its own way from 20), so there is something to look forward to from the first day.
+// The whole card opens the guide, the ✕ too: people tap it to get it out of the way, and that is
+// the moment to show them the rest.
 const SEEN_KEY = 'buddy-guide-seen';
 
 // `hold`: not yet (the dream before the first egg is on).
@@ -32,30 +34,23 @@ export function GuideBanner({ onOpen, hold = false }: { onOpen: () => void; hold
 
   if (!show || hold) return null;
   return (
-    <View style={[styles.banner, { backgroundColor: colors.surface, borderColor: colors.accent }]}>
-      <Pressable
-        onPress={() => {
-          done();
-          onOpen();
-        }}
-        accessibilityRole="button"
-        style={styles.body}
-      >
+    <Pressable
+      onPress={() => {
+        done();
+        onOpen();
+      }}
+      accessibilityRole="button"
+      style={[styles.banner, { backgroundColor: colors.surface, borderColor: colors.accent }]}
+    >
+      <View style={styles.body}>
         <Text style={[styles.title, { color: colors.text }]}>{t('guide.banner.title')}</Text>
         <Text lineBreakStrategyIOS="hangul-word" style={[styles.text, { color: colors.textMuted }]}>
           {t('guide.banner.body')}
         </Text>
         <Text style={[styles.action, { color: colors.accent }]}>{t('guide.banner.open')}</Text>
-      </Pressable>
-      <Pressable
-        onPress={done}
-        accessibilityRole="button"
-        accessibilityLabel={t('common.close')}
-        hitSlop={10}
-      >
-        <Text style={[styles.close, { color: colors.textMuted }]}>✕</Text>
-      </Pressable>
-    </View>
+      </View>
+      <Text style={[styles.close, { color: colors.textMuted }]}>✕</Text>
+    </Pressable>
   );
 }
 
