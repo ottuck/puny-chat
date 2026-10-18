@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.buddychat.TestJwtConfiguration;
 import com.buddychat.TestSocket;
 import com.buddychat.TestcontainersConfiguration;
+import com.buddychat.chat.ChatService;
 import com.buddychat.chat.Message;
 import com.buddychat.room.Invitation;
 import com.buddychat.room.Room;
@@ -128,6 +129,9 @@ public class NotificationFlowTest {
     @Autowired
     NotificationService notifications;
 
+    @Autowired
+    ChatService chatService;
+
     private final List<TestSocket> sockets = new ArrayList<>();
     private WebTestClient http;
 
@@ -226,6 +230,41 @@ public class NotificationFlowTest {
         sendText(henry, "hi");
 
         assertThat(awaitPush().to()).isEqualTo(YUKI_PHONE);
+    }
+
+    @Test
+    void tellsTheInviterWhenTheFriendComesIn() {
+        createRoom("henry");
+        register("henry", HENRY_PHONE);
+        register("yuki", YUKI_PHONE);
+
+        join("henry", "yuki");
+
+        PushMessage notice = awaitPush();
+        assertThat(notice.to()).isEqualTo(HENRY_PHONE); // not the one who came in
+        assertThat(notice.body()).isEqualTo("yuki joined! Now you two raise your buddy together.");
+        sleep(500);
+        assertThat(push.sent).hasSize(1);
+    }
+
+    @Test
+    void doesNotTellAnInviterWhoSawTheFriendComeIn() {
+        createRoom("henry");
+        register("henry", HENRY_PHONE);
+        TestSocket henry = connect("henry");
+
+        join("henry", "yuki");
+        JsonNode note = henry.expect("message").get("message");
+        assertThat(note.get("systemEvent").asString()).isEqualTo("MEMBER_JOINED");
+        henry.send(Map.of("type", "read", "messageId", note.get("id").asString()));
+
+        assertNoPushWithin(Duration.ofMillis(1500));
+    }
+
+    @Test
+    void theJoinNoticeIsInTheDevicesLanguage() {
+        assertThat(NotificationService.joinedNotice("ko", "유키").body()).isEqualTo("유키님이 들어왔어요! 이제 둘이 함께 버디를 키워요.");
+        assertThat(NotificationService.joinedNotice("ja", null).body()).startsWith("友だちが");
     }
 
     @Test
@@ -383,8 +422,16 @@ public class NotificationFlowTest {
         post(uid, "/api/rooms", Map.of("buddyName", "Mugi")).expectStatus().isCreated();
     }
 
+    // The owner was looking at the chat when the friend came in: the join note is read, not pushed.
     private void duoRoom(String owner, String friend) {
         createRoom(owner);
+        join(owner, friend);
+        Message note = mongo.findOne(Query.query(Criteria.where("systemEvent").is("MEMBER_JOINED")), Message.class)
+                .block();
+        chatService.markRead(user(owner), note.id()).block();
+    }
+
+    private void join(String owner, String friend) {
         String code = post(owner, "/api/rooms/me/invitations", Map.of())
                 .expectBody(JsonNode.class)
                 .returnResult()

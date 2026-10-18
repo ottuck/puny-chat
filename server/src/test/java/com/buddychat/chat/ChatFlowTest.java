@@ -95,6 +95,10 @@ class ChatFlowTest {
                 .expectStatus()
                 .isOk();
 
+        // A line in the timeline first, then the member list changes.
+        JsonNode note = henry.expect("message").get("message");
+        assertThat(note.get("systemEvent").asString()).isEqualTo("MEMBER_JOINED");
+        assertThat(note.get("text").asString()).isEqualTo("yuki");
         JsonNode joined = henry.expect("member");
         assertThat(joined.get("displayName").asString()).isEqualTo("yuki");
     }
@@ -112,7 +116,9 @@ class ChatFlowTest {
         assertThat(second).isEqualTo(first);
         yuki.expect("message");
         yuki.expectSilence();
-        assertThat(history("henry", "").messages()).hasSize(1);
+        assertThat(history("henry", "").messages())
+                .filteredOn(m -> m.type() == Message.Type.TEXT)
+                .hasSize(1);
     }
 
     @Test
@@ -131,7 +137,9 @@ class ChatFlowTest {
                 .asString();
 
         assertThat(again).isEqualTo(first);
-        assertThat(history("henry", "").messages()).hasSize(1);
+        assertThat(history("henry", "").messages())
+                .filteredOn(m -> m.type() == Message.Type.TEXT)
+                .hasSize(1);
     }
 
     @Test
@@ -167,7 +175,8 @@ class ChatFlowTest {
 
         Page older = history(
                 "yuki", "?limit=30&before=" + newest.messages().getLast().id());
-        assertThat(older.messages()).extracting(Message::text).containsExactly("m4", "m3", "m2", "m1", "m0");
+        // The oldest is the line that yuki came in (its text is the name).
+        assertThat(older.messages()).extracting(Message::text).containsExactly("m4", "m3", "m2", "m1", "m0", "yuki");
         assertThat(older.hasMore()).isFalse();
 
         // After a reconnect: everything newer than the last message the app had.

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -209,6 +210,7 @@ class RoomFlowTest {
         assertThat(joined.id()).isEqualTo(created.id());
         assertThat(joined.members()).extracting(RoomView.Member::displayName).containsExactly("henry", "yuki");
         assertThat(joined.buddy().name()).isEqualTo("Mugi"); // the buddy carries over from solo to duo
+        assertThat(systemEvents(created.id())).containsExactly(tuple("MEMBER_JOINED", userId("yuki"), "yuki"));
     }
 
     @Test
@@ -265,6 +267,12 @@ class RoomFlowTest {
                 .filteredOn(m -> "MEMBER_RETURNED".equals(m.systemEvent()))
                 .extracting(Message::actorId, Message::text)
                 .containsExactly(tuple(newId, "yuki2"));
+        // Coming back in a seat is not a new friend joining: the one line is from when yuki first came
+        // in, and like the rest of yuki's history it now names the new account.
+        assertThat(timeline)
+                .filteredOn(m -> "MEMBER_JOINED".equals(m.systemEvent()))
+                .extracting(Message::actorId)
+                .containsExactly(newId);
         assertThat(chatService.readMarks(room.id()).block())
                 .containsEntry(newId, hello.id())
                 .doesNotContainKey(yuki.id());
@@ -469,6 +477,8 @@ class RoomFlowTest {
                 .isEqualTo(henrysRoom.id());
         // Still single use for anyone else.
         assertError(accept("mika", code, false), HttpStatus.GONE, "INVITATION_USED");
+        // The join was made by the try that failed; finishing it says nothing new.
+        assertThat(systemEvents(henrysRoom.id())).isEmpty();
     }
 
     @Test
@@ -711,6 +721,16 @@ class RoomFlowTest {
     // The uid doubles as the display name so assertions can read member names.
     private WebTestClient as(String uid) {
         return client.mutateWith(mockJwt().jwt(jwt -> jwt.subject(uid).claim("name", uid)));
+    }
+
+    private List<Tuple> systemEvents(String roomId) {
+        return mongo.find(
+                        Query.query(
+                                Criteria.where("roomId").is(roomId).and("type").is(Message.Type.SYSTEM)),
+                        Message.class)
+                .map(m -> tuple(m.systemEvent(), m.actorId(), m.text()))
+                .collectList()
+                .block();
     }
 
     private static void assertError(WebTestClient.ResponseSpec response, HttpStatus status, String code) {
