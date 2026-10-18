@@ -14,7 +14,9 @@ export type ReactionKind =
   | 'evolved'
   | 'together'
   // The partner is here too (docs/fun-improvements.md, 함께 있을 때): not from a message but from presence.
-  | 'here';
+  | 'here'
+  // A friend just came in with the invite: the room is for two now.
+  | 'joined';
 export type Reaction = { id: string; kind: ReactionKind };
 
 const BY_EVENT: Partial<Record<string, ReactionKind>> = {
@@ -33,14 +35,18 @@ const BY_EVENT: Partial<Record<string, ReactionKind>> = {
 
 // Only for messages arriving live; history loaded after a reconnect is not reacted to. Care and
 // growth events come for whoever caused them, so the partner's feeding shows here too. The
-// user's own texts are not reacted to, only the partner's.
+// user's own texts are not reacted to, only the partner's; nor is their own coming in.
 export function reactionTo(message: ServerMessage, myId: string): Reaction | null {
   const kind =
     message.type === 'BUDDY_EVENT'
       ? BY_EVENT[message.buddyEvent ?? '']
       : message.type === 'TEXT' && message.senderId !== myId
         ? 'message'
-        : undefined;
+        : message.type === 'SYSTEM' &&
+            message.systemEvent === 'MEMBER_JOINED' &&
+            message.actorId !== myId
+          ? 'joined'
+          : undefined;
   return kind ? { id: message.id, kind } : null;
 }
 

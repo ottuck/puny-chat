@@ -329,6 +329,7 @@ const REACTION_MS: Record<ReactionKind, number> = {
   evolved: 2600,
   together: 2400,
   here: 2000,
+  joined: 3000,
 };
 // Of 'fed', the part spent chewing; the rest is a happy heart.
 const CHEW_MS = 2400;
@@ -1186,6 +1187,7 @@ export function BuddyStage({
       next = job === 'GARDENER' ? 'gardenerCleaned' : pick(['refreshed', 'digestion'] as const);
     else if (active?.kind === 'together') next = 'together';
     else if (active?.kind === 'here') next = 'bothHere';
+    else if (active?.kind === 'joined') next = 'friendCame';
     if (!next) return;
     const say_ = next;
     const timer = setTimeout(() => say(say_), 0);
@@ -1280,6 +1282,8 @@ export function BuddyStage({
       together: Animated.sequence([jump(16), jump(16)]),
       // The partner is here: one happy hop.
       here: Animated.sequence([jump(12), jump(6)]),
+      // A friend came in for the first time: three big hops.
+      joined: Animated.sequence([jump(16), jump(12), jump(16)]),
     };
     const move = moves[reaction.kind];
     move?.start();
@@ -1463,6 +1467,7 @@ export function BuddyStage({
                               active?.kind === 'maxLevel' ||
                               active?.kind === 'together' ||
                               active?.kind === 'here' ||
+                              active?.kind === 'joined' ||
                               (active?.kind === 'evolved' && !evolving) ||
                               petted
                             ? 'happy'
@@ -1507,7 +1512,8 @@ export function BuddyStage({
   const butterfly = act === 'butterfly' && buddy.stage !== 'EGG' ? butterflyAt(buddy.stage) : null;
 
   // A writer's love, and a pet shared by both, show a big heart.
-  const bigHeart = mood === 'coPet' || (mood === 'love' && job === 'WRITER');
+  const bigHeart =
+    mood === 'coPet' || (mood === 'love' && job === 'WRITER') || active?.kind === 'joined';
   const showHeart =
     petted ||
     (act === 'job' && job === 'WRITER') ||
@@ -1515,7 +1521,8 @@ export function BuddyStage({
     mood === 'coPet' ||
     (eating && active?.phase === 'after') ||
     active?.kind === 'together' ||
-    active?.kind === 'here';
+    active?.kind === 'here' ||
+    active?.kind === 'joined';
   const sparkling = active?.kind === 'cleaned';
   const bursting = active?.kind === 'evolved' && active.phase === 'after';
   const levelingUp = active?.kind === 'levelUp' || active?.kind === 'maxLevel';

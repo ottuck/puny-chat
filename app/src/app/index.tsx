@@ -24,6 +24,7 @@ import { useBuddy } from '@/features/buddy/use-buddy';
 import { ChatHeader } from '@/features/chat/components/chat-header';
 import { MessageComposer } from '@/features/chat/components/message-composer';
 import { EmptyChat } from '@/features/chat/components/empty-chat';
+import { nothingSaidYet } from '@/features/chat/timeline';
 import { MessageList } from '@/features/chat/components/message-list';
 import { useChat } from '@/features/chat/use-chat';
 import { type PushState, registerForPush, setPushEnabled } from '@/features/notifications/push';
@@ -149,7 +150,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
         />
         <StageShade />
         <View style={styles.list}>
-          {chat.loaded && messages.length === 0 ? (
+          {chat.loaded && nothingSaidYet(messages) ? (
             <EmptyChat
               buddyName={buddy.name}
               partnerName={partner ? (partner.displayName ?? '') : null}
