@@ -213,7 +213,6 @@ function RootNavigator() {
             headerShown: true,
             title: t('join.title'),
             headerBackButtonDisplayMode: 'minimal',
-            presentation: 'modal',
           }}
         />
       </Stack.Protected>

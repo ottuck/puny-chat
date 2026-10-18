@@ -34,9 +34,8 @@ import {
   setPushEnabled,
 } from '@/features/notifications/push';
 import { DisplayCard } from '@/features/preferences/components/display-card';
-import { leaveRoom, type Room } from '@/features/room/api';
+import type { Room } from '@/features/room/api';
 import { InviteSheet } from '@/features/room/components/invite-sheet';
-import { errorMessage } from '@/features/room/error-message';
 import { useRoom } from '@/features/room/room-provider';
 import { confirm } from '@/lib/confirm';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
@@ -53,6 +52,7 @@ export default function SettingsScreen() {
   const daysLeft = useGuestDaysLeft(account);
 
   const [deleting, setDeleting] = useState(false);
+  const [moving, setMoving] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // A guest who signs out can never come back to this account; say so first.
@@ -134,9 +134,7 @@ export default function SettingsScreen() {
 
         {pushSupported ? <NotificationsCard /> : null}
 
-        {state.status === 'ready' ? (
-          <RoomCard room={state.room} myId={state.me.id} guest={guest} />
-        ) : null}
+        {state.status === 'ready' ? <RoomCard room={state.room} /> : null}
 
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <Text style={[styles.label, { color: colors.textMuted }]}>
@@ -168,6 +166,22 @@ export default function SettingsScreen() {
         >
           <Text style={[styles.row, { color: colors.text }]}>{t('guide.title')}</Text>
         </Pressable>
+
+        {/* A guest lives only in this app or browser: a code to open their room elsewhere (an
+            account just signs in there). */}
+        {guest && state.status === 'ready' ? (
+          <Pressable
+            onPress={() => setMoving(true)}
+            accessibilityRole="button"
+            style={({ pressed }) => [
+              styles.card,
+              { backgroundColor: colors.surface, opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <Text style={[styles.row, { color: colors.text }]}>{t('invite.moveTitle')}</Text>
+          </Pressable>
+        ) : null}
+        <InviteSheet visible={moving} onClose={() => setMoving(false)} self />
 
         {/* For someone who started solo and got a friend's code later. */}
         {me?.displayName ? (
@@ -423,44 +437,12 @@ function NotificationsCard() {
   );
 }
 
-function RoomCard({ room, myId, guest }: { room: Room; myId: string; guest: boolean }) {
+function RoomCard({ room }: { room: Room }) {
   const colors = useColors();
   const { t, i18n } = useTranslation();
-  const { reload } = useRoom();
-  const [leaving, setLeaving] = useState(false);
-  // A guest lives only in this app or browser: a code to go on elsewhere (an account just signs in).
-  const [moving, setMoving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const partner = room.members.find((member) => member.id !== myId);
   const since = new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(
     new Date(room.createdAt),
   );
-
-  const leave = async () => {
-    const ok = await confirm({
-      title: t('settings.leaveTitle'),
-      message: partner
-        ? t('settings.leaveDuo', {
-            buddy: room.buddy.name,
-            partner: partner.displayName ?? t('chat.guestName'),
-          })
-        : t('settings.leaveSolo', { buddy: room.buddy.name }),
-      confirmLabel: t('settings.leaveConfirm'),
-      cancelLabel: t('common.cancel'),
-      destructive: true,
-    });
-    if (!ok) return;
-    setLeaving(true);
-    setError(null);
-    try {
-      await leaveRoom();
-      // No room now: the route guards move on to the welcome screen.
-      await reload();
-    } catch (e) {
-      setError(errorMessage(t, e));
-      setLeaving(false);
-    }
-  };
 
   return (
     <View style={[styles.card, { backgroundColor: colors.surface }]}>
@@ -480,45 +462,6 @@ function RoomCard({ room, myId, guest }: { room: Room; myId: string; guest: bool
           {member.displayName ?? t('chat.guestName')}
         </Text>
       ))}
-      {guest ? (
-        <Pressable onPress={() => setMoving(true)} accessibilityRole="button" style={styles.leave}>
-          <Text style={[styles.signOut, { color: colors.accent }]}>{t('invite.moveTitle')}</Text>
-        </Pressable>
-      ) : null}
-      <InviteSheet visible={moving} onClose={() => setMoving(false)} self />
-      {partner ? (
-        <Pressable
-          onPress={() =>
-            router.push({
-              pathname: '/support',
-              params: {
-                type: 'report',
-                roomId: room.id,
-                targetId: partner.id,
-              },
-            })
-          }
-          accessibilityRole="button"
-          style={styles.leave}
-        >
-          <Text style={[styles.signOut, { color: colors.accent }]}>
-            {t('support.reportAndRemove')}
-          </Text>
-        </Pressable>
-      ) : null}
-      <Pressable
-        onPress={leave}
-        disabled={leaving}
-        accessibilityRole="button"
-        style={({ pressed }) => [styles.leave, { opacity: pressed || leaving ? 0.6 : 1 }]}
-      >
-        {leaving ? (
-          <ActivityIndicator color={colors.accent} />
-        ) : (
-          <Text style={[styles.signOut, { color: colors.accent }]}>{t('settings.leave')}</Text>
-        )}
-      </Pressable>
-      {error ? <Text style={[styles.email, { color: colors.accent }]}>{error}</Text> : null}
     </View>
   );
 }
