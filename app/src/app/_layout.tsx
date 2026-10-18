@@ -1,13 +1,13 @@
 import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { type ComponentProps, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import i18n, { detectLanguage } from '@/i18n';
-import { HeaderBack } from '@/components/header-back';
+import { HeaderBack, HeaderBackTitle } from '@/components/header-back';
 import { StatusScreen } from '@/components/status-screen';
 import { WebFrame } from '@/components/web-frame';
 import { AuthProvider, useAuth } from '@/features/auth/auth-provider';
@@ -176,11 +176,17 @@ function RootNavigator() {
     );
   }
 
-  // Screens with a header: a back button that is always there (components/header-back.tsx).
+  // Screens with a header: a back button that is always there (components/header-back.tsx). On the
+  // web the title next to it goes back too.
   const withHeader = (title: string) => ({
     headerShown: true,
     title,
     headerLeft: () => <HeaderBack />,
+    ...(Platform.OS === 'web' && {
+      headerTitle: (props: ComponentProps<typeof HeaderBackTitle>) => (
+        <HeaderBackTitle {...props} />
+      ),
+    }),
   });
 
   return (
