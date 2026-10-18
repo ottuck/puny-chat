@@ -426,7 +426,8 @@
     "light": "ライト",
     "dark": "ダーク",
     "notificationsDeniedWeb": "ブラウザでpuny-chatの通知がブロックされています。サイトの設定で通知を許可してください。",
-    "notificationsInstall": "iPhoneではホーム画面に追加したアプリで通知を受け取れます。Safariの共有ボタン →「ホーム画面に追加」を押して、ホーム画面のpuny-chatから通知をオンにしてください。"
+    "notificationsInstall": "iPhoneではホーム画面に追加したアプリで通知を受け取れます。Safariの共有ボタン →「ホーム画面に追加」を押して、ホーム画面のpuny-chatから通知をオンにしてください。",
+    "alone": "まだひとりです。チャット画面の「友だちを招待」から呼んでみましょう。"
   },
   "systemEvent": {
     "MEMBER_LEFT": "{{name}}さんが退出しました",
