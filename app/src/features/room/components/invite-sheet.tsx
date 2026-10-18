@@ -116,13 +116,16 @@ export function InviteContent({
           </View>
         ) : null}
 
-        <Text style={[styles.title, { color: colors.text }]}>
-          {self
-            ? t('invite.moveTitle')
-            : partnerName
-              ? t('invite.rejoinTitle', { name: partnerName })
-              : t('invite.title')}
-        </Text>
+        {/* On a screen the header already says it. */}
+        {onClose ? (
+          <Text style={[styles.title, { color: colors.text }]}>
+            {self
+              ? t('invite.moveTitle')
+              : partnerName
+                ? t('invite.rejoinTitle', { name: partnerName })
+                : t('invite.title')}
+          </Text>
+        ) : null}
         <Text style={[styles.hint, { color: colors.textMuted }]}>
           {self
             ? t('invite.moveHint')
