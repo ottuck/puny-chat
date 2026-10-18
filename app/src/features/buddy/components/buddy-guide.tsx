@@ -152,7 +152,19 @@ export function BuddyGuide() {
         t('guide.grow.exp'),
         t('guide.grow.together', { exp: TOGETHER_EXP }),
         t('guide.grow.stages'),
-        t('guide.grow.job'),
+      ])}
+      {/* What levels bring, the big steps first: a job at 12, its own way from 20, then the
+          room's props level by level. */}
+      {section(t('guide.job.title'), [
+        t('guide.job.decide'),
+        t('guide.job.kinds'),
+        t('guide.job.work'),
+        t('guide.job.change'),
+      ])}
+      {section(t('guide.graduate.title'), [
+        t('guide.graduate.top'),
+        t('guide.graduate.album'),
+        t('guide.graduate.keep'),
       ])}
 
       <View style={[styles.card, { backgroundColor: colors.surface }]}>
@@ -170,12 +182,6 @@ export function BuddyGuide() {
           </View>
         ))}
       </View>
-
-      {section(t('guide.graduate.title'), [
-        t('guide.graduate.top'),
-        t('guide.graduate.album'),
-        t('guide.graduate.keep'),
-      ])}
     </View>
   );
 }

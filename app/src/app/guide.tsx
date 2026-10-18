@@ -1,14 +1,18 @@
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { PageTitle } from '@/components/page-title';
 import { BuddyGuide } from '@/features/buddy/components/buddy-guide';
+import { markGuideOpened } from '@/features/buddy/guide-opened';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
 // How to raise the buddy, to look up any time (chat header "?", settings).
 export default function GuideScreen() {
   const colors = useColors();
   const { t } = useTranslation();
+  // Seen: the chat header's "?" stops calling for attention.
+  useEffect(() => markGuideOpened(), []);
   return (
     <ScrollView
       style={{ backgroundColor: colors.background }}

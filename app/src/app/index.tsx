@@ -19,6 +19,7 @@ import { BuddyScene } from '@/features/buddy/components/buddy-scene';
 import { StageShade } from '@/features/buddy/components/stage-shade';
 import type { Cue } from '@/features/buddy/components/buddy-stage';
 import { GuideBanner } from '@/features/buddy/components/guide-banner';
+import { useGuideOpened } from '@/features/buddy/guide-opened';
 import { changeJob, graduateBuddy } from '@/features/buddy/api';
 import { useBuddy } from '@/features/buddy/use-buddy';
 import { ChatHeader } from '@/features/chat/components/chat-header';
@@ -91,6 +92,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
   const [inviteOpen, setInviteOpen] = useState(false);
   // The guide waits for the dream before the first egg to end.
   const [dreaming, setDreaming] = useState(false);
+  const guideOpened = useGuideOpened();
   const partner = room.members.find((member) => member.id !== me.id);
 
   // The buddy's stage takes about a third of the screen and keeps it (docs/PROJECT.md, 핵심 경험).
@@ -118,6 +120,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
           onPressInvite={() => setInviteOpen(true)}
           onPressSettings={() => router.push('/settings')}
           onPressHelp={() => router.push('/guide')}
+          helpNew={guideOpened === false && !dreaming}
           onPressPartner={partner ? () => setPartnerOpen(true) : undefined}
         />
         <GuideBanner hold={dreaming} onOpen={() => router.push('/guide')} />
