@@ -2,7 +2,8 @@
   "common": {
     "close": "閉じる",
     "retry": "もう一度",
-    "cancel": "キャンセル"
+    "cancel": "キャンセル",
+    "back": "← 戻る"
   },
   "errors": {
     "loadFailed": "サーバーに接続できませんでした。",

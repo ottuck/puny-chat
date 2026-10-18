@@ -2,7 +2,6 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,7 +14,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { Button } from '@/components/button';
 import { PageTitle } from '@/components/page-title';
-import { isCancelledSignIn, signInAsGuest, signInErrorKey } from '@/features/auth/actions';
+import { setStartCode } from '@/features/auth/start-flow';
 import { BuddySheet } from '@/features/buddy/components/buddy-sheet';
 import { BuddyStage } from '@/features/buddy/components/buddy-stage';
 import { StageShade } from '@/features/buddy/components/stage-shade';
@@ -50,24 +49,14 @@ function DemoScreen({ onReplay }: { onReplay: () => void }) {
     { id: DEMO_PARTNER, displayName: t('demo.partner') },
   ];
   const [buddyOpen, setBuddyOpen] = useState(false);
-  const [starting, setStarting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { height: windowHeight } = useWindowDimensions();
   const stageHeight = Math.round(Math.min(280, Math.max(180, windowHeight * 0.3)));
 
   // The auth listener then leaves the tour for naming, as from the sign-in screen.
-  const start = async () => {
-    setStarting(true);
-    setError(null);
-    try {
-      await signInAsGuest();
-    } catch (e) {
-      if (!isCancelledSignIn(e)) {
-        console.warn(e);
-        setError(t(signInErrorKey(e)));
-      }
-      setStarting(false);
-    }
+  // On to the name; the guest is made only once it is picked (start-flow.ts).
+  const start = () => {
+    setStartCode(null);
+    router.push('/name');
   };
 
   const leave = () => (router.canGoBack() ? router.back() : router.replace('/sign-in'));
@@ -90,12 +79,11 @@ function DemoScreen({ onReplay }: { onReplay: () => void }) {
           {/* Starting is the point of the tour: a filled button, there all along. */}
           <Pressable
             onPress={start}
-            disabled={starting}
             accessibilityRole="button"
             hitSlop={6}
             style={({ pressed }) => [
               styles.startButton,
-              { backgroundColor: colors.accent, opacity: pressed || starting ? 0.7 : 1 },
+              { backgroundColor: colors.accent, opacity: pressed ? 0.7 : 1 },
             ]}
           >
             <Text style={[styles.startLabel, { color: colors.onAccent }]}>
@@ -148,15 +136,10 @@ function DemoScreen({ onReplay }: { onReplay: () => void }) {
             >
               {t('demo.endBody')}
             </Text>
-            {starting ? (
-              <ActivityIndicator color={colors.accent} />
-            ) : (
-              <Button label={t('signIn.startNow')} onPress={start} />
-            )}
+            <Button label={t('signIn.startNow')} onPress={start} />
             <Pressable onPress={onReplay} accessibilityRole="button" hitSlop={8}>
               <Text style={[styles.replay, { color: colors.textMuted }]}>{t('demo.replay')}</Text>
             </Pressable>
-            {error ? <Text style={[styles.endBody, { color: colors.accent }]}>{error}</Text> : null}
           </View>
         ) : null}
         <MessageComposer onSend={demo.send} onTyping={() => {}} />
