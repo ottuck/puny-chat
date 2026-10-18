@@ -12,16 +12,21 @@ import { BuddyStage, type Cue } from './buddy-stage';
 // A dream of the future (docs/fun-improvements.md, 미래의 꿈): before the egg is first shown, a few
 // quick cuts of what it may grow into, each a different job and a different day. buddy-scene.tsx
 // plays it once on this device and then opens on the egg with the iris. A tap skips it. Quick and
-// lively rather than hazy: each cut comes in with a flash and a little punch, about a second each.
+// lively rather than hazy: each cut comes in with a flash and a little punch, a second and a half
+// each, about ten seconds in all with the iris.
 
 type Cut = { job: BuddyJob | null; season: Season | null; cue: Cue['kind'] | null; bath?: boolean };
+// Through a year: two jobs, then spring, Halloween and Christmas (no job: its things would hide the
+// season's), then the hot spring.
 const CUTS: readonly Cut[] = [
   { job: 'BARISTA', season: null, cue: 'dance' },
   { job: 'WRITER', season: null, cue: 'love' },
+  { job: null, season: 'SPRING', cue: 'butterfly' },
+  { job: null, season: 'HALLOWEEN', cue: 'laugh' },
   { job: null, season: 'CHRISTMAS', cue: 'snow' },
   { job: 'CHEF', season: null, cue: null, bath: true },
 ];
-const CUT_MS = 1050;
+const CUT_MS = 1500;
 const NATIVE_DRIVER = Platform.OS !== 'web';
 // A cue given with the stage is not news to it (buddy-stage.tsx), and the buddy must be in place
 // first: it comes just after.
