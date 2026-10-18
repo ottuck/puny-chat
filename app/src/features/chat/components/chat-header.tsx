@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { GearIcon, HelpIcon } from '@/components/icons';
 import { useColors } from '@/theme';
 
 type Props = {
@@ -87,9 +88,7 @@ export function ChatHeader({
             hitSlop={12}
             style={styles.settingsButton}
           >
-            <Text style={[styles.help, { color: colors.textMuted, borderColor: colors.textMuted }]}>
-              ?
-            </Text>
+            <HelpIcon color={colors.text} />
           </Pressable>
         ) : null}
         {onPressSettings ? (
@@ -100,7 +99,7 @@ export function ChatHeader({
             hitSlop={12}
             style={onPressHelp ? styles.nextToHelp : styles.settingsButton}
           >
-            <Text style={[styles.settingsIcon, { color: colors.textMuted }]}>⚙︎</Text>
+            <GearIcon color={colors.text} />
           </Pressable>
         ) : null}
       </View>
@@ -109,16 +108,6 @@ export function ChatHeader({
 }
 
 const styles = StyleSheet.create({
-  help: {
-    width: 20,
-    height: 20,
-    borderWidth: 1.5,
-    borderRadius: 10,
-    fontSize: 12,
-    fontWeight: '700',
-    textAlign: 'center',
-    lineHeight: 17,
-  },
   container: {
     paddingHorizontal: 16,
     paddingTop: 8,
@@ -151,9 +140,6 @@ const styles = StyleSheet.create({
   // The "?" takes the push to the right; settings sits beside it.
   nextToHelp: {
     marginLeft: 16,
-  },
-  settingsIcon: {
-    fontSize: 20,
   },
   inviteButton: {
     paddingHorizontal: 14,

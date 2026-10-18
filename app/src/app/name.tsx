@@ -19,7 +19,7 @@ import { errorMessage } from '@/features/room/error-message';
 import { useRoom } from '@/features/room/room-provider';
 import { cancelStart, isCancelledSignIn, signInErrorKey } from '@/features/auth/actions';
 import { useAuth } from '@/features/auth/auth-provider';
-import { finishStart, resetStart } from '@/features/auth/start-flow';
+import { finishStart, resetStart, setStartName, useStart } from '@/features/auth/start-flow';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
 // The name the friend sees. Three ways here: starting (no account yet: the guest is made with it,
@@ -30,10 +30,11 @@ export default function NameScreen() {
   const { state, setMe, refreshRoom } = useRoom();
   const { user } = useAuth();
   const starting = !user;
+  const pending = useStart();
   const me = state.status === 'none' || state.status === 'ready' ? state.me : null;
   // Changing an existing name (from settings) goes back when done; first-time naming moves on.
   const [editing] = useState(() => !!me?.displayName);
-  const [name, setName] = useState(me?.displayName ?? '');
+  const [name, setName] = useState(me?.displayName ?? pending.name ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,9 +42,16 @@ export default function NameScreen() {
     setBusy(true);
     setError(null);
     if (starting) {
+      setStartName(name.trim());
+      // Joining a friend: this is the last step, the guest is made now and goes into their room.
+      // Otherwise on to the egg's name, still without an account.
+      if (!pending.code) {
+        setBusy(false);
+        router.push('/welcome');
+        return;
+      }
       try {
-        await finishStart(name.trim());
-        // The guards take over from here (saving the name, then the room).
+        await finishStart();
       } catch (e) {
         if (!isCancelledSignIn(e)) setError(t(signInErrorKey(e)));
         setBusy(false);
