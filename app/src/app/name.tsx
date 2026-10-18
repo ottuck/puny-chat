@@ -1,7 +1,15 @@
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
@@ -9,6 +17,8 @@ import { PageTitle } from '@/components/page-title';
 import { MAX_DISPLAY_NAME, updateMyName } from '@/features/room/api';
 import { errorMessage } from '@/features/room/error-message';
 import { useRoom } from '@/features/room/room-provider';
+import { cancelStart } from '@/features/auth/actions';
+import { setJoinIntent } from '@/lib/join-intent';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
 // The name the friend sees. Guests land here first, since they have none (the route guards in
@@ -42,6 +52,23 @@ export default function NameScreen() {
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
       <PageTitle title={t('name.title')} />
+      {/* First-time naming can still go back: the start is undone (actions.ts, cancelStart). */}
+      {!editing ? (
+        <View style={styles.topBar}>
+          <Pressable
+            onPress={() => {
+              setJoinIntent(null);
+              setBusy(true);
+              void cancelStart().finally(() => setBusy(false));
+            }}
+            disabled={busy}
+            accessibilityRole="button"
+            hitSlop={10}
+          >
+            <Text style={[styles.back, { color: colors.textMuted }]}>{t('demo.back')}</Text>
+          </Pressable>
+        </View>
+      ) : null}
       {/* A back button only when coming from settings; first-time naming has nowhere to go back to. */}
       <Stack.Screen
         options={{ headerShown: editing, title: '', headerBackButtonDisplayMode: 'minimal' }}
@@ -83,14 +110,6 @@ export default function NameScreen() {
             onPress={save}
             disabled={busy || !name.trim()}
           />
-          {!editing ? (
-            <Button
-              label={t('settings.title')}
-              onPress={() => router.push('/settings')}
-              disabled={busy}
-              variant="secondary"
-            />
-          ) : null}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -108,6 +127,16 @@ const styles = StyleSheet.create({
     maxWidth: MAX_CONTENT_WIDTH,
     paddingHorizontal: 24,
     paddingBottom: 24,
+  },
+  topBar: {
+    width: '100%',
+    maxWidth: MAX_CONTENT_WIDTH,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+  },
+  back: {
+    fontSize: 15,
+    fontWeight: '600',
   },
   hero: {
     flex: 1,

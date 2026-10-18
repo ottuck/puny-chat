@@ -54,6 +54,28 @@ export async function deleteAccount(): Promise<void> {
   await deleteUser(user);
 }
 
+// Back from the name screen before doing anything: a guest made a moment ago is deleted (nothing of
+// theirs is worth keeping, and no empty account is left behind); an account just signs out.
+export async function cancelStart(): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) return;
+  if (!user.isAnonymous) return signOut();
+  try {
+    await deleteAccount();
+  } catch (e) {
+    console.warn('deleting the new guest failed; signing out', e);
+    await signOut();
+  }
+}
+
+// What to tell someone whose start failed: Firebase allows only so many new guests from one place
+// in a while (e.g. starting over and over while trying the app), which passes with time.
+export function signInErrorKey(error: unknown): 'signIn.tooMany' | 'signIn.error' {
+  return error instanceof FirebaseError && error.code === 'auth/too-many-requests'
+    ? 'signIn.tooMany'
+    : 'signIn.error';
+}
+
 // The user closed the popup or Apple's sheet, or started another one; not worth an error message.
 export function isCancelledSignIn(error: unknown): boolean {
   if (error instanceof FirebaseError) {
