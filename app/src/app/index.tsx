@@ -168,7 +168,12 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
             />
           )}
         </View>
-        <MessageComposer onSend={chat.send} onTyping={chat.notifyTyping} />
+        <MessageComposer
+          userId={me.id}
+          roomId={room.id}
+          onSend={chat.send}
+          onTyping={chat.notifyTyping}
+        />
       </KeyboardAvoidingView>
 
       <BuddySheet

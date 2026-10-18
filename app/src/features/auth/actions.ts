@@ -1,6 +1,7 @@
 import { FirebaseError } from 'firebase/app';
 import { deleteUser, signInAnonymously, signOut as firebaseSignOut } from 'firebase/auth';
 
+import { clearDrafts } from '@/features/chat/draft';
 import { unregisterPush } from '@/features/notifications/push';
 import { api } from '@/lib/api';
 import { auth } from '@/lib/firebase';
@@ -20,6 +21,7 @@ export async function signInAsGuest(): Promise<void> {
 // Leaves the guest account for an existing Google or Apple account (see AccountInUseError).
 export async function switchAccount(switchTo: () => Promise<void>): Promise<void> {
   await unregisterPush().catch((e) => console.warn('removing the push token failed', e));
+  await clearDrafts().catch((e) => console.warn('clearing drafts failed', e));
   await switchTo();
 }
 
@@ -34,6 +36,7 @@ export async function noteAccountLinked(): Promise<void> {
 export async function signOut(): Promise<void> {
   // While still signed in: the server removes only the user's own tokens.
   await unregisterPush().catch((e) => console.warn('removing the push token failed', e));
+  await clearDrafts().catch((e) => console.warn('clearing drafts failed', e));
   await firebaseSignOut(auth);
 }
 
@@ -48,6 +51,7 @@ export async function deleteAccount(): Promise<void> {
   else if (!user.isAnonymous) await reauthenticateGoogle();
   await unregisterPush().catch((e) => console.warn('removing the push token failed', e));
   await api<void>('/api/me', { method: 'DELETE' });
+  await clearDrafts().catch((e) => console.warn('clearing drafts failed', e));
   // If this fails the account is not deleted, so it is not reported as done: the user stays signed
   // in and can try again. The server steps run again harmlessly, and a request in between only
   // creates an empty user that the retry deletes.

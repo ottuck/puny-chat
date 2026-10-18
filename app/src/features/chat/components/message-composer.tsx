@@ -1,32 +1,61 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useColors } from '@/theme';
 
+import { loadDraft, saveDraft } from '../draft';
+
 // Web textareas start at two rows. RN types lack `rows`, and numberOfLines would cap the
 // growing input on iOS, so it is set for web only.
 const webSingleRow = Platform.OS === 'web' ? { rows: 1 } : {};
 
 type Props = {
+  // Whose box in which room: what is typed is kept on the device under these (draft.ts). The
+  // scripted room before signing in (app/demo.tsx) keeps nothing.
+  userId?: string;
+  roomId?: string;
   onSend: (text: string) => void;
   // Called on every change with whether there is something typed (drives "typing…").
   onTyping: (hasDraft: boolean) => void;
 };
 
-export function MessageComposer({ onSend, onTyping }: Props) {
+export function MessageComposer({ userId, roomId, onSend, onTyping }: Props) {
   const colors = useColors();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [draft, setDraft] = useState('');
   const [focused, setFocused] = useState(false);
   const canSend = draft.trim().length > 0;
+  // Typing before the saved draft has been read wins over it.
+  const typed = useRef(false);
+
+  // What was typed and not sent before the app was closed or reloaded. Not "typing…" for the
+  // partner: nobody is typing yet.
+  useEffect(() => {
+    if (!userId || !roomId) return;
+    let gone = false;
+    loadDraft(userId, roomId)
+      .then((saved) => {
+        if (!gone && saved && !typed.current) setDraft(saved);
+      })
+      .catch((e) => console.warn('reading the draft failed', e));
+    return () => {
+      gone = true;
+    };
+  }, [userId, roomId]);
+
+  const change = (text: string) => {
+    typed.current = true;
+    setDraft(text);
+    if (userId && roomId) saveDraft(userId, roomId, text);
+  };
 
   const send = () => {
     if (!canSend) return;
     onSend(draft.trim());
-    setDraft('');
+    change('');
   };
 
   return (
@@ -43,7 +72,7 @@ export function MessageComposer({ onSend, onTyping }: Props) {
       <TextInput
         value={draft}
         onChangeText={(text) => {
-          setDraft(text);
+          change(text);
           onTyping(text.trim().length > 0);
         }}
         placeholder={t('chat.composerPlaceholder')}
