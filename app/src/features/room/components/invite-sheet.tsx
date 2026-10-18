@@ -11,6 +11,7 @@ import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
 import { createInvitation, type Invitation } from '../api';
 import { errorMessage } from '../error-message';
+import { spacedCode } from '../invite-code';
 
 type Props = {
   visible: boolean;
@@ -84,7 +85,7 @@ export function InviteContent({
               : 'invite.shareMessage',
           {
             link,
-            code: invitation.code,
+            code: spacedCode(invitation.code),
             time: expires,
           },
         ),
@@ -139,7 +140,7 @@ export function InviteContent({
             <>
               <View style={styles.codeRow}>
                 <Text selectable style={[styles.code, { color: colors.text }]}>
-                  {invitation.code}
+                  {spacedCode(invitation.code)}
                 </Text>
                 <Pressable
                   onPress={copy}

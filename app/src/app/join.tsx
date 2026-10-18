@@ -8,6 +8,7 @@ import { Button } from '@/components/button';
 import { useAuth } from '@/features/auth/auth-provider';
 import { acceptInvitation } from '@/features/room/api';
 import { errorMessage } from '@/features/room/error-message';
+import { spacedCode } from '@/features/room/invite-code';
 import { useRoom } from '@/features/room/room-provider';
 import { ApiError } from '@/lib/api';
 import { confirm } from '@/lib/confirm';
@@ -114,9 +115,9 @@ export default function JoinScreen() {
       <View style={styles.column}>
         <Text style={[styles.hint, { color: colors.textMuted }]}>{t('join.hint')}</Text>
         <TextInput
-          value={code}
+          value={spacedCode(code)}
           onChangeText={(value) => setCode(codeFrom(value))}
-          placeholder="AB23"
+          placeholder="AB 23"
           placeholderTextColor={colors.border}
           autoCapitalize="characters"
           autoCorrect={false}
