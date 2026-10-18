@@ -17,16 +17,19 @@ import { PageTitle } from '@/components/page-title';
 import { MAX_DISPLAY_NAME, updateMyName } from '@/features/room/api';
 import { errorMessage } from '@/features/room/error-message';
 import { useRoom } from '@/features/room/room-provider';
-import { cancelStart } from '@/features/auth/actions';
-import { setJoinIntent } from '@/lib/join-intent';
+import { cancelStart, isCancelledSignIn, signInErrorKey } from '@/features/auth/actions';
+import { useAuth } from '@/features/auth/auth-provider';
+import { finishStart, resetStart } from '@/features/auth/start-flow';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
-// The name the friend sees. Guests land here first, since they have none (the route guards in
-// _layout.tsx); anyone can come back from settings to change it.
+// The name the friend sees. Three ways here: starting (no account yet: the guest is made with it,
+// start-flow.ts), signed in without one (a new Google or Apple account), or from settings.
 export default function NameScreen() {
   const colors = useColors();
   const { t } = useTranslation();
   const { state, setMe, refreshRoom } = useRoom();
+  const { user } = useAuth();
+  const starting = !user;
   const me = state.status === 'none' || state.status === 'ready' ? state.me : null;
   // Changing an existing name (from settings) goes back when done; first-time naming moves on.
   const [editing] = useState(() => !!me?.displayName);
@@ -37,6 +40,16 @@ export default function NameScreen() {
   const save = async () => {
     setBusy(true);
     setError(null);
+    if (starting) {
+      try {
+        await finishStart(name.trim());
+        // The guards take over from here (saving the name, then the room).
+      } catch (e) {
+        if (!isCancelledSignIn(e)) setError(t(signInErrorKey(e)));
+        setBusy(false);
+      }
+      return;
+    }
     try {
       setMe(await updateMyName(name.trim()));
       // The room lists members by name too.
@@ -52,20 +65,31 @@ export default function NameScreen() {
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
       <PageTitle title={t('name.title')} />
-      {/* First-time naming can still go back: the start is undone (actions.ts, cancelStart). */}
+      {/* First-time naming can go back. Starting: just back (nothing exists yet). Signed in without
+          a name: out of that account, to the first screen. */}
       {!editing ? (
         <View style={styles.topBar}>
           <Pressable
             onPress={() => {
-              setJoinIntent(null);
+              if (starting) {
+                if (router.canGoBack()) router.back();
+                else router.replace('/sign-in');
+                return;
+              }
+              resetStart();
               setBusy(true);
-              void cancelStart().finally(() => setBusy(false));
+              void cancelStart().finally(() => {
+                setBusy(false);
+                setTimeout(() => router.replace('/sign-in'), 0);
+              });
             }}
             disabled={busy}
             accessibilityRole="button"
             hitSlop={10}
           >
-            <Text style={[styles.back, { color: colors.textMuted }]}>{t('demo.back')}</Text>
+            <Text style={[styles.back, { color: colors.textMuted }]}>
+              {starting ? t('common.back') : t('demo.back')}
+            </Text>
           </Pressable>
         </View>
       ) : null}

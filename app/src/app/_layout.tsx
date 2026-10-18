@@ -10,9 +10,10 @@ import i18n, { detectLanguage } from '@/i18n';
 import { StatusScreen } from '@/components/status-screen';
 import { WebFrame } from '@/components/web-frame';
 import { AuthProvider, useAuth } from '@/features/auth/auth-provider';
+import { nameSaved, takeStartCode, useStart } from '@/features/auth/start-flow';
+import { updateMyName } from '@/features/room/api';
 import { RoomProvider, useRoom } from '@/features/room/room-provider';
 import { loadPreferences, usePreferences } from '@/lib/preferences';
-import { takeJoinIntent } from '@/lib/join-intent';
 import { rememberInviteFromUrl, takePendingInvite } from '@/lib/pending-invite';
 import { registerServiceWorker } from '@/lib/service-worker';
 import { warmUpServer } from '@/lib/warm-up';
@@ -64,23 +65,51 @@ export default function RootLayout() {
 
 function RootNavigator() {
   const { user, initializing } = useAuth();
-  const { state, reload } = useRoom();
+  const { state, reload, setMe } = useRoom();
   const { t, i18n } = useTranslation();
   const signedIn = !!user;
+  const pending = useStart();
+  const me = state.status === 'none' || state.status === 'ready' ? state.me : null;
+  // Guests start without a name; they pick one before anything else (the friend sees it).
+  const named = !!me?.displayName;
+  // Just made from the start flow, with the name it was given still to save (start-flow.ts).
+  const savingName = signedIn && !!me && !named && !!pending.name;
+  const roomReady = state.status === 'ready';
+
+  // Saves the name typed before starting, then goes where a named person goes (the stack was
+  // replaced by the loading screen meanwhile, so it says where). A failure leaves the name screen.
+  useEffect(() => {
+    if (!savingName || !pending.name) return;
+    let gone = false;
+    updateMyName(pending.name)
+      .then((next) => {
+        if (gone) return;
+        nameSaved();
+        setMe(next);
+        setTimeout(() => router.replace(roomReady ? '/' : '/welcome'), 0);
+      })
+      .catch((e) => {
+        console.warn('saving the name failed', e);
+        if (!gone) nameSaved();
+      });
+    return () => {
+      gone = true;
+    };
+  }, [savingName, pending.name, roomReady, setMe]);
   const settled = !initializing && (!signedIn || state.status !== 'loading');
   const pathname = usePathname();
   const publicPage = pathname === '/privacy' || pathname === '/support';
   const canJoin =
     signedIn && (state.status === 'none' || state.status === 'ready') && !!state.me.displayName;
 
-  // Signed in with a name now: on to the invite that brought them here, code filled in, or to the
-  // join screen for someone who started with "invite code" on the first screen.
+  // Signed in with a name now: on to the invite that brought them here, code filled in, or into
+  // the room of the code typed on the first screen's way in.
   // Waits for where they land after naming (welcome or the chat): going earlier, the name screen's
   // own navigation would cover the join screen.
   useEffect(() => {
     if (!canJoin || (pathname !== '/welcome' && pathname !== '/')) return;
     // A code typed before starting is used right away (auto); one from a link is shown to confirm.
-    const typed = takeJoinIntent();
+    const typed = takeStartCode();
     const code = takePendingInvite() ?? typed;
     if (!code) return;
     const params = typed ? { code, auto: '1' } : { code };
@@ -99,6 +128,7 @@ function RootNavigator() {
 
   if (initializing && !publicPage) return null;
   if (signedIn && state.status === 'loading' && !publicPage) return <StatusScreen loading />;
+  if (savingName) return <StatusScreen loading />;
   if (signedIn && state.status === 'error' && !publicPage) {
     return (
       <StatusScreen
@@ -109,10 +139,6 @@ function RootNavigator() {
     );
   }
 
-  const me = state.status === 'none' || state.status === 'ready' ? state.me : null;
-  // Guests start without a name; they pick one before anything else (the friend sees it).
-  const named = !!me?.displayName;
-
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={signedIn && state.status === 'ready' && named}>
@@ -121,7 +147,8 @@ function RootNavigator() {
       <Stack.Protected guard={signedIn && state.status === 'none' && named}>
         <Stack.Screen name="welcome" />
       </Stack.Protected>
-      <Stack.Protected guard={!!me}>
+      {/* Also before signing in: the start flow asks for the name before making the guest. */}
+      <Stack.Protected guard={!!me || !signedIn}>
         <Stack.Screen name="name" />
       </Stack.Protected>
       {/* Not before a name: there is nothing of theirs to show or sign out of yet. */}

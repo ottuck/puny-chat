@@ -6,13 +6,12 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { PageTitle } from '@/components/page-title';
 import { Button } from '@/components/button';
 import { useAuth } from '@/features/auth/auth-provider';
-import { isCancelledSignIn, signInAsGuest, signInErrorKey } from '@/features/auth/actions';
 import { acceptInvitation } from '@/features/room/api';
 import { errorMessage } from '@/features/room/error-message';
 import { useRoom } from '@/features/room/room-provider';
 import { ApiError } from '@/lib/api';
 import { confirm } from '@/lib/confirm';
-import { setJoinIntent } from '@/lib/join-intent';
+import { setStartCode } from '@/features/auth/start-flow';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
 const CODE_LENGTH = 4;
@@ -40,19 +39,12 @@ export default function JoinScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Before signing in (from the first screen): keep the code, start as a guest, and pick a name;
+  // Before signing in (from the first screen): keep the code and go on to the name; the guest is
+  // made there, and
   // the room's join then happens on its own (_layout.tsx).
-  const start = async () => {
-    setBusy(true);
-    setError(null);
-    setJoinIntent(code);
-    try {
-      await signInAsGuest();
-    } catch (e) {
-      setJoinIntent(null);
-      if (!isCancelledSignIn(e)) setError(t(signInErrorKey(e)));
-      setBusy(false);
-    }
+  const start = () => {
+    setStartCode(code);
+    router.push('/name');
   };
 
   const join = async () => {
