@@ -108,7 +108,9 @@ export default function NameScreen() {
         </View>
       ) : null}
       {/* A back button only when coming from settings; first-time naming has nowhere to go back to. */}
-      <Stack.Screen options={{ headerShown: editing, title: '', headerLeft: HeaderBack }} />
+      <Stack.Screen
+        options={{ headerShown: editing, title: '', headerLeft: () => <HeaderBack /> }}
+      />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.column}
