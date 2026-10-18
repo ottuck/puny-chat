@@ -12,6 +12,7 @@ import { WebFrame } from '@/components/web-frame';
 import { AuthProvider, useAuth } from '@/features/auth/auth-provider';
 import { RoomProvider, useRoom } from '@/features/room/room-provider';
 import { loadPreferences, usePreferences } from '@/lib/preferences';
+import { takeJoinIntent } from '@/lib/join-intent';
 import { rememberInviteFromUrl, takePendingInvite } from '@/lib/pending-invite';
 import { registerServiceWorker } from '@/lib/service-worker';
 import { warmUpServer } from '@/lib/warm-up';
@@ -72,14 +73,18 @@ function RootNavigator() {
   const canJoin =
     signedIn && (state.status === 'none' || state.status === 'ready') && !!state.me.displayName;
 
-  // Signed in with a name now: on to the invite that brought them here, code filled in.
+  // Signed in with a name now: on to the invite that brought them here, code filled in, or to the
+  // join screen for someone who started with "invite code" on the first screen.
   // Waits for where they land after naming (welcome or the chat): going earlier, the name screen's
   // own navigation would cover the join screen.
   useEffect(() => {
     if (!canJoin || (pathname !== '/welcome' && pathname !== '/')) return;
     const code = takePendingInvite();
-    if (!code) return;
-    const timer = setTimeout(() => router.push({ pathname: '/join', params: { code } }), 0);
+    if (!code && !takeJoinIntent()) return;
+    const timer = setTimeout(
+      () => router.push(code ? { pathname: '/join', params: { code } } : '/join'),
+      0,
+    );
     return () => clearTimeout(timer);
   }, [canJoin, pathname]);
 
