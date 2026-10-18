@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/button';
 import { WebFrame } from '@/components/web-frame';
 import { InviteContent } from '@/features/room/components/invite-sheet';
+import { leaveRoom } from '@/features/room/api';
 import { errorMessage } from '@/features/room/error-message';
 import { confirm } from '@/lib/confirm';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
@@ -20,6 +21,7 @@ export function PartnerSheet({
   roomId,
   targetId,
   partnerName,
+  buddyName,
   onRemoved,
 }: {
   visible: boolean;
@@ -27,6 +29,8 @@ export function PartnerSheet({
   roomId: string;
   targetId: string;
   partnerName: string;
+  buddyName: string;
+  // After the partner was removed or I left: the room is gone for this screen.
   onRemoved: () => Promise<void>;
 }) {
   const colors = useColors();
@@ -67,6 +71,32 @@ export function PartnerSheet({
       });
       await onRemoved();
       onClose();
+    } catch (e) {
+      setError(errorMessage(t, e));
+    } finally {
+      removing.current = false;
+      setBusy(false);
+    }
+  };
+
+  // Going quietly: the partner keeps the room, the buddy and the conversation (docs/PROJECT.md).
+  const leave = async () => {
+    if (removing.current) return;
+    removing.current = true;
+    setBusy(true);
+    try {
+      const ok = await confirm({
+        title: t('settings.leaveTitle'),
+        message: t('settings.leaveDuo', { buddy: buddyName, partner: partnerName }),
+        confirmLabel: t('settings.leaveConfirm'),
+        cancelLabel: t('common.cancel'),
+        destructive: true,
+      });
+      if (!ok) return;
+      setError(null);
+      await leaveRoom();
+      await onRemoved();
+      close();
     } catch (e) {
       setError(errorMessage(t, e));
     } finally {
@@ -122,6 +152,12 @@ export function PartnerSheet({
                 disabled={busy}
                 variant="secondary"
                 onPress={remove}
+              />
+              <Button
+                label={t('settings.leave')}
+                disabled={busy}
+                variant="secondary"
+                onPress={leave}
               />
               {busy ? <ActivityIndicator color={colors.accent} /> : null}
               {error ? (

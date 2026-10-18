@@ -205,6 +205,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
           roomId={room.id}
           targetId={partner.id}
           partnerName={partner.displayName ?? ''}
+          buddyName={buddy.name}
           onRemoved={async () => {
             await onRoomLost();
           }}
