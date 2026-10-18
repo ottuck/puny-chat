@@ -5,31 +5,41 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useColors } from '@/theme';
 
-// Above the chat until tapped once on this device: what the buddy is about and what levels bring
+// Above the chat until tapped once in this room on this device: what the buddy is about and what levels bring
 // (a job at 12, its own way from 20), so there is something to look forward to from the first day.
 // The whole card opens the guide, the ✕ too: people tap it to get it out of the way, and that is
 // the moment to show them the rest.
-const SEEN_KEY = 'buddy-guide-seen';
+// Per room: someone who comes into a friend's room with an invite sees it there too, even on a
+// device where they had a room of their own before.
+const seenKey = (roomId: string) => `buddy-guide-seen:${roomId}`;
 
 // `hold`: not yet (the dream before the first egg is on).
-export function GuideBanner({ onOpen, hold = false }: { onOpen: () => void; hold?: boolean }) {
+export function GuideBanner({
+  roomId,
+  onOpen,
+  hold = false,
+}: {
+  roomId: string;
+  onOpen: () => void;
+  hold?: boolean;
+}) {
   const colors = useColors();
   const { t } = useTranslation();
   const [show, setShow] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    AsyncStorage.getItem(SEEN_KEY)
+    AsyncStorage.getItem(seenKey(roomId))
       .then((seen) => !cancelled && setShow(!seen))
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [roomId]);
 
   const done = () => {
     setShow(false);
-    AsyncStorage.setItem(SEEN_KEY, '1').catch(() => {});
+    AsyncStorage.setItem(seenKey(roomId), '1').catch(() => {});
   };
 
   if (!show || hold) return null;
