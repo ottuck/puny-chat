@@ -145,12 +145,19 @@ public class RoomService {
         return rooms.findById(roomId).switchIfEmpty(Mono.error(roomNotFound()));
     }
 
+    /** How {@link #join} went: added now, already in (an earlier accept got this far), or no room for them. */
+    enum Join {
+        ADDED,
+        ALREADY_MEMBER,
+        FULL
+    }
+
     /**
      * Adds a member in one conditional update: only if the room still has a free slot and the
      * user is not already in it. Of any number of concurrent joins, at most the free slots succeed.
      * A user who is already a member counts as joined (an earlier accept got this far, then failed).
      */
-    Mono<Boolean> join(String roomId, String userId) {
+    Mono<Join> join(String roomId, String userId) {
         return mongo.updateFirst(
                         query(where("_id")
                                 .is(roomId)
@@ -163,15 +170,16 @@ public class RoomService {
                         new Update().push("memberIds", userId).inc("memberCount", 1),
                         Room.class)
                 .flatMap(result -> result.getModifiedCount() == 1
-                        ? Mono.just(true)
+                        ? Mono.just(Join.ADDED)
                         : mongo.exists(
-                                query(where("_id")
-                                        .is(roomId)
-                                        .and("memberIds")
-                                        .is(userId)
-                                        .and("closureId")
-                                        .is(null)),
-                                Room.class));
+                                        query(where("_id")
+                                                .is(roomId)
+                                                .and("memberIds")
+                                                .is(userId)
+                                                .and("closureId")
+                                                .is(null)),
+                                        Room.class)
+                                .map(member -> member ? Join.ALREADY_MEMBER : Join.FULL));
     }
 
     /**

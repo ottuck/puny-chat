@@ -135,6 +135,7 @@
       "cheer": "Go go!",
       "comfort": "You okay?",
       "bothHere": "We're all here!",
+      "friendCame": "A friend is here!",
       "coPet": "So happy!",
       "bestThing": "Best part of today?",
       "wantEat": "Craving anything?",
@@ -430,6 +431,7 @@
     "alone": "Just you for now. Invite a friend from the chat screen."
   },
   "systemEvent": {
+    "MEMBER_JOINED": "{{name}} joined",
     "MEMBER_LEFT": "{{name}} left",
     "MEMBER_RETURNED": "{{name}} is back"
   },

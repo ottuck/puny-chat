@@ -207,6 +207,8 @@ class AccountDeletionFlowTest {
         String roomId = duoRoom("henry", "yuki");
         String yukiId = user("yuki").id();
         delete("yuki").expectStatus().isNoContent();
+        // Deleting already changed the history (the line that yuki came in).
+        long version = mongo.findById(roomId, Room.class).block().historyVersion();
 
         TestSocket henry = connect("henry");
 
@@ -217,7 +219,7 @@ class AccountDeletionFlowTest {
         assertThat(late.actorId()).isNull();
         assertThat(henry.expect("historyChanged").get("deletedUserId").asString())
                 .isEqualTo(yukiId);
-        assertThat(mongo.findById(roomId, Room.class).block().historyVersion()).isEqualTo(1L);
+        assertThat(mongo.findById(roomId, Room.class).block().historyVersion()).isEqualTo(version + 1);
         assertThat(count("messages", "actorId", yukiId)).isZero();
         assertThat(mongo.findById(roomId, Room.class).block().buddy().talkers()).isNullOrEmpty();
         assertThat(chatService
@@ -231,6 +233,7 @@ class AccountDeletionFlowTest {
     void deletionFencePreventsNamedEventsWhileTheUserStillExists() {
         String roomId = duoRoom("henry", "yuki");
         String yukiId = user("yuki").id();
+        long named = count("messages", "actorId", yukiId); // the line that yuki came in
         TestSocket henry = connect("henry");
         chatService.beginAccountDeletion(yukiId).block();
 
@@ -239,7 +242,7 @@ class AccountDeletionFlowTest {
                         .block())
                 .isNull();
         assertThat(user("yuki")).isNotNull();
-        assertThat(count("messages", "actorId", yukiId)).isZero();
+        assertThat(count("messages", "actorId", yukiId)).isEqualTo(named);
         delete("yuki").expectStatus().isNoContent();
         henry.expect("left");
         assertThat(user("yuki")).isNull();
@@ -250,12 +253,13 @@ class AccountDeletionFlowTest {
     void aRejectedLateSystemInsertionAlsoInvalidatesAnyHistoryThatObservedIt() {
         String roomId = duoRoom("henry", "yuki");
         String yukiId = user("yuki").id();
+        long named = count("messages", "actorId", yukiId); // the line that yuki came in
         TestSocket henry = connect("henry");
         var checks = new java.util.concurrent.atomic.AtomicInteger();
         org.mockito.Mockito.doAnswer(invocation -> checks.incrementAndGet() == 1
                         ? reactor.core.publisher.Mono.just(true)
                         : mongo.count(Query.query(Criteria.where("actorId").is(yukiId)), Message.class)
-                                .doOnNext(count -> assertThat(count).isEqualTo(1L))
+                                .doOnNext(count -> assertThat(count).isEqualTo(named + 1))
                                 .then(chatService.beginAccountDeletion(yukiId))
                                 .thenReturn(false))
                 .when(userService)
@@ -269,7 +273,7 @@ class AccountDeletionFlowTest {
         JsonNode changed = henry.expect("historyChanged");
         assertThat(changed.get("deletedUserId").asString()).isEqualTo(yukiId);
         assertThat(changed.get("historyVersion").asLong()).isEqualTo(1L);
-        assertThat(count("messages", "actorId", yukiId)).isZero();
+        assertThat(count("messages", "actorId", yukiId)).isEqualTo(named);
         assertThat(mongo.findById(roomId, Room.class).block().historyVersion()).isEqualTo(1L);
     }
 

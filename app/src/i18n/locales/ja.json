@@ -135,6 +135,7 @@
       "cheer": "がんばれ！",
       "comfort": "だいじょうぶ？",
       "bothHere": "ふたりそろった！",
+      "friendCame": "ともだちが来た！",
       "coPet": "うれしい！",
       "bestThing": "今日いちばん良かったことは？",
       "wantEat": "食べたいものある？",
@@ -430,6 +431,7 @@
     "alone": "まだひとりです。チャット画面の「友だちを招待」から呼んでみましょう。"
   },
   "systemEvent": {
+    "MEMBER_JOINED": "{{name}}さんが参加しました",
     "MEMBER_LEFT": "{{name}}さんが退出しました",
     "MEMBER_RETURNED": "{{name}}さんが続きから参加しました"
   },

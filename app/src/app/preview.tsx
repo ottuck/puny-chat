@@ -57,6 +57,7 @@ const REACTIONS: ReactionKind[] = [
   'evolved',
   'together',
   'here',
+  'joined',
 ];
 
 // Levels where the room gets something new (the rewards), for looking at each step.

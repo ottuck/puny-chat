@@ -42,3 +42,9 @@ export function foldLevelUps(messages: Message[], grownAt: number): Message[] {
     return true;
   });
 }
+
+// Nothing said yet: the timeline holds at most the note that the friend came in. The empty chat's
+// "you two are together now" says the same, and the note shows once the talk starts.
+export function nothingSaidYet(messages: Message[]): boolean {
+  return messages.every((m) => m.type === 'SYSTEM' && m.event === 'MEMBER_JOINED');
+}

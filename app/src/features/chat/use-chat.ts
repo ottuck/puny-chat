@@ -236,6 +236,8 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
         apply([message]);
         const next = reactionTo(message, myIdRef.current);
         if (next) setReaction(next);
+        // The friend's first arrival is cheered already; "together now" would follow right after.
+        if (next?.kind === 'joined') hereAt.current = Date.now();
         cueFrom(message);
         // A buddy went its own way: the album has a new page.
         if (message.type === 'BUDDY_EVENT' && message.buddyEvent === 'GRADUATED') {

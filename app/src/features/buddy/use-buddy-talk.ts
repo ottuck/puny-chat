@@ -31,6 +31,8 @@ export type Line =
   | 'comfort'
   // Both are here now, and both petted it.
   | 'bothHere'
+  // A friend came in with the invite.
+  | 'friendCame'
   | 'coPet'
   // Questions to start a talk (ASKS).
   | 'bestThing'

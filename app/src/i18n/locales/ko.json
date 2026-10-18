@@ -135,6 +135,7 @@
       "cheer": "화이팅!",
       "comfort": "괜찮아?",
       "bothHere": "둘이 같이 있네!",
+      "friendCame": "친구가 왔다!",
       "coPet": "너무 좋아!",
       "bestThing": "오늘 제일 좋았던 게 뭐야?",
       "wantEat": "먹고 싶은 거 있어?",
@@ -430,6 +431,7 @@
     "alone": "아직 혼자예요. 채팅 화면의 친구 초대로 불러 보세요."
   },
   "systemEvent": {
+    "MEMBER_JOINED": "{{name}}님이 들어왔어요",
     "MEMBER_LEFT": "{{name}}님이 나갔어요",
     "MEMBER_RETURNED": "{{name}}님이 이어서 들어왔어요"
   },

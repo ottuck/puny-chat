@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { foldLevelUps } from '../src/features/chat/timeline.ts';
+import { foldLevelUps, nothingSaidYet } from '../src/features/chat/timeline.ts';
 
 const levelUp = (level, createdAt) => ({
   type: 'BUDDY_EVENT',
@@ -36,4 +36,18 @@ test("past the grown level only the day's newest level up stays", () => {
 test('up to the grown level every level up stays', () => {
   const day = [levelUp(12, '2026-10-15T12:00:00'), levelUp(11, '2026-10-15T11:00:00')];
   assert.equal(foldLevelUps(day, 20).length, 2);
+});
+
+test('the note that the friend came in alone still counts as nothing said', () => {
+  const joined = {
+    type: 'SYSTEM',
+    event: 'MEMBER_JOINED',
+    actorName: 'Yuki',
+    clientMessageId: 'j',
+  };
+  const left = { type: 'SYSTEM', event: 'MEMBER_LEFT', actorName: 'Yuki', clientMessageId: 'l' };
+  assert.equal(nothingSaidYet([]), true);
+  assert.equal(nothingSaidYet([joined]), true);
+  assert.equal(nothingSaidYet([text('t1', '2026-10-18T12:00:00'), joined]), false);
+  assert.equal(nothingSaidYet([left, joined]), false);
 });

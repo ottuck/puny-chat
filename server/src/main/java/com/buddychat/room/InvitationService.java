@@ -3,7 +3,9 @@ package com.buddychat.room;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import com.buddychat.chat.ChatService;
 import com.buddychat.common.ApiException;
+import com.buddychat.notification.NotificationService;
 import com.buddychat.realtime.RoomHub;
 import com.buddychat.realtime.ServerEvent;
 import com.buddychat.user.User;
@@ -41,6 +43,8 @@ class InvitationService {
     private final InvitationRepository invitations;
     private final RoomService roomService;
     private final UserService userService;
+    private final ChatService chatService;
+    private final NotificationService notifications;
     private final ReactiveMongoTemplate mongo;
     private final RoomHub hub;
     private final Clock clock;
@@ -53,12 +57,16 @@ class InvitationService {
             InvitationRepository invitations,
             RoomService roomService,
             UserService userService,
+            ChatService chatService,
+            NotificationService notifications,
             ReactiveMongoTemplate mongo,
             RoomHub hub,
             Clock clock) {
         this.invitations = invitations;
         this.roomService = roomService;
         this.userService = userService;
+        this.chatService = chatService;
+        this.notifications = notifications;
         this.mongo = mongo;
         this.hub = hub;
         this.clock = clock;
@@ -129,9 +137,10 @@ class InvitationService {
                             .then(claim(invitation, user, now))
                             .flatMap(claimed -> reserve(claimed, user)
                                     .then(seat(claimed, user))
-                                    .flatMap(tookSeat -> finish(claimed, user)
+                                    .flatMap(seat -> finish(claimed, user)
                                             .then(cleanPreviousRoom(claimed, user))
-                                            .then(inherit(claimed, user, tookSeat))
+                                            .then(inherit(claimed, user, seat == Seat.TOOK_SEAT))
+                                            .then(seat == Seat.NEW ? announceJoin(claimed, user) : Mono.empty())
                                             .then(joined(claimed, user)))
                                     .onErrorResume(
                                             ApiException.class,
@@ -244,26 +253,46 @@ class InvitationService {
                 });
     }
 
+    // How this call placed the user: in a free slot, in the other member's seat, or neither because
+    // an earlier try of the same accept already did. Only the first two are said in the timeline.
+    private enum Seat {
+        NEW,
+        TOOK_SEAT,
+        AGAIN
+    }
+
     /**
      * A place in the room: a free slot, or with a code made for the other member, that member's seat.
-     * True only when this call took the seat. If that member left meanwhile, the code fills the free
-     * slot; if the one who made it left, it is no longer valid.
+     * If that member left meanwhile, the code fills the free slot; if the one who made it left, it is
+     * no longer valid.
      */
-    private Mono<Boolean> seat(Invitation invitation, User user) {
+    private Mono<Seat> seat(Invitation invitation, User user) {
         String replaced = invitation.replacesId();
-        if (replaced == null) return joinOrRelease(invitation, user).thenReturn(false);
+        if (replaced == null) return joinOrRelease(invitation, user);
         return roomService
                 .takeSeat(invitation.roomId(), replaced, invitation.createdBy(), user.id())
                 .flatMap(took -> took
-                        ? Mono.just(true)
+                        ? Mono.just(Seat.TOOK_SEAT)
                         : roomService.findById(invitation.roomId()).flatMap(room -> {
-                            if (room.memberIds().contains(user.id())) return Mono.just(false); // resuming
+                            if (room.memberIds().contains(user.id())) return Mono.just(Seat.AGAIN);
                             if (room.memberIds().contains(replaced)) {
                                 return release(invitation, user)
                                         .then(Mono.error(new ApiException(HttpStatus.GONE, "INVITATION_EXPIRED")));
                             }
-                            return joinOrRelease(invitation, user).thenReturn(false);
+                            return joinOrRelease(invitation, user);
                         }));
+    }
+
+    // A friend came in with an invite: said once in the timeline, and the one who invited them is
+    // told (docs/PROJECT.md, 참가 알림). A seat taken over says MEMBER_RETURNED instead (handOver).
+    private Mono<Void> announceJoin(Invitation invitation, User user) {
+        return chatService
+                .recordSystemEvent(invitation.roomId(), "MEMBER_JOINED", user.id(), user.displayName())
+                .doOnNext(message -> {
+                    hub.publish(invitation.roomId(), new ServerEvent.NewMessage(message), null);
+                    notifications.onMemberJoined(message, user);
+                })
+                .then();
     }
 
     // With a code made for a member: their history follows them to this account. Safe to repeat.
@@ -274,10 +303,11 @@ class InvitationService {
 
     // The room can still be full when another code for it was accepted at the same moment. Then
     // the claimed invitation is handed back, since nobody actually used it.
-    private Mono<Void> joinOrRelease(Invitation invitation, User user) {
-        return roomService.join(invitation.roomId(), user.id()).flatMap(joined -> {
-            if (joined) return Mono.<Void>empty();
-            return release(invitation, user).then(Mono.error(new ApiException(HttpStatus.CONFLICT, "ROOM_FULL")));
+    private Mono<Seat> joinOrRelease(Invitation invitation, User user) {
+        return roomService.join(invitation.roomId(), user.id()).flatMap(joined -> switch (joined) {
+            case ADDED -> Mono.just(Seat.NEW);
+            case ALREADY_MEMBER -> Mono.just(Seat.AGAIN);
+            case FULL -> release(invitation, user).then(Mono.error(new ApiException(HttpStatus.CONFLICT, "ROOM_FULL")));
         });
     }
 

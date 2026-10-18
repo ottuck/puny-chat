@@ -27,10 +27,10 @@ import reactor.core.publisher.Mono;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Push notifications for new messages (docs/PROJECT.md, 푸시). A recipient is notified when
- * the message is still unread a moment after it was sent: someone looking at the chat marks it read
- * within a second, while an app in the background, suspended without a clean disconnect, or offline
- * does not. Buddy events are never pushed (docs/PROJECT.md).
+ * Push notifications for new messages and a friend joining (docs/PROJECT.md, 푸시). A recipient is
+ * notified when the entry is still unread a moment after it was made: someone looking at the chat
+ * marks it read within a second, while an app in the background, suspended without a clean
+ * disconnect, or offline does not. Buddy events are never pushed (docs/PROJECT.md).
  */
 @Service
 public class NotificationService {
@@ -174,15 +174,7 @@ public class NotificationService {
         String text = message.text();
         String messageId = message.id();
         if (message.type() != Message.Type.TEXT || text == null || messageId == null) return;
-        Mono.delay(properties.gracePeriod())
-                .then(Mono.zip(roomService.memberIds(message.roomId()), chatService.readMarks(message.roomId())))
-                .map(roomState -> roomState.getT1().stream()
-                        .filter(memberId -> !memberId.equals(from.id()))
-                        // Ids compare in timeline order (docs/PROJECT.md).
-                        .filter(memberId ->
-                                roomState.getT2().getOrDefault(memberId, "").compareTo(messageId) < 0)
-                        .toList())
-                .filter(unread -> !unread.isEmpty())
+        unreadLater(message.roomId(), messageId, from.id())
                 .flatMap(unread -> mongo.find(query(where("userId").in(unread)), PushToken.class)
                         .collectList())
                 .flatMap(tokens -> Mono.when(
@@ -190,6 +182,42 @@ public class NotificationService {
                                 tokens.stream().filter(token -> !token.isWeb()).toList(), message, text, from),
                         sendToBrowsers(tokens.stream().filter(PushToken::isWeb).toList(), message, text, from)))
                 .subscribe(null, e -> log.warn("Could not send push notifications: {}", e.toString()));
+    }
+
+    /**
+     * A friend came in with an invite (MEMBER_JOINED): the one who invited them is told, unless they
+     * are looking at the chat and see it there. Like a message, on its own after the grace period.
+     */
+    public void onMemberJoined(Message note, User joiner) {
+        String noteId = note.id();
+        if (noteId == null) return;
+        unreadLater(note.roomId(), noteId, joiner.id())
+                .flatMapMany(Flux::fromIterable)
+                .flatMap(memberId -> notify(memberId, language -> joinedNotice(language, joiner.displayName())))
+                .subscribe(null, e -> log.warn("Could not send the join notice: {}", e.toString()));
+    }
+
+    static Notice joinedNotice(@Nullable String language, @Nullable String name) {
+        String body = switch (language == null ? "en" : language) {
+            case "ko" -> (name != null ? name + "님이" : "친구가") + " 들어왔어요! 이제 둘이 함께 버디를 키워요.";
+            case "ja" -> (name != null ? name + "さんが" : "友だちが") + "入ってきました！これからふたりでBuddyを育てましょう。";
+            default -> (name != null ? name : "Your friend") + " joined! Now you two raise your buddy together.";
+        };
+        return new Notice("puny-chat", body);
+    }
+
+    // After the grace period, the room's members other than the actor who have not read up to the
+    // entry. Empty when everyone has.
+    private Mono<List<String>> unreadLater(String roomId, String entryId, String actorId) {
+        return Mono.delay(properties.gracePeriod())
+                .then(Mono.zip(roomService.memberIds(roomId), chatService.readMarks(roomId)))
+                .map(roomState -> roomState.getT1().stream()
+                        .filter(memberId -> !memberId.equals(actorId))
+                        // Ids compare in timeline order (docs/PROJECT.md).
+                        .filter(memberId ->
+                                roomState.getT2().getOrDefault(memberId, "").compareTo(entryId) < 0)
+                        .toList())
+                .filter(unread -> !unread.isEmpty());
     }
 
     private Mono<Void> sendToApps(List<PushToken> tokens, Message message, String text, User from) {
