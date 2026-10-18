@@ -426,7 +426,8 @@
     "light": "Light",
     "dark": "Dark",
     "notificationsDeniedWeb": "Notifications for puny-chat are blocked in this browser. Allow them in the site settings.",
-    "notificationsInstall": "On iPhone, notifications come to the app on your home screen. In Safari, tap Share → “Add to Home Screen”, then turn notifications on in puny-chat from your home screen."
+    "notificationsInstall": "On iPhone, notifications come to the app on your home screen. In Safari, tap Share → “Add to Home Screen”, then turn notifications on in puny-chat from your home screen.",
+    "alone": "Just you for now. Invite a friend from the chat screen."
   },
   "systemEvent": {
     "MEMBER_LEFT": "{{name}} left",

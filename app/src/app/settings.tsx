@@ -133,7 +133,7 @@ export default function SettingsScreen() {
 
         {pushSupported ? <NotificationsCard /> : null}
 
-        {state.status === 'ready' ? <RoomCard room={state.room} /> : null}
+        {state.status === 'ready' ? <RoomCard room={state.room} myId={state.me.id} /> : null}
 
         {/* Everything here opens a screen with a back button, as rows with a chevron. */}
         {me?.displayName ? (
@@ -412,9 +412,11 @@ function NavRow({ label, onPress }: { label: string; onPress: () => void }) {
   );
 }
 
-function RoomCard({ room }: { room: Room }) {
+// The room, as the one looking sees it: the buddy and who they share it with (not themselves).
+function RoomCard({ room, myId }: { room: Room; myId: string }) {
   const colors = useColors();
   const { t, i18n } = useTranslation();
+  const partner = room.members.find((member) => member.id !== myId);
   const since = new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(
     new Date(room.createdAt),
   );
@@ -432,11 +434,13 @@ function RoomCard({ room }: { room: Room }) {
       <Text style={[styles.label, styles.section, { color: colors.textMuted }]}>
         {t('settings.members')}
       </Text>
-      {room.members.map((member) => (
-        <Text key={member.id} style={[styles.row, { color: colors.text }]}>
-          {member.displayName ?? t('chat.guestName')}
+      {partner ? (
+        <Text style={[styles.name, { color: colors.text }]}>
+          {partner.displayName ?? t('chat.guestName')}
         </Text>
-      ))}
+      ) : (
+        <Text style={[styles.email, { color: colors.textMuted }]}>{t('settings.alone')}</Text>
+      )}
     </View>
   );
 }
