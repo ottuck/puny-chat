@@ -177,7 +177,11 @@ function RootNavigator() {
   }
 
   // Screens with a header: a back button that is always there (components/header-back.tsx).
-  const withHeader = (title: string) => ({ headerShown: true, title, headerLeft: HeaderBack });
+  const withHeader = (title: string) => ({
+    headerShown: true,
+    title,
+    headerLeft: () => <HeaderBack />,
+  });
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
