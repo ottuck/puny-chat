@@ -18,6 +18,7 @@ import { loadPreferences, usePreferences } from '@/lib/preferences';
 import { rememberInviteFromUrl, takePendingInvite } from '@/lib/pending-invite';
 import { registerServiceWorker } from '@/lib/service-worker';
 import { warmUpServer } from '@/lib/warm-up';
+import { watchForNewVersion } from '@/lib/web-update';
 import { useColorMode } from '@/theme';
 
 // Keep the splash screen up until we know where the user belongs (signed out, no room yet, or
@@ -33,6 +34,7 @@ export default function RootLayout() {
     warmUpServer();
     loadPreferences();
     registerServiceWorker();
+    watchForNewVersion();
     // A friend's invite link (join?code=…) may arrive before the friend has signed in.
     rememberInviteFromUrl();
   }, []);
