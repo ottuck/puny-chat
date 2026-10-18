@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Animated, Easing, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GearIcon, HelpIcon } from '@/components/icons';
 import { useColors } from '@/theme';
@@ -16,8 +15,6 @@ type Props = {
   onPressSettings?: () => void;
   // How to raise the buddy (the guide).
   onPressHelp?: () => void;
-  // The guide has not been opened on this device yet: the "?" calls for attention.
-  helpNew?: boolean;
   onPressPartner?: () => void;
 };
 
@@ -29,7 +26,6 @@ export function ChatHeader({
   onPressInvite,
   onPressSettings,
   onPressHelp,
-  helpNew = false,
   onPressPartner,
 }: Props) {
   const colors = useColors();
@@ -92,10 +88,7 @@ export function ChatHeader({
             hitSlop={12}
             style={styles.settingsButton}
           >
-            <Calling on={helpNew}>
-              <HelpIcon color={helpNew ? colors.accent : colors.text} />
-            </Calling>
-            {helpNew ? <View style={[styles.badge, { borderColor: colors.background }]} /> : null}
+            <HelpIcon color={colors.text} />
           </Pressable>
         ) : null}
         {onPressSettings ? (
@@ -114,66 +107,7 @@ export function ChatHeader({
   );
 }
 
-const NATIVE_DRIVER = Platform.OS !== 'web';
-
-// Every few seconds a little pop and wiggle, like the stage's mailbox with a letter in it, while
-// `on`.
-function Calling({ on, children }: { on: boolean; children: React.ReactNode }) {
-  const [pop] = useState(() => new Animated.Value(0));
-  const [wiggle] = useState(() => new Animated.Value(0));
-  useEffect(() => {
-    if (!on) return;
-    const step = (value: Animated.Value, toValue: number, duration: number) =>
-      Animated.timing(value, {
-        toValue,
-        duration,
-        easing: Easing.inOut(Easing.quad),
-        useNativeDriver: NATIVE_DRIVER,
-      });
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.delay(700),
-        step(pop, 1, 160),
-        step(wiggle, -1, 70),
-        step(wiggle, 1, 90),
-        step(wiggle, -1, 90),
-        step(wiggle, 0, 70),
-        step(pop, 0, 200),
-        Animated.delay(1800),
-      ]),
-    );
-    loop.start();
-    return () => {
-      loop.stop();
-      pop.setValue(0);
-      wiggle.setValue(0);
-    };
-  }, [on, pop, wiggle]);
-  return (
-    <Animated.View
-      style={{
-        transform: [
-          { scale: pop.interpolate({ inputRange: [0, 1], outputRange: [1, 1.25] }) },
-          { rotate: wiggle.interpolate({ inputRange: [-1, 1], outputRange: ['-14deg', '14deg'] }) },
-        ],
-      }}
-    >
-      {children}
-    </Animated.View>
-  );
-}
-
 const styles = StyleSheet.create({
-  badge: {
-    position: 'absolute',
-    top: -3,
-    right: -3,
-    width: 11,
-    height: 11,
-    borderRadius: 6,
-    borderWidth: 2,
-    backgroundColor: '#FF5A5F',
-  },
   container: {
     paddingHorizontal: 16,
     paddingTop: 8,
