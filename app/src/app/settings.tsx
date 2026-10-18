@@ -23,6 +23,7 @@ import {
   switchAccount,
 } from '@/features/auth/actions';
 import { appleSignInSupported, linkApple } from '@/features/auth/apple-sign-in';
+import { ChevronRightIcon } from '@/components/icons';
 import { useAuth } from '@/features/auth/auth-provider';
 import { useGuestDaysLeft } from '@/features/auth/guest-expiry';
 import { AppleButton } from '@/features/auth/components/apple-button';
@@ -35,7 +36,6 @@ import {
 } from '@/features/notifications/push';
 import { DisplayCard } from '@/features/preferences/components/display-card';
 import type { Room } from '@/features/room/api';
-import { InviteSheet } from '@/features/room/components/invite-sheet';
 import { useRoom } from '@/features/room/room-provider';
 import { confirm } from '@/lib/confirm';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
@@ -52,7 +52,6 @@ export default function SettingsScreen() {
   const daysLeft = useGuestDaysLeft(account);
 
   const [deleting, setDeleting] = useState(false);
-  const [moving, setMoving] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // A guest who signs out can never come back to this account; say so first.
@@ -113,7 +112,7 @@ export default function SettingsScreen() {
           <Text style={[styles.label, { color: colors.textMuted }]}>{t('settings.profile')}</Text>
           <Text style={[styles.name, { color: colors.text }]}>{me?.displayName ?? ''}</Text>
           <Pressable
-            onPress={() => router.push('/name')}
+            onPress={() => router.push({ pathname: '/name', params: { edit: '1' } })}
             accessibilityRole="button"
             hitSlop={8}
             style={({ pressed }) => [styles.link, { opacity: pressed ? 0.6 : 1 }]}
@@ -136,66 +135,27 @@ export default function SettingsScreen() {
 
         {state.status === 'ready' ? <RoomCard room={state.room} /> : null}
 
+        {/* Everything here opens a screen with a back button, as rows with a chevron. */}
+        {me?.displayName ? (
+          <View style={[styles.card, { backgroundColor: colors.surface }]}>
+            {/* A guest lives only in this app or browser: a code to open their room elsewhere (an
+                account just signs in there). */}
+            {guest && state.status === 'ready' ? (
+              <NavRow label={t('invite.moveTitle')} onPress={() => router.push('/move')} />
+            ) : null}
+            {/* For someone who started solo and got a friend's code later. */}
+            <NavRow label={t('settings.joinWithCode')} onPress={() => router.push('/join')} />
+          </View>
+        ) : null}
+
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <Text style={[styles.label, { color: colors.textMuted }]}>
             {t('support.serviceInfo')}
           </Text>
-          <Pressable
-            onPress={() => router.push('/support')}
-            accessibilityRole="button"
-            style={styles.leave}
-          >
-            <Text style={[styles.row, { color: colors.text }]}>{t('support.title')}</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => router.push('/privacy')}
-            accessibilityRole="link"
-            style={styles.leave}
-          >
-            <Text style={[styles.row, { color: colors.text }]}>{t('privacy.title')}</Text>
-          </Pressable>
+          <NavRow label={t('guide.title')} onPress={() => router.push('/guide')} />
+          <NavRow label={t('support.title')} onPress={() => router.push('/support')} />
+          <NavRow label={t('privacy.title')} onPress={() => router.push('/privacy')} />
         </View>
-
-        <Pressable
-          onPress={() => router.push('/guide')}
-          accessibilityRole="button"
-          style={({ pressed }) => [
-            styles.card,
-            { backgroundColor: colors.surface, opacity: pressed ? 0.7 : 1 },
-          ]}
-        >
-          <Text style={[styles.row, { color: colors.text }]}>{t('guide.title')}</Text>
-        </Pressable>
-
-        {/* A guest lives only in this app or browser: a code to open their room elsewhere (an
-            account just signs in there). */}
-        {guest && state.status === 'ready' ? (
-          <Pressable
-            onPress={() => setMoving(true)}
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.card,
-              { backgroundColor: colors.surface, opacity: pressed ? 0.7 : 1 },
-            ]}
-          >
-            <Text style={[styles.row, { color: colors.text }]}>{t('invite.moveTitle')}</Text>
-          </Pressable>
-        ) : null}
-        <InviteSheet visible={moving} onClose={() => setMoving(false)} self />
-
-        {/* For someone who started solo and got a friend's code later. */}
-        {me?.displayName ? (
-          <Pressable
-            onPress={() => router.push('/join')}
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.card,
-              { backgroundColor: colors.surface, opacity: pressed ? 0.7 : 1 },
-            ]}
-          >
-            <Text style={[styles.row, { color: colors.text }]}>{t('settings.joinWithCode')}</Text>
-          </Pressable>
-        ) : null}
 
         <Pressable
           onPress={onSignOut}
@@ -437,6 +397,21 @@ function NotificationsCard() {
   );
 }
 
+// A row that opens another screen.
+function NavRow({ label, onPress }: { label: string; onPress: () => void }) {
+  const colors = useColors();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      style={({ pressed }) => [styles.navRow, { opacity: pressed ? 0.6 : 1 }]}
+    >
+      <Text style={[styles.row, styles.navLabel, { color: colors.text }]}>{label}</Text>
+      <ChevronRightIcon color={colors.textMuted} />
+    </Pressable>
+  );
+}
+
 function RoomCard({ room }: { room: Room }) {
   const colors = useColors();
   const { t, i18n } = useTranslation();
@@ -477,6 +452,15 @@ const styles = StyleSheet.create({
   },
   section: {
     marginTop: 12,
+  },
+  navRow: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  navLabel: {
+    flex: 1,
   },
   leave: {
     marginTop: 16,

@@ -7,6 +7,7 @@ import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import i18n, { detectLanguage } from '@/i18n';
+import { HeaderBack } from '@/components/header-back';
 import { StatusScreen } from '@/components/status-screen';
 import { WebFrame } from '@/components/web-frame';
 import { AuthProvider, useAuth } from '@/features/auth/auth-provider';
@@ -173,6 +174,9 @@ function RootNavigator() {
     );
   }
 
+  // Screens with a header: a back button that is always there (components/header-back.tsx).
+  const withHeader = (title: string) => ({ headerShown: true, title, headerLeft: HeaderBack });
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={signedIn && state.status === 'ready' && named}>
@@ -188,54 +192,20 @@ function RootNavigator() {
       </Stack.Protected>
       {/* Not before a name: there is nothing of theirs to show or sign out of yet. */}
       <Stack.Protected guard={!!me && named}>
-        <Stack.Screen
-          name="settings"
-          options={{
-            headerShown: true,
-            title: t('settings.title'),
-            headerBackButtonDisplayMode: 'minimal',
-          }}
-        />
-        <Stack.Screen
-          name="guide"
-          options={{
-            headerShown: true,
-            title: t('guide.title'),
-            headerBackButtonDisplayMode: 'minimal',
-          }}
-        />
+        <Stack.Screen name="settings" options={withHeader(t('settings.title'))} />
+        <Stack.Screen name="guide" options={withHeader(t('guide.title'))} />
+        <Stack.Screen name="move" options={withHeader(t('invite.moveTitle'))} />
       </Stack.Protected>
       {/* Also before signing in: "start with an invite code" types the code first (join.tsx). */}
       <Stack.Protected guard={!signedIn || named}>
-        <Stack.Screen
-          name="join"
-          options={{
-            headerShown: true,
-            title: t('join.title'),
-            headerBackButtonDisplayMode: 'minimal',
-          }}
-        />
+        <Stack.Screen name="join" options={withHeader(t('join.title'))} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="sign-in" />
         <Stack.Screen name="demo" />
       </Stack.Protected>
-      <Stack.Screen
-        name="privacy"
-        options={{
-          headerShown: true,
-          title: t('privacy.title'),
-          headerBackButtonDisplayMode: 'minimal',
-        }}
-      />
-      <Stack.Screen
-        name="support"
-        options={{
-          headerShown: true,
-          title: t('support.title'),
-          headerBackButtonDisplayMode: 'minimal',
-        }}
-      />
+      <Stack.Screen name="privacy" options={withHeader(t('privacy.title'))} />
+      <Stack.Screen name="support" options={withHeader(t('support.title'))} />
     </Stack>
   );
 }

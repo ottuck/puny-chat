@@ -1,4 +1,4 @@
-import { router, Stack } from 'expo-router';
+import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
+import { goBack, HeaderBack } from '@/components/header-back';
 import { PageTitle } from '@/components/page-title';
 import { MAX_DISPLAY_NAME, updateMyName } from '@/features/room/api';
 import { errorMessage } from '@/features/room/error-message';
@@ -37,6 +38,9 @@ export default function NameScreen() {
   const [name, setName] = useState(me?.displayName ?? pending.name ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Settings opens it with edit=1. Without it a named person got here another way (e.g. the web's
+  // back button after starting): their place is the chat.
+  const params = useLocalSearchParams<{ edit?: string }>();
 
   const save = async () => {
     setBusy(true);
@@ -62,13 +66,15 @@ export default function NameScreen() {
       setMe(await updateMyName(name.trim()));
       // The room lists members by name too.
       if (state.status === 'ready') await refreshRoom();
-      if (editing) router.back();
+      if (editing) goBack('/settings');
       else router.replace(state.status === 'ready' ? '/' : '/welcome');
     } catch (e) {
       setError(errorMessage(t, e));
       setBusy(false);
     }
   };
+
+  if (editing && params.edit !== '1') return <Redirect href="/" />;
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
@@ -102,9 +108,7 @@ export default function NameScreen() {
         </View>
       ) : null}
       {/* A back button only when coming from settings; first-time naming has nowhere to go back to. */}
-      <Stack.Screen
-        options={{ headerShown: editing, title: '', headerBackButtonDisplayMode: 'minimal' }}
-      />
+      <Stack.Screen options={{ headerShown: editing, title: '', headerLeft: HeaderBack }} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.column}
