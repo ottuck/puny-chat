@@ -30,7 +30,8 @@
     "startNow": "Start now",
     "noAccountNeeded": "No account needed. Guests can use puny-chat for 30 days, and linking an account keeps everything.",
     "demo": "Take a look first",
-    "invited": "You were invited by a friend. Start, and you will go straight to their room."
+    "invited": "You were invited by a friend. Start, and you will go straight to their room.",
+    "withCode": "Start with an invite code"
   },
   "welcome": {
     "title": "A new buddy is about to hatch!",

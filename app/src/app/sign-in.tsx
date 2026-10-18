@@ -12,6 +12,7 @@ import { isCancelledSignIn, signInAsGuest } from '@/features/auth/actions';
 import { appleSignInSupported, signInWithApple } from '@/features/auth/apple-sign-in';
 import { AppleButton } from '@/features/auth/components/apple-button';
 import { googleSignInSupported, signInWithGoogle } from '@/features/auth/google-sign-in';
+import { setJoinIntent } from '@/lib/join-intent';
 import { hasPendingInvite } from '@/lib/pending-invite';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
@@ -64,7 +65,30 @@ export default function SignInScreen() {
         {/* Guest first: nothing stands between opening the app and meeting the buddy. An account
             can be linked later from settings, keeping everything (docs/PROJECT.md). */}
         <View style={styles.actions}>
-          <Button label={t('signIn.startNow')} onPress={() => run(signInAsGuest)} disabled={busy} />
+          <Button
+            label={t('signIn.startNow')}
+            onPress={() =>
+              run(() => {
+                setJoinIntent(false);
+                return signInAsGuest();
+              })
+            }
+            disabled={busy}
+          />
+          {/* Got a friend's code: start as a guest, pick a name, then straight to entering it. */}
+          {invited ? null : (
+            <Button
+              label={t('signIn.withCode')}
+              onPress={() =>
+                run(() => {
+                  setJoinIntent(true);
+                  return signInAsGuest();
+                })
+              }
+              disabled={busy}
+              variant="secondary"
+            />
+          )}
           {/* A scripted room to watch first, no account needed (app/demo.tsx). */}
           <Button
             label={t('signIn.demo')}
