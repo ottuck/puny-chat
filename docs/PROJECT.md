@@ -427,7 +427,8 @@ togetherToday, job, leaning, canChangeJob, jobChangeAt, grown)를 그대로 보�
 
 - 방 생성은 room 저장 → `users.roomId: null, roomJoinId: null` 조건으로 연결. 동시 생성에서 연결하지 못한 후보 room은 지운다.
 - 초대 코드: 4자리(0/O, 1/I/L 제외), 24시간 유효, 한 번만, 대소문자 무시. 채팅 앱은 말풍선을 통째로만 복사하는 경우가 많아 손으로 칠 수 있게
-  짧게 두고, 참가 화면은 초대 메시지를 통째로 붙여 넣어도 링크에서 코드를 꺼낸다. 짧은 대신 틀린 코드는 이용자당 10분에 10번까지
+  짧게 두고, 참가 화면은 초대 메시지를 통째로 붙여 넣어도 링크에서 코드를 꺼낸다. 화면과 입력칸에서는 두 글자씩 끊어 `AB 23`으로 보인다(`invite-code.ts`,
+  띄어쓰기는 보기용). 자리마다 글자 종류를 정하면(영어 2 + 숫자 2) 조합이 크게 줄어(31⁴ ≈ 92만 → 약 3~7만) 그렇게 하지 않는다. 짧은 대신 틀린 코드는 이용자당 10분에 10번까지
   (`INVITATION_RATE_LIMIT`, 서버가 한 대라 메모리에 센다). 만료 1주 뒤 초대 문서를 TTL 인덱스로 지워 코드를 다시 쓴다.
   초대 링크는 `<웹 주소>/join?code=<코드>`. 웹이 로그인 전에 코드를 기억했다가 이름을 정한 뒤 참가 화면을 연다(`lib/pending-invite`).
 - solo room이 있는 사람이 수락하면 `LEAVE_CONFIRMATION_REQUIRED`. 앱이 "지금 Buddy는 사라져요"를 확인받고 `leaveCurrentRoom: true`로 다시 요청하면
