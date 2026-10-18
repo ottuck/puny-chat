@@ -26,11 +26,10 @@
   },
   "signIn": {
     "tagline": "好きな人とおしゃべりしながら、小さなBuddyをいっしょに育てよう。",
-    "google": "Googleで続ける",
+    "google": "Googleで始める",
     "error": "ログインできませんでした。もう一度お試しください。",
     "startNow": "すぐに始める",
     "noAccountNeeded": "アカウントなしで始められます。ゲストは30日間使え、アカウントを連携するとそのまま続けられます。",
-    "demo": "まずは見てみる",
     "invited": "友だちの招待で来ました。始めるとすぐ友だちのルームに入れます。",
     "withCode": "招待コードで始める",
     "start": "はじめる",
@@ -40,8 +39,7 @@
     "title": "新しいBuddyが生まれそう！",
     "subtitle": "名前をつけてあげよう。友だちはいつでも招待できます。",
     "namePlaceholder": "Buddyの名前",
-    "startSolo": "ひとりではじめる",
-    "haveCode": "招待コードを持っている"
+    "startSolo": "Buddyを起こす"
   },
   "join": {
     "title": "コードで参加",

@@ -10,8 +10,8 @@ import i18n, { detectLanguage } from '@/i18n';
 import { StatusScreen } from '@/components/status-screen';
 import { WebFrame } from '@/components/web-frame';
 import { AuthProvider, useAuth } from '@/features/auth/auth-provider';
-import { nameSaved, takeStartCode, useStart } from '@/features/auth/start-flow';
-import { updateMyName } from '@/features/room/api';
+import { nameSaved, roomMade, takeStartCode, useStart } from '@/features/auth/start-flow';
+import { createRoom, updateMyName } from '@/features/room/api';
 import { RoomProvider, useRoom } from '@/features/room/room-provider';
 import { loadPreferences, usePreferences } from '@/lib/preferences';
 import { rememberInviteFromUrl, takePendingInvite } from '@/lib/pending-invite';
@@ -65,19 +65,22 @@ export default function RootLayout() {
 
 function RootNavigator() {
   const { user, initializing } = useAuth();
-  const { state, reload, setMe } = useRoom();
+  const { state, reload, setMe, setRoom } = useRoom();
   const { t, i18n } = useTranslation();
   const signedIn = !!user;
   const pending = useStart();
   const me = state.status === 'none' || state.status === 'ready' ? state.me : null;
   // Guests start without a name; they pick one before anything else (the friend sees it).
   const named = !!me?.displayName;
-  // Just made from the start flow, with the name it was given still to save (start-flow.ts).
+  // Just made by the start flow (start-flow.ts): first the name it was given is saved, then the
+  // room with the egg's name is made, or the friend's code is used. A loading screen meanwhile.
   const savingName = signedIn && !!me && !named && !!pending.name;
+  const makingRoom = signedIn && named && state.status === 'none' && !!pending.buddyName;
   const roomReady = state.status === 'ready';
+  const waking = !!pending.buddyName;
 
-  // Saves the name typed before starting, then goes where a named person goes (the stack was
-  // replaced by the loading screen meanwhile, so it says where). A failure leaves the name screen.
+  // The stack was replaced by the loading screen meanwhile, so each step says where to go. A failure
+  // leaves the screen for doing it by hand (name, or the egg's name).
   useEffect(() => {
     if (!savingName || !pending.name) return;
     let gone = false;
@@ -86,7 +89,19 @@ function RootNavigator() {
         if (gone) return;
         nameSaved();
         setMe(next);
-        setTimeout(() => router.replace(roomReady ? '/' : '/welcome'), 0);
+        if (waking) return; // the room comes next (below)
+        const code = takeStartCode();
+        setTimeout(
+          () =>
+            router.replace(
+              code
+                ? { pathname: '/join', params: { code, auto: '1' } }
+                : roomReady
+                  ? '/'
+                  : '/welcome',
+            ),
+          0,
+        );
       })
       .catch((e) => {
         console.warn('saving the name failed', e);
@@ -95,7 +110,26 @@ function RootNavigator() {
     return () => {
       gone = true;
     };
-  }, [savingName, pending.name, roomReady, setMe]);
+  }, [savingName, pending.name, waking, roomReady, setMe]);
+
+  useEffect(() => {
+    if (!makingRoom || !pending.buddyName) return;
+    let gone = false;
+    createRoom(pending.buddyName)
+      .then((room) => {
+        if (gone) return;
+        roomMade();
+        setRoom(room);
+        setTimeout(() => router.replace('/'), 0);
+      })
+      .catch((e) => {
+        console.warn('making the room failed', e);
+        if (!gone) roomMade();
+      });
+    return () => {
+      gone = true;
+    };
+  }, [makingRoom, pending.buddyName, setRoom]);
   const settled = !initializing && (!signedIn || state.status !== 'loading');
   const pathname = usePathname();
   const publicPage = pathname === '/privacy' || pathname === '/support';
@@ -128,7 +162,7 @@ function RootNavigator() {
 
   if (initializing && !publicPage) return null;
   if (signedIn && state.status === 'loading' && !publicPage) return <StatusScreen loading />;
-  if (savingName) return <StatusScreen loading />;
+  if (savingName || makingRoom) return <StatusScreen loading />;
   if (signedIn && state.status === 'error' && !publicPage) {
     return (
       <StatusScreen
@@ -144,7 +178,8 @@ function RootNavigator() {
       <Stack.Protected guard={signedIn && state.status === 'ready' && named}>
         <Stack.Screen name="index" />
       </Stack.Protected>
-      <Stack.Protected guard={signedIn && state.status === 'none' && named}>
+      {/* Also before signing in: the egg's name is the start flow's last step. */}
+      <Stack.Protected guard={!signedIn || (state.status === 'none' && named)}>
         <Stack.Screen name="welcome" />
       </Stack.Protected>
       {/* Also before signing in: the start flow asks for the name before making the guest. */}

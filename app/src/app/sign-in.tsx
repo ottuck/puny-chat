@@ -12,6 +12,7 @@ import { isCancelledSignIn, signInErrorKey } from '@/features/auth/actions';
 import { appleSignInSupported, signInWithApple } from '@/features/auth/apple-sign-in';
 import { AppleButton } from '@/features/auth/components/apple-button';
 import { googleSignInSupported, signInWithGoogle } from '@/features/auth/google-sign-in';
+import { resetStart } from '@/features/auth/start-flow';
 import { hasPendingInvite } from '@/lib/pending-invite';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
@@ -30,6 +31,7 @@ export default function SignInScreen() {
 
   // On success the auth listener swaps this screen out, so only failures need handling here.
   const run = async (signIn: () => Promise<void>) => {
+    resetStart();
     setBusy(true);
     setError(null);
     try {
@@ -66,12 +68,22 @@ export default function SignInScreen() {
         <View style={styles.actions}>
           {/* Starting always shows the scripted room first (app/demo.tsx, no account needed);
               starting for real is a tap from there. */}
-          <Button label={t('signIn.start')} onPress={() => router.push('/demo')} disabled={busy} />
+          <Button
+            label={t('signIn.start')}
+            onPress={() => {
+              resetStart();
+              router.push('/demo');
+            }}
+            disabled={busy}
+          />
           {/* Got a friend's code: type it first, then a name, then straight into their room. */}
           {invited ? null : (
             <Button
               label={t('signIn.withCode')}
-              onPress={() => router.push('/join')}
+              onPress={() => {
+                resetStart();
+                router.push('/join');
+              }}
               disabled={busy}
               variant="secondary"
             />

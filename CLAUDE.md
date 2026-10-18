@@ -67,7 +67,7 @@
   native의 `getReactNativePersistence` import에만 `@ts-expect-error`를 둔다.
 - 로그인 여부로 화면을 나누는 건 `_layout.tsx`의 `Stack.Protected`.
 - **게스트 우선.** 첫 화면의 주 버튼 "시작하기"는 구경하기를 먼저 보여 주고, 거기서 시작하기 = Firebase 익명 로그인이다. 운영에서도 정식 기능이다.
-  게스트도 모든 기능을 쓴다. 이름을 먼저 받고(계정 전, `features/auth/start-flow`) "다음"에서 익명 로그인 후 `PATCH /api/me`로 저장한다.
+  게스트도 모든 기능을 쓴다. 이름·알 이름을 계정 없이 먼저 받고(`features/auth/start-flow`), 마지막 단계에서 익명 로그인 후 이름 저장·방 만들기.
 - 계정은 나중에 설정에서 연결한다. 익명 계정에 Google을 `linkWithPopup`으로 붙이므로 Firebase uid가 그대로라 서버 데이터를
   옮기지 않는다. 이미 다른 사용자인 Google 계정이면 합치지 않고, 확인 후 그 계정으로 전환한다(게스트 데이터는 이 기기에서 못 봄).
 - 연결은 웹은 Google, 아이폰은 Apple(`features/auth/apple-sign-in.ios.ts`, `expo-apple-authentication` → Firebase

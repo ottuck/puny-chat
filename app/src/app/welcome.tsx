@@ -1,12 +1,24 @@
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PageTitle } from '@/components/page-title';
 import { BuddyAvatar } from '@/features/buddy/components/buddy-avatar';
 import { Button } from '@/components/button';
+import { GearIcon } from '@/components/icons';
+import { isCancelledSignIn, signInErrorKey } from '@/features/auth/actions';
+import { useAuth } from '@/features/auth/auth-provider';
+import { finishStart, useStart } from '@/features/auth/start-flow';
 import { createRoom } from '@/features/room/api';
 import { errorMessage } from '@/features/room/error-message';
 import { useRoom } from '@/features/room/room-provider';
@@ -14,12 +26,17 @@ import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
 const MAX_BUDDY_NAME = 12; // server: Buddy.MAX_NAME_LENGTH
 
-// First screen after signing in without a room: name the egg and start solo, or join a friend
-// (docs/PROJECT.md, 핵심 경험).
+// Naming the egg (docs/PROJECT.md, 핵심 경험). Starting, it is the last step: waking the buddy makes
+// the guest, and the guards then save the name and make the room (start-flow.ts). Signed in without a
+// room (someone who left one), it makes the room here; settings are behind the gear there, as in the
+// chat (a friend's code is in settings too).
 export default function WelcomeScreen() {
   const colors = useColors();
   const { t } = useTranslation();
   const { setRoom } = useRoom();
+  const { user } = useAuth();
+  const pending = useStart();
+  const starting = !user;
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +44,15 @@ export default function WelcomeScreen() {
   const start = async () => {
     setBusy(true);
     setError(null);
+    if (starting) {
+      try {
+        await finishStart(name.trim());
+      } catch (e) {
+        if (!isCancelledSignIn(e)) setError(t(signInErrorKey(e)));
+        setBusy(false);
+      }
+      return;
+    }
     try {
       setRoom(await createRoom(name.trim()));
     } catch (e) {
@@ -35,9 +61,34 @@ export default function WelcomeScreen() {
     }
   };
 
+  // The way in skips the name only after a reload (it lives in memory): ask it again.
+  if (starting && !pending.name) return <Redirect href="/name" />;
+
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
       <PageTitle />
+      <View style={styles.topBar}>
+        {starting ? (
+          <Pressable
+            onPress={() => (router.canGoBack() ? router.back() : router.replace('/name'))}
+            disabled={busy}
+            accessibilityRole="button"
+            hitSlop={10}
+          >
+            <Text style={[styles.back, { color: colors.textMuted }]}>{t('common.back')}</Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={() => router.push('/settings')}
+            accessibilityRole="button"
+            accessibilityLabel={t('settings.title')}
+            hitSlop={12}
+            style={styles.gear}
+          >
+            <GearIcon color={colors.text} />
+          </Pressable>
+        )}
+      </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.column}
@@ -70,18 +121,6 @@ export default function WelcomeScreen() {
 
         <View style={styles.actions}>
           <Button label={t('welcome.startSolo')} onPress={start} disabled={busy || !name.trim()} />
-          <Button
-            label={t('welcome.haveCode')}
-            onPress={() => router.push('/join')}
-            disabled={busy}
-            variant="secondary"
-          />
-          <Button
-            label={t('settings.title')}
-            onPress={() => router.push('/settings')}
-            disabled={busy}
-            variant="secondary"
-          />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -99,6 +138,20 @@ const styles = StyleSheet.create({
     maxWidth: MAX_CONTENT_WIDTH,
     paddingHorizontal: 24,
     paddingBottom: 24,
+  },
+  topBar: {
+    width: '100%',
+    maxWidth: MAX_CONTENT_WIDTH,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    minHeight: 36,
+  },
+  back: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  gear: {
+    alignSelf: 'flex-end',
   },
   hero: {
     flex: 1,
