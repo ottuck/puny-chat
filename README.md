@@ -71,8 +71,9 @@ at you, no daily missions. Just **having something to raise together** makes the
 
 **🤝 For two**
 - When you both send a message on the same day, a **together bonus** 🤝 once a day. It grows better when you two talk
-- **Start right away**, no sign-up: just pick a name. Link a Google account later and everything carries over
-- Came alone? **Take a look first** plays a 55-second room where the egg grows into an adult
+- No sign-up. **Get started** first plays a 55-second room where the egg grows into an adult; then pick your name and the egg's,
+  and that's it. Link a Google account later and everything carries over
+- Got a friend's code? **Start with an invite code**: the code and your name, and you're in their room
 - Start on your own and invite one friend any time; the Buddy you've been raising stays
 - At most two people per room. A space just for you two
 
