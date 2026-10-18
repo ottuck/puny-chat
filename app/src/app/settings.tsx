@@ -50,6 +50,9 @@ export default function SettingsScreen() {
   const me = state.status === 'ready' || state.status === 'none' ? state.me : null;
   const guest = !!account?.guest;
   const daysLeft = useGuestDaysLeft(account);
+  const alone = state.status === 'ready' && state.room.members.length < 2;
+  const showMove = guest && state.status === 'ready';
+  const showJoin = !!me?.displayName;
 
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -136,15 +139,21 @@ export default function SettingsScreen() {
         {state.status === 'ready' ? <RoomCard room={state.room} myId={state.me.id} /> : null}
 
         {/* Everything here opens a screen with a back button, as rows with a chevron. */}
-        {me?.displayName ? (
+        {showMove || showJoin ? (
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
             {/* A guest lives only in this app or browser: a code to open their room elsewhere (an
                 account just signs in there). */}
-            {guest && state.status === 'ready' ? (
+            {showMove ? (
               <NavRow label={t('invite.moveTitle')} onPress={() => router.push('/move')} />
             ) : null}
-            {/* For someone who started solo and got a friend's code later. */}
-            <NavRow label={t('settings.joinWithCode')} onPress={() => router.push('/join')} />
+            {showJoin ? (
+              // Alone, a friend's code is the likely next step: it stands out.
+              <NavRow
+                label={t('settings.joinWithCode')}
+                onPress={() => router.push('/join')}
+                accent={alone}
+              />
+            ) : null}
           </View>
         ) : null}
 
@@ -398,7 +407,15 @@ function NotificationsCard() {
 }
 
 // A row that opens another screen.
-function NavRow({ label, onPress }: { label: string; onPress: () => void }) {
+function NavRow({
+  label,
+  onPress,
+  accent = false,
+}: {
+  label: string;
+  onPress: () => void;
+  accent?: boolean;
+}) {
   const colors = useColors();
   return (
     <Pressable
@@ -406,8 +423,17 @@ function NavRow({ label, onPress }: { label: string; onPress: () => void }) {
       accessibilityRole="button"
       style={({ pressed }) => [styles.navRow, { opacity: pressed ? 0.6 : 1 }]}
     >
-      <Text style={[styles.row, styles.navLabel, { color: colors.text }]}>{label}</Text>
-      <ChevronRightIcon color={colors.textMuted} />
+      <Text
+        style={[
+          styles.row,
+          styles.navLabel,
+          { color: accent ? colors.accent : colors.text },
+          accent && styles.accentLabel,
+        ]}
+      >
+        {label}
+      </Text>
+      <ChevronRightIcon color={accent ? colors.accent : colors.textMuted} />
     </Pressable>
   );
 }
@@ -465,6 +491,9 @@ const styles = StyleSheet.create({
   },
   navLabel: {
     flex: 1,
+  },
+  accentLabel: {
+    fontWeight: '600',
   },
   leave: {
     marginTop: 16,
