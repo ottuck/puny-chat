@@ -153,7 +153,6 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
             <EmptyChat
               buddyName={buddy.name}
               partnerName={partner ? (partner.displayName ?? '') : null}
-              onInvite={() => setInviteOpen(true)}
             />
           ) : (
             <MessageList
