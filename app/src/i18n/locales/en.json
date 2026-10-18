@@ -182,6 +182,9 @@
       "bath1": "Ahh, nice",
       "bath2": "So warm",
       "bath3": "I could live here",
+      "bathTap1": "Hehe, that tickles!",
+      "bathTap2": "Wanna come in?",
+      "bathTap3": "The water's just right~",
       "snail": "A snail came by",
       "sparrow": "Tweet tweet, hi!",
       "catTail": "…a cat?",
@@ -325,7 +328,8 @@
     "bath": {
       "go": "Go to the hot spring",
       "home": "Go back home",
-      "bucket": "Bucket"
+      "bucket": "Bucket",
+      "splash": "Splash the water"
     },
     "dream": {
       "caption": "In a dream…",

@@ -35,7 +35,8 @@ import { Snowfall } from './weather';
 // The hot spring (docs/fun-improvements.md, 목욕): the buddy soaks in a wooden tub in the middle of
 // the stage, steam rising, a towel on its head. Nothing happens to it here: it shows the buddy as it
 // was when it came (buddy-scene.tsx keeps that), and what happens in the room meanwhile is only in the
-// chat. Petting it splashes the water. From a child up it says something now and then.
+// chat. Tapping the tub splashes the water; tapping the buddy makes it hop up, smiling, and from a
+// child up say something. From a child up it also says something now and then on its own.
 
 const NATIVE_DRIVER = Platform.OS !== 'web';
 const TICK_MS = 450;
@@ -46,7 +47,11 @@ const SPLASH_MS = 700;
 const RATTLE_MS = 650;
 const TALK_EVERY_MS = 9000;
 const TALK_MS = 3000;
+const HOP_MS = 600;
 const LINES = ['bath1', 'bath2', 'bath3'] as const;
+// What it says when tapped, in turn.
+const TAP_LINES = ['bathTap1', 'bathTap2', 'bathTap3'] as const;
+type Line = (typeof LINES)[number] | (typeof TAP_LINES)[number];
 // Tile seams on the stone floor, in points.
 const TILE = 28;
 
@@ -205,7 +210,13 @@ export function BathStage({
   const [splashing, setSplashing] = useState(false);
   const splashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [rattle] = useState(() => new Animated.Value(0));
-  const [line, setLine] = useState<(typeof LINES)[number] | null>(null);
+  const [hop] = useState(() => new Animated.Value(0));
+  const [hopping, setHopping] = useState(false);
+  const hopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [line, setLine] = useState<Line | null>(null);
+  const hideLine = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saidAt = useRef(0);
+  const nextTap = useRef(0);
 
   // It sways a little in the water.
   useEffect(() => {
@@ -229,28 +240,63 @@ export function BathStage({
     return () => loop.stop();
   }, [bob]);
 
-  // Now and then, a word about the water (from a child up, like everywhere).
+  // Now and then, a word about the water (from a child up, like everywhere). Not right after a
+  // word to a tap: that one stays up.
   const talks = stage !== 'BABY';
+  const say = (next: Line) => {
+    if (hideLine.current) clearTimeout(hideLine.current);
+    saidAt.current = Date.now();
+    setLine(next);
+    hideLine.current = setTimeout(() => setLine(null), TALK_MS);
+  };
   useEffect(() => {
     if (!talks) return;
-    let hide: ReturnType<typeof setTimeout> | undefined;
     let next = 0;
     const timer = setInterval(() => {
+      if (Date.now() - saidAt.current < TALK_EVERY_MS) return;
+      if (hideLine.current) clearTimeout(hideLine.current);
+      saidAt.current = Date.now();
       setLine(LINES[next++ % LINES.length]);
-      hide = setTimeout(() => setLine(null), TALK_MS);
+      hideLine.current = setTimeout(() => setLine(null), TALK_MS);
     }, TALK_EVERY_MS);
-    return () => {
-      clearInterval(timer);
-      if (hide) clearTimeout(hide);
-    };
+    return () => clearInterval(timer);
   }, [talks]);
 
   useEffect(
     () => () => {
       if (splashTimer.current) clearTimeout(splashTimer.current);
+      if (hopTimer.current) clearTimeout(hopTimer.current);
+      if (hideLine.current) clearTimeout(hideLine.current);
     },
     [],
   );
+
+  // The buddy, tapped: a hop up out of the water with a big smile, and from a child up a word.
+  const tapBuddy = () => {
+    if (hopTimer.current) clearTimeout(hopTimer.current);
+    setHopping(true);
+    hop.stopAnimation();
+    hop.setValue(0);
+    Animated.sequence([
+      Animated.timing(hop, {
+        toValue: 1,
+        duration: HOP_MS * 0.4,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: NATIVE_DRIVER,
+      }),
+      Animated.timing(hop, {
+        toValue: 0,
+        duration: HOP_MS * 0.6,
+        easing: Easing.bounce,
+        useNativeDriver: NATIVE_DRIVER,
+      }),
+    ]).start();
+    hopTimer.current = setTimeout(() => {
+      hopTimer.current = null;
+      setHopping(false);
+    }, HOP_MS);
+    if (talks) say(TAP_LINES[nextTap.current++ % TAP_LINES.length]);
+  };
 
   // The bucket by the tub: a tap knocks it about on the stone, a clatter of small shakes.
   const knock = () => {
@@ -264,7 +310,8 @@ export function BathStage({
     }).start();
   };
 
-  const pet = () => {
+  // The water, tapped: drops fly up out of the tub.
+  const splashWater = () => {
     if (splashTimer.current) clearTimeout(splashTimer.current);
     setSplashing(true);
     splash.setValue(0);
@@ -291,15 +338,16 @@ export function BathStage({
   const buddyLeft = tubLeft + tub.inset * scale;
   const buddyBottom = tubBottom + TUB_SINK * scale;
   const spriteHeight = grid.length * scale;
-  // Eyes shut and smiling most of the time; a blink in between; a big smile when splashed.
+  // Eyes shut and smiling most of the time; a blink in between; a big smile when splashed or tapped.
   const cycle = tick % (BLISS_TICKS + AWAKE_TICKS);
-  const pose: Pose = splashing
-    ? 'happy'
-    : cycle < BLISS_TICKS
+  const pose: Pose =
+    splashing || hopping
       ? 'happy'
-      : cycle === BLISS_TICKS + 2
-        ? 'blink'
-        : 'idle';
+      : cycle < BLISS_TICKS
+        ? 'happy'
+        : cycle === BLISS_TICKS + 2
+          ? 'blink'
+          : 'idle';
   const drops = [
     { dx: -0.9, rise: 7 },
     { dx: -0.4, rise: 10 },
@@ -370,11 +418,17 @@ export function BathStage({
 
       {width > 0 ? (
         <>
-          <View style={[styles.absolute, styles.passThrough, { left: tubLeft, bottom: waterTop }]}>
-            <PixelSprite frame={tub.back} palette={BATH_PALETTE} scale={scale} />
-          </View>
+          {/* The tub's rim and front splash the water; the buddy between them hops (above). */}
           <Pressable
-            onPress={pet}
+            onPress={splashWater}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            style={[styles.absolute, { left: tubLeft, bottom: waterTop }]}
+          >
+            <PixelSprite frame={tub.back} palette={BATH_PALETTE} scale={scale} />
+          </Pressable>
+          <Pressable
+            onPress={tapBuddy}
             accessibilityRole="button"
             accessibilityLabel={t('buddy.pet', { buddy: buddy.name })}
             style={[styles.absolute, { left: buddyLeft, bottom: buddyBottom }]}
@@ -382,7 +436,12 @@ export function BathStage({
             <Animated.View
               style={{
                 transform: [
-                  { translateY: bob.interpolate({ inputRange: [0, 1], outputRange: [0, -scale] }) },
+                  {
+                    translateY: Animated.add(
+                      bob.interpolate({ inputRange: [0, 1], outputRange: [0, -scale] }),
+                      hop.interpolate({ inputRange: [0, 1], outputRange: [0, -4 * scale] }),
+                    ),
+                  },
                 ],
               }}
             >
@@ -401,9 +460,14 @@ export function BathStage({
               />
             ) : null}
           </Pressable>
-          <View style={[styles.absolute, styles.passThrough, { left: tubLeft, bottom: tubBottom }]}>
+          <Pressable
+            onPress={splashWater}
+            accessibilityRole="button"
+            accessibilityLabel={t('buddy.bath.splash')}
+            style={[styles.absolute, { left: tubLeft, bottom: tubBottom }]}
+          >
             <PixelSprite frame={tub.front} palette={BATH_PALETTE} scale={scale} />
-          </View>
+          </Pressable>
           <Pressable
             onPress={knock}
             accessibilityRole="button"
