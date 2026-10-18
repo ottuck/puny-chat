@@ -31,7 +31,9 @@
     "noAccountNeeded": "No account needed. Guests can use puny-chat for 30 days, and linking an account keeps everything.",
     "demo": "Take a look first",
     "invited": "You were invited by a friend. Start, and you will go straight to their room.",
-    "withCode": "Start with an invite code"
+    "withCode": "Start with an invite code",
+    "start": "Get started",
+    "tooMany": "Started too many times in a short while. Please try again in a bit."
   },
   "welcome": {
     "title": "A new buddy is about to hatch!",
@@ -49,7 +51,8 @@
     "leaveConfirm": "Join anyway",
     "seatTitle": "Come in as {{name}}?",
     "seatMessage": "This code takes over {{name}}'s seat. You pick up the conversation so far, and the place {{name}} used before leaves the room.\n\nIf you're not {{name}}, cancel.",
-    "seatConfirm": "Come in"
+    "seatConfirm": "Come in",
+    "beforeStart": "Next, pick a name and you're in your friend's room. No account needed."
   },
   "chat": {
     "composerPlaceholder": "Message",

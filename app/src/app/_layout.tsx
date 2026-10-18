@@ -79,12 +79,12 @@ function RootNavigator() {
   // own navigation would cover the join screen.
   useEffect(() => {
     if (!canJoin || (pathname !== '/welcome' && pathname !== '/')) return;
-    const code = takePendingInvite();
-    if (!code && !takeJoinIntent()) return;
-    const timer = setTimeout(
-      () => router.push(code ? { pathname: '/join', params: { code } } : '/join'),
-      0,
-    );
+    // A code typed before starting is used right away (auto); one from a link is shown to confirm.
+    const typed = takeJoinIntent();
+    const code = takePendingInvite() ?? typed;
+    if (!code) return;
+    const params = typed ? { code, auto: '1' } : { code };
+    const timer = setTimeout(() => router.push({ pathname: '/join', params }), 0);
     return () => clearTimeout(timer);
   }, [canJoin, pathname]);
 
@@ -123,6 +123,9 @@ function RootNavigator() {
       </Stack.Protected>
       <Stack.Protected guard={!!me}>
         <Stack.Screen name="name" />
+      </Stack.Protected>
+      {/* Not before a name: there is nothing of theirs to show or sign out of yet. */}
+      <Stack.Protected guard={!!me && named}>
         <Stack.Screen
           name="settings"
           options={{
@@ -140,7 +143,8 @@ function RootNavigator() {
           }}
         />
       </Stack.Protected>
-      <Stack.Protected guard={signedIn && named}>
+      {/* Also before signing in: "start with an invite code" types the code first (join.tsx). */}
+      <Stack.Protected guard={!signedIn || named}>
         <Stack.Screen
           name="join"
           options={{

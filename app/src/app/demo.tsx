@@ -15,7 +15,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { Button } from '@/components/button';
 import { PageTitle } from '@/components/page-title';
-import { isCancelledSignIn, signInAsGuest } from '@/features/auth/actions';
+import { isCancelledSignIn, signInAsGuest, signInErrorKey } from '@/features/auth/actions';
 import { BuddySheet } from '@/features/buddy/components/buddy-sheet';
 import { BuddyStage } from '@/features/buddy/components/buddy-stage';
 import { StageShade } from '@/features/buddy/components/stage-shade';
@@ -64,7 +64,7 @@ function DemoScreen({ onReplay }: { onReplay: () => void }) {
     } catch (e) {
       if (!isCancelledSignIn(e)) {
         console.warn(e);
-        setError(t('signIn.error'));
+        setError(t(signInErrorKey(e)));
       }
       setStarting(false);
     }
@@ -87,8 +87,20 @@ function DemoScreen({ onReplay }: { onReplay: () => void }) {
           <Text style={[styles.barText, { color: colors.textMuted }]} numberOfLines={1}>
             {t('demo.badge')}
           </Text>
-          <Pressable onPress={start} disabled={starting} accessibilityRole="button" hitSlop={10}>
-            <Text style={[styles.barLink, { color: colors.accent }]}>{t('demo.startShort')}</Text>
+          {/* Starting is the point of the tour: a filled button, there all along. */}
+          <Pressable
+            onPress={start}
+            disabled={starting}
+            accessibilityRole="button"
+            hitSlop={6}
+            style={({ pressed }) => [
+              styles.startButton,
+              { backgroundColor: colors.accent, opacity: pressed || starting ? 0.7 : 1 },
+            ]}
+          >
+            <Text style={[styles.startLabel, { color: colors.onAccent }]}>
+              {t('demo.startShort')}
+            </Text>
           </Pressable>
         </View>
         <ChatHeader
@@ -188,6 +200,15 @@ const styles = StyleSheet.create({
   barLink: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  startButton: {
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  startLabel: {
+    fontSize: 15,
+    fontWeight: '700',
   },
   list: {
     flex: 1,

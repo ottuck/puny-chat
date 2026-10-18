@@ -8,11 +8,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PageTitle } from '@/components/page-title';
 import { BuddyAvatar } from '@/features/buddy/components/buddy-avatar';
 import { Button } from '@/components/button';
-import { isCancelledSignIn, signInAsGuest } from '@/features/auth/actions';
+import { isCancelledSignIn, signInErrorKey } from '@/features/auth/actions';
 import { appleSignInSupported, signInWithApple } from '@/features/auth/apple-sign-in';
 import { AppleButton } from '@/features/auth/components/apple-button';
 import { googleSignInSupported, signInWithGoogle } from '@/features/auth/google-sign-in';
-import { setJoinIntent } from '@/lib/join-intent';
 import { hasPendingInvite } from '@/lib/pending-invite';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
@@ -40,7 +39,7 @@ export default function SignInScreen() {
         console.warn(e);
         // In development, show the Firebase error code (e.g. a provider not enabled in the console).
         const code = __DEV__ && e instanceof FirebaseError ? ` (${e.code})` : '';
-        setError(t('signIn.error') + code);
+        setError(t(signInErrorKey(e)) + code);
       }
     } finally {
       setBusy(false);
@@ -65,37 +64,18 @@ export default function SignInScreen() {
         {/* Guest first: nothing stands between opening the app and meeting the buddy. An account
             can be linked later from settings, keeping everything (docs/PROJECT.md). */}
         <View style={styles.actions}>
-          <Button
-            label={t('signIn.startNow')}
-            onPress={() =>
-              run(() => {
-                setJoinIntent(false);
-                return signInAsGuest();
-              })
-            }
-            disabled={busy}
-          />
-          {/* Got a friend's code: start as a guest, pick a name, then straight to entering it. */}
+          {/* Starting always shows the scripted room first (app/demo.tsx, no account needed);
+              starting for real is a tap from there. */}
+          <Button label={t('signIn.start')} onPress={() => router.push('/demo')} disabled={busy} />
+          {/* Got a friend's code: type it first, then a name, then straight into their room. */}
           {invited ? null : (
             <Button
               label={t('signIn.withCode')}
-              onPress={() =>
-                run(() => {
-                  setJoinIntent(true);
-                  return signInAsGuest();
-                })
-              }
+              onPress={() => router.push('/join')}
               disabled={busy}
               variant="secondary"
             />
           )}
-          {/* A scripted room to watch first, no account needed (app/demo.tsx). */}
-          <Button
-            label={t('signIn.demo')}
-            onPress={() => router.push('/demo')}
-            disabled={busy}
-            variant="secondary"
-          />
           {googleSignInSupported ? (
             <Button
               label={t('signIn.google')}

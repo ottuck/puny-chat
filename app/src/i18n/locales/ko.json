@@ -31,7 +31,9 @@
     "noAccountNeeded": "계정 없이 시작할 수 있어요. 게스트는 30일 동안 쓸 수 있고, 계정을 연결하면 그대로 이어져요.",
     "demo": "먼저 구경하기",
     "invited": "친구의 초대로 왔어요. 시작하면 바로 친구의 방에 들어갈 수 있어요.",
-    "withCode": "초대 코드로 시작하기"
+    "withCode": "초대 코드로 시작하기",
+    "start": "시작하기",
+    "tooMany": "짧은 시간에 여러 번 시작했어요. 잠시 뒤에 다시 시도해 주세요."
   },
   "welcome": {
     "title": "새로운 Buddy가 태어나려고 해요!",
@@ -49,7 +51,8 @@
     "leaveConfirm": "참가하기",
     "seatTitle": "{{name}}님으로 이어서 들어갈까요?",
     "seatMessage": "이 코드는 {{name}}님 자리를 이어받는 코드예요. 지금까지의 대화를 이어받고, {{name}}님이 원래 쓰던 곳은 방에서 나가요.\n\n{{name}}님이 아니라면 취소해 주세요.",
-    "seatConfirm": "이어서 들어가기"
+    "seatConfirm": "이어서 들어가기",
+    "beforeStart": "다음에서 이름을 정하면 바로 친구의 방에 들어가요. 계정 없이 시작해요."
   },
   "chat": {
     "composerPlaceholder": "메시지",
