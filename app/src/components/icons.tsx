@@ -27,3 +27,26 @@ export function GearIcon({ color, size = 24 }: Props) {
     </Svg>
   );
 }
+
+export function ChevronLeftIcon({ color, size = 24 }: Props) {
+  return (
+    <Svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth={2.2}
+    >
+      <Path d="m15 18-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+export function ChevronRightIcon({ color, size = 20 }: Props) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2}>
+      <Path d="m9 18 6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}

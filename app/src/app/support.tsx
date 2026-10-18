@@ -15,6 +15,7 @@ import {
 
 import { Button } from '@/components/button';
 import { PageTitle } from '@/components/page-title';
+import { goBack, useHome } from '@/components/header-back';
 import { useAuth } from '@/features/auth/auth-provider';
 import { errorMessage } from '@/features/room/error-message';
 import { useRoom } from '@/features/room/room-provider';
@@ -37,6 +38,7 @@ export default function SupportScreen() {
   const colors = useColors();
   const { t } = useTranslation();
   const { user } = useAuth();
+  const home = useHome();
   const { state, reload } = useRoom();
   const params = useLocalSearchParams<{ type?: string; roomId?: string; targetId?: string }>();
   const [selectedType, setType] = useState<'inquiry' | 'report'>(
@@ -202,7 +204,7 @@ export default function SupportScreen() {
                 {t(receiptCopied ? 'support.copied' : 'support.copyReceipt')}
               </Text>
             </Pressable>
-            <Button label={t('support.done')} onPress={() => router.replace('/')} />
+            <Button label={t('support.done')} onPress={() => goBack(home)} />
           </View>
         ) : user ? (
           <View style={[styles.card, { backgroundColor: colors.surface }]}>

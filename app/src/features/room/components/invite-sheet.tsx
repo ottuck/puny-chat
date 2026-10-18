@@ -43,7 +43,8 @@ export function InviteContent({
   partnerName,
   self = false,
 }: {
-  onClose: () => void;
+  // A sheet's close; none on a screen (it has a header).
+  onClose?: () => void;
   partnerName?: string;
   self?: boolean;
 }) {
@@ -107,11 +108,13 @@ export function InviteContent({
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <View style={[styles.column, { paddingBottom: 16 + insets.bottom }]}>
-        <View style={styles.topBar}>
-          <Pressable onPress={onClose} accessibilityRole="button" hitSlop={12}>
-            <Text style={[styles.close, { color: colors.accent }]}>{t('common.close')}</Text>
-          </Pressable>
-        </View>
+        {onClose ? (
+          <View style={styles.topBar}>
+            <Pressable onPress={onClose} accessibilityRole="button" hitSlop={12}>
+              <Text style={[styles.close, { color: colors.accent }]}>{t('common.close')}</Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         <Text style={[styles.title, { color: colors.text }]}>
           {self
