@@ -129,7 +129,11 @@ export default function JoinScreen() {
             { color: colors.text, backgroundColor: colors.surface, borderColor: colors.border },
           ]}
         />
-        {error ? <Text style={[styles.error, { color: colors.accent }]}>{error}</Text> : null}
+        {error ? (
+          <Text lineBreakStrategyIOS="hangul-word" style={[styles.error, { color: colors.accent }]}>
+            {error}
+          </Text>
+        ) : null}
         <Button
           label={user ? t('join.submit') : t('name.next')}
           onPress={submit}
