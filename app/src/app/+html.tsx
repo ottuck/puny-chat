@@ -59,8 +59,11 @@ export default function Root({ children }: PropsWithChildren) {
 // line still breaks. Only for Korean: Japanese has no spaces to break at.
 const pageStyle = `
 body { background-color: #F6F4F1; }
-/* A long press in the chat opens the reaction picker, as in the app: not a text selection or iOS Safari's photo menu. */
-#message-list { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+/* As in the app, a long press is not a text selection or iOS Safari's own menu: in the chat it opens the reaction
+   picker. iOS selects from the page down, so the whole page; fields and text marked selectable (Text selectable)
+   still can be. */
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
 @media (prefers-color-scheme: dark) {
   body { background-color: #16161A; }
 }
