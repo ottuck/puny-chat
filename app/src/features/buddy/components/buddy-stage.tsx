@@ -18,6 +18,7 @@ import { ProgressBar } from '@/components/progress-bar';
 import { useColorMode, useColors } from '@/theme';
 
 import { type BuddyJob, type BuddyView, JOB_CHANGE_LEVELS, NEXT_STEP_AT } from '../api';
+import { JOB_ICON } from '../jobs';
 import {
   BUTTERFLY,
   butterflyAt,
@@ -59,7 +60,7 @@ import {
 } from '../pixel/sprites';
 import type { Reaction, ReactionKind } from '../reactions';
 import type { ChatWord, Mood } from '../chat-words';
-import { JOB_LINES, type Line, pick, useBuddyTalk } from '../use-buddy-talk';
+import { JOB_LINES, type Line, NEW_JOB_LINE, pick, useBuddyTalk } from '../use-buddy-talk';
 import { RoomLight, roomHour } from './room-light';
 import { SpeechBubble } from './speech-bubble';
 import { Feathers, TOP_NOTE_MS, TopLevelLight, TopLevelNotes } from './top-level';
@@ -328,26 +329,37 @@ const REACTION_MS: Record<ReactionKind, number> = {
   levelUp: 1600,
   maxLevel: 2600,
   evolved: 2600,
+  jobChanged: 3200,
   together: 2400,
   here: 2000,
   joined: 3000,
 };
 // Of 'fed', the part spent chewing; the rest is a happy heart.
 const CHEW_MS = 2400;
-// Of 'evolved', the transformation (rings of light, old and new looks flickering); the rest shows
-// off the new look with a burst of sparkles.
+// Of 'evolved' and 'jobChanged', the transformation (rings of light, old and new looks flickering);
+// the rest shows off the new look with a burst of sparkles.
 const EVOLVE_MS = 1400;
 // A note over the stage shows for this long: the next goal after growing ("Lv.5에 꼬마가 돼요"), or
 // when the job can be changed.
 const NOTICE_MS = 4500;
+// Between two notes in a row.
+const NOTICE_GAP_MS = 300;
 // After a level up or a job change, the note waits this long for the buddy's new state to arrive.
 const NOTICE_AFTER_MS = 500;
 type Notice = {
   key:
     | `nextStage.${BuddyView['stage']}`
-    | `notice.${'jobChangeOpen' | 'jobChangeSoon' | 'jobChangeAt' | 'jobChangeFree'}`;
+    | `notice.${'jobChangeOpen' | 'jobChangeSoon' | 'jobChangeAt' | 'jobChangeFree' | 'newJob'}`;
   level?: number;
+  job?: BuddyJob;
 };
+// After the job settled or changed: when it can be changed next, or that it can be any time.
+const nextJobChange = (now: BuddyView): Notice | null =>
+  now.jobChangeAt
+    ? { key: 'notice.jobChangeAt', level: now.jobChangeAt }
+    : now.canChangeJob
+      ? { key: 'notice.jobChangeFree' }
+      : null;
 const GLOW_MS = 450;
 // Where the burst's sparkles fly, from the buddy's middle.
 const BURST = [
@@ -493,7 +505,11 @@ function useActiveReaction(reaction: Reaction | null) {
     if (!reaction) return;
     const timers = [setTimeout(() => setActive({ kind: reaction.kind, phase: 'main' }), 0)];
     const main =
-      reaction.kind === 'fed' ? CHEW_MS : reaction.kind === 'evolved' ? EVOLVE_MS : undefined;
+      reaction.kind === 'fed'
+        ? CHEW_MS
+        : reaction.kind === 'evolved' || reaction.kind === 'jobChanged'
+          ? EVOLVE_MS
+          : undefined;
     if (main !== undefined) {
       timers.push(setTimeout(() => setActive({ kind: reaction.kind, phase: 'after' }), main));
     }
@@ -677,12 +693,17 @@ export function BuddyStage({
   const active = useActiveReaction(reaction);
   const [cueMountedAfter] = useState(latestCue?.id);
   const cue = latestCue && latestCue.id !== cueMountedAfter ? latestCue : null;
-  const evolving = active?.kind === 'evolved' && active.phase === 'main';
+  // Transforming: into the next stage, or into a new job.
+  const changingJob = active?.kind === 'jobChanged';
+  const evolving = (active?.kind === 'evolved' || changingJob) && active.phase === 'main';
   const [act, setAct] = useState<Act | null>(null);
   const [actRun, setActRun] = useState(0);
   const actTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tick = useTick(evolving || act === 'refuse' ? FAST_TICK_MS : TICK_MS);
   const job = buddy.job;
+  // The job before the latest change, for the change's old and new looks in turn.
+  const [jobs, setJobs] = useState({ now: job, before: job });
+  if (job !== jobs.now) setJobs({ now: job, before: jobs.now });
   const night = useSleeping(job, hour);
   const season = useSeason(chosenSeason);
   const [width, setWidth] = useState(0);
@@ -1255,6 +1276,8 @@ export function BuddyStage({
     else if (active?.kind === 'together') next = 'together';
     else if (active?.kind === 'here') next = 'bothHere';
     else if (active?.kind === 'joined') next = 'friendCame';
+    else if (active?.kind === 'jobChanged' && active.phase === 'after' && job)
+      next = NEW_JOB_LINE[job];
     if (!next) return;
     const say_ = next;
     const timer = setTimeout(() => say(say_), 0);
@@ -1345,6 +1368,7 @@ export function BuddyStage({
       // The top level: three hops while the room sparkles.
       maxLevel: Animated.sequence([jump(12), jump(8), jump(12)]),
       evolved: transform,
+      jobChanged: transform,
       // Both came today: two big happy jumps.
       together: Animated.sequence([jump(16), jump(16)]),
       // The partner is here: one happy hop.
@@ -1372,17 +1396,28 @@ export function BuddyStage({
   useEffect(() => {
     latestBuddy.current = buddy;
   });
-  const showNotice = useCallback((pick: (now: BuddyView) => Notice | null, after: number) => {
-    noticeTimers.current.forEach(clearTimeout);
-    noticeTimers.current = [
-      setTimeout(() => {
-        const next = pick(latestBuddy.current);
-        if (!next) return;
+  // `then`: another note right after this one.
+  const showNotice = useCallback(
+    (pick: (now: BuddyView) => Notice | null, after: number, then?: typeof pick) => {
+      noticeTimers.current.forEach(clearTimeout);
+      const show = (choose: typeof pick, rest?: typeof pick): void => {
+        const next = choose(latestBuddy.current);
+        if (!next) {
+          if (rest) show(rest);
+          return;
+        }
         setNotice(next);
-        noticeTimers.current.push(setTimeout(() => setNotice(null), NOTICE_MS));
-      }, after),
-    ];
-  }, []);
+        noticeTimers.current.push(
+          setTimeout(() => {
+            setNotice(null);
+            if (rest) noticeTimers.current.push(setTimeout(() => show(rest), NOTICE_GAP_MS));
+          }, NOTICE_MS),
+        );
+      };
+      noticeTimers.current = [setTimeout(() => show(pick, then), after)];
+    },
+    [],
+  );
   useEffect(() => () => noticeTimers.current.forEach(clearTimeout), []);
   useEffect(() => {
     if (reaction?.kind === 'evolved') {
@@ -1392,6 +1427,13 @@ export function BuddyStage({
             ? null
             : { key: `nextStage.${now.stage}`, level: NEXT_STEP_AT[now.stage] },
         EVOLVE_MS,
+      );
+    } else if (reaction?.kind === 'jobChanged') {
+      // A cheer for the new job as it settles, then when it can be changed next.
+      showNotice(
+        (now) => (now.job ? { key: 'notice.newJob', job: now.job } : null),
+        EVOLVE_MS,
+        nextJobChange,
       );
     } else if (reaction?.kind === 'levelUp' || reaction?.kind === 'maxLevel') {
       showNotice((now) => {
@@ -1406,21 +1448,15 @@ export function BuddyStage({
       }, NOTICE_AFTER_MS);
     }
   }, [reaction, showNotice]);
-  // The job settled or changed while the stage is open: when it can be changed next.
+  // The job settled while the stage is open: when it can be changed next. A change says so after its
+  // own transformation ('jobChanged').
   const jobSeen = useRef(job);
   useEffect(() => {
-    if (job === jobSeen.current) return;
+    const before = jobSeen.current;
+    if (job === before) return;
     jobSeen.current = job;
-    if (!job) return;
-    showNotice(
-      (now) =>
-        now.jobChangeAt
-          ? { key: 'notice.jobChangeAt', level: now.jobChangeAt }
-          : now.canChangeJob
-            ? { key: 'notice.jobChangeFree' }
-            : null,
-      NOTICE_AFTER_MS + 1500,
-    );
+    if (!job || before) return;
+    showNotice(nextJobChange, NOTICE_AFTER_MS + 1500);
   }, [job, showNotice]);
   const noticeShown = notice && !dream && !leaving ? notice : null;
   // Reaching the top level (top-level.tsx): once for each such reaction, over after the notes.
@@ -1535,7 +1571,7 @@ export function BuddyStage({
                               active?.kind === 'together' ||
                               active?.kind === 'here' ||
                               active?.kind === 'joined' ||
-                              (active?.kind === 'evolved' && !evolving) ||
+                              ((active?.kind === 'evolved' || changingJob) && !evolving) ||
                               petted
                             ? 'happy'
                             : sleeping
@@ -1568,9 +1604,17 @@ export function BuddyStage({
 
   // While evolving, the old and new looks take turns quickly.
   const previousStage = STAGE_ORDER[Math.max(0, STAGE_ORDER.indexOf(buddy.stage) - 1)];
-  // Dressed for the season or its job, but not in the middle of growing.
+  // Dressed for the season or its job, but not in the middle of growing. Changing jobs, the old
+  // job's look and the new one's take turns the same way.
   const dressed = evolving
-    ? buddyFrame(tick % 2 === 0 ? previousStage : buddy.stage, tick % 2 === 0 ? 'idle' : pose)
+    ? changingJob
+      ? dressedFrame(
+          buddy.stage,
+          tick % 2 === 0 ? 'idle' : pose,
+          tick % 2 === 0 ? jobs.before : job,
+          null,
+        )
+      : buddyFrame(tick % 2 === 0 ? previousStage : buddy.stage, tick % 2 === 0 ? 'idle' : pose)
     : dressedFrame(buddy.stage, pose, job, season);
   const frame = sitting ? seated(buddy.stage, dressed) : dressed;
 
@@ -1591,7 +1635,7 @@ export function BuddyStage({
     active?.kind === 'here' ||
     active?.kind === 'joined';
   const sparkling = active?.kind === 'cleaned';
-  const bursting = active?.kind === 'evolved' && active.phase === 'after';
+  const bursting = (active?.kind === 'evolved' || changingJob) && active.phase === 'after';
   const levelingUp = active?.kind === 'levelUp' || active?.kind === 'maxLevel';
 
   // Rice in the bowl, but for when the buddy is hungry: then it is empty and asks to be filled.
@@ -2428,7 +2472,11 @@ export function BuddyStage({
               { color: colors.text, backgroundColor: colors.surface, borderColor: colors.accent },
             ]}
           >
-            {t(`buddy.${noticeShown.key}`, { level: noticeShown.level })}
+            {t(`buddy.${noticeShown.key}`, {
+              level: noticeShown.level,
+              icon: noticeShown.job ? JOB_ICON[noticeShown.job] : '',
+              job: noticeShown.job ? t(`buddy.job.${noticeShown.job}`) : '',
+            })}
           </Text>
         </View>
       ) : null}

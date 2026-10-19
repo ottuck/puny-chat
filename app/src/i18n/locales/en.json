@@ -222,7 +222,12 @@
       "plush": "Let's play!",
       "table": "Tea time?",
       "kotatsu": "So warm in the kotatsu~",
-      "sit": "So comfy~"
+      "sit": "So comfy~",
+      "nowChef": "I'm a chef from today!",
+      "nowGardener": "I'm a gardener now!",
+      "nowDj": "Radio DJ, on air!",
+      "nowWriter": "I'm a writer now!",
+      "nowBarista": "Barista debut!"
     },
     "graduate": {
       "title": "Its own way",
@@ -329,7 +334,10 @@
       "current": "Now",
       "confirmTitle": "Change the job?",
       "confirmMessage": "{{icon}} {{job}} · The job can be changed once each at level 20, 30, 40 and 50, and any time from 60.",
-      "confirm": "Change"
+      "confirm": "Change",
+      "locked": "🔒 Change job · from Lv.{{level}}",
+      "lockedWhy": "The job can be changed once each at Lv.20, 30, 40 and 50, and any time from Lv.60. The next chance is at Lv.{{level}}; the stage and the chat will tell you.",
+      "changed": "🎉 New job: {{icon}} {{job}}! Close this to see its new look on the stage."
     },
     "nextStage": {
       "EGG": "It hatches at Lv.{{level}}",
@@ -379,7 +387,8 @@
       "jobChangeOpen": "The job can be changed once! Pick one in the buddy details",
       "jobChangeSoon": "At the next level (Lv.{{level}}) the job can be changed",
       "jobChangeAt": "The job can be changed next from Lv.{{level}}",
-      "jobChangeFree": "From now on the job can be changed any time"
+      "jobChangeFree": "From now on the job can be changed any time",
+      "newJob": "🎉 New job: {{icon}} {{job}}!"
     },
     "top": {
       "reached": "You reached the top level!",

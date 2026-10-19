@@ -222,7 +222,12 @@
       "plush": "같이 놀자!",
       "table": "차 한잔 할까?",
       "kotatsu": "코타츠 따뜻해~",
-      "sit": "러그 폭신해~"
+      "sit": "러그 폭신해~",
+      "nowChef": "오늘부터 요리사야!",
+      "nowGardener": "정원사가 됐어!",
+      "nowDj": "라디오 DJ, 시작해 볼게!",
+      "nowWriter": "작가가 됐어!",
+      "nowBarista": "바리스타 데뷔!"
     },
     "graduate": {
       "title": "독립시키기",
@@ -329,7 +334,10 @@
       "current": "지금",
       "confirmTitle": "직업을 바꿀까요?",
       "confirmMessage": "{{icon}} {{job}} · 직업은 20·30·40·50레벨에 한 번씩, 60레벨부터는 언제든 바꿀 수 있어요.",
-      "confirm": "바꾸기"
+      "confirm": "바꾸기",
+      "locked": "🔒 직업 바꾸기 · Lv.{{level}}부터",
+      "lockedWhy": "직업은 Lv.20·30·40·50에 한 번씩, Lv.60부터는 언제든 바꿀 수 있어요. 다음 기회는 Lv.{{level}}이에요. 그때 무대와 대화에서 알려 드릴게요.",
+      "changed": "🎉 새 직업: {{icon}} {{job}}! 닫으면 무대에서 새 모습을 보여 줘요."
     },
     "nextStage": {
       "EGG": "Lv.{{level}}에 알이 깨어나요",
@@ -379,7 +387,8 @@
       "jobChangeOpen": "직업을 한 번 바꿀 수 있어요! Buddy 상세에서 골라 보세요",
       "jobChangeSoon": "다음 레벨(Lv.{{level}})에 직업을 바꿀 수 있어요",
       "jobChangeAt": "다음 직업 바꾸기는 Lv.{{level}}부터예요",
-      "jobChangeFree": "이제 직업을 언제든 바꿀 수 있어요"
+      "jobChangeFree": "이제 직업을 언제든 바꿀 수 있어요",
+      "newJob": "🎉 새 직업: {{icon}} {{job}}!"
     },
     "top": {
       "reached": "최고 레벨에 도달했어요!",

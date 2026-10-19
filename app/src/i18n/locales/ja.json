@@ -222,7 +222,12 @@
       "plush": "いっしょに遊ぼ!",
       "table": "お茶にしよっか",
       "kotatsu": "こたつ、あったか〜い",
-      "sit": "ラグふかふか〜"
+      "sit": "ラグふかふか〜",
+      "nowChef": "今日からコックだよ！",
+      "nowGardener": "庭師になったよ！",
+      "nowDj": "ラジオDJ、始めるよ！",
+      "nowWriter": "作家になったよ！",
+      "nowBarista": "バリスタデビュー！"
     },
     "graduate": {
       "title": "独り立ち",
@@ -329,7 +334,10 @@
       "current": "今",
       "confirmTitle": "職業を変えますか？",
       "confirmMessage": "{{icon}} {{job}} ・職業は20・30・40・50レベルで1回ずつ、60レベルからはいつでも変えられます。",
-      "confirm": "変える"
+      "confirm": "変える",
+      "locked": "🔒 職業を変える · Lv.{{level}}から",
+      "lockedWhy": "職業はLv.20・30・40・50で1回ずつ、Lv.60からはいつでも変えられます。次のチャンスはLv.{{level}}です。そのときステージとチャットでお知らせします。",
+      "changed": "🎉 新しい職業：{{icon}} {{job}}！閉じるとステージで新しい姿を見せてくれます。"
     },
     "nextStage": {
       "EGG": "Lv.{{level}}でたまごがかえります",
@@ -379,7 +387,8 @@
       "jobChangeOpen": "職業を1回変えられます!バディの詳細で選んでみてね",
       "jobChangeSoon": "次のレベル(Lv.{{level}})で職業を変えられます",
       "jobChangeAt": "次に職業を変えられるのはLv.{{level}}からです",
-      "jobChangeFree": "これからは職業をいつでも変えられます"
+      "jobChangeFree": "これからは職業をいつでも変えられます",
+      "newJob": "🎉 新しい職業：{{icon}} {{job}}！"
     },
     "top": {
       "reached": "最高レベルに到達しました!",
