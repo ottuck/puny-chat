@@ -529,7 +529,42 @@ function DroppingIn({ children }: { children: React.ReactNode }) {
   );
 }
 
-// A poop just cleaned up: it spins up and away, fading, with a sparkle.
+// Something that comes and goes with the moment (the thought of food, the meal's table): it springs
+// in, and on the way out stays a beat to leave instead of blinking off. `value` runs 0 → 1 in, 1 → 0
+// out; `present` is false once it has left.
+function usePresence(on: boolean, leaveMs: number) {
+  const [value] = useState(() => new Animated.Value(on ? 1 : 0));
+  const [present, setPresent] = useState(on);
+  if (on && !present) setPresent(true);
+  useEffect(() => {
+    const change = on
+      ? Animated.spring(value, {
+          toValue: 1,
+          friction: 6,
+          tension: 170,
+          useNativeDriver: NATIVE_DRIVER,
+        })
+      : Animated.timing(value, {
+          toValue: 0,
+          duration: leaveMs,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: NATIVE_DRIVER,
+        });
+    change.start(({ finished }) => finished && !on && setPresent(false));
+    return () => change.stop();
+  }, [on, value, leaveMs]);
+  return { present: on || present, value };
+}
+
+// The most seen motions in the room, so each is short and lands softly: the thought of food bursts
+// like a bubble when fed, the table drops into place for the meal and sinks away after, and a poop
+// tapped away squashes, then hops up and away.
+const THOUGHT_POP_MS = 220;
+const TABLE_AWAY_MS = 240;
+const POOP_AWAY_MS = 460;
+
+// A poop just cleaned up: squashed by the tap for a moment, then up and away, spinning and fading,
+// with a sparkle.
 function FlyingAway({
   id,
   onDone,
@@ -543,7 +578,7 @@ function FlyingAway({
   useEffect(() => {
     const fly = Animated.timing(away, {
       toValue: 1,
-      duration: 650,
+      duration: POOP_AWAY_MS,
       easing: Easing.out(Easing.quad),
       useNativeDriver: NATIVE_DRIVER,
     });
@@ -556,11 +591,32 @@ function FlyingAway({
         style,
         styles.passThrough,
         {
-          opacity: away.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+          opacity: away.interpolate({ inputRange: [0, 0.45, 1], outputRange: [1, 1, 0] }),
           transform: [
-            { translateY: away.interpolate({ inputRange: [0, 1], outputRange: [0, -34] }) },
-            { rotate: away.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '40deg'] }) },
-            { scale: away.interpolate({ inputRange: [0, 1], outputRange: [1, 0.5] }) },
+            {
+              translateY: away.interpolate({
+                inputRange: [0, 0.12, 1],
+                outputRange: [0, 2, -30],
+              }),
+            },
+            {
+              rotate: away.interpolate({
+                inputRange: [0, 0.12, 1],
+                outputRange: ['0deg', '0deg', '35deg'],
+              }),
+            },
+            {
+              scaleX: away.interpolate({
+                inputRange: [0, 0.12, 0.3, 1],
+                outputRange: [1, 1.25, 0.95, 0.55],
+              }),
+            },
+            {
+              scaleY: away.interpolate({
+                inputRange: [0, 0.12, 0.3, 1],
+                outputRange: [1, 0.7, 1.08, 0.55],
+              }),
+            },
           ],
         },
       ]}
@@ -717,6 +773,11 @@ export function BuddyStage({
   useEffect(() => {
     if (evolving) hush();
   }, [evolving, hush]);
+  // Fed: no more "배고파…" over the meal.
+  const fedNow = !buddy.hungry;
+  useEffect(() => {
+    if (fedNow && line === 'hungry') hush();
+  }, [fedNow, line, hush]);
 
   useEffect(() => {
     if (!onWalk) return;
@@ -1159,6 +1220,7 @@ export function BuddyStage({
   // Hungry, it thinks of food over its head from the egg on (no words needed), and a tap on it
   // feeds it.
   const thinking = wantsFood && !sleeping;
+  const thought = usePresence(thinking, THOUGHT_POP_MS);
   const hasPoop = buddy.poops > 0;
   useEffect(() => {
     if (!wantsFood && !hasPoop) return;
@@ -1529,6 +1591,10 @@ export function BuddyStage({
 
   // Rice in the bowl, but for when the buddy is hungry: then it is empty and asks to be filled.
   const bowlFull = !buddy.hungry || eating;
+  const table = usePresence(atTable && eating, TABLE_AWAY_MS);
+  // While the table sinks away it shows the empty bowl, as at the end of the meal.
+  const [tableFull, setTableFull] = useState(active?.phase === 'main');
+  if (eating && tableFull !== (active?.phase === 'main')) setTableFull(active?.phase === 'main');
   const [rice] = useState(() => new Animated.Value(bowlFull ? 1 : 0));
   const [riceSparkle, setRiceSparkle] = useState(false);
   const [riceWasFull] = useState(bowlFull);
@@ -1558,20 +1624,37 @@ export function BuddyStage({
     };
   }, [bowlFull, rice, riceWasFull]);
 
-  // Poops tapped away fly up and fade; the ones still there stay in place.
-  const [seenPoops, setSeenPoops] = useState(buddy.poops);
+  // Each poop keeps its spot on the floor (a slot). The one tapped is the one that flies up and
+  // fades; the ones still there stay put. Cleaned some other way (the partner, "청소" in the chat),
+  // the last ones go. A new poop takes the first free spot.
+  const [slots, setSlots] = useState(() => Array.from({ length: buddy.poops }, (_, i) => i));
+  const [tapped, setTapped] = useState<number[]>([]);
   const [poopRound, setPoopRound] = useState(0);
   const [flyingOff, setFlyingOff] = useState<{ key: string; index: number }[]>([]);
-  if (buddy.poops !== seenPoops) {
-    if (buddy.poops < seenPoops) {
-      const gone = Array.from({ length: seenPoops - buddy.poops }, (_, k) => ({
-        key: `${poopRound}-${buddy.poops + k}`,
-        index: buddy.poops + k,
-      }));
-      setFlyingOff((prev) => [...prev, ...gone]);
+  if (buddy.poops !== slots.length) {
+    let next = slots;
+    let taps = tapped;
+    const gone: number[] = [];
+    while (next.length > buddy.poops) {
+      const slot = taps.find((s) => next.includes(s)) ?? next[next.length - 1];
+      taps = taps.filter((s) => s !== slot);
+      next = next.filter((s) => s !== slot);
+      gone.push(slot);
+    }
+    while (next.length < buddy.poops) {
+      let free = 0;
+      while (next.includes(free)) free++;
+      next = [...next, free];
+    }
+    if (gone.length) {
+      setFlyingOff((prev) => [
+        ...prev,
+        ...gone.map((slot) => ({ key: `${poopRound}-${slot}`, index: slot })),
+      ]);
     }
     setPoopRound(poopRound + 1);
-    setSeenPoops(buddy.poops);
+    setSlots(next);
+    setTapped([]);
   }
   const doneLeaving = useCallback(
     (key: string) => setFlyingOff((prev) => prev.filter((poop) => poop.key !== key)),
@@ -1606,8 +1689,9 @@ export function BuddyStage({
     }
     onFeed();
   };
-  const clean = () => {
+  const clean = (slot: number) => {
     if (!buddy.canClean || busy) return;
+    setTapped((prev) => [...prev, slot]);
     onClean();
   };
   // The room's toys: the ball bounces out and it dances; the music box plays and it sings along.
@@ -1927,14 +2011,27 @@ export function BuddyStage({
           <View style={[styles.above, bigHeart ? styles.aboveBig : null]}>
             <PixelSprite frame={bigHeart ? HEART_BIG : HEART} palette={PROP_PALETTE} scale={3} />
           </View>
-        ) : thinking ? (
-          // Away from the speech bubble, its trail of puffs toward the head.
+        ) : thought.present ? (
+          // Away from the speech bubble, its trail of puffs toward the head. It swells up when it
+          // comes, and when fed it bursts like a bubble: a little bigger as it fades.
           <Animated.View
             style={[
               styles.thought,
               styles.passThrough,
               onRightHalf ? styles.thoughtRight : styles.thoughtLeft,
-              { transform: [{ translateY: nudge }] },
+              {
+                opacity: thinking
+                  ? thought.value.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 1, 1] })
+                  : thought.value,
+                transform: [
+                  { translateY: nudge },
+                  {
+                    scale: thinking
+                      ? thought.value.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] })
+                      : thought.value.interpolate({ inputRange: [0, 1], outputRange: [1.35, 1] }),
+                  },
+                ],
+              },
             ]}
           >
             <PixelSprite
@@ -2146,7 +2243,7 @@ export function BuddyStage({
       ) : null}
 
       {/* The table, out for the meal and in front of the buddy, which eats behind it. */}
-      {atTable && eating ? (
+      {table.present ? (
         <Animated.View
           style={[
             styles.buddy,
@@ -2154,12 +2251,25 @@ export function BuddyStage({
             {
               bottom: FLOOR - 2,
               left: workSway + (spriteWidth - TABLE_CELLS * PROP_SCALE) / 2,
-              transform: [{ translateX: x }],
+              opacity: table.value.interpolate({
+                inputRange: [0, 0.35, 1],
+                outputRange: [0, 1, 1],
+              }),
+              transform: [
+                { translateX: x },
+                // Set down from just above, landing with a little bounce; sinking a touch as it goes.
+                {
+                  translateY: table.value.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [eating ? -14 : 4, 0],
+                  }),
+                },
+              ],
             },
           ]}
         >
           <PixelSprite
-            frame={mealTable(active?.phase === 'main', decor.bowl)}
+            frame={mealTable(eating ? active?.phase === 'main' : tableFull, decor.bowl)}
             palette={PROP_PALETTE}
             scale={PROP_SCALE}
           />
@@ -2193,20 +2303,20 @@ export function BuddyStage({
       ) : null}
 
       {/* In front of the buddy, so one by its feet can still be tapped away. */}
-      {Array.from({ length: buddy.poops }, (_, i) => (
+      {slots.map((slot) => (
         <Animated.View
-          key={i}
+          key={slot}
           style={[
             styles.poop,
             {
               bottom: FLOOR - 2,
-              right: poopRight + i * 30,
+              right: poopRight + slot * 30,
               transform: [{ translateY: nudge }],
             },
           ]}
         >
           <Pressable
-            onPress={clean}
+            onPress={() => clean(slot)}
             disabled={busy}
             accessibilityRole="button"
             accessibilityLabel={t('buddy.cleanUp')}

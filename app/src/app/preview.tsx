@@ -305,8 +305,15 @@ function Preview() {
               buddy={buddyOf(stage, job, hungry, poops, level)}
               busy={false}
               height={stageHeight}
-              onFeed={() => setHungry(false)}
-              onClean={() => setPoops((n) => Math.max(0, n - 1))}
+              // As in the room: the change at once, and the buddy's reaction with it (use-buddy.ts).
+              onFeed={() => {
+                setHungry(false);
+                setReaction({ id: randomUUID(), kind: 'fed' });
+              }}
+              onClean={() => {
+                setPoops((n) => Math.max(0, n - 1));
+                setReaction({ id: randomUUID(), kind: 'cleaned' });
+              }}
               onWork={() => {}}
               onOpenDetail={() => setDetail(true)}
               reaction={reaction}
