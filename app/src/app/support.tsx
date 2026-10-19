@@ -15,8 +15,9 @@ import {
 
 import { Button } from '@/components/button';
 import { PageTitle } from '@/components/page-title';
-import { goBack, useHome } from '@/components/header-back';
+import { goBack } from '@/components/header-back';
 import { useAuth } from '@/features/auth/auth-provider';
+import { useHome } from '@/features/auth/use-home';
 import { errorMessage } from '@/features/room/error-message';
 import { useRoom } from '@/features/room/room-provider';
 import {
