@@ -6,6 +6,7 @@ import {
   isCancelledSignIn,
   linkOrSwitch,
   linkUser,
+  reauthenticateLinked,
 } from '../src/lib/social-auth/account.ts';
 
 const credential = { providerId: 'google.com' };
@@ -94,4 +95,18 @@ test('cancel codes from popups and Apple sheet', () => {
   assert.ok(isCancelledSignIn({ code: 'ERR_REQUEST_CANCELED' }));
   assert.ok(!isCancelledSignIn({ code: 'auth/network-request-failed' }));
   assert.ok(!isCancelledSignIn(null));
+});
+
+test('signing in again uses the linked provider, and nothing for a guest', async () => {
+  const calls = [];
+  const providers = {
+    google: { reauthenticate: async () => calls.push('google') },
+    apple: { reauthenticate: async () => calls.push('apple') },
+  };
+  const user = (isAnonymous, providerId) => ({ isAnonymous, providerData: [{ providerId }] });
+  await reauthenticateLinked({ currentUser: user(false, 'apple.com') }, providers);
+  await reauthenticateLinked({ currentUser: user(false, 'google.com') }, providers);
+  await reauthenticateLinked({ currentUser: user(true, 'anonymous') }, providers);
+  await reauthenticateLinked({ currentUser: null }, providers);
+  assert.deepEqual(calls, ['apple', 'google']);
 });

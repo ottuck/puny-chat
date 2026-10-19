@@ -1,10 +1,14 @@
 import type { BuddyView } from '@/features/buddy/api';
 import { idToken } from '@/lib/api';
 import { wsUrl } from '@/lib/api-url';
+import { type ConnectionStatus, RealtimeSocket } from '@/lib/realtime-socket';
 
 import type { ServerMessage } from './types';
 
-// Server → app events (docs/PROJECT.md, "WebSocket 프로토콜").
+export type { ConnectionStatus };
+
+// Server → app events (docs/PROJECT.md, "WebSocket 프로토콜"). The connection itself (hello, auth,
+// reconnecting) is lib/realtime-socket.ts.
 type ServerEvent =
   | { type: 'hello' }
   | {
@@ -28,8 +32,6 @@ type ServerEvent =
   | { type: 'error'; code: string; clientMessageId: string | null }
   | { type: 'pong' };
 
-export type ConnectionStatus = 'connecting' | 'online' | 'offline';
-
 export type SocketListener = {
   onStatus: (status: ConnectionStatus) => void;
   // Authenticated; the app should fetch what it missed and resend unacknowledged messages.
@@ -52,115 +54,69 @@ export type SocketListener = {
   onFatal: (code: string) => void;
 };
 
-const MAX_BACKOFF_MS = 30_000;
 // SEAT_TAKEN: a code made for this member let someone (them, elsewhere) take their seat.
 const FATAL_CODES = new Set(['ROOM_NOT_FOUND', 'SEAT_TAKEN']);
 
-/**
- * One WebSocket to the chat server that keeps itself connected: it authenticates with the first
- * message and reconnects with exponential backoff until stop() is called.
- */
+/** The chat server's socket: this room's messages, reads, typing and buddy over one connection. */
 export class ChatSocket {
-  private ws: WebSocket | null = null;
-  private ready = false;
-  private stopped = false;
-  // Closed on purpose while the app is in the background; resume() reconnects.
-  private paused = false;
-  private attempt = 0;
-  private retryTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly socket: RealtimeSocket<ServerEvent>;
+  private readonly listener: SocketListener;
 
-  constructor(private readonly listener: SocketListener) {}
+  constructor(listener: SocketListener) {
+    this.listener = listener;
+    this.socket = new RealtimeSocket<ServerEvent>({
+      url: wsUrl,
+      token: idToken,
+      onStatus: (status) => listener.onStatus(status),
+      onEvent: (event) => this.onEvent(event),
+    });
+  }
 
   start() {
-    this.stopped = false;
-    this.connect();
+    this.socket.start();
   }
 
   stop() {
-    this.stopped = true;
-    this.clearRetry();
-    this.ws?.close();
-    this.ws = null;
+    this.socket.stop();
   }
 
   // The app went to the background: disconnect so the others see it offline right away, instead of
   // after the OS suspends it and the server notices. Unread messages then come as push notifications.
   pause() {
-    if (this.stopped || this.paused) return;
-    this.paused = true;
-    this.clearRetry();
-    this.ws?.close();
-    this.ws = null;
-    this.ready = false;
-    this.listener.onStatus('offline');
+    this.socket.pause();
   }
 
   resume() {
-    if (this.stopped || !this.paused) return;
-    this.paused = false;
-    this.attempt = 0;
-    this.connect();
+    this.socket.resume();
   }
 
   // E.g. when the app returns to the foreground: skip the backoff wait.
   reconnectNow() {
-    if (this.stopped || this.paused || this.ws) return;
-    this.clearRetry();
-    this.connect();
+    this.socket.reconnectNow();
   }
 
   // Returns false when not connected; the caller keeps the message pending and resends on ready.
   send(clientMessageId: string, text: string): boolean {
-    if (!this.ws || !this.ready) return false;
-    this.ws.send(JSON.stringify({ type: 'send', clientMessageId, text }));
-    return true;
+    return this.socket.send({ type: 'send', clientMessageId, text });
   }
 
   // Typing and read marks are not worth queueing: while offline they are simply dropped.
   sendTyping(typing: boolean) {
-    if (this.ws && this.ready) this.ws.send(JSON.stringify({ type: 'typing', typing }));
+    this.socket.send({ type: 'typing', typing });
   }
 
   // Like typing: only worth sending right now, and only the partner sees it.
   sendPet() {
-    if (this.ws && this.ready) this.ws.send(JSON.stringify({ type: 'pet' }));
+    this.socket.send({ type: 'pet' });
   }
 
   sendRead(messageId: string): boolean {
-    if (!this.ws || !this.ready) return false;
-    this.ws.send(JSON.stringify({ type: 'read', messageId }));
-    return true;
+    return this.socket.send({ type: 'read', messageId });
   }
 
-  private connect() {
-    this.listener.onStatus('connecting');
-    const ws = new WebSocket(wsUrl());
-    this.ws = ws;
-    this.ready = false;
-
-    ws.onmessage = (event) => {
-      if (this.ws !== ws || this.stopped || this.paused) return;
-      this.onEvent(ws, JSON.parse(String(event.data)) as ServerEvent);
-    };
-    ws.onclose = () => {
-      if (this.ws !== ws) return; // an old socket closing after a reconnect
-      this.ws = null;
-      this.ready = false;
-      this.listener.onStatus('offline');
-      this.scheduleRetry();
-    };
-  }
-
-  private onEvent(ws: WebSocket, event: ServerEvent) {
+  private onEvent(event: ServerEvent) {
     switch (event.type) {
-      // The server reads from here on; a message sent right at open can be lost.
-      case 'hello':
-        this.authenticate(ws);
-        break;
       case 'ready':
-        this.ready = true;
-        this.attempt = 0;
-        this.listener.onStatus('online');
         this.listener.onReady(event.online, event.reads, event.historyVersion ?? 0);
         break;
       case 'ack':
@@ -200,25 +156,5 @@ export class ChatSocket {
         }
         break;
     }
-  }
-
-  private async authenticate(ws: WebSocket) {
-    try {
-      ws.send(JSON.stringify({ type: 'auth', token: await idToken() }));
-    } catch {
-      ws.close();
-    }
-  }
-
-  private scheduleRetry() {
-    if (this.stopped || this.paused) return;
-    const delay = Math.min(1000 * 2 ** this.attempt, MAX_BACKOFF_MS);
-    this.attempt += 1;
-    this.retryTimer = setTimeout(() => this.connect(), delay);
-  }
-
-  private clearRetry() {
-    if (this.retryTimer) clearTimeout(this.retryTimer);
-    this.retryTimer = null;
   }
 }

@@ -13,7 +13,7 @@ import { isCancelledSignIn, onPopupClosed } from '@/lib/social-auth';
 import { AppleButton } from '@/features/auth/components/apple-button';
 import { social } from '@/features/auth/social';
 import { resetStart } from '@/features/auth/start-flow';
-import { hasPendingInvite } from '@/lib/pending-invite';
+import { hasPendingInvite } from '@/features/room/pending-invite';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
 export default function SignInScreen() {
