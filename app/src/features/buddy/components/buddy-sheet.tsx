@@ -32,7 +32,7 @@ type Props = {
   onClose: () => void;
   // At the top level: the buddy goes into the album and a new egg with this name arrives.
   onGraduate?: (newName: string) => Promise<void>;
-  // An adult's job, changed once a day; none in the tour.
+  // An adult's job, changed once at Lv.20, 30, 40 and 50 and any time from 60; none in the tour.
   onChangeJob?: (job: BuddyJob) => Promise<void>;
   // With a partner in the room: today's together bonus, and who has talked.
   together?: { myId: string; partnerId: string; partnerName: string };
@@ -163,7 +163,7 @@ function TogetherCard({
 }
 
 // What it grows up to be (docs/fun-improvements.md, 직업): the job once an adult, and before that where
-// it is heading, so the way they raise it shows. An adult's job can be changed, once a day.
+// it is heading, so the way they raise it shows. The server says when it can be changed.
 function JobCard({
   buddy,
   onChangeJob,

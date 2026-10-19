@@ -129,6 +129,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged, onGuideSeen }: ChatSc
   const [dreaming, setDreaming] = useState(false);
   // The chat's card for a buddy gone its own way opens the album on the stage.
   const [albumRequest, setAlbumRequest] = useState<string | null>(null);
+  const [mailRequest, setMailRequest] = useState<string | null>(null);
   const partner = room.members.find((member) => member.id !== me.id);
 
   // The buddy's stage takes about a third of the screen and keeps it (docs/PROJECT.md, 핵심 경험).
@@ -167,6 +168,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged, onGuideSeen }: ChatSc
         <BuddyScene
           dreams
           albumRequest={albumRequest}
+          mailRequest={mailRequest}
           // Being a guest and notifications off come as letters in the stage's mailbox.
           situation={{ guestDaysLeft, push }}
           onTurnOnPush={() =>
@@ -209,7 +211,8 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged, onGuideSeen }: ChatSc
               onRetry={chat.retry}
               onReact={chat.react}
               onLoadOlder={chat.loadOlder}
-              onGraduate={buddy.grown ? () => setBuddyOpen(true) : undefined}
+              onChangeJob={buddy.canChangeJob ? () => setBuddyOpen(true) : undefined}
+              onOpenMail={() => setMailRequest(String(Date.now()))}
               onOpenAlbum={() => setAlbumRequest(String(Date.now()))}
             />
           )}

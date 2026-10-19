@@ -17,8 +17,9 @@ export type MailId =
   | 'guestDays1'
   | 'pushOff'
   | 'pushInstall';
-// A button under the letter: to settings to link an account, or turning notifications on.
-export type MailAction = 'linkAccount' | 'turnOnPush';
+// A button under the letter: to settings to link an account, turning notifications on, or to the
+// buddy's details to let it go its own way.
+export type MailAction = 'linkAccount' | 'turnOnPush' | 'graduate';
 // This account and device right now. Some mail is only for that: a guest, notifications off.
 export type Situation = { guestDaysLeft: number | null; push: PushState | null };
 export type Mail = {
@@ -26,7 +27,8 @@ export type Mail = {
   kind: 'notice' | 'letter' | 'guide';
   // The day it went out ("YYYY-MM-DD"); a letter that comes with a level is dated the day it came.
   date?: string;
-  // Only once the room's buddy has reached this level; kept after, even once it has gone its own way.
+  // Only while the room's buddy is at this level or above: it goes once the buddy has gone its own
+  // way, and comes again, unread, to the next buddy that gets there.
   fromLevel?: number;
   // Comes when this holds and stays while `stays` does (the same if not given), dated the day it
   // came: it goes once the account is linked or notifications are on.
@@ -72,14 +74,21 @@ export const MAIL: readonly Mail[] = [
   { id: 'pushOff', kind: 'guide', comes: webPush('off'), action: 'turnOnPush' },
   { id: 'pushInstall', kind: 'guide', comes: webPush('needsInstall'), action: 'linkAccount' },
   { id: 'linkAccount', kind: 'guide', comes: guest, action: 'linkAccount' },
-  { id: 'topLevelLetter', kind: 'letter', fromLevel: 60 },
+  // The thank-you at the top level, the level a buddy may go its own way from (server: BuddyRules.GRADUATE_AT).
+  { id: 'topLevelLetter', kind: 'letter', fromLevel: 60, action: 'graduate' },
   { id: 'roomUpdate', kind: 'notice', date: '2026-10-17' },
 ];
 
 const NOTHING: Situation = { guestDaysLeft: null, push: null };
 
 const KEY = 'mailbox';
-type Saved = { read: MailId[]; came: Partial<Record<MailId, string>> };
+// `buddy`: for a letter that comes with a level, which of the room's buddies it came to (how many had
+// gone their own way by then).
+type Saved = {
+  read: MailId[];
+  came: Partial<Record<MailId, string>>;
+  buddy?: Partial<Record<MailId, number>>;
+};
 let saved: Saved = { read: [], came: {} };
 let loaded = false;
 const listeners = new Set<() => void>();
@@ -120,30 +129,44 @@ export function markRead(id: MailId) {
 }
 
 // The mail there is for this room's buddy at `level` and for `now`, newest first, and how much is
-// unread.
-export function useMailbox(level: number, now: Situation = NOTHING) {
+// unread. `buddy`: how many of the room's buddies have gone their own way, so the next one is told
+// apart from this one.
+export function useMailbox(level: number, now: Situation = NOTHING, buddy = 0) {
   const state = useSyncExternalStore(subscribe, get, get);
+  // A level's letter that came to an earlier buddy comes again, as new.
+  const earlier = (mail: Mail) =>
+    mail.fromLevel !== undefined && (state.buddy?.[mail.id] ?? 0) < buddy;
   const due = MAIL.filter((mail) =>
     mail.fromLevel !== undefined ? level >= mail.fromLevel : !!mail.comes?.(now),
   );
-  const missing = due.filter((mail) => !state.came[mail.id]).map((mail) => mail.id);
+  const missing = due
+    .filter((mail) => !state.came[mail.id] || earlier(mail))
+    .map((mail) => mail.id);
   useEffect(() => {
     if (missing.length === 0) return;
     const came = { ...saved.came };
-    for (const id of missing) came[id] = today();
-    save({ ...saved, came });
+    const of = { ...saved.buddy };
+    for (const id of missing) {
+      came[id] = today();
+      of[id] = buddy;
+    }
+    save({ read: saved.read.filter((id) => !missing.includes(id)), came, buddy: of });
     // Only when something new is due; `missing` is a fresh array each time.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [missing.join(',')]);
+  const read = state.read.filter((id) => !missing.includes(id));
   const mails = MAIL.filter((mail) => {
     if (mail.comes) {
       const stays = mail.stays ?? mail.comes;
       return stays(now) && (!!state.came[mail.id] || mail.comes(now));
     }
-    return mail.fromLevel === undefined || state.came[mail.id] || level >= mail.fromLevel;
+    return mail.fromLevel === undefined || level >= mail.fromLevel;
   })
-    .map((mail) => ({ ...mail, date: mail.date ?? state.came[mail.id] ?? today() }))
+    .map((mail) => ({
+      ...mail,
+      date: mail.date ?? (missing.includes(mail.id) ? undefined : state.came[mail.id]) ?? today(),
+    }))
     .sort((a, b) => b.date.localeCompare(a.date));
-  const unread = mails.filter((mail) => !state.read.includes(mail.id)).length;
-  return { mails, unread, read: state.read };
+  const unread = mails.filter((mail) => !read.includes(mail.id)).length;
+  return { mails, unread, read };
 }

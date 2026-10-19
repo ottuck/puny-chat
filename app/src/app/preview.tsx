@@ -86,7 +86,9 @@ function buddyOf(
     hungry,
     canFeed: hungry,
     canClean: poops > 0,
-    grown: false,
+    // As the server would have it (BuddyRules.GRADUATE_AT): the details and the top level's letter
+    // offer going its own way.
+    grown: (level ?? 0) >= 60,
     talkedToday: [],
     togetherToday: false,
     job: stage === 'ADULT' ? job : null,

@@ -100,8 +100,9 @@ public final class BuddyRules {
     static final int BABY_AT = 3;
     static final int CHILD_AT = 5;
     static final int ADULT_AT = 10;
-    // From this level the buddy may go its own way (docs/PROJECT.md, 독립과 앨범): a choice, it can keep growing.
-    static final int GRADUATE_AT = 20;
+    // The buddy may go its own way only once raised all the way (docs/PROJECT.md, 독립과 앨범): a choice
+    // at the top level, so the rewards up to it are not skipped. It can keep living there after.
+    static final int GRADUATE_AT = MAX_LEVEL;
     // The job is settled a little after it grows up (docs/fun-improvements.md, 직업): first the new grown-up
     // look on its own, then the job, from how the two raised it.
     static final int JOB_AT = 12;
