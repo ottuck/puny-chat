@@ -404,6 +404,8 @@ type Props = {
   hour?: number;
   // The day ("MM-DD") the room's seasonal things go by instead of today (the art preview).
   date?: string;
+  // Opens the mailbox (the top level's note about the developer's letter).
+  onOpenMail?: () => void;
 };
 
 // The room's time: the device's, or the hour and day the art preview picks.
@@ -558,6 +560,10 @@ function usePresence(on: boolean, leaveMs: number) {
 // like a bubble when fed, the table drops into place for the meal and sinks away after, and a poop
 // tapped away squashes, then hops up and away.
 const THOUGHT_POP_MS = 220;
+// Where the thought of food floats over the head (styles.thought), and the extra room around it
+// that a tap on it still counts in.
+const THOUGHT_TOP = 40;
+const THOUGHT_SLOP = 10;
 const TABLE_AWAY_MS = 240;
 const POOP_AWAY_MS = 460;
 
@@ -658,6 +664,7 @@ export function BuddyStage({
   leaving = false,
   hour,
   date,
+  onOpenMail,
 }: Props) {
   const colors = useColors();
   const colorMode = useColorMode();
@@ -1422,6 +1429,7 @@ export function BuddyStage({
   const topOn = topId !== null && topDone !== topId;
   const topNotes = [
     { text: t('buddy.top.reached') },
+    { text: t('buddy.top.letter'), onPress: onOpenMail },
     ...(job ? [{ text: t('buddy.notice.jobChangeFree') }] : []),
   ];
   const topMs = topNotes.length * TOP_NOTE_MS;
@@ -2238,6 +2246,43 @@ export function BuddyStage({
         </Animated.View>
       ) : null}
 
+      {/* The thought of food can be tapped to feed, as people do. Drawn above the buddy's box it
+          sits outside it, where an iPhone does not pass touches on; this follows it on the stage
+          instead, a little larger than the cloud. */}
+      {thinking ? (
+        <Animated.View
+          style={[
+            styles.buddy,
+            {
+              bottom:
+                FLOOR -
+                scale -
+                workNod -
+                (sitting ? SIT_ROWS * scale : 0) +
+                frame.length * scale +
+                THOUGHT_TOP -
+                THOUGHT_FOOD.length * 2 -
+                THOUGHT_SLOP,
+              left:
+                workSway +
+                (onRightHalf ? frame[0].length * scale + 4 - THOUGHT_FOOD[0].length * 2 : -4) -
+                THOUGHT_SLOP,
+              transform: [{ translateX: x }],
+            },
+          ]}
+        >
+          <Pressable
+            onPress={feed}
+            accessibilityRole="button"
+            accessibilityLabel={t('buddy.feed')}
+            style={{
+              width: THOUGHT_FOOD[0].length * 2 + THOUGHT_SLOP * 2,
+              height: THOUGHT_FOOD.length * 2 + THOUGHT_SLOP * 2,
+            }}
+          />
+        </Animated.View>
+      ) : null}
+
       {/* The table, out for the meal and in front of the buddy, which eats behind it. */}
       {table.present ? (
         <Animated.View
@@ -2447,7 +2492,7 @@ const styles = StyleSheet.create({
   // Room for the big heart of a pet shared by both.
   thought: {
     position: 'absolute',
-    top: -40,
+    top: -THOUGHT_TOP,
   },
   thoughtRight: {
     right: -4,

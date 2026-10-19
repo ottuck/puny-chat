@@ -10,6 +10,7 @@ import type { PushState } from '@/features/notifications/push';
 
 export type MailId =
   | 'roomUpdate'
+  | 'topLevelLetter'
   | 'linkAccount'
   | 'guestDays7'
   | 'guestDays3'
@@ -71,6 +72,7 @@ export const MAIL: readonly Mail[] = [
   { id: 'pushOff', kind: 'guide', comes: webPush('off'), action: 'turnOnPush' },
   { id: 'pushInstall', kind: 'guide', comes: webPush('needsInstall'), action: 'linkAccount' },
   { id: 'linkAccount', kind: 'guide', comes: guest, action: 'linkAccount' },
+  { id: 'topLevelLetter', kind: 'letter', fromLevel: 60 },
   { id: 'roomUpdate', kind: 'notice', date: '2026-10-17' },
 ];
 
