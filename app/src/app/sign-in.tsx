@@ -9,7 +9,8 @@ import { PageTitle } from '@/components/page-title';
 import { BuddyAvatar } from '@/features/buddy/components/buddy-avatar';
 import { Button } from '@/components/button';
 import { signInErrorKey } from '@/features/auth/actions';
-import { isCancelledSignIn } from '@/lib/social-auth';
+import { useAuth } from '@/features/auth/auth-provider';
+import { isCancelledSignIn, onPopupClosed } from '@/lib/social-auth';
 import { AppleButton } from '@/features/auth/components/apple-button';
 import { social } from '@/features/auth/social';
 import { resetStart } from '@/features/auth/start-flow';
@@ -19,8 +20,11 @@ import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 export default function SignInScreen() {
   const colors = useColors();
   const { t } = useTranslation();
+  const { guestExpired } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A closed popup takes Firebase 8 seconds to report; the buttons come back as soon as it closes.
+  useEffect(() => (busy ? onPopupClosed(() => setBusy(false)) : undefined), [busy]);
   // Came with a friend's invite link: after starting, they go straight to joining. Read after the
   // first render, which the web builds ahead of time without the link.
   const [invited, setInvited] = useState(false);
@@ -100,8 +104,18 @@ export default function SignInScreen() {
           {social.apple.supported ? (
             <AppleButton kind="signIn" onPress={() => run(social.apple.signIn)} disabled={busy} />
           ) : null}
-          <Text style={[styles.notice, { color: invited ? colors.accent : colors.textMuted }]}>
-            {invited ? t('signIn.invited') : t('signIn.noAccountNeeded')}
+          {/* Back after the guest's 30 days: say why this is the first screen again. */}
+          <Text
+            style={[
+              styles.notice,
+              { color: invited || guestExpired ? colors.accent : colors.textMuted },
+            ]}
+          >
+            {invited
+              ? t('signIn.invited')
+              : guestExpired
+                ? t('signIn.guestExpired')
+                : t('signIn.noAccountNeeded')}
           </Text>
           {busy ? <ActivityIndicator color={colors.accent} /> : null}
           {error ? <Text style={[styles.error, { color: colors.accent }]}>{error}</Text> : null}

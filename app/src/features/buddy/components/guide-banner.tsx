@@ -5,21 +5,37 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useColors } from '@/theme';
 
-// Above the chat until tapped once in this room on this device: what the buddy is about and what levels bring
-// (a job at 12, its own way from 20), so there is something to look forward to from the first day.
+// Above the chat until opened once: what the buddy is about and what levels bring (a job at 12,
+// its own way from 20), so there is something to look forward to from the first day.
 // The whole card opens the guide, the ✕ too: people tap it to get it out of the way, and that is
 // the moment to show them the rest.
-// Per room: someone who comes into a friend's room with an invite sees it there too, even on a
-// device where they had a room of their own before.
-const seenKey = (roomId: string) => `buddy-guide-seen:${roomId}`;
+// Opened once is per user, kept on the server (`seenVersion`, docs/PROJECT.md), so it does not come
+// back on another device or in another room. Raise GUIDE_VERSION when the card says something new:
+// everyone sees it once more.
+export const GUIDE_VERSION = 1;
+
+// This device's own note, for when telling the server failed. Before the server kept it, a device
+// noted version 1 as `buddy-guide-seen` or, per room, `buddy-guide-seen:<roomId>`.
+const LOCAL_KEY = 'buddy-guide-seen-version';
+const LEGACY_KEY = 'buddy-guide-seen';
+
+async function seenOnThisDevice(): Promise<number> {
+  const local = Number(await AsyncStorage.getItem(LOCAL_KEY)) || 0;
+  const keys = await AsyncStorage.getAllKeys();
+  const legacy = keys.some((k) => k === LEGACY_KEY || k.startsWith(`${LEGACY_KEY}:`));
+  return Math.max(local, legacy ? 1 : 0);
+}
 
 // `hold`: not yet (the dream before the first egg is on).
 export function GuideBanner({
-  roomId,
+  seenVersion,
+  onSeen,
   onOpen,
   hold = false,
 }: {
-  roomId: string;
+  seenVersion: number;
+  // Tells the server; the screen keeps the user it sends back.
+  onSeen: (version: number) => void;
   onOpen: () => void;
   hold?: boolean;
 }) {
@@ -28,18 +44,27 @@ export function GuideBanner({
   const [show, setShow] = useState(false);
 
   useEffect(() => {
+    if (seenVersion >= GUIDE_VERSION) return;
     let cancelled = false;
-    AsyncStorage.getItem(seenKey(roomId))
-      .then((seen) => !cancelled && setShow(!seen))
-      .catch(() => {});
+    seenOnThisDevice()
+      .catch(() => 0)
+      .then((local) => {
+        if (cancelled) return;
+        // Opened here before the server heard of it: tell it now, for the user's other devices.
+        if (local >= GUIDE_VERSION) onSeen(GUIDE_VERSION);
+        else setShow(true);
+      });
     return () => {
       cancelled = true;
     };
-  }, [roomId]);
+    // onSeen is a new function each render; only the server's value decides.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seenVersion]);
 
   const done = () => {
     setShow(false);
-    AsyncStorage.setItem(seenKey(roomId), '1').catch(() => {});
+    AsyncStorage.setItem(LOCAL_KEY, String(GUIDE_VERSION)).catch(() => {});
+    onSeen(GUIDE_VERSION);
   };
 
   if (!show || hold) return null;

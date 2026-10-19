@@ -55,7 +55,7 @@ test("a failure carries the server's code and detail", async () => {
   }
 });
 
-test('a failure without a body is UNKNOWN; no answer (or no token) is NETWORK', async () => {
+test('a failure without a body is UNKNOWN; no answer is NETWORK', async () => {
   let fetch = serve(() => new Response('oops', { status: 500 }));
   try {
     await assert.rejects(api('/api/x'), { status: 500, code: 'UNKNOWN' });
@@ -70,11 +70,30 @@ test('a failure without a body is UNKNOWN; no answer (or no token) is NETWORK', 
   } finally {
     fetch.mock.restore();
   }
-  const signedOut = createApiClient({
-    baseUrl: () => 'https://api.test',
-    token: async () => {
-      throw new ApiError(401, 'UNAUTHORIZED');
-    },
-  });
-  await assert.rejects(signedOut('/api/x'), { status: 0, code: 'NETWORK' });
+});
+
+test("without a token nothing is sent, and the token's reason is kept", async () => {
+  const fetch = serve(() => assert.fail('sent without a token'));
+  const client = (error) =>
+    createApiClient({
+      baseUrl: () => 'https://api.test',
+      token: async () => {
+        throw error;
+      },
+    });
+  try {
+    await assert.rejects(client(new ApiError(401, 'UNAUTHORIZED'))('/api/x'), {
+      status: 401,
+      code: 'UNAUTHORIZED',
+    });
+    await assert.rejects(client(new ApiError(0, 'NETWORK'))('/api/x'), {
+      status: 0,
+      code: 'NETWORK',
+    });
+    // Not saying why counts as no answer.
+    await assert.rejects(client(new Error('?'))('/api/x'), { status: 0, code: 'NETWORK' });
+  } finally {
+    fetch.mock.restore();
+  }
+  assert.equal(fetch.mock.callCount(), 0);
 });

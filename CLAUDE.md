@@ -57,6 +57,7 @@
   무대 꾸미기(`stage-decor.tsx`의 `REWARDS`)는 서버가 준 레벨로 앱이 고른다(표시 규칙이라 서버에 없음). 도움말
   (`app/guide.tsx`)과 Buddy 상세의 다음 보상도 같은 목록을 쓴다. 철 따라 나오는 소품과 방의 빛은 기기 날짜·시각으로 정한다.
   우편함(`features/mailbox`)의 공지·편지도 앱에 넣고(`mail.ts`, 번역 `mailbox.mail.*`) 배포로 보낸다. 읽음은 기기에 둔다.
+  여러 기기·플랫폼에 걸쳐 같아야 하는 판단(예: 안내 카드를 본 사람인지, `guideSeenVersion`)은 서버에 둔다.
   예외는 로그인 전 "구경하기"(`app/demo.tsx`, `features/demo`)뿐이다. 대본으로 채팅 화면 부품을 그대로 재생하고 서버를 쓰지 않는다.
 - Buddy 무대(`features/buddy/components/buddy-stage.tsx`): 채팅 화면 위쪽 약 1/3, 접히지 않는다(접었다 펴면 스크롤이 튐).
   마운트 전에 받은 반응은 재생하지 않는다. 한 단어 메시지("밥", "똥", "춤", "노래" 등, `chat-words.ts`)에 답한다.
@@ -88,7 +89,8 @@
   `lib/confirm.web.ts`). Apple 계정을 지울 때는 다시 로그인하고 Apple 토큰을 취소한다(Firebase Apple 제공업체에 Services ID·키 필요).
 - **게스트는 30일.** Firebase 콘솔의 익명 계정 자동 정리(30일 지난 익명 계정 삭제)를 켜서 그대로 제품 정책으로 쓴다. 남은 일수는
   Firebase 계정 생성 시각으로 앱이 계산한다(`lib/account/guest-expiry.ts`, 30일은 `features/auth/guest-expiry.ts`). 서버에 남은 만료 게스트의 데이터는 서버가
-  주 1회 지운다(`account/GuestCleanup`). 첫 화면과 설정에 안내하고
+  주 1회 지운다(`account/GuestCleanup`). 첫 화면과 설정에 안내하고, 기간이 지나 돌아온 게스트에게는 첫 화면에서 알린다
+  (`lib/account`가 이 기기의 게스트 생성 시각을 기억해 `guestExpired`). 그리고
   계정 연결 권유와 마지막 7·3·1일 안내는 무대의 우편함 편지로(같은 날 서버 푸시도). 문구는 "회원가입"이 아니라 "계정 연결".
 - 계정 삭제는 설정 맨 아래. 서버(`DELETE /api/me`)를 먼저 지우고 Firebase 계정은 앱이 `deleteUser`로 지운다. Google 연결
   계정은 그 전에 다시 로그인한다. 순서(재인증 → 푸시 토큰 해제 → 서버 삭제 → 초안 정리 → `deleteUser`)는 `lib/account/actions.ts`의

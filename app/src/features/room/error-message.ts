@@ -1,26 +1,18 @@
 import type { TFunction } from 'i18next';
 
+import en from '@/i18n/locales/en.json';
 import { ApiError } from '@/lib/api';
 
-// Server error codes that have their own message; anything else gets a generic one.
-const KNOWN = [
-  'NETWORK',
-  'ROOM_FULL',
-  'INVITATION_NOT_FOUND',
-  'INVITATION_EXPIRED',
-  'INVITATION_USED',
-  'ALREADY_MEMBER',
-  'ALREADY_IN_ROOM',
-  'PARTNER_CHANGED',
-  'SUPPORT_RATE_LIMIT',
-  'ROOM_NOT_FOUND',
-  'JOB_CHANGE_LOCKED',
-  'JOB_UNCHANGED',
-  'BUDDY_NOT_ADULT',
-] as const;
+type ErrorKey = keyof typeof en.errors;
+
+// A server error code (or NETWORK) has its own message when `errors.<CODE>` is in the messages, so
+// adding the message is all a new code needs; anything else gets a generic one. The keys in
+// lower case (loadFailed, unknown) are the screens' own, not codes.
+function isCode(code: string): code is ErrorKey {
+  return /^[A-Z_]+$/.test(code) && code in en.errors;
+}
 
 export function errorMessage(t: TFunction, error: unknown): string {
   const code = error instanceof ApiError ? error.code : null;
-  const known = KNOWN.find((k) => k === code);
-  return known ? t(`errors.${known}`) : t('errors.unknown');
+  return code && isCode(code) ? t(`errors.${code}`) : t('errors.unknown');
 }

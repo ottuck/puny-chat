@@ -2,7 +2,13 @@ import type { BuddyJob, BuddyView } from '@/features/buddy/api';
 import { api, ApiError } from '@/lib/api';
 
 // Shapes returned by the server (server/src/main/java/com/buddychat/room/RoomView.java).
-export type Me = { id: string; displayName: string | null; roomId: string | null };
+export type Me = {
+  id: string;
+  displayName: string | null;
+  roomId: string | null;
+  // The newest guide card version this user has opened, on any device (0 for none).
+  guideSeenVersion?: number;
+};
 export type RoomMember = { id: string; displayName: string | null };
 // A buddy that grew up and went its own way, kept in the room's album.
 export type AlbumEntry = {
@@ -27,6 +33,10 @@ export const fetchMe = () => api<Me>('/api/me');
 export const MAX_DISPLAY_NAME = 20;
 export const updateMyName = (displayName: string) =>
   api<Me>('/api/me', { method: 'PATCH', body: { displayName } });
+
+// The guide card above the chat was opened (server keeps the highest version).
+export const markGuideSeen = (version: number) =>
+  api<Me>('/api/me/guide-seen', { method: 'PUT', body: { version } });
 
 export const fetchRoom = () => api<Room>('/api/rooms/me');
 

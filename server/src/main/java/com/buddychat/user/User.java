@@ -17,6 +17,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
  *     including on older documents.
  * @param guestNoticeDays the last "days left as a guest" push sent (7, 3 or 1), so each goes once.
  *     Null until the first.
+ * @param guideSeenVersion the newest version of the in-chat guide card the user has opened, on any
+ *     device. The app shows the card while this is below its own version. Null until the first.
  */
 @Document("users")
 public record User(
@@ -28,11 +30,12 @@ public record User(
         @Nullable Boolean guest,
         @Nullable Instant lastSeenAt,
         @Nullable String roomJoinId,
-        @Nullable Integer guestNoticeDays) {
+        @Nullable Integer guestNoticeDays,
+        @Nullable Integer guideSeenVersion) {
 
     public static final int MAX_NAME_LENGTH = 20;
 
     static User create(String firebaseUid, @Nullable String displayName, boolean guest, Instant now) {
-        return new User(null, firebaseUid, displayName, null, now, guest, now, null, null);
+        return new User(null, firebaseUid, displayName, null, now, guest, now, null, null, null);
     }
 }

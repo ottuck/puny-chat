@@ -4,6 +4,8 @@
 //
 //   auth-state.tsx    AuthProvider (pass the app's Auth) and useAuth(): the user and an Account
 //                     summary (guest or not, linked provider, email, created at)
+//                     and, given guestDays, whether a guest on this device is gone because their
+//                     days were up (guestExpired; remembered in AsyncStorage while signed in)
 //   guest-expiry.ts   days left for an anonymous guest who lasts N days from creation
 //   actions.ts        signing in as a guest, out, and deleting the account in a safe order: the
 //                     app passes its server's deletion and what to clean up when leaving
