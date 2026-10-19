@@ -192,6 +192,12 @@ function RootNavigator() {
       <Stack.Protected guard={signedIn && state.status === 'ready' && named}>
         <Stack.Screen name="index" />
       </Stack.Protected>
+      {/* Signed out, the first screen allowed is where a blocked address ends up: signing out, or
+          opening the chat's address, lands on the first screen rather than the start flow's steps. */}
+      <Stack.Protected guard={!signedIn}>
+        <Stack.Screen name="sign-in" />
+        <Stack.Screen name="demo" />
+      </Stack.Protected>
       {/* Also before signing in: the egg's name is the start flow's last step. */}
       <Stack.Protected guard={!signedIn || (state.status === 'none' && named)}>
         <Stack.Screen name="welcome" />
@@ -209,10 +215,6 @@ function RootNavigator() {
       {/* Also before signing in: "start with an invite code" types the code first (join.tsx). */}
       <Stack.Protected guard={!signedIn || named}>
         <Stack.Screen name="join" options={withHeader(t('join.title'))} />
-      </Stack.Protected>
-      <Stack.Protected guard={!signedIn}>
-        <Stack.Screen name="sign-in" />
-        <Stack.Screen name="demo" />
       </Stack.Protected>
       <Stack.Screen name="privacy" options={withHeader(t('privacy.title'))} />
       <Stack.Screen name="support" options={withHeader(t('support.title'))} />
