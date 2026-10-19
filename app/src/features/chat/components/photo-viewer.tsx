@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ChevronLeftIcon } from '@/components/icons';
 import { WebFrame } from '@/components/web-frame';
 
 type Props = {
@@ -11,7 +12,7 @@ type Props = {
 };
 
 // A photo across the whole screen on black. A tap anywhere closes it: there is nothing else to do
-// here (no zoom, no saving; docs/PROJECT.md, 사진).
+// here (no zoom, no saving; docs/PROJECT.md, 사진). The back arrow top left says so, as in Photos.
 export function PhotoViewer({ uri, onClose }: Props) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -38,8 +39,8 @@ export function PhotoViewer({ uri, onClose }: Props) {
               accessibilityLabel={t('chat.photoMessage')}
             />
           ) : null}
-          <View style={[styles.close, { top: 12 + insets.top }]}>
-            <Text style={styles.closeText}>✕</Text>
+          <View style={[styles.back, { top: 12 + insets.top }]}>
+            <ChevronLeftIcon color="#fff" />
           </View>
         </Pressable>
       </WebFrame>
@@ -59,20 +60,15 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   // Only a sign: the tap anywhere closes.
-  close: {
+  back: {
     pointerEvents: 'none',
     position: 'absolute',
-    right: 16,
+    left: 16,
     width: 36,
     height: 36,
     borderRadius: 18,
     backgroundColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  closeText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
   },
 });
