@@ -41,7 +41,13 @@
 
 ## App structure
 
-- 서버 통신: `lib/api.ts`(REST, Firebase ID token 첨부) · `features/chat/socket.ts`(WebSocket, 첫 메시지 인증, 재연결)
+- 서버 통신: `lib/api.ts`(REST, `lib/api-client.ts`에 서버 주소와 Firebase ID token을 넘긴다) · `features/chat/socket.ts`(채팅·Buddy 이벤트).
+  연결 자체(첫 메시지 인증, 재연결·백오프, 일시정지)는 `lib/realtime-socket.ts`로, 이벤트 타입은 제네릭이고 주소·토큰은 주입받는다.
+- `lib/`의 재사용 코어(`social-auth`, `account`, `realtime-socket.ts`, `api-client.ts`, `push`)는 앱 코드(`@/features`, `@/app`,
+  `@/i18n`)와 서버 경로를 import하지 않는다. 앱은 `lib/api.ts`, `features/chat/socket.ts`, `features/notifications/push.ts`,
+  `features/auth/social.ts`에서 주소·번역·인증을 넘겨 묶는다. 다른 앱에는 파일·폴더째 복사해 쓴다.
+- `features/chat` → `features/buddy` 한 방향으로만 import한다. buddy는 chat 타입을 모르고, 반응은 `reactions.ts`의
+  `ReactionSource`(메시지에서 쓰는 필드만)로 받는다. Buddy 사건 종류 `BuddyEvent`는 `features/buddy/api.ts`에 있다.
 - `features/room/room-provider.tsx`: 로그인 후 `/api/me` → room 유무로 `welcome` / 채팅 화면을 나눈다(`_layout.tsx` 가드).
 - `features/chat/use-chat.ts`: 타임라인 상태. `message-sync.ts`가 실시간 메시지와 별개인 복구 커서로 `after`를 읽고,
   실패하면 마지막 성공 페이지에서 재시도한다. 복구 중 읽음은 보내지 않는다. ack 못 받은 메시지는 `ready`에서 같은
@@ -66,7 +72,8 @@
 - Firebase Auth는 JS SDK(`firebase`)만 쓴다 — iOS와 Web 공용. `@react-native-firebase`는 쓰지 않는다.
 - `app/src/lib/firebase.ts`(native, AsyncStorage 유지) / `firebase.web.ts`(web). firebase 타입이 web 전용이라
   native의 `getReactNativePersistence` import에만 `@ts-expect-error`를 둔다.
-- 로그인 여부로 화면을 나누는 건 `_layout.tsx`의 `Stack.Protected`.
+- 로그인 여부로 화면을 나누는 건 `_layout.tsx`의 `Stack.Protected`. 로그인 상태(`useAuth`, `Account`)는 `lib/account`의
+  `AuthProvider`에 앱의 Firebase `auth`를 넘겨 쓴다(`features/auth/auth-provider.tsx`). `lib/account`는 `lib/social-auth`와 함께 옮긴다.
 - **게스트 우선.** 첫 화면의 주 버튼 "시작하기"는 구경하기를 먼저 보여 주고, 이름·알 이름을 정한 마지막 단계("버디 깨우기")에서
   Firebase 익명 로그인을 한다. 운영에서도 정식 기능이다.
   게스트도 모든 기능을 쓴다. 이름·알 이름을 계정 없이 먼저 받고(`features/auth/start-flow`), 마지막 단계에서 익명 로그인 후 이름 저장·방 만들기.
@@ -81,11 +88,13 @@
   연결은 `linkOrSwitch`: 이미 다른 사용자인 계정이면 `AccountInUseError`로 전환을 묻는다(웹 확인 창은 포커스가 돌아온 뒤,
   `lib/confirm.web.ts`). Apple 계정을 지울 때는 다시 로그인하고 Apple 토큰을 취소한다(Firebase Apple 제공업체에 Services ID·키 필요).
 - **게스트는 30일.** Firebase 콘솔의 익명 계정 자동 정리(30일 지난 익명 계정 삭제)를 켜서 그대로 제품 정책으로 쓴다. 남은 일수는
-  Firebase 계정 생성 시각으로 앱이 계산한다(`features/auth/guest-expiry.ts`). 서버에 남은 만료 게스트의 데이터는 서버가
-  주 1회 지운다(`account/GuestCleanup`). 첫 화면과 설정에 안내하고
+  Firebase 계정 생성 시각으로 앱이 계산한다(`lib/account/guest-expiry.ts`, 30일은 `features/auth/guest-expiry.ts`). 서버에 남은 만료 게스트의 데이터는 서버가
+  주 1회 지운다(`account/GuestCleanup`). 첫 화면과 설정에 안내하고, 기간이 지나 돌아온 게스트에게는 첫 화면에서 알린다
+  (`lib/account`가 이 기기의 게스트 생성 시각을 기억해 `guestExpired`). 그리고
   계정 연결 권유와 마지막 7·3·1일 안내는 무대의 우편함 편지로(같은 날 서버 푸시도). 문구는 "회원가입"이 아니라 "계정 연결".
 - 계정 삭제는 설정 맨 아래. 서버(`DELETE /api/me`)를 먼저 지우고 Firebase 계정은 앱이 `deleteUser`로 지운다. Google 연결
-  계정은 그 전에 다시 로그인한다(`features/auth/actions.ts`, 순서와 이유는 `docs/PROJECT.md` 계정 삭제).
+  계정은 그 전에 다시 로그인한다. 순서(재인증 → 푸시 토큰 해제 → 서버 삭제 → 초안 정리 → `deleteUser`)는 `lib/account/actions.ts`의
+  `createAccountActions`가 지키고, 서버 호출과 정리할 것은 `features/auth/actions.ts`가 넘긴다(이유는 `docs/PROJECT.md` 계정 삭제).
 
 ## Server commands (`server/`에서 실행)
 
@@ -131,8 +140,10 @@
 - `ios/`, `android/`는 CNG로 생성되는 폴더다. 직접 만들거나 고치지 않고 `app.json`과 config plugin으로 설정한다.
 - Windows에서는 iOS 로컬 빌드가 안 된다. 네이티브 모듈을 넣거나 네이티브 설정을 바꾸면 EAS 클라우드 빌드를 다시
   해야 한다(무료 플랜은 월 빌드 수 제한) — 넣기 전에 사용자에게 먼저 확인한다.
-- 플랫폼마다 지원이 다른 기능은 `*.web.ts`로 나눈다(예: `features/notifications/push.web.ts`는 Web Push와 서비스 워커
-  `public/sw.js`, 앱은 Expo 푸시).
+- 플랫폼마다 지원이 다른 기능은 `*.web.ts`로 나눈다(예: `lib/push/push.web.ts`는 Web Push와 서비스 워커
+  `public/sw.js`, `push.ts`는 Expo 푸시). 푸시 코어 `lib/push`는 서버 호출·번역을 모르고, 앱의
+  `features/notifications/push.ts`가 `createPush`에 서버 주소(`/api/me/push-tokens`, `/api/me/web-push`)와 언어를 넘긴다.
+  알림을 누르면 `onNotificationTap`(웹은 `sw.js`가 열린 창에 메시지를 보냄)으로 채팅 화면(`app/index.tsx`)이 `/`로 돌아온다.
 
 ## Principles
 
@@ -141,7 +152,7 @@
 - iOS UX가 기준이다(Safe Area, 키보드, 스크롤). Web은 같은 모바일 레이아웃을 가운데 정렬하고 최대 폭만 제한한다.
   넓은 창(768px~)에서는 폰 크기 틀에 담는다: CSS 미디어 쿼리(`app/+html.tsx`)가 `WebFrame`의 id를 꾸민다. 창 폭을 JS로 재서
   구조를 바꾸면 경계를 넘을 때 앱 전체가 다시 마운트되므로 그렇게 하지 않는다. 모달 시트도 `WebFrame`으로 감싼다.
-- 초대 링크 `join?code=`: 로그인 전이면 `lib/pending-invite`가 코드를 기억했다가 이름을 정한 뒤 참가 화면을 연다.
+- 초대 링크 `join?code=`: 로그인 전이면 `features/room/pending-invite`가 코드를 기억했다가 이름을 정한 뒤 참가 화면을 연다.
   복사는 `lib/clipboard`(`expo-clipboard`, 앱·웹 공용).
 - 링크 미리보기(Open Graph, 일본어 — 일본 App Store 출시)는 `app/+html.tsx`, 이미지는 `app/public/og.png`(1200×630, 온천 장면 `docs/images/bath.png`에 일본어 문구를 얹음).
 - iOS-first design ≠ iOS-only code. 플랫폼 분기는 정말 다를 때만 `*.ios.ts` / `*.web.ts`로 나눈다.

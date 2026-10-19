@@ -26,7 +26,12 @@ import { EmptyChat } from '@/features/chat/components/empty-chat';
 import { nothingSaidYet } from '@/features/chat/timeline';
 import { MessageList } from '@/features/chat/components/message-list';
 import { useChat } from '@/features/chat/use-chat';
-import { type PushState, registerForPush, setPushEnabled } from '@/features/notifications/push';
+import {
+  onNotificationTap,
+  type PushState,
+  registerForPush,
+  setPushEnabled,
+} from '@/features/notifications/push';
 import { InviteSheet } from '@/features/room/components/invite-sheet';
 import { markGuideSeen, type Me, type Room } from '@/features/room/api';
 import { useReadyRoom } from '@/features/room/room-provider';
@@ -101,6 +106,9 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged, onGuideSeen }: ChatSc
       .then(setPush)
       .catch((e) => console.warn('push registration failed', e));
   }, []);
+  // Every notification is about this room (a message, the guest's days), so a tap brings the chat
+  // back from wherever the app was left (settings, the guide). This screen stays under those.
+  useEffect(() => onNotificationTap(() => router.navigate('/')), []);
   const [inviteOpen, setInviteOpen] = useState(false);
   // The guide waits for the dream before the first egg to end.
   const [dreaming, setDreaming] = useState(false);

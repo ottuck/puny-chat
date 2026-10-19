@@ -21,6 +21,7 @@ import { useRoom } from '@/features/room/room-provider';
 import { cancelStart, signInErrorKey } from '@/features/auth/actions';
 import { isCancelledSignIn } from '@/lib/social-auth';
 import { useAuth } from '@/features/auth/auth-provider';
+import { useHome } from '@/features/auth/use-home';
 import { finishStart, resetStart, setStartName, useStart } from '@/features/auth/start-flow';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
@@ -31,6 +32,7 @@ export default function NameScreen() {
   const { t } = useTranslation();
   const { state, setMe, refreshRoom } = useRoom();
   const { user } = useAuth();
+  const home = useHome();
   const starting = !user;
   const pending = useStart();
   const me = state.status === 'none' || state.status === 'ready' ? state.me : null;
@@ -110,7 +112,7 @@ export default function NameScreen() {
       ) : null}
       {/* A back button only when coming from settings; first-time naming has nowhere to go back to. */}
       <Stack.Screen
-        options={{ headerShown: editing, title: '', headerLeft: () => <HeaderBack /> }}
+        options={{ headerShown: editing, title: '', headerLeft: () => <HeaderBack home={home} /> }}
       />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

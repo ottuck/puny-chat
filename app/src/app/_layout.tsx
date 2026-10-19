@@ -12,10 +12,11 @@ import { StatusScreen } from '@/components/status-screen';
 import { WebFrame } from '@/components/web-frame';
 import { AuthProvider, useAuth } from '@/features/auth/auth-provider';
 import { nameSaved, roomMade, takeStartCode, useStart } from '@/features/auth/start-flow';
+import { useHome } from '@/features/auth/use-home';
 import { createRoom, updateMyName } from '@/features/room/api';
 import { RoomProvider, useRoom } from '@/features/room/room-provider';
 import { loadPreferences, usePreferences } from '@/lib/preferences';
-import { rememberInviteFromUrl, takePendingInvite } from '@/lib/pending-invite';
+import { rememberInviteFromUrl, takePendingInvite } from '@/features/room/pending-invite';
 import { registerServiceWorker } from '@/lib/service-worker';
 import { warmUpServer } from '@/lib/warm-up';
 import { watchForNewVersion } from '@/lib/web-update';
@@ -68,6 +69,7 @@ export default function RootLayout() {
 
 function RootNavigator() {
   const { user, initializing } = useAuth();
+  const home = useHome();
   const { state, reload, setMe, setRoom } = useRoom();
   const { t, i18n } = useTranslation();
   const signedIn = !!user;
@@ -181,10 +183,10 @@ function RootNavigator() {
   const withHeader = (title: string) => ({
     headerShown: true,
     title,
-    headerLeft: () => <HeaderBack />,
+    headerLeft: () => <HeaderBack home={home} />,
     ...(Platform.OS === 'web' && {
-      headerTitle: (props: ComponentProps<typeof HeaderBackTitle>) => (
-        <HeaderBackTitle {...props} />
+      headerTitle: (props: Omit<ComponentProps<typeof HeaderBackTitle>, 'home'>) => (
+        <HeaderBackTitle {...props} home={home} />
       ),
     }),
   });

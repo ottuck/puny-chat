@@ -1,51 +1,25 @@
-import { auth } from './firebase';
+import { ApiError, createApiClient } from './api-client';
 import { apiUrl } from './api-url';
+import { auth } from './firebase';
 
-// A failure the server described with a stable code (docs/PROJECT.md). UI copy for each
-// code lives in the app's messages.
-export class ApiError extends Error {
-  constructor(
-    readonly status: number,
-    readonly code: string,
-    // A value for the message, when the server gives one (e.g. whose seat a code is for).
-    readonly detail?: string,
-  ) {
-    super(code);
-  }
-}
+// This app's server (docs/PROJECT.md, API), signed in with Firebase. The client itself is
+// lib/api-client.ts.
+export { ApiError };
 
-// The current Firebase ID token. The SDK refreshes it when it is close to expiring.
+// The current Firebase ID token. The SDK refreshes it when it is close to expiring; that needs the
+// network, and fails for good when the account is gone (a guest past 30 days, a deleted account),
+// which Firebase then signs out.
 export async function idToken(): Promise<string> {
   const user = auth.currentUser;
   if (!user) throw new ApiError(401, 'UNAUTHORIZED');
-  return user.getIdToken();
+  try {
+    return await user.getIdToken();
+  } catch (e) {
+    if ((e as { code?: unknown }).code === 'auth/network-request-failed') {
+      throw new ApiError(0, 'NETWORK');
+    }
+    throw new ApiError(401, 'UNAUTHORIZED');
+  }
 }
 
-export async function api<T>(
-  path: string,
-  init: { method?: string; body?: unknown; signal?: AbortSignal } = {},
-): Promise<T> {
-  let response: Response;
-  try {
-    response = await fetch(`${apiUrl()}${path}`, {
-      method: init.method ?? 'GET',
-      headers: {
-        Authorization: `Bearer ${await idToken()}`,
-        ...(init.body === undefined ? {} : { 'Content-Type': 'application/json' }),
-      },
-      body: init.body === undefined ? undefined : JSON.stringify(init.body),
-      signal: init.signal,
-    });
-  } catch {
-    throw new ApiError(0, 'NETWORK');
-  }
-  if (!response.ok) {
-    const body = (await response.json().catch(() => null)) as {
-      code?: string;
-      detail?: string;
-    } | null;
-    throw new ApiError(response.status, body?.code ?? 'UNKNOWN', body?.detail);
-  }
-  if (response.status === 204) return undefined as T;
-  return (await response.json()) as T;
-}
+export const api = createApiClient({ baseUrl: apiUrl, token: idToken });

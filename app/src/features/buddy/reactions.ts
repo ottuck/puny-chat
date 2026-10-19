@@ -1,4 +1,15 @@
-import type { ServerMessage } from '@/features/chat/types';
+import type { BuddyEvent } from './api';
+
+// The fields of a chat message (features/chat/types, ServerMessage) a reaction depends on. The chat
+// passes its messages in; the buddy does not know the chat's types.
+export type ReactionSource = {
+  id: string;
+  type: 'TEXT' | 'SYSTEM' | 'BUDDY_EVENT';
+  senderId: string | null;
+  buddyEvent: BuddyEvent | null;
+  systemEvent?: string | null;
+  actorId: string | null;
+};
 
 // Something that just happened in the room, for the buddy on its stage to react to.
 export type ReactionKind =
@@ -36,7 +47,7 @@ const BY_EVENT: Partial<Record<string, ReactionKind>> = {
 // Only for messages arriving live; history loaded after a reconnect is not reacted to. Care and
 // growth events come for whoever caused them, so the partner's feeding shows here too. The
 // user's own texts are not reacted to, only the partner's; nor is their own coming in.
-export function reactionTo(message: ServerMessage, myId: string): Reaction | null {
+export function reactionTo(message: ReactionSource, myId: string): Reaction | null {
   const kind =
     message.type === 'BUDDY_EVENT'
       ? BY_EVENT[message.buddyEvent ?? '']
@@ -54,7 +65,10 @@ export function reactionTo(message: ServerMessage, myId: string): Reaction | nul
 // opening or reconnecting, newer than what they had read): worth showing once, the other care
 // events are not. The top level first, it is the bigger moment. Someone who never read anything
 // here just joined, and the buddy's past is not news to them.
-export function missedMoment(loaded: ServerMessage[], myRead: string | undefined): Reaction | null {
+export function missedMoment(
+  loaded: ReactionSource[],
+  myRead: string | undefined,
+): Reaction | null {
   if (!myRead) return null;
   // Hex ids sort by time (docs/PROJECT.md).
   const newer = (event: string) =>

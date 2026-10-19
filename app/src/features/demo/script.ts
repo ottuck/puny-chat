@@ -1,4 +1,4 @@
-import type { BuddyEvent } from '@/features/chat/types';
+import type { BuddyEvent } from '@/features/buddy/api';
 
 // The "take a look first" tour (docs/PROJECT.md, 구경하기): a scripted conversation of about 55
 // seconds in which both say hello (the together bonus), the buddy hatches, dances, gets hungry, eats, poops, is cleaned, levels up,

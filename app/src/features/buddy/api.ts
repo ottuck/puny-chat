@@ -2,6 +2,25 @@ import { api } from '@/lib/api';
 
 export type BuddyStage = 'EGG' | 'BABY' | 'CHILD' | 'ADULT';
 
+// What happened to the buddy, kept as a chat timeline entry (server: buddy/BuddyService).
+export type BuddyEvent =
+  | 'HUNGRY'
+  | 'FED'
+  | 'POOPED'
+  | 'CLEANED'
+  // A grown-up's work at its station (docs/PROJECT.md, 직업 무대 장치).
+  | 'WORKED'
+  // A trip to the hot spring that earned EXP (docs/fun-improvements.md, 목욕).
+  | 'BATHED'
+  | 'LEVELED_UP'
+  | 'EVOLVED'
+  | 'GROWN'
+  | 'MAX_LEVEL'
+  | 'GRADUATED'
+  | 'TOGETHER'
+  | 'JOB'
+  | 'JOB_CHANGED';
+
 // What it grows up to be, from how the two raised it (server: buddy/BuddyJob).
 export type BuddyJob = 'CHEF' | 'GARDENER' | 'DJ' | 'WRITER' | 'BARISTA';
 
