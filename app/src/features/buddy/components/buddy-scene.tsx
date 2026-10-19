@@ -15,15 +15,15 @@ import { useColors } from '@/theme';
 
 import type { AlbumEntry } from '@/features/room/api';
 
-import type { BuddyView } from '../api';
+import type { BuddyJob, BuddyView } from '../api';
 import { type Situation, useMailbox } from '@/features/mailbox/mail';
 import { MailboxSheet } from '@/features/mailbox/mailbox-sheet';
 import type { PushState } from '@/features/notifications/push';
 
 import { ALBUM_ICON, BATH_ICON, BATH_PALETTE, HOME_ICON, MAIL_ICON } from '../pixel/bath';
-import { isWinter } from '../pixel/looks';
+import { dressedFrame, isWinter } from '../pixel/looks';
 import { PixelSprite } from '../pixel/pixel-sprite';
-import { buddyFrame } from '../pixel/sprites';
+import { BUDDY_PALETTE, buddyFrame } from '../pixel/sprites';
 import type { Reaction } from '../reactions';
 import { AlbumGallery } from './album-gallery';
 import { BathStage } from './bath-stage';
@@ -48,10 +48,14 @@ import { Iris, type IrisRun } from './iris';
 // evolution, plays there once the iris opens.
 //
 // When the buddy goes its own way it moves out: it waves with its things in a bundle on its back and
-// walks off, the iris closes, and it opens on the bare room with the new egg.
+// walks off, the iris closes, and it opens on the bare room, where its photo pops up and flies into
+// the memory album's frame in the corner; then the new egg arrives in its rings of light. The album's
+// button calls (a dot, a little shake) until the newest photo has been seen on this device.
 
 const BATH_MAX_MS = 10 * 60_000;
 const DREAM_SEEN_KEY = 'buddy-dream-seen';
+// The newest photo seen in the album on this device (its graduatedAt).
+const ALBUM_SEEN_KEY = 'buddy-album-seen';
 // The wave, and the walk out of the room.
 const MOVE_OUT_MS = LEAVE_WAVE_MS + 1600;
 
@@ -67,6 +71,8 @@ type Props = ComponentProps<typeof BuddyStage> & {
   onBathe?: () => void;
   // Buddies gone their own way: the album's button sits beside the bath's once there are any.
   album?: AlbumEntry[];
+  // A new value opens the album (the chat's card for a buddy gone its own way).
+  albumRequest?: string | null;
   // The account and device now, for the mail that is only for that (docs/fun-improvements.md, 우편함).
   situation?: Situation;
   onTurnOnPush?: () => Promise<PushState>;
@@ -151,12 +157,96 @@ function CornerButton({
   );
 }
 
+// The photo of a buddy that just moved out: it pops up in the middle of the empty room in a pastel
+// frame, holds a beat, then arcs up into the album's frame in the corner, shrinking as it goes.
+const PHOTO_PICTURE = 46;
+function PhotoFlight({
+  job,
+  from,
+  to,
+  onDone,
+}: {
+  job: BuddyJob | null;
+  from: { x: number; y: number };
+  to: { x: number; y: number };
+  onDone: () => void;
+}) {
+  const colors = useColors();
+  const [pop] = useState(() => new Animated.Value(0));
+  const [fly] = useState(() => new Animated.Value(0));
+  const done = useRef(onDone);
+  useEffect(() => {
+    done.current = onDone;
+  });
+  useEffect(() => {
+    const anim = Animated.sequence([
+      Animated.spring(pop, {
+        toValue: 1,
+        friction: 5,
+        tension: 110,
+        useNativeDriver: NATIVE_DRIVER,
+      }),
+      Animated.delay(500),
+      Animated.timing(fly, {
+        toValue: 1,
+        duration: 650,
+        easing: Easing.inOut(Easing.cubic),
+        useNativeDriver: NATIVE_DRIVER,
+      }),
+    ]);
+    anim.start(({ finished }) => finished && done.current());
+    return () => anim.stop();
+  }, [pop, fly]);
+  const frame = dressedFrame('ADULT', 'happy', job, null);
+  const scale = PHOTO_PICTURE / frame[0].length;
+  const size = PHOTO_PICTURE + 14;
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.photo,
+        {
+          left: from.x - size / 2,
+          top: from.y - size / 2,
+          width: size,
+          opacity: fly.interpolate({ inputRange: [0, 0.92, 1], outputRange: [1, 1, 0] }),
+          transform: [
+            { translateX: fly.interpolate({ inputRange: [0, 1], outputRange: [0, dx] }) },
+            {
+              translateY: fly.interpolate({
+                inputRange: [0, 0.5, 1],
+                outputRange: [0, dy * 0.5 - 24, dy],
+              }),
+            },
+            {
+              scale: Animated.multiply(
+                pop,
+                fly.interpolate({ inputRange: [0, 1], outputRange: [1, 0.3] }),
+              ),
+            },
+            {
+              rotate: fly.interpolate({ inputRange: [0, 1], outputRange: ['-5deg', '10deg'] }),
+            },
+          ],
+        },
+      ]}
+    >
+      <View style={[styles.photoPicture, { backgroundColor: colors.stage }]}>
+        <PixelSprite frame={frame} palette={BUDDY_PALETTE} scale={scale} smooth />
+      </View>
+    </Animated.View>
+  );
+}
+
 export function BuddyScene({
   dreams = false,
   onDreaming,
   startInBath = false,
   onBathe,
   album = [],
+  albumRequest = null,
   situation,
   onTurnOnPush,
   ...props
@@ -180,6 +270,41 @@ export function BuddyScene({
   }, []);
   const [focusX, setFocusX] = useState<number | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  // A photo not yet seen in the album; undefined until read.
+  const newestPhoto = album.length > 0 ? album[album.length - 1].graduatedAt : null;
+  const [albumSeen, setAlbumSeen] = useState<string | null | undefined>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    AsyncStorage.getItem(ALBUM_SEEN_KEY)
+      .then((value) => !cancelled && setAlbumSeen(value))
+      .catch(() => !cancelled && setAlbumSeen(null));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const newPhoto =
+    albumSeen !== undefined && newestPhoto !== null && (!albumSeen || newestPhoto > albumSeen);
+  const openAlbum = useCallback(() => {
+    setGalleryOpen(true);
+    if (!newestPhoto) return;
+    setAlbumSeen(newestPhoto);
+    AsyncStorage.setItem(ALBUM_SEEN_KEY, newestPhoto).catch(() => {});
+  }, [newestPhoto]);
+  const opening = useRef(openAlbum);
+  useEffect(() => {
+    opening.current = openAlbum;
+  });
+  useEffect(() => {
+    if (!albumRequest) return;
+    const timer = setTimeout(() => opening.current(), 0);
+    return () => clearTimeout(timer);
+  }, [albumRequest]);
+  // The photo of the buddy that just moved out, on its way to the album.
+  const [flight, setFlight] = useState<{
+    id: number;
+    job: BuddyJob | null;
+    landed: () => void;
+  } | null>(null);
   const [mailOpen, setMailOpen] = useState(false);
   const mailbox = useMailbox(buddy.level, situation);
 
@@ -287,15 +412,18 @@ export function BuddyScene({
   }, [place]);
 
   const moveIn = () => {
+    const leaving = moving;
     setFocusX(null);
     run(
       () => setMoving(null),
-      // The new egg arrives in its rings of light.
-      () =>
-        setCaughtUp({
-          reaction: { id: `moved-${runs.current}`, kind: 'evolved' },
-          after: latest?.id,
-        }),
+      () => {
+        // Its photo goes into the album first; then the new egg arrives in its rings of light.
+        const after = latest?.id;
+        const rings = () =>
+          setCaughtUp({ reaction: { id: `moved-${runs.current}`, kind: 'evolved' }, after });
+        if (!leaving) return rings();
+        setFlight({ id: runs.current, job: leaving.job, landed: rings });
+      },
     );
   };
   const movedOut = useRef(moveIn);
@@ -354,7 +482,6 @@ export function BuddyScene({
         onWalk={onWalk}
         buddy={shown}
         reaction={reaction}
-        onOpenMail={() => setMailOpen(true)}
         corners={1 + (canBathe ? 1 : 0) + (hasAlbum ? 1 : 0)}
         corner={
           <View style={styles.corners}>
@@ -369,7 +496,8 @@ export function BuddyScene({
               <CornerButton
                 icon={ALBUM_ICON}
                 label={t('buddy.album.open')}
-                onPress={() => setGalleryOpen(true)}
+                badge={newPhoto && !flight}
+                onPress={openAlbum}
               />
             ) : null}
             {canBathe ? (
@@ -387,6 +515,19 @@ export function BuddyScene({
       onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}
     >
       {scene}
+      {flight && width > 0 ? (
+        <PhotoFlight
+          key={flight.id}
+          job={flight.job}
+          from={{ x: width / 2, y: (height - FLOOR) / 2 }}
+          // The album's frame: the last corner button while there is an egg (no bath button yet).
+          to={{ x: width - 6 - CORNER_SIZE / 2, y: 4 + CORNER_SIZE / 2 }}
+          onDone={() => {
+            setFlight(null);
+            flight.landed();
+          }}
+        />
+      ) : null}
       <Iris run={iris} width={width} height={height} focus={focus} spot={spriteHeight * 0.62} />
       <AlbumGallery visible={galleryOpen} album={album} onClose={() => setGalleryOpen(false)} />
       <MailboxSheet
@@ -413,6 +554,24 @@ const styles = StyleSheet.create({
   corners: {
     flexDirection: 'row',
     gap: 6,
+  },
+  // A small framed photo, as in the album (album-gallery.tsx), in its pastel yellow.
+  photo: {
+    position: 'absolute',
+    padding: 4,
+    paddingBottom: 10,
+    borderRadius: 4,
+    borderWidth: 3,
+    borderColor: '#FFC86B',
+    backgroundColor: '#FFFDF8',
+    zIndex: 3,
+  },
+  photoPicture: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingTop: 4,
+    borderRadius: 2,
+    overflow: 'hidden',
   },
   badge: {
     position: 'absolute',

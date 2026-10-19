@@ -404,8 +404,6 @@ type Props = {
   hour?: number;
   // The day ("MM-DD") the room's seasonal things go by instead of today (the art preview).
   date?: string;
-  // Opens the mailbox (the top level's note about the developer's letter).
-  onOpenMail?: () => void;
 };
 
 // The room's time: the device's, or the hour and day the art preview picks.
@@ -660,7 +658,6 @@ export function BuddyStage({
   leaving = false,
   hour,
   date,
-  onOpenMail,
 }: Props) {
   const colors = useColors();
   const colorMode = useColorMode();
@@ -1425,7 +1422,6 @@ export function BuddyStage({
   const topOn = topId !== null && topDone !== topId;
   const topNotes = [
     { text: t('buddy.top.reached') },
-    { text: t('buddy.top.letter'), onPress: onOpenMail },
     ...(job ? [{ text: t('buddy.notice.jobChangeFree') }] : []),
   ];
   const topMs = topNotes.length * TOP_NOTE_MS;

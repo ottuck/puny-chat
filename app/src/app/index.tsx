@@ -98,6 +98,8 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
   const [inviteOpen, setInviteOpen] = useState(false);
   // The guide waits for the dream before the first egg to end.
   const [dreaming, setDreaming] = useState(false);
+  // The chat's card for a buddy gone its own way opens the album on the stage.
+  const [albumRequest, setAlbumRequest] = useState<string | null>(null);
   const partner = room.members.find((member) => member.id !== me.id);
 
   // The buddy's stage takes about a third of the screen and keeps it (docs/PROJECT.md, 핵심 경험).
@@ -130,6 +132,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
         <GuideBanner roomId={room.id} hold={dreaming} onOpen={() => router.push('/guide')} />
         <BuddyScene
           dreams
+          albumRequest={albumRequest}
           // Being a guest and notifications off come as letters in the stage's mailbox.
           situation={{ guestDaysLeft, push }}
           onTurnOnPush={() =>
@@ -172,6 +175,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
               onRetry={chat.retry}
               onLoadOlder={chat.loadOlder}
               onGraduate={buddy.grown ? () => setBuddyOpen(true) : undefined}
+              onOpenAlbum={() => setAlbumRequest(String(Date.now()))}
             />
           )}
         </View>
