@@ -97,7 +97,7 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 - 서버 `.env`의 `BUDDYCHAT_BUDDY_EXPPERLEVEL`이 5인지(값을 읽지 않아 운영자가 확인한다).
 - 서버가 심사 기간과 출시 후 늘 켜져 있는지(심사자가 아무 때나 연다).
 - 자동 앱 업데이트를 껐는지: `app/`에서 `pnpm app-update:status`가 `false`인지(끄기는 `pnpm app-update:off`, 승인 뒤 `pnpm app-update:on`).
-- 데이터 백업: 인스턴스가 매일 `mongodump`를 받아 30일까지 둔다(`docs/PROJECT.md` 인프라의 백업). 최근 백업 파일이 있는지 본다.
+- 데이터 백업: 인스턴스가 매일 `mongodump`를 받아 21일까지 두고, 인스턴스 자동 스냅샷에도 7일 남는다(`docs/PROJECT.md` 인프라의 백업). 최근 백업 파일이 있는지 본다.
 - iPhone 스크린샷 규격: 제출 시점의 App Store Connect 안내를 기준으로 확인한다.
 
 ## 참고

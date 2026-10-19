@@ -440,7 +440,7 @@ server → client
   `<API 주소>/photos/<roomId>/<photoId>.webp`이고 앱이 메시지로 만든다. 웹의 `<img>`가 토큰을 붙일 수 없어 **토큰 없이** 주고, 대신 `photoId`를
   추측할 수 없는 128비트 난수로 둔다(주소를 아는 사람만 볼 수 있다). `Cache-Control: private, max-age=31536000, immutable`.
 - **지우기**: 방이 지워지면(혼자 나가기, 신고·내보내기, 참가하며 두고 온 방) 그 방 폴더를 지운다. 계정 삭제·게스트 정리는 본인이 보낸 사진 파일을
-  메시지보다 먼저 지운다(다시 해도 같다). 지운 사진의 주소는 404. 사진은 DB 백업에 들어가지 않는다(지우면 바로 사라진다).
+  메시지보다 먼저 지운다(다시 해도 같다). 지운 사진의 주소는 404. 사진은 DB 백업에 들어가지 않고, 인스턴스 일일 스냅샷에만 최대 7일 남는다(아래 인프라의 백업).
 - **용량**: 한 장 약 250~400KB. 말풍선도 같은 파일을 받는다(사진이 많아 데이터가 문제되면 말풍선용 썸네일을 따로 만든다). 디스크 남은 공간이 5GB 아래면 받지 않는다(`PHOTO_UNAVAILABLE`, `buddychat.photos.min-free-space`).
 
 ## Buddy 규칙
@@ -621,7 +621,10 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
   인스턴스를 바꾸면 고정 IP를 옮기거나 `var.server_ip`를 바꿔 다시 apply한다. M0는 자동 백업이 없어 인스턴스가 받아 둔다(아래 백업).
 - **백업**: 인스턴스의 systemd 타이머(`puny-chat-backup.timer`, 매일 18:00 UTC)가 `server/deploy/backup.sh`를 실행한다. compose의 `backup` 서비스(`mongo:8.0`,
   profile이 있어 `up`으로는 뜨지 않고 실행할 때만 잠깐 뜬다)가 `mongodump`로 gzip 아카이브를 받아 `/opt/puny-chat/backups`에 둔다. 매일 것 7개와 일요일 것 4개를
-  남겨 가장 오래된 것도 30일을 넘지 않는다(개인정보처리방침의 보관 기간). Atlas 접근 목록이 Lightsail IP뿐이라 GitHub Actions에서는 받을 수 없다.
+  남겨 가장 오래된 것도 21일을 넘지 않는다. Atlas 접근 목록이 Lightsail IP뿐이라 GitHub Actions에서는 받을 수 없다.
+  인스턴스는 Lightsail 자동 스냅샷(매일 18:18 UTC쯤, 최근 7개, 인스턴스를 같이 쓰는 서비스 공용)도 남겨서, 덤프와 사진 파일(`photos`)이 스냅샷에 최대 7일 더 남는다.
+  그래서 덤프는 스냅샷까지 합쳐 30일, 지운 사진은 7일을 넘지 않는다(개인정보처리방침의 보관 기간). 덤프를 더 오래 두려면 방침부터 고친다.
+  사진을 되살릴 때는 스냅샷으로 새 인스턴스를 만들어 `photos`를 꺼낸다. 인스턴스를 지우면 자동 스냅샷도 같이 사라진다.
   인스턴스 밖 사본은 두지 않는다: 인스턴스를 잃어도 운영 데이터는 Atlas에 있고, 인스턴스 침해까지 대비하는 건 이 규모에 과하다.
   2026-10(사용자 20명, 메시지 220개) 기준 데이터는 약 70KB, 30일치를 모두 합쳐도 1MB가 안 된다. 실패는 `journalctl -u puny-chat-backup`으로 본다.
   복원은 `/opt/puny-chat`에서 `docker compose run --rm -T backup sh -c 'mongorestore --uri="$SPRING_MONGODB_URI" --gzip --archive=/backups/daily/<날짜>.archive.gz --drop'`.
