@@ -157,6 +157,24 @@ class PhotoFlowTest {
     }
 
     @Test
+    void newPhotosBeyondTheLimitAreRefusedButARetryIsNot() throws IOException {
+        createRoom("henry");
+        byte[] image = jpeg(100, 100);
+        for (int i = 0; i < 10; i++)
+            sendPhoto("henry", "lim-" + i, image).expectStatus().isOk();
+
+        sendPhoto("henry", "lim-10", image)
+                .expectStatus()
+                .isEqualTo(429)
+                .expectBody()
+                .jsonPath("$.code")
+                .isEqualTo("PHOTO_RATE_LIMIT");
+        // Stored already: answered without counting, so a retry after a lost reply still works.
+        sendPhoto("henry", "lim-0", image).expectStatus().isOk();
+        assertThat(photoFiles(user("henry").roomId())).hasSize(10);
+    }
+
+    @Test
     void photosCanBeReactedTo() throws IOException {
         duoRoom("henry", "yuki");
         TestSocket yuki = connect("yuki");

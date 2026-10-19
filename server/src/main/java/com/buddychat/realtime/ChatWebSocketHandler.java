@@ -148,6 +148,7 @@ class ChatWebSocketHandler implements WebSocketHandler {
                                 return noticeHistory
                                         .then(noticeBuddy)
                                         .thenMany(rest.skip(1))
+                                        .filter(text -> !answeredPing(connection, text))
                                         .concatMap(text -> onEvent(connection, user, text))
                                         .doFinally(signal -> {
                                             expiry.dispose();
@@ -287,6 +288,14 @@ class ChatWebSocketHandler implements WebSocketHandler {
             preAuth.tryEmitComplete();
         }
         return Flux.empty();
+    }
+
+    // A ping is answered at once, ahead of events still being handled and without a database read: it
+    // tells the app the connection is alive (app/src/lib/realtime-socket.ts), not how busy the server is.
+    private boolean answeredPing(RoomHub.Connection connection, String text) {
+        if (text.length() > 64 || !text.contains("ping") || !(parse(text) instanceof ClientEvent.Ping)) return false;
+        connection.emit(new ServerEvent.Pong());
+        return true;
     }
 
     private @Nullable ClientEvent parse(String text) {
