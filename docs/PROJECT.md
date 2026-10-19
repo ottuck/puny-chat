@@ -125,6 +125,7 @@ Yuki:  니가 치워
 | 푸시 | 상대 메시지 알림 | 웹 푸시 됨. 아이폰 앱 푸시는 실기기 확인 전 |
 | Buddy | 이름, 배고픔, 청결, 밥·청소, 경험치, 레벨, 진화, 독립과 앨범, 직업 | 됨 |
 | 고객 지원 | 개인정보처리방침·연락처, 문의, 상대 신고·내보내기 | 됨 |
+| 이용 통계 | 시작 흐름·재방문 합계와 주간 메일, 웹 방문(Cloudflare) | 됨. 아이폰 앱은 이 기능이 담긴 EAS Update부터 단계를 보낸다 |
 
 넣지 않는 것: 그룹 채팅, 여러 room·여러 상대, 음성·영상 통화, 사진·파일 첨부, 스레드, 리액션, 스티커, 공개 프로필·피드·커뮤니티,
 캘린더·공유 앨범·기념일, AI 기능, Buddy 여러 종류·분기 진화·교배, 게임 요소 전부.
@@ -279,7 +280,8 @@ com.buddychat
 ## 컬렉션
 
 ```text
-users          { _id, firebaseUid (unique), displayName, roomId?, createdAt, guest?, lastSeenAt?, roomJoinId? }
+users          { _id, firebaseUid (unique), displayName, roomId?, createdAt, guest?, lastSeenAt?, roomJoinId?, guestNoticeDays?,
+                 guideSeenVersion? }
 rooms          { _id, memberIds [1..2], memberCount, createdAt, closureId?, historyVersion?, album? [{ name, bornAt, graduatedAt, job? }],
                  buddy { name, exp, bornAt, lastFedAt?, lastCleanedAt?, poopsCleaned?, lastWorkedAt?, lastBathedAt?, expDay?, messageExpToday?,
                          talkDay?, talkers?, togetherDay?, fedCount?, cleanedCount?, nightCount?, laughCount?, loveCount?,
@@ -576,6 +578,7 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
 - **웹 앱**: Cloudflare Worker의 정적 자산(`app/wrangler.jsonc`). `pnpm build:web`이 `expo export -p web` 뒤에 `scripts/worker-assets.mjs`로 404 페이지와
   `_headers`(서비스 워커 no-cache 등), 배포 버전(`version.json`, 커밋 sha)을 만든다. 홈 화면에 추가한 웹 앱은 새로고침 버튼이 없고 닫아도
   멈춰 있을 뿐이라, 앱이 다시 보일 때(1분에 한 번까지) 번들에 넣은 버전과 `version.json`을 비교해 다르면 새로 불러온다(`lib/web-update`). 커스텀 도메인은 wrangler 배포가 붙인다(같은 이름의 CNAME이 있으면 안 된다).
+  Cloudflare가 페이지에 Web Analytics 비콘을 자동으로 넣는다(이용 통계).
 - **도메인**: 웹 `puny-chat.com`(Worker), 서버 `api.puny-chat.com`(고정 IP를 가리키는 A 레코드, 프록시 없음, 인증서는 Caddy가 HTTP-01로). Cloudflare Registrar.
   Firebase 승인된 도메인에 웹 도메인이 있어야 Google 로그인이 된다. 서버 CORS에는 웹 도메인과 로컬 Expo dev 서버.
 - **Terraform**(`infra/`, `infra/README.md`): Atlas 프로젝트·M0·DB 사용자·접근 목록, Cloudflare DNS, VAPID 키. state는 R2, 인증 정보는 `infra/.env`.
