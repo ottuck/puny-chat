@@ -29,7 +29,13 @@ export type ApiClientOptions = {
   token: () => Promise<string>;
 };
 
-export type ApiRequest = { method?: string; body?: unknown; signal?: AbortSignal };
+// A Blob body (an image, say) goes as it is with its `contentType`; anything else as JSON.
+export type ApiRequest = {
+  method?: string;
+  body?: unknown;
+  contentType?: string;
+  signal?: AbortSignal;
+};
 
 export function createApiClient(options: ApiClientOptions) {
   return async function api<T>(path: string, init: ApiRequest = {}): Promise<T> {
@@ -39,15 +45,27 @@ export function createApiClient(options: ApiClientOptions) {
     } catch (e) {
       throw e instanceof ApiError ? e : new ApiError(0, 'NETWORK');
     }
+    const raw = typeof Blob !== 'undefined' && init.body instanceof Blob;
     let response: Response;
     try {
       response = await fetch(`${options.baseUrl()}${path}`, {
         method: init.method ?? 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
-          ...(init.body === undefined ? {} : { 'Content-Type': 'application/json' }),
+          ...(init.body === undefined
+            ? {}
+            : {
+                'Content-Type': raw
+                  ? (init.contentType ?? 'application/octet-stream')
+                  : 'application/json',
+              }),
         },
-        body: init.body === undefined ? undefined : JSON.stringify(init.body),
+        body:
+          init.body === undefined
+            ? undefined
+            : raw
+              ? (init.body as Blob)
+              : JSON.stringify(init.body),
         signal: init.signal,
       });
     } catch {

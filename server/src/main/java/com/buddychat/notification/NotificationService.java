@@ -171,16 +171,16 @@ public class NotificationService {
      * on its own: the caller does not wait, and a failure only means a missed notification.
      */
     public void onNewMessage(Message message, User from) {
-        String text = message.text();
         String messageId = message.id();
-        if (message.type() != Message.Type.TEXT || text == null || messageId == null) return;
+        boolean text = message.type() == Message.Type.TEXT && message.text() != null;
+        if (!(text || message.type() == Message.Type.PHOTO) || messageId == null) return;
         unreadLater(message.roomId(), messageId, from.id())
                 .flatMap(unread -> mongo.find(query(where("userId").in(unread)), PushToken.class)
                         .collectList())
                 .flatMap(tokens -> Mono.when(
                         sendToApps(
-                                tokens.stream().filter(token -> !token.isWeb()).toList(), message, text, from),
-                        sendToBrowsers(tokens.stream().filter(PushToken::isWeb).toList(), message, text, from)))
+                                tokens.stream().filter(token -> !token.isWeb()).toList(), message, from),
+                        sendToBrowsers(tokens.stream().filter(PushToken::isWeb).toList(), message, from)))
                 .subscribe(null, e -> log.warn("Could not send push notifications: {}", e.toString()));
     }
 
@@ -220,10 +220,20 @@ public class NotificationService {
                 .filter(unread -> !unread.isEmpty());
     }
 
-    private Mono<Void> sendToApps(List<PushToken> tokens, Message message, String text, User from) {
+    // A text as it is; a photo in the device's language.
+    static String body(Message message, @Nullable String language) {
+        if (message.type() != Message.Type.PHOTO && message.text() != null) return message.text();
+        return switch (language == null ? "en" : language) {
+            case "ko" -> "사진을 보냈어요";
+            case "ja" -> "写真を送りました";
+            default -> "Sent a photo";
+        };
+    }
+
+    private Mono<Void> sendToApps(List<PushToken> tokens, Message message, User from) {
         if (tokens.isEmpty()) return Mono.empty();
         return sender.send(tokens.stream()
-                        .map(token -> toPush(token.token(), message.roomId(), text, from))
+                        .map(token -> toPush(token.token(), message.roomId(), body(message, token.language()), from))
                         .toList())
                 .flatMap(sent -> {
                     checkReceiptsLater(sent.pending());
@@ -232,13 +242,17 @@ public class NotificationService {
     }
 
     // Same title and text as the app's; the service worker (app: public/sw.js) shows it.
-    private Mono<Void> sendToBrowsers(List<PushToken> subscriptions, Message message, String text, User from) {
+    private Mono<Void> sendToBrowsers(List<PushToken> subscriptions, Message message, User from) {
         if (subscriptions.isEmpty()) return Mono.empty();
-        PushMessage push = toPush("", message.roomId(), text, from);
-        String payload = json.writeValueAsString(Map.of("title", push.title(), "body", push.body(), "url", "/"));
         return Flux.fromIterable(subscriptions)
-                .flatMap(subscription ->
-                        webPush.send(subscription, payload).filter(gone -> gone).map(gone -> subscription.token()))
+                .flatMap(subscription -> {
+                    PushMessage push = toPush("", message.roomId(), body(message, subscription.language()), from);
+                    String payload =
+                            json.writeValueAsString(Map.of("title", push.title(), "body", push.body(), "url", "/"));
+                    return webPush.send(subscription, payload)
+                            .filter(gone -> gone)
+                            .map(gone -> subscription.token());
+                })
                 .collectList()
                 .flatMap(this::forget);
     }

@@ -4,7 +4,7 @@ import type { BuddyEvent } from './api';
 // passes its messages in; the buddy does not know the chat's types.
 export type ReactionSource = {
   id: string;
-  type: 'TEXT' | 'SYSTEM' | 'BUDDY_EVENT';
+  type: 'TEXT' | 'PHOTO' | 'SYSTEM' | 'BUDDY_EVENT';
   senderId: string | null;
   buddyEvent: BuddyEvent | null;
   systemEvent?: string | null;
@@ -46,12 +46,12 @@ const BY_EVENT: Partial<Record<string, ReactionKind>> = {
 
 // Only for messages arriving live; history loaded after a reconnect is not reacted to. Care and
 // growth events come for whoever caused them, so the partner's feeding shows here too. The
-// user's own texts are not reacted to, only the partner's; nor is their own coming in.
+// user's own texts and photos are not reacted to, only the partner's; nor is their own coming in.
 export function reactionTo(message: ReactionSource, myId: string): Reaction | null {
   const kind =
     message.type === 'BUDDY_EVENT'
       ? BY_EVENT[message.buddyEvent ?? '']
-      : message.type === 'TEXT' && message.senderId !== myId
+      : (message.type === 'TEXT' || message.type === 'PHOTO') && message.senderId !== myId
         ? 'message'
         : message.type === 'SYSTEM' &&
             message.systemEvent === 'MEMBER_JOINED' &&

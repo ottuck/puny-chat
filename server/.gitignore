@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Photos stored by bootRun (buddychat.photos.dir) ###
+/photos/

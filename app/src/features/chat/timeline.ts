@@ -1,13 +1,17 @@
-import type { Message } from './types';
+import type { MemberMessage, Message } from './types';
+
+// Like isMemberMessage in ./types, which Node tests of this file cannot import at runtime.
+const fromMember = (m: Message | undefined): m is MemberMessage =>
+  m?.type === 'TEXT' || m?.type === 'PHOTO';
 
 const minuteOf = (iso: string) => Math.floor(Date.parse(iso) / 60_000);
 
-// Two text messages belong to the same visual run when the same member sent them within the
+// Two texts or photos belong to the same visual run when the same member sent them within the
 // same minute. Runs are drawn close together and only the newest one shows its time.
 function sameRun(a: Message | undefined, b: Message | undefined): boolean {
   return (
-    a?.type === 'TEXT' &&
-    b?.type === 'TEXT' &&
+    fromMember(a) &&
+    fromMember(b) &&
     a.senderId === b.senderId &&
     minuteOf(a.createdAt) === minuteOf(b.createdAt)
   );

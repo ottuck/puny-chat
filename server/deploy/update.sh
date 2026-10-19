@@ -4,6 +4,7 @@
 set -eu
 cd /opt/puny-chat
 mkdir -p public # Caddy mounts it; Docker would make a missing one root-owned
+mkdir -p photos && chown 1001:1001 photos # the server writes photos as its own user
 docker compose pull --quiet server || exit 0 # registry unreachable: try again next minute
 docker compose up -d --remove-orphans
 docker image prune --force > /dev/null

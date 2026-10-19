@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { PhotoIcon } from '@/components/icons';
 import { useColors } from '@/theme';
 
 import { loadDraft, saveDraft } from '../draft';
@@ -19,9 +20,11 @@ type Props = {
   onSend: (text: string) => void;
   // Called on every change with whether there is something typed (drives "typing…").
   onTyping: (hasDraft: boolean) => void;
+  // The photo button; without it (the demo, older iPhone builds) there is none.
+  onPickPhoto?: () => void;
 };
 
-export function MessageComposer({ userId, roomId, onSend, onTyping }: Props) {
+export function MessageComposer({ userId, roomId, onSend, onTyping, onPickPhoto }: Props) {
   const colors = useColors();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -69,6 +72,17 @@ export function MessageComposer({ userId, roomId, onSend, onTyping }: Props) {
         },
       ]}
     >
+      {onPickPhoto ? (
+        <Pressable
+          onPress={onPickPhoto}
+          accessibilityRole="button"
+          accessibilityLabel={t('chat.photo')}
+          hitSlop={4}
+          style={({ pressed }) => [styles.photoButton, { opacity: pressed ? 0.5 : 1 }]}
+        >
+          <PhotoIcon color={colors.textMuted} size={24} />
+        </Pressable>
+      ) : null}
       <TextInput
         value={draft}
         onChangeText={(text) => {
@@ -148,6 +162,12 @@ const styles = StyleSheet.create({
     // With outline-style auto, Chrome draws its focus ring whatever the width; solid and 0 draw nothing.
     outlineStyle: 'solid',
     outlineWidth: 0,
+  },
+  photoButton: {
+    width: 32,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sendButton: {
     width: 40,

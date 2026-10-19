@@ -115,6 +115,7 @@
 - 서버 코드는 Terraform이 아니라 deploy workflow가 배포한다(GHCR 이미지 + 인스턴스의 update 타이머). Terraform은 Atlas와 DNS만.
 - Lightsail 인스턴스는 다른 서비스(quant-lab, ur-check)와 나눠 쓴다. 메모리가 빠듯하니(2GB) 서버 힙·컨테이너 한도를 함부로 키우지 않고,
   방화벽·SSH 설정은 사용자에게 먼저 확인한다(SSH는 Lightsail 브라우저 연결만 허용). 서버 설정(`.env`)은 인스턴스의 `/opt/puny-chat`에만 있다.
+  사진 파일도 인스턴스 디스크(`/opt/puny-chat/photos`, compose 볼륨)에 있고 백업하지 않는다. `server/deploy`의 compose·스크립트는 CI가 옮기지 않으니 바꾸면 인스턴스에 손으로 복사한다.
 
 ## Server principles
 
@@ -151,7 +152,7 @@
 ## Principles
 
 - Chat이 항상 핵심이다. Buddy 때문에 채팅 UX를 희생하지 않는다. Buddy는 가벼운 virtual pet이지 게임이 아니다.
-- MVP에 없는 기능(게임 요소, AI Chat, 사진 첨부 등)을 임의로 추가하지 않는다. Pokémon/Tamagotchi IP를 쓰지 않는다.
+- MVP에 없는 기능(게임 요소, AI Chat, 파일·동영상 첨부 등)을 임의로 추가하지 않는다. 사진은 한 장씩 보내는 것만 있다(`docs/PROJECT.md`의 사진). Pokémon/Tamagotchi IP를 쓰지 않는다.
 - iOS UX가 기준이다(Safe Area, 키보드, 스크롤). Web은 같은 모바일 레이아웃을 가운데 정렬하고 최대 폭만 제한한다.
   넓은 창(768px~)에서는 폰 크기 틀에 담는다: CSS 미디어 쿼리(`app/+html.tsx`)가 `WebFrame`의 id를 꾸민다. 창 폭을 JS로 재서
   구조를 바꾸면 경계를 넘을 때 앱 전체가 다시 마운트되므로 그렇게 하지 않는다. 모달 시트도 `WebFrame`으로 감싼다.

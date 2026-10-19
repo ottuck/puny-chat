@@ -9,6 +9,9 @@ services:
     env_file: .env
     # The instance is shared: the JVM heap (-Xmx in .env) plus metaspace and threads must fit.
     mem_limit: 640m
+    volumes:
+      # Photo files (docs/PROJECT.md, 사진), owned by the image's user (uid 1001); update.sh makes the folder.
+      - ./photos:/data/photos
     expose:
       - "8080"
 

@@ -6,11 +6,27 @@ import { GROWN_LEVEL, JOB_CHANGE_LEVELS } from '@/features/buddy/api';
 import { rewardAt } from '@/features/buddy/components/stage-decor';
 import { isJob, JOB_ICON } from '@/features/buddy/jobs';
 
+import { photoUrl } from '../photo';
 import { foldLevelUps, formatTime, runPosition } from '../timeline';
-import type { Member, Message, MessageReaction, TextMessage } from '../types';
+import {
+  isMemberMessage,
+  type Member,
+  type MemberMessage,
+  type Message,
+  type MessageReaction,
+  type PhotoMessage,
+} from '../types';
 import { BuddyEventRow, EventCard } from './buddy-event-row';
-import { type BubbleRect, MessageBubble } from './message-bubble';
+import { type BubblePhoto, type BubbleRect, MessageBubble } from './message-bubble';
+import { PhotoViewer } from './photo-viewer';
 import { ReactionPicker } from './reaction-picker';
+
+// The picked file while mine is on its way (and after, so it does not flash), else the server's.
+function photoOf({ photo }: PhotoMessage): BubblePhoto | undefined {
+  const uri =
+    photo.localUri ?? (photo.roomId && photo.id ? photoUrl(photo.roomId, photo.id) : undefined);
+  return uri ? { uri, width: photo.width, height: photo.height } : undefined;
+}
 
 type Props = {
   messages: Message[]; // newest first
@@ -20,7 +36,7 @@ type Props = {
   // Newest message id the partner has read, if any.
   partnerReadId?: string;
   onRetry: (clientMessageId: string) => void;
-  // Long-pressing a text message offers 👍 😢 😮. Without it (the demo) a long press does nothing.
+  // Long-pressing a text or photo offers 👍 😢 😮. Without it (the demo) a long press does nothing.
   onReact?: (messageId: string, reaction: MessageReaction | null) => void;
   onLoadOlder: () => void;
   // The top level's card offers going its own way while the buddy is still the grown one.
@@ -42,13 +58,14 @@ export function MessageList({
   onOpenAlbum,
 }: Props) {
   const { t, i18n } = useTranslation();
-  const [picking, setPicking] = useState<{ message: TextMessage; rect: BubbleRect } | null>(null);
+  const [picking, setPicking] = useState<{ message: MemberMessage; rect: BubbleRect } | null>(null);
+  const [viewing, setViewing] = useState<string | null>(null);
   const nameOf = (id?: string) =>
     members.find((member) => member.id === id)?.displayName ?? t('chat.guestName');
   // Only my newest read message says so; everything before it is read too.
   const lastRead = partnerReadId
     ? messages.find(
-        (m) => m.type === 'TEXT' && m.senderId === myId && m.id && m.id <= partnerReadId,
+        (m) => isMemberMessage(m) && m.senderId === myId && m.id && m.id <= partnerReadId,
       )
     : undefined;
 
@@ -191,10 +208,13 @@ export function MessageList({
             );
           }
           const { continuesOlder, showTime } = runPosition(shown, index);
+          const photo = item.type === 'PHOTO' ? photoOf(item) : undefined;
           return (
             <View style={continuesOlder ? styles.grouped : styles.spaced}>
               <MessageBubble
-                text={item.text}
+                text={item.type === 'TEXT' ? item.text : undefined}
+                photo={photo}
+                onOpenPhoto={photo ? () => setViewing(photo.uri) : undefined}
                 mine={item.senderId === myId}
                 time={showTime ? formatTime(item.createdAt, i18n.language) : undefined}
                 status={item.status}
@@ -219,6 +239,7 @@ export function MessageList({
         }}
         onClose={() => setPicking(null)}
       />
+      <PhotoViewer uri={viewing} onClose={() => setViewing(null)} />
     </>
   );
 }

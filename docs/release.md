@@ -12,6 +12,8 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 | Apple Developer Program 가입, App ID(`com.ottuck.buddychat`), Sign in with Apple 켜기 | 운영자 | 완료 |
 | Sign in with Apple 키, Services ID, Firebase Apple 제공업체 | 운영자 | 완료 |
 | 아이폰 Google 로그인: `@react-native-google-signin/google-signin`을 넣은 개발용 빌드 다시 만들기(Firebase iOS 앱의 OAuth client 사용) | 운영자 | 예정 |
+| 아이폰 사진 보내기: `expo-image-picker`·`expo-image-manipulator`가 든 개발용 빌드(위 Google 빌드와 한 번에). 그 전 빌드는 사진 버튼만 숨기고 받은 사진은 보인다 | 운영자 | 예정 |
+| App Store Connect 앱 개인정보: "사진 또는 비디오"(사용자 콘텐츠, 앱 기능, 사용자와 연결됨) 추가 | 운영자 | 예정 |
 | 웹 Apple 로그인: Services ID에 웹 도메인(`buddy-chat-67e35.firebaseapp.com`)과 return URL(`https://buddy-chat-67e35.firebaseapp.com/__/auth/handler`) | 운영자 | 예정 |
 | Firebase iOS 앱(번들 ID `com.ottuck.buddychat`) 등록. 앱의 Apple 토큰은 수신자가 번들 ID라 이 등록이 없으면 `auth/invalid-credential` | CLI | 완료 |
 | App Store Connect 앱 등록 | 운영자 | 완료 |
