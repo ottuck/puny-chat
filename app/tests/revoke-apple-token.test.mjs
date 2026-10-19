@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { mock, test } from 'node:test';
 
-import { revokeAppleToken } from '../src/features/auth/revoke-apple-token.ts';
+import { revokeAppleToken } from '../src/lib/social-auth/revoke-apple-token.ts';
 
 const request = {
   apiKey: 'public-api-key',

@@ -27,6 +27,7 @@
   "signIn": {
     "tagline": "好きな人とおしゃべりしながら、小さなBuddyをいっしょに育てよう。",
     "google": "Googleで始める",
+    "apple": "Appleでサインイン",
     "error": "ログインできませんでした。もう一度お試しください。",
     "startNow": "すぐに始める",
     "noAccountNeeded": "アカウントなしで始められます。ゲストは30日間使え、アカウントを連携するとそのまま続けられます。",
@@ -420,6 +421,7 @@
       "browser": "このブラウザ"
     },
     "linkGoogle": "Google アカウントを連携",
+    "linkApple": "Appleで続ける",
     "linkNotReady": "アプリでのアカウント連携はもうすぐ対応します。",
     "linkedGoogle": "Google アカウントと連携済み",
     "linkedApple": "Apple アカウントと連携済み",

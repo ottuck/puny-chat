@@ -14,22 +14,19 @@ import {
 } from 'react-native';
 
 import { PageTitle } from '@/components/page-title';
-import { AccountInUseError, switchToExisting } from '@/features/auth/account-in-use';
 import {
   deleteAccount,
-  isCancelledSignIn,
   noteAccountLinked,
+  prepareAccountSwitch,
   signOut,
-  switchAccount,
 } from '@/features/auth/actions';
-import { appleSignInSupported, linkApple } from '@/features/auth/apple-sign-in';
 import { ChevronRightIcon } from '@/components/icons';
 import { useAuth } from '@/features/auth/auth-provider';
 import { useGuestDaysLeft } from '@/features/auth/guest-expiry';
 import { currentGuestPlace } from '@/features/auth/guest-place';
 import { isInAppBrowser } from '@/features/auth/guest-place-ua';
 import { AppleButton } from '@/features/auth/components/apple-button';
-import { googleSignInSupported, linkGoogle } from '@/features/auth/google-sign-in';
+import { social } from '@/features/auth/social';
 import {
   registerForPush,
   type PushState,
@@ -38,6 +35,12 @@ import {
 } from '@/features/notifications/push';
 import { DisplayCard } from '@/features/preferences/components/display-card';
 import type { Room } from '@/features/room/api';
+import {
+  isCancelledSignIn,
+  linkOrSwitch,
+  type ProviderId,
+  type SocialProvider,
+} from '@/lib/social-auth';
 import { useRoom } from '@/features/room/room-provider';
 import { confirm } from '@/lib/confirm';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
@@ -212,7 +215,7 @@ function AccountCard({
   daysLeft,
   email,
 }: {
-  provider: 'google' | 'apple' | null;
+  provider: ProviderId | null;
   daysLeft: number | null;
   email: string | null;
 }) {
@@ -223,31 +226,25 @@ function AccountCard({
   // Where this guest lives, so they know where to open puny-chat to find it again.
   const [place] = useState(currentGuestPlace);
 
-  const link = async (linkAccount: () => Promise<void>) => {
+  const link = async (provider: SocialProvider) => {
     setBusy(true);
     setError(null);
     try {
-      await linkAccount();
-      await noteAccountLinked();
+      const outcome = await linkOrSwitch(provider, {
+        confirmSwitch: () =>
+          confirm({
+            title: t('settings.accountInUseTitle'),
+            message: t('settings.accountInUseMessage'),
+            confirmLabel: t('settings.accountInUseConfirm'),
+            cancelLabel: t('common.cancel'),
+            destructive: true,
+          }),
+        beforeSwitch: prepareAccountSwitch,
+      });
+      if (outcome === 'linked') await noteAccountLinked();
     } catch (e) {
-      if (e instanceof AccountInUseError) {
-        const ok = await confirm({
-          title: t('settings.accountInUseTitle'),
-          message: t('settings.accountInUseMessage'),
-          confirmLabel: t('settings.accountInUseConfirm'),
-          cancelLabel: t('common.cancel'),
-          destructive: true,
-        });
-        if (ok) {
-          await switchAccount(() => switchToExisting(e.credential)).catch((err) => {
-            console.warn(err);
-            setError(t('settings.linkFailed'));
-          });
-        }
-      } else if (!isCancelledSignIn(e)) {
-        console.warn(e);
-        setError(t('settings.linkFailed'));
-      }
+      console.warn(e);
+      setError(t('settings.linkFailed'));
     } finally {
       setBusy(false);
     }
@@ -275,9 +272,9 @@ function AccountCard({
             {t('settings.guestPlace', { place: t(`settings.places.${place}`) })}
             {isInAppBrowser(place) ? ` ${t('settings.guestPlaceInApp')}` : ''}
           </Text>
-          {googleSignInSupported ? (
+          {social.google.supported ? (
             <Pressable
-              onPress={() => link(linkGoogle)}
+              onPress={() => link(social.google)}
               disabled={busy}
               accessibilityRole="button"
               style={({ pressed }) => [styles.leave, { opacity: pressed || busy ? 0.6 : 1 }]}
@@ -290,11 +287,13 @@ function AccountCard({
                 </Text>
               )}
             </Pressable>
-          ) : appleSignInSupported ? (
+          ) : null}
+          {social.apple.supported ? (
             <View style={styles.section}>
-              <AppleButton kind="link" onPress={() => link(linkApple)} disabled={busy} />
+              <AppleButton kind="link" onPress={() => link(social.apple)} disabled={busy} />
             </View>
-          ) : (
+          ) : null}
+          {social.google.supported || social.apple.supported ? null : (
             <Text style={[styles.email, styles.section, { color: colors.textMuted }]}>
               {t('settings.linkNotReady')}
             </Text>
