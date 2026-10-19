@@ -4,6 +4,11 @@ import type { BuddyEvent } from '@/features/buddy/api';
 // for the partner and took their seat.
 export type SystemEvent = 'MEMBER_JOINED' | 'MEMBER_LEFT' | 'MEMBER_RETURNED';
 
+// What a long press on a text message offers. Each member has at most one on a message.
+export const MESSAGE_REACTIONS = ['LIKE', 'SAD', 'WOW'] as const;
+export type MessageReaction = (typeof MESSAGE_REACTIONS)[number];
+export const REACTION_EMOJI: Record<MessageReaction, string> = { LIKE: '👍', SAD: '😢', WOW: '😮' };
+
 // As the server sends it (server/src/main/java/com/buddychat/chat/Message.java).
 export type ServerMessage = {
   id: string;
@@ -17,6 +22,8 @@ export type ServerMessage = {
   actorId: string | null;
   clientMessageId: string;
   createdAt: string;
+  // TEXT: user id → their reaction. Null or absent when nobody has reacted.
+  reactions?: Record<string, MessageReaction> | null;
 };
 
 // A live frame or already-started REST response may arrive after deletion was announced.
@@ -46,6 +53,8 @@ export type TextMessage = MessageBase & {
   text: string;
   // Only on my own messages that the server has not confirmed yet.
   status?: 'sending' | 'failed';
+  // User id → their reaction; kinds this app version does not know are left out.
+  reactions?: Record<string, MessageReaction>;
 };
 
 export type BuddyEventMessage = MessageBase & {
@@ -81,7 +90,13 @@ export function fromServer(message: ServerMessage): Message | null {
     createdAt: message.createdAt,
   };
   if (message.type === 'TEXT' && message.senderId && message.text !== null) {
-    return { ...base, type: 'TEXT', senderId: message.senderId, text: message.text };
+    return {
+      ...base,
+      type: 'TEXT',
+      senderId: message.senderId,
+      text: message.text,
+      reactions: knownReactions(message.reactions),
+    };
   }
   if (message.type === 'BUDDY_EVENT' && message.buddyEvent) {
     return {
@@ -97,4 +112,14 @@ export function fromServer(message: ServerMessage): Message | null {
     return { ...base, type: 'SYSTEM', event: message.systemEvent, actorName: message.text };
   }
   return null;
+}
+
+export function knownReactions(
+  reactions: ServerMessage['reactions'],
+): Record<string, MessageReaction> | undefined {
+  if (!reactions) return undefined;
+  const known = Object.entries(reactions).filter(([, reaction]) =>
+    MESSAGE_REACTIONS.includes(reaction),
+  );
+  return known.length > 0 ? Object.fromEntries(known) : undefined;
 }

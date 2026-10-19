@@ -15,6 +15,7 @@ import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -85,6 +86,41 @@ public class ChatService {
                                                 ? messages.deleteById(
                                                         result.message().id())
                                                 : Mono.<Void>empty())
+                                        .then(Mono.error(e))));
+    }
+
+    /**
+     * Sets the user's reaction on a text message in their room ({@code reaction} null takes it off).
+     * It says the state to end in rather than toggling, so a repeat changes nothing. Emits the message
+     * as stored afterwards.
+     */
+    public Mono<Message> react(User user, String messageId, @Nullable String reaction) {
+        String roomId = user.roomId();
+        if (roomId == null) return Mono.error(new ApiException(HttpStatus.CONFLICT, "ROOM_NOT_FOUND"));
+        if (messageId == null
+                || !ObjectId.isValid(messageId)
+                || (reaction != null && !Message.REACTIONS.contains(reaction))) {
+            return Mono.error(invalid());
+        }
+        // User ids are server-made hex ids, so they are safe as a field name.
+        String field = "reactions." + user.id();
+        Query target = query(where("_id")
+                .is(new ObjectId(messageId))
+                .and("roomId")
+                .is(roomId)
+                .and("type")
+                .is(Message.Type.TEXT));
+        Update update = reaction == null ? new Update().unset(field) : new Update().set(field, reaction);
+        return access.requireMember(roomId, user.id())
+                .then(mongo.findAndModify(
+                        target, update, FindAndModifyOptions.options().returnNew(true), Message.class))
+                .switchIfEmpty(Mono.error(invalid()))
+                // The member may have left in between: a reaction from outside the room is not kept.
+                .flatMap(saved -> access.requireMember(roomId, user.id())
+                        .thenReturn(saved)
+                        .onErrorResume(
+                                ApiException.class,
+                                e -> mongo.updateFirst(target, new Update().unset(field), Message.class)
                                         .then(Mono.error(e))));
     }
 
@@ -204,6 +240,13 @@ public class ChatService {
                         query(where("roomId").is(roomId).and("actorId").is(fromId)),
                         Update.update("actorId", toId),
                         Message.class))
+                .then(mongo.updateMulti(
+                        query(where("roomId")
+                                .is(roomId)
+                                .and("reactions." + fromId)
+                                .exists(true)),
+                        new Update().rename("reactions." + fromId, "reactions." + toId),
+                        Message.class))
                 .then(readMark)
                 .then(access.invalidateHistory(List.of(roomId), null));
     }
@@ -220,10 +263,14 @@ public class ChatService {
         return mongo.remove(query(where("userId").is(userId)), ReadMark.class).then();
     }
 
-    /** Deletes authored text and named system notes in every room, not just the current one. */
+    /** Deletes authored text, reactions and named system notes in every room, not just the current one. */
     public Mono<Void> deleteUserHistory(String userId) {
+        String reaction = "reactions." + userId;
         Criteria authored = new Criteria()
-                .orOperator(where("senderId").is(userId), where("actorId").is(userId));
+                .orOperator(
+                        where("senderId").is(userId),
+                        where("actorId").is(userId),
+                        where(reaction).exists(true));
         return mongo.find(query(authored), Message.class)
                 .map(Message::roomId)
                 .distinct()
@@ -246,6 +293,8 @@ public class ChatService {
                                 Message.class)
                         .then(mongo.updateMulti(
                                 query(where("actorId").is(userId)), new Update().unset("actorId"), Message.class))
+                        .then(mongo.updateMulti(
+                                query(where(reaction).exists(true)), new Update().unset(reaction), Message.class))
                         .then(access.forgetTalker(userId))
                         .then(access.invalidateHistory(deletion.roomIds(), userId))
                         .then());

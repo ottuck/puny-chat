@@ -250,6 +250,16 @@ class ChatWebSocketHandler implements WebSocketHandler {
                 hub.publishToOthers(connection.roomId, new ServerEvent.Pet(user.id()), user.id());
                 yield Mono.empty();
             }
+            case ClientEvent.React react ->
+                chatService
+                        .react(user, react.messageId(), react.reaction())
+                        // Also to the user's own devices, this one included: the app shows the stored state.
+                        .doOnNext(message -> hub.publish(connection.roomId, new ServerEvent.Reacted(message), null))
+                        .onErrorResume(ApiException.class, e -> {
+                            connection.emit(new ServerEvent.Error(e.code(), null));
+                            return Mono.empty();
+                        })
+                        .then();
             case ClientEvent.Read read ->
                 chatService
                         .markRead(user, read.messageId())

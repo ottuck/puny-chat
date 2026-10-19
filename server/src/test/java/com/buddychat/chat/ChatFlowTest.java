@@ -215,6 +215,86 @@ class ChatFlowTest {
     }
 
     @Test
+    void reactionReachesBothMembersAndIsStored() {
+        duoRoom("henry", "yuki");
+        TestSocket henry = connect("henry");
+        TestSocket yuki = connect("yuki");
+        String id = henry.send(Map.of("type", "send", "clientMessageId", "c-1", "text", "合格した!"))
+                .expect("ack")
+                .get("message")
+                .get("id")
+                .asString();
+        yuki.expect("message");
+        String yukiId = uidOf("yuki");
+
+        yuki.send(Map.of("type", "react", "messageId", id, "reaction", "WOW"));
+        for (TestSocket socket : List.of(henry, yuki)) {
+            JsonNode reacted = socket.expect("reaction").get("message");
+            assertThat(reacted.get("id").asString()).isEqualTo(id);
+            assertThat(reacted.get("reactions").get(yukiId).asString()).isEqualTo("WOW");
+        }
+
+        // The state to end in, not a toggle: the same again changes nothing.
+        yuki.send(Map.of("type", "react", "messageId", id, "reaction", "LIKE"));
+        yuki.send(Map.of("type", "react", "messageId", id, "reaction", "LIKE"));
+        henry.expect("reaction");
+        henry.expect("reaction");
+        assertThat(history("henry", "").messages().getFirst().reactions()).isEqualTo(Map.of(yukiId, "LIKE"));
+
+        Map<String, Object> takeOff = new java.util.HashMap<>();
+        takeOff.put("type", "react");
+        takeOff.put("messageId", id);
+        takeOff.put("reaction", null);
+        yuki.send(takeOff);
+        assertThat(henry.expect("reaction").get("message").get("reactions").has(yukiId))
+                .isFalse();
+    }
+
+    @Test
+    void reactionsOnlyGoOnTextInTheUsersOwnRoom() {
+        duoRoom("henry", "yuki");
+        createRoom("mika");
+        TestSocket henry = connect("henry");
+        TestSocket mika = connect("mika");
+        String id = henry.send(Map.of("type", "send", "clientMessageId", "c-1", "text", "hi"))
+                .expect("ack")
+                .get("message")
+                .get("id")
+                .asString();
+
+        JsonNode foreign = mika.send(Map.of("type", "react", "messageId", id, "reaction", "LIKE"))
+                .expect("error");
+        assertThat(foreign.get("code").asString()).isEqualTo("INVALID_REQUEST");
+        JsonNode unknown = henry.send(Map.of("type", "react", "messageId", id, "reaction", "HEART"))
+                .expect("error");
+        assertThat(unknown.get("code").asString()).isEqualTo("INVALID_REQUEST");
+        henry.expectSilence();
+        assertThat(history("henry", "").messages().getFirst().reactions()).isNull();
+        mika.send(Map.of("type", "ping")).expect("pong");
+    }
+
+    @Test
+    void deletingAUsersHistoryTakesOffTheirReactions() {
+        duoRoom("henry", "yuki");
+        TestSocket henry = connect("henry");
+        TestSocket yuki = connect("yuki");
+        String id = henry.send(Map.of("type", "send", "clientMessageId", "c-1", "text", "hi"))
+                .expect("ack")
+                .get("message")
+                .get("id")
+                .asString();
+        yuki.expect("message");
+        yuki.send(Map.of("type", "react", "messageId", id, "reaction", "SAD")).expect("reaction");
+
+        chatService.deleteUserHistory(uidOf("yuki")).block();
+
+        assertThat(mongo.findById(new org.bson.types.ObjectId(id), Message.class)
+                        .block()
+                        .reactions())
+                .isEmpty();
+    }
+
+    @Test
     void rejectsAnInvalidToken() {
         createRoom("henry");
         TestSocket socket = open().send(Map.of("type", "auth", "token", "not-a-token"));
@@ -295,6 +375,15 @@ class ChatFlowTest {
         TestSocket socket = open().send(Map.of("type", "auth", "token", token(uid)));
         socket.expect("ready");
         return socket;
+    }
+
+    private String uidOf(String firebaseUid) {
+        return mongo.findOne(
+                        Query.query(org.springframework.data.mongodb.core.query.Criteria.where("firebaseUid")
+                                .is(firebaseUid)),
+                        User.class)
+                .block()
+                .id();
     }
 
     private void createRoom(String uid) {

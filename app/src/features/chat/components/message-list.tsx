@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, StyleSheet, View } from 'react-native';
 
@@ -6,9 +7,10 @@ import { rewardAt } from '@/features/buddy/components/stage-decor';
 import { isJob, JOB_ICON } from '@/features/buddy/jobs';
 
 import { foldLevelUps, formatTime, runPosition } from '../timeline';
-import type { Member, Message } from '../types';
+import type { Member, Message, MessageReaction, TextMessage } from '../types';
 import { BuddyEventRow, EventCard } from './buddy-event-row';
-import { MessageBubble } from './message-bubble';
+import { type BubbleRect, MessageBubble } from './message-bubble';
+import { ReactionPicker } from './reaction-picker';
 
 type Props = {
   messages: Message[]; // newest first
@@ -18,6 +20,8 @@ type Props = {
   // Newest message id the partner has read, if any.
   partnerReadId?: string;
   onRetry: (clientMessageId: string) => void;
+  // Long-pressing a text message offers 👍 😢 😮. Without it (the demo) a long press does nothing.
+  onReact?: (messageId: string, reaction: MessageReaction | null) => void;
   onLoadOlder: () => void;
   // The top level's card offers going its own way while the buddy is still the grown one.
   onGraduate?: () => void;
@@ -32,11 +36,13 @@ export function MessageList({
   buddyName,
   partnerReadId,
   onRetry,
+  onReact,
   onLoadOlder,
   onGraduate,
   onOpenAlbum,
 }: Props) {
   const { t, i18n } = useTranslation();
+  const [picking, setPicking] = useState<{ message: TextMessage; rect: BubbleRect } | null>(null);
   const nameOf = (id?: string) =>
     members.find((member) => member.id === id)?.displayName ?? t('chat.guestName');
   // Only my newest read message says so; everything before it is read too.
@@ -49,155 +55,171 @@ export function MessageList({
   const shown = foldLevelUps(messages, GROWN_LEVEL);
 
   return (
-    // Inverted: the newest message sits at the bottom and new ones stay in view. The list's
-    // "end" is the top, so reaching it loads older history.
-    <FlatList
-      inverted
-      data={shown}
-      keyExtractor={(message) => message.clientMessageId}
-      keyboardDismissMode="interactive"
-      keyboardShouldPersistTaps="handled"
-      contentContainerStyle={styles.content}
-      onEndReached={onLoadOlder}
-      onEndReachedThreshold={0.5}
-      renderItem={({ item, index }) => {
-        if (item.type === 'SYSTEM') {
-          return (
-            <View style={styles.spaced}>
-              <BuddyEventRow
-                label={t(`systemEvent.${item.event}`, {
-                  name: item.actorName ?? t('chat.guestName'),
-                })}
-              />
-            </View>
-          );
-        }
-        if (item.type === 'BUDDY_EVENT' && item.event === 'GROWN') {
-          return (
-            <View style={styles.spaced}>
-              <EventCard
-                title={t('buddyEvent.GROWN', { buddy: buddyName })}
-                body={t('chat.grownBody')}
-                action={onGraduate ? `🎓 ${t('buddy.graduate.button')}` : undefined}
-                onAction={onGraduate}
-              />
-            </View>
-          );
-        }
-        if (item.type === 'BUDDY_EVENT' && item.event === 'MAX_LEVEL') {
-          return (
-            <View style={styles.spaced}>
-              <EventCard
-                title={t('buddyEvent.MAX_LEVEL', { buddy: buddyName, level: item.level })}
-                body={`${t('chat.maxLevelThanks')} ${t('chat.maxLevelJob')}`}
-                action={onGraduate ? `🎓 ${t('buddy.graduate.button')}` : undefined}
-                onAction={onGraduate}
-              />
-            </View>
-          );
-        }
-        if (item.type === 'BUDDY_EVENT' && item.event === 'GRADUATED') {
-          return (
-            <View style={styles.spaced}>
-              <EventCard
-                title={t('buddyEvent.GRADUATED', { name: item.detail })}
-                body={t('chat.graduatedBody', { name: item.detail })}
-                action={onOpenAlbum ? `📷 ${t('buddy.album.view')}` : undefined}
-                onAction={onOpenAlbum}
-              />
-            </View>
-          );
-        }
-        if (item.type === 'BUDDY_EVENT' && item.event === 'JOB' && isJob(item.detail)) {
-          return (
-            <View style={styles.spaced}>
-              <EventCard
-                title={t('buddyEvent.JOB', {
-                  icon: JOB_ICON[item.detail],
+    <>
+      {/* Inverted: the newest message sits at the bottom and new ones stay in view. The list's
+        "end" is the top, so reaching it loads older history. */}
+      <FlatList
+        inverted
+        data={shown}
+        keyExtractor={(message) => message.clientMessageId}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.content}
+        onEndReached={onLoadOlder}
+        onEndReachedThreshold={0.5}
+        renderItem={({ item, index }) => {
+          if (item.type === 'SYSTEM') {
+            return (
+              <View style={styles.spaced}>
+                <BuddyEventRow
+                  label={t(`systemEvent.${item.event}`, {
+                    name: item.actorName ?? t('chat.guestName'),
+                  })}
+                />
+              </View>
+            );
+          }
+          if (item.type === 'BUDDY_EVENT' && item.event === 'GROWN') {
+            return (
+              <View style={styles.spaced}>
+                <EventCard
+                  title={t('buddyEvent.GROWN', { buddy: buddyName })}
+                  body={t('chat.grownBody')}
+                  action={onGraduate ? `🎓 ${t('buddy.graduate.button')}` : undefined}
+                  onAction={onGraduate}
+                />
+              </View>
+            );
+          }
+          if (item.type === 'BUDDY_EVENT' && item.event === 'MAX_LEVEL') {
+            return (
+              <View style={styles.spaced}>
+                <EventCard
+                  title={t('buddyEvent.MAX_LEVEL', { buddy: buddyName, level: item.level })}
+                  body={`${t('chat.maxLevelThanks')} ${t('chat.maxLevelJob')}`}
+                  action={onGraduate ? `🎓 ${t('buddy.graduate.button')}` : undefined}
+                  onAction={onGraduate}
+                />
+              </View>
+            );
+          }
+          if (item.type === 'BUDDY_EVENT' && item.event === 'GRADUATED') {
+            return (
+              <View style={styles.spaced}>
+                <EventCard
+                  title={t('buddyEvent.GRADUATED', { name: item.detail })}
+                  body={t('chat.graduatedBody', { name: item.detail })}
+                  action={onOpenAlbum ? `📷 ${t('buddy.album.view')}` : undefined}
+                  onAction={onOpenAlbum}
+                />
+              </View>
+            );
+          }
+          if (item.type === 'BUDDY_EVENT' && item.event === 'JOB' && isJob(item.detail)) {
+            return (
+              <View style={styles.spaced}>
+                <EventCard
+                  title={t('buddyEvent.JOB', {
+                    icon: JOB_ICON[item.detail],
+                    buddy: buddyName,
+                    job: t(`buddy.job.${item.detail}`),
+                  })}
+                  body={`${t(`buddy.jobWhy.${item.detail}`)} ${t('chat.jobChangeRule')}`}
+                />
+              </View>
+            );
+          }
+          if (item.type === 'BUDDY_EVENT' && item.event === 'JOB_CHANGED' && isJob(item.detail)) {
+            return (
+              <View style={styles.spaced}>
+                <BuddyEventRow
+                  label={t('buddyEvent.JOB_CHANGED', {
+                    icon: JOB_ICON[item.detail],
+                    actor: nameOf(item.actorId),
+                    buddy: buddyName,
+                    job: t(`buddy.job.${item.detail}`),
+                  })}
+                />
+              </View>
+            );
+          }
+          if (item.type === 'BUDDY_EVENT' && item.event === 'TOGETHER') {
+            return (
+              <View style={styles.spaced}>
+                <EventCard
+                  title={t('buddyEvent.TOGETHER', { exp: Number(item.detail) })}
+                  body={t('chat.togetherBody', { buddy: buddyName })}
+                />
+              </View>
+            );
+          }
+          // A level that brings something new to the room says what, and one that lets the job be
+          // changed says so.
+          if (item.type === 'BUDDY_EVENT' && item.event === 'LEVELED_UP' && item.level) {
+            const reward = rewardAt(item.level);
+            const line = reward
+              ? t('buddyEvent.LEVELED_UP_REWARD', {
                   buddy: buddyName,
-                  job: t(`buddy.job.${item.detail}`),
-                })}
-                body={`${t(`buddy.jobWhy.${item.detail}`)} ${t('chat.jobChangeRule')}`}
-              />
-            </View>
-          );
-        }
-        if (item.type === 'BUDDY_EVENT' && item.event === 'JOB_CHANGED' && isJob(item.detail)) {
+                  level: item.level,
+                  reward: t(`buddy.reward.${reward}`),
+                })
+              : t('buddyEvent.LEVELED_UP', { buddy: buddyName, level: item.level });
+            return (
+              <View style={styles.spaced}>
+                <BuddyEventRow
+                  label={
+                    JOB_CHANGE_LEVELS.includes(item.level)
+                      ? `${line} · ${t('chat.jobChangeOpen')}`
+                      : line
+                  }
+                />
+              </View>
+            );
+          }
+          if (item.type === 'BUDDY_EVENT') {
+            return (
+              <View style={styles.spaced}>
+                <BuddyEventRow
+                  label={t(`buddyEvent.${item.event}`, {
+                    buddy: buddyName,
+                    actor: nameOf(item.actorId),
+                    level: item.level,
+                    name: item.detail,
+                  })}
+                />
+              </View>
+            );
+          }
+          const { continuesOlder, showTime } = runPosition(shown, index);
           return (
-            <View style={styles.spaced}>
-              <BuddyEventRow
-                label={t('buddyEvent.JOB_CHANGED', {
-                  icon: JOB_ICON[item.detail],
-                  actor: nameOf(item.actorId),
-                  buddy: buddyName,
-                  job: t(`buddy.job.${item.detail}`),
-                })}
-              />
-            </View>
-          );
-        }
-        if (item.type === 'BUDDY_EVENT' && item.event === 'TOGETHER') {
-          return (
-            <View style={styles.spaced}>
-              <EventCard
-                title={t('buddyEvent.TOGETHER', { exp: Number(item.detail) })}
-                body={t('chat.togetherBody', { buddy: buddyName })}
-              />
-            </View>
-          );
-        }
-        // A level that brings something new to the room says what, and one that lets the job be
-        // changed says so.
-        if (item.type === 'BUDDY_EVENT' && item.event === 'LEVELED_UP' && item.level) {
-          const reward = rewardAt(item.level);
-          const line = reward
-            ? t('buddyEvent.LEVELED_UP_REWARD', {
-                buddy: buddyName,
-                level: item.level,
-                reward: t(`buddy.reward.${reward}`),
-              })
-            : t('buddyEvent.LEVELED_UP', { buddy: buddyName, level: item.level });
-          return (
-            <View style={styles.spaced}>
-              <BuddyEventRow
-                label={
-                  JOB_CHANGE_LEVELS.includes(item.level)
-                    ? `${line} · ${t('chat.jobChangeOpen')}`
-                    : line
+            <View style={continuesOlder ? styles.grouped : styles.spaced}>
+              <MessageBubble
+                text={item.text}
+                mine={item.senderId === myId}
+                time={showTime ? formatTime(item.createdAt, i18n.language) : undefined}
+                status={item.status}
+                receipt={item === lastRead ? t('chat.read') : undefined}
+                onRetry={() => onRetry(item.clientMessageId)}
+                reactions={item.reactions}
+                myId={myId}
+                onReact={
+                  onReact && item.id ? (rect) => setPicking({ message: item, rect }) : undefined
                 }
               />
             </View>
           );
-        }
-        if (item.type === 'BUDDY_EVENT') {
-          return (
-            <View style={styles.spaced}>
-              <BuddyEventRow
-                label={t(`buddyEvent.${item.event}`, {
-                  buddy: buddyName,
-                  actor: nameOf(item.actorId),
-                  level: item.level,
-                  name: item.detail,
-                })}
-              />
-            </View>
-          );
-        }
-        const { continuesOlder, showTime } = runPosition(shown, index);
-        return (
-          <View style={continuesOlder ? styles.grouped : styles.spaced}>
-            <MessageBubble
-              text={item.text}
-              mine={item.senderId === myId}
-              time={showTime ? formatTime(item.createdAt, i18n.language) : undefined}
-              status={item.status}
-              receipt={item === lastRead ? t('chat.read') : undefined}
-              onRetry={() => onRetry(item.clientMessageId)}
-            />
-          </View>
-        );
-      }}
-    />
+        }}
+      />
+      <ReactionPicker
+        target={picking?.rect ?? null}
+        mine={picking?.message.senderId === myId}
+        current={picking?.message.reactions?.[myId]}
+        onPick={(reaction) => {
+          if (picking?.message.id) onReact?.(picking.message.id, reaction);
+        }}
+        onClose={() => setPicking(null)}
+      />
+    </>
   );
 }
 
