@@ -65,9 +65,11 @@
     "read": "既読",
     "react": "リアクション",
     "reaction": {
+      "LOVE": "大好き",
       "LIKE": "いいね",
-      "SAD": "悲しい",
-      "WOW": "びっくり"
+      "CHECK": "確認しました",
+      "WOW": "びっくり",
+      "SAD": "悲しい"
     },
     "photo": "写真を送る",
     "photoMessage": "写真",

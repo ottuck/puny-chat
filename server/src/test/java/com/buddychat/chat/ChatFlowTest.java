@@ -243,19 +243,19 @@ class ChatFlowTest {
         yuki.expect("message");
         String yukiId = uidOf("yuki");
 
-        yuki.send(Map.of("type", "react", "messageId", id, "reaction", "WOW"));
+        yuki.send(Map.of("type", "react", "messageId", id, "reaction", "CHECK"));
         for (TestSocket socket : List.of(henry, yuki)) {
             JsonNode reacted = socket.expect("reaction").get("message");
             assertThat(reacted.get("id").asString()).isEqualTo(id);
-            assertThat(reacted.get("reactions").get(yukiId).asString()).isEqualTo("WOW");
+            assertThat(reacted.get("reactions").get(yukiId).asString()).isEqualTo("CHECK");
         }
 
         // The state to end in, not a toggle: the same again changes nothing.
-        yuki.send(Map.of("type", "react", "messageId", id, "reaction", "LIKE"));
-        yuki.send(Map.of("type", "react", "messageId", id, "reaction", "LIKE"));
+        yuki.send(Map.of("type", "react", "messageId", id, "reaction", "LOVE"));
+        yuki.send(Map.of("type", "react", "messageId", id, "reaction", "LOVE"));
         henry.expect("reaction");
         henry.expect("reaction");
-        assertThat(history("henry", "").messages().getFirst().reactions()).isEqualTo(Map.of(yukiId, "LIKE"));
+        assertThat(history("henry", "").messages().getFirst().reactions()).isEqualTo(Map.of(yukiId, "LOVE"));
 
         Map<String, Object> takeOff = new java.util.HashMap<>();
         takeOff.put("type", "react");
@@ -281,7 +281,7 @@ class ChatFlowTest {
         JsonNode foreign = mika.send(Map.of("type", "react", "messageId", id, "reaction", "LIKE"))
                 .expect("error");
         assertThat(foreign.get("code").asString()).isEqualTo("INVALID_REQUEST");
-        JsonNode unknown = henry.send(Map.of("type", "react", "messageId", id, "reaction", "HEART"))
+        JsonNode unknown = henry.send(Map.of("type", "react", "messageId", id, "reaction", "ANGRY"))
                 .expect("error");
         assertThat(unknown.get("code").asString()).isEqualTo("INVALID_REQUEST");
         henry.expectSilence();
