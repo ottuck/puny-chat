@@ -1,4 +1,3 @@
-import { randomUUID } from 'expo-crypto';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -66,8 +65,16 @@ type ChatScreenProps = {
 function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { buddy, busy, setBuddy, feed, clean, work, bathe } = useBuddy(room.buddy);
+  const care = useBuddy(room.buddy);
+  const { buddy, busy, setBuddy, work, bathe } = care;
   const chat = useChat({ myId: me.id, onRoomLost, onRoomChanged, onBuddy: setBuddy });
+  // The bowl and the poops answer the tap at once (use-buddy.ts), and so does the buddy.
+  const feed = () => {
+    if (care.feed()) chat.playMine('fed');
+  };
+  const clean = () => {
+    if (care.clean()) chat.playMine('cleaned');
+  };
   // What the buddy is asked to do: a word in the chat, or work from its details.
   const [cue, setCue] = useState<Cue | null>(null);
   const [chatCue, setChatCue] = useState(chat.cue);
@@ -179,15 +186,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
       <BuddySheet
         visible={buddyOpen}
         buddy={buddy}
-        busy={busy}
         onClose={() => setBuddyOpen(false)}
-        onFeed={feed}
-        onClean={clean}
-        onWork={() => {
-          setBuddyOpen(false);
-          work();
-          setCue({ id: randomUUID(), kind: 'work' });
-        }}
         together={
           partner
             ? { myId: me.id, partnerId: partner.id, partnerName: partner.displayName ?? '' }

@@ -29,13 +29,7 @@ const MAX_POOPS = 3; // server: BuddyRules.MAX_POOPS
 type Props = {
   visible: boolean;
   buddy: BuddyView;
-  // A care request is in flight.
-  busy: boolean;
   onClose: () => void;
-  onFeed: () => void;
-  onClean: () => void;
-  // A grown-up's work at its station, in place of cleaning up (it no longer poops).
-  onWork?: () => void;
   // At the top level: the buddy goes into the album and a new egg with this name arrives.
   onGraduate?: (newName: string) => Promise<void>;
   // An adult's job, changed once a day; none in the tour.
@@ -46,20 +40,10 @@ type Props = {
 
 const MAX_NAME_LENGTH = 12; // server: Buddy.MAX_NAME_LENGTH
 
-// Buddy detail: stats, the two care actions, and going its own way once grown (docs/PROJECT.md); the
+// Buddy detail: stats, the together bonus, the job, and going its own way once grown (docs/PROJECT.md).
+// Feeding, cleaning and work are on the stage itself (the bowl, the poops, the station), not here. The
 // buddies gone their own way are in the memory album (album-gallery.tsx). A native page sheet on iOS, so it can be swiped down.
-export function BuddySheet({
-  visible,
-  buddy,
-  busy,
-  onClose,
-  onFeed,
-  onClean,
-  onWork,
-  onGraduate,
-  onChangeJob,
-  together,
-}: Props) {
+export function BuddySheet({ visible, buddy, onClose, onGraduate, onChangeJob, together }: Props) {
   const colors = useColors();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -123,31 +107,6 @@ export function BuddySheet({
                   value={buddy.poops > 0 ? '💩'.repeat(buddy.poops) : t('buddy.clean')}
                   progress={1 - buddy.poops / MAX_POOPS}
                   color={colors.cleanliness}
-                />
-              )}
-            </View>
-
-            <View style={styles.actions}>
-              <CareButton
-                label={t('buddy.feed')}
-                emoji="🍚"
-                onPress={onFeed}
-                disabled={busy || !buddy.canFeed}
-              />
-              {grownUp ? (
-                // Off to its station; without a job yet there is none to go to.
-                <CareButton
-                  label={t('buddy.workShort')}
-                  emoji={buddy.job && isJob(buddy.job) ? JOB_ICON[buddy.job] : '💼'}
-                  onPress={() => onWork?.()}
-                  disabled={busy || !buddy.job || !onWork}
-                />
-              ) : (
-                <CareButton
-                  label={t('buddy.cleanUp')}
-                  emoji="🧹"
-                  onPress={onClean}
-                  disabled={busy || !buddy.canClean}
                 />
               )}
             </View>
@@ -448,33 +407,6 @@ function Stat(props: { label: string; value: string; progress: number; color?: s
   );
 }
 
-function CareButton(props: {
-  label: string;
-  emoji: string;
-  onPress: () => void;
-  disabled: boolean;
-}) {
-  const colors = useColors();
-  return (
-    <Pressable
-      onPress={props.onPress}
-      disabled={props.disabled}
-      accessibilityRole="button"
-      style={({ pressed }) => [
-        styles.careButton,
-        {
-          backgroundColor: colors.accent,
-          opacity: props.disabled ? 0.4 : pressed ? 0.7 : 1,
-        },
-      ]}
-    >
-      <Text style={[styles.careLabel, { color: colors.onAccent }]}>
-        {props.emoji} {props.label}
-      </Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -565,10 +497,6 @@ const styles = StyleSheet.create({
   },
   statBar: {
     flexDirection: 'row',
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 12,
   },
   careButton: {
     flex: 1,
