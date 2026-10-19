@@ -1,6 +1,6 @@
 import { randomUUID } from 'expo-crypto';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, Platform } from 'react-native';
+import { AppState, Image, Platform } from 'react-native';
 
 import type { BuddyView } from '@/features/buddy/api';
 import { chatMood, chatWord } from '@/features/buddy/chat-words';
@@ -15,7 +15,8 @@ import { ApiError } from '@/lib/api';
 
 import { fetchNewer, fetchNewest, fetchOlder } from './api';
 import { MessageSync } from './message-sync';
-import { type PreparedPhoto, uploadPhoto } from './photo';
+import { type PreparedPhoto, photoUrl, uploadPhoto } from './photo';
+import { releasePhoto } from './photo-resize';
 import { ChatSocket, type ConnectionStatus } from './socket';
 import {
   fromServer,
@@ -413,6 +414,25 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
         photoOutbox.current.delete(clientMessageId);
         apply([message]);
         cueFrom(message);
+        // Once the server's copy is loaded, show it instead and let the picked file go (in a
+        // browser it stays in memory until then). Without it, the picked file stays on screen.
+        if (message.photo) {
+          // Native resolves true, the web nothing: only a rejection or false means not loaded.
+          const loaded = await Image.prefetch(photoUrl(message.roomId, message.photo.id)).then(
+            (ok: boolean | void) => ok !== false,
+            () => false,
+          );
+          if (loaded) {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.clientMessageId === clientMessageId && m.type === 'PHOTO' && m.photo.localUri
+                  ? { ...m, photo: { ...m.photo, localUri: undefined } }
+                  : m,
+              ),
+            );
+            releasePhoto(photo.uri);
+          }
+        }
       } catch (e) {
         console.warn('sending a photo failed', e);
         markStatus(clientMessageId, 'failed');
