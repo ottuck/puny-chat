@@ -15,9 +15,11 @@ import { ApiError } from '@/lib/api';
 
 import { fetchNewer, fetchNewest, fetchOlder } from './api';
 import { MessageSync } from './message-sync';
+import { type PreparedPhoto, uploadPhoto } from './photo';
 import { ChatSocket, type ConnectionStatus } from './socket';
 import {
   fromServer,
+  isMemberMessage,
   knownReactions,
   type Message,
   type MessageReaction,
@@ -40,12 +42,21 @@ function sortTimeline(messages: Message[]): Message[] {
 }
 
 // Adds or replaces by clientMessageId, so an ack replaces my pending copy and a message that
-// arrives twice (socket and catch-up) shows once.
+// arrives twice (socket and catch-up) shows once. My photo keeps showing the file I picked, so it
+// does not flash while the server's copy loads.
 function merge(current: Message[], incoming: ServerMessage[]): Message[] {
   const byKey = new Map(current.map((m) => [m.clientMessageId, m]));
   for (const serverMessage of incoming) {
     const message = fromServer(serverMessage);
-    if (message) byKey.set(message.clientMessageId, message);
+    if (!message) continue;
+    const previous = byKey.get(message.clientMessageId);
+    const localUri = previous?.type === 'PHOTO' ? previous.photo.localUri : undefined;
+    byKey.set(
+      message.clientMessageId,
+      message.type === 'PHOTO' && localUri
+        ? { ...message, photo: { ...message.photo, localUri } }
+        : message,
+    );
   }
   return sortTimeline([...byKey.values()]);
 }
@@ -86,6 +97,8 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   const deletedUsers = useRef(new Set<string>());
   // Kept synchronously in event handlers: ready can arrive before React commits the pending bubble.
   const outbox = useRef(new Map<string, { text: string; status: 'sending' | 'failed' }>());
+  // Photos go over REST, not the socket: kept until stored, for "retry".
+  const photoOutbox = useRef(new Map<string, PreparedPhoto>());
   const socketRef = useRef<ChatSocket | null>(null);
   const onRoomLostRef = useRef(onRoomLost);
   const onRoomChangedRef = useRef(onRoomChanged);
@@ -126,7 +139,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   // When a text last came or went live, for the buddy to start a talk only when it is quiet.
   const [lastTalkAt, setLastTalkAt] = useState(0);
   const cueFrom = useCallback((message: ServerMessage) => {
-    if (message.type === 'TEXT') setLastTalkAt(Date.now());
+    if (message.type === 'TEXT' || message.type === 'PHOTO') setLastTalkAt(Date.now());
     const kind =
       message.type === 'TEXT' && message.text
         ? (chatWord(message.text) ?? chatMood(message.text))
@@ -148,7 +161,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
     const byId = new Map(incoming.map((message) => [message.id, message.reactions]));
     setMessages((prev) =>
       prev.map((m) =>
-        m.type === 'TEXT' && m.id && byId.has(m.id)
+        isMemberMessage(m) && m.id && byId.has(m.id)
           ? { ...m, reactions: knownReactions(byId.get(m.id)) }
           : m,
       ),
@@ -175,7 +188,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
     if (pending) outbox.current.set(clientMessageId, { ...pending, status });
     setMessages((prev) =>
       prev.map((m) =>
-        m.clientMessageId === clientMessageId && m.type === 'TEXT' && !m.id ? { ...m, status } : m,
+        m.clientMessageId === clientMessageId && isMemberMessage(m) && !m.id ? { ...m, status } : m,
       ),
     );
   }, []);
@@ -347,7 +360,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   // that is not my own. Hex ids sort by time, so comparing strings compares age.
   useEffect(() => {
     if (status !== 'online' || !active || syncing || syncingRef.current) return;
-    const newest = messages.find((m) => m.id && !(m.type === 'TEXT' && m.senderId === myId))?.id;
+    const newest = messages.find((m) => m.id && !(isMemberMessage(m) && m.senderId === myId))?.id;
     if (!newest) return;
     if ((reads[myId] ?? '') >= newest || (readSent.current ?? '') >= newest) return;
     if (socketRef.current?.sendRead(newest)) readSent.current = newest;
@@ -390,6 +403,42 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
     [myId],
   );
 
+  // Stored over REST (docs/PROJECT.md, 사진); the room hears it from the server like a text.
+  const uploadPending = useCallback(
+    async (clientMessageId: string) => {
+      const photo = photoOutbox.current.get(clientMessageId);
+      if (!photo) return;
+      try {
+        const message = await uploadPhoto(clientMessageId, photo);
+        photoOutbox.current.delete(clientMessageId);
+        apply([message]);
+        cueFrom(message);
+      } catch (e) {
+        console.warn('sending a photo failed', e);
+        markStatus(clientMessageId, 'failed');
+      }
+    },
+    [apply, cueFrom, markStatus],
+  );
+
+  const sendPhoto = useCallback(
+    (photo: PreparedPhoto) => {
+      const clientMessageId = randomUUID();
+      const pending: Message = {
+        clientMessageId,
+        type: 'PHOTO',
+        senderId: myId,
+        photo: { localUri: photo.uri, width: photo.width, height: photo.height },
+        createdAt: new Date().toISOString(),
+        status: 'sending',
+      };
+      photoOutbox.current.set(clientMessageId, photo);
+      setMessages((prev) => sortTimeline([pending, ...prev]));
+      void uploadPending(clientMessageId);
+    },
+    [myId, uploadPending],
+  );
+
   // Shown at once; the server's reaction event then brings the stored state. Offline it is not
   // queued: the bubble stays as it was.
   const react = useCallback(
@@ -397,7 +446,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
       if (!socketRef.current?.sendReaction(messageId, reaction)) return;
       setMessages((prev) =>
         prev.map((m) => {
-          if (m.type !== 'TEXT' || m.id !== messageId) return m;
+          if (!isMemberMessage(m) || m.id !== messageId) return m;
           const next = { ...m.reactions };
           delete next[myId];
           if (reaction) next[myId] = reaction;
@@ -411,11 +460,16 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   const retry = useCallback(
     (clientMessageId: string) => {
       const message = messagesRef.current.find((m) => m.clientMessageId === clientMessageId);
+      if (message?.type === 'PHOTO') {
+        markStatus(clientMessageId, 'sending');
+        void uploadPending(clientMessageId);
+        return;
+      }
       if (message?.type !== 'TEXT') return;
       markStatus(clientMessageId, 'sending');
       socketRef.current?.send(clientMessageId, message.text);
     },
-    [markStatus],
+    [markStatus, uploadPending],
   );
 
   const loadingOlder = useRef(false);
@@ -440,7 +494,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   const unreadWhileAway = active
     ? 0
     : messages.filter(
-        (m) => m.type === 'TEXT' && m.senderId !== myId && m.id && m.id > (awaySince ?? ''),
+        (m) => isMemberMessage(m) && m.senderId !== myId && m.id && m.id > (awaySince ?? ''),
       ).length;
 
   return {
@@ -458,6 +512,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
     notifyPet,
     loaded,
     send,
+    sendPhoto,
     retry,
     react,
     loadOlder,

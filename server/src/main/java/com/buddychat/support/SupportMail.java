@@ -122,7 +122,7 @@ class SupportMail {
                 .append(ticket.description());
         if (ticket.kind() == SupportTicket.Kind.REPORT) {
             body.append("\n\n자동 조치: 상대 퇴장, 기존 초대 무효화, 대화 기록 삭제. 신고자는 Buddy 유지.")
-                    .append("\n신고 자료: 삭제 전 최근 텍스트 메시지 최대 50개. 접수일로부터 90일 보관.\n");
+                    .append("\n신고 자료: 삭제 전 최근 텍스트·사진 메시지 최대 50개(사진 파일은 대화와 함께 지워짐). 접수일로부터 90일 보관.\n");
             for (Message evidence : ticket.evidence()) {
                 body.append("\n[")
                         .append(evidence.createdAt())
@@ -132,7 +132,7 @@ class SupportMail {
                                         ? ticket.reporterName()
                                         : ticket.targetName())
                         .append(": ")
-                        .append(evidence.text())
+                        .append(evidence.type() == Message.Type.PHOTO ? "[사진]" : evidence.text())
                         .append("\n");
             }
         }

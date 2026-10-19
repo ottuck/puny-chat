@@ -53,6 +53,14 @@
       "expo-notifications",
       "expo-apple-authentication",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "puny-chat uses your photos only when you choose one to send in the chat.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
+      [
         "@react-native-google-signin/google-signin",
         {
           "iosUrlScheme": "com.googleusercontent.apps.365977945909-fnqlp325msddsclmoj3akj99kbk1tebm"

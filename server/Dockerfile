@@ -25,5 +25,9 @@ COPY --from=build /src/extracted/spring-boot-loader/ ./
 COPY --from=build /src/extracted/snapshot-dependencies/ ./
 COPY --from=build /src/extracted/application/ ./
 EXPOSE 8080
+# Photos go to a volume the instance mounts here (deploy/compose.yaml). Without it /data is not writable:
+# sending photos then fails with PHOTO_UNAVAILABLE and the rest works.
+ENV BUDDYCHAT_PHOTOS_DIR=/data/photos
 # The container's memory limit decides the heap.
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "org.springframework.boot.loader.launch.JarLauncher"]
+# The WebP encoder loads libwebp (chat/PhotoStore).
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "--enable-native-access=ALL-UNNAMED", "org.springframework.boot.loader.launch.JarLauncher"]

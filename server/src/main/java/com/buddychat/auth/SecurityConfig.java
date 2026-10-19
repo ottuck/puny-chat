@@ -31,6 +31,9 @@ class SecurityConfig {
                         // Steps of the start, counted before sign-in (stats/StatsController).
                         .pathMatchers(HttpMethod.POST, "/api/stats/steps")
                         .permitAll()
+                        // Photo files: <img> cannot send a token; the ids cannot be guessed (chat/PhotoFileController).
+                        .pathMatchers(HttpMethod.GET, "/photos/**")
+                        .permitAll()
                         .pathMatchers("/api/**")
                         .authenticated()
                         .anyExchange()

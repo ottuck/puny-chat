@@ -3,7 +3,6 @@ package com.buddychat.realtime;
 import com.buddychat.buddy.BuddyService;
 import com.buddychat.chat.ChatService;
 import com.buddychat.common.ApiException;
-import com.buddychat.notification.NotificationService;
 import com.buddychat.room.RoomAccess;
 import com.buddychat.user.User;
 import com.buddychat.user.UserService;
@@ -46,7 +45,7 @@ class ChatWebSocketHandler implements WebSocketHandler {
     private final UserService userService;
     private final ChatService chatService;
     private final BuddyService buddyService;
-    private final NotificationService notifications;
+    private final MessageDelivery delivery;
     private final RoomHub hub;
     private final JsonMapper json;
     private final RealtimeProperties properties;
@@ -57,7 +56,7 @@ class ChatWebSocketHandler implements WebSocketHandler {
             UserService userService,
             ChatService chatService,
             BuddyService buddyService,
-            NotificationService notifications,
+            MessageDelivery delivery,
             RoomHub hub,
             JsonMapper json,
             RealtimeProperties properties,
@@ -66,7 +65,7 @@ class ChatWebSocketHandler implements WebSocketHandler {
         this.userService = userService;
         this.chatService = chatService;
         this.buddyService = buddyService;
-        this.notifications = notifications;
+        this.delivery = delivery;
         this.hub = hub;
         this.json = json;
         this.properties = properties;
@@ -222,19 +221,9 @@ class ChatWebSocketHandler implements WebSocketHandler {
             case ClientEvent.Send send ->
                 chatService
                         .send(user, send.clientMessageId(), send.text())
-                        .doOnNext(result -> {
-                            connection.emit(new ServerEvent.Ack(send.clientMessageId(), result.message()));
-                            // A resend was already delivered to the others the first time.
-                            if (result.created()) {
-                                hub.publish(
-                                        connection.roomId, new ServerEvent.NewMessage(result.message()), connection);
-                                notifications.onNewMessage(result.message(), user);
-                            }
-                        })
-                        // Chatting grows the buddy (and "밥" feeds it); a resend did that the first time.
-                        .flatMap(result -> result.created()
-                                ? buddyService.onMessageSent(connection.roomId, user.id(), send.text())
-                                : Mono.<Void>empty())
+                        .doOnNext(result ->
+                                connection.emit(new ServerEvent.Ack(send.clientMessageId(), result.message())))
+                        .flatMap(result -> delivery.deliver(result, user, connection, send.text()))
                         .onErrorResume(ApiException.class, e -> {
                             connection.emit(new ServerEvent.Error(e.code(), send.clientMessageId()));
                             return Mono.empty();

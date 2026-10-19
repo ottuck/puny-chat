@@ -1,4 +1,4 @@
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 // Line icons for the chat header, drawn rather than typed: a "?" or "⚙" character looks different
 // (and thin) on every platform. Shapes after Feather (MIT).
@@ -47,6 +47,16 @@ export function ChevronRightIcon({ color, size = 20 }: Props) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2}>
       <Path d="m9 18 6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+export function PhotoIcon({ color, size = 24 }: Props) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2}>
+      <Rect x={3} y={3} width={18} height={18} rx={3} />
+      <Circle cx={8.5} cy={8.5} r={1.5} />
+      <Path d="m21 15-5-5L5 21" strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
 }
