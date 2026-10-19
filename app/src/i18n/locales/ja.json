@@ -72,6 +72,8 @@
     "photo": "写真を送る",
     "photoMessage": "写真",
     "photoOpen": "写真を大きく表示",
+    "photoUnreadableTitle": "写真を送れません",
+    "photoUnreadable": "この写真を読み込めませんでした。別の写真を選んでください。",
     "online": "オンライン",
     "offline": "オフライン",
     "emptySolo": "{{buddy}}が生まれました！\n友だちを招待して一緒に育てましょう。",
