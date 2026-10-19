@@ -1,7 +1,5 @@
 import { type Href, router } from 'expo-router';
-import { HeaderTitle } from 'expo-router/react-navigation';
-import { type ComponentProps } from 'react';
-import { Pressable } from 'react-native';
+import { Platform, Pressable, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useColors } from '@/theme';
@@ -15,7 +13,9 @@ export function goBack(fallback: Href): void {
   else router.replace(fallback);
 }
 
-// The headers' back button, always there (the stack's own one hides without history).
+// The headers' back button, always there (the stack's own one hides without history). The iPhone
+// puts it in its own round button; the web draws one like it in the same place, with the title
+// centered as on the iPhone.
 export function HeaderBack({ home }: { home: Href }) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -25,25 +25,30 @@ export function HeaderBack({ home }: { home: Href }) {
       accessibilityRole="button"
       accessibilityLabel={t('common.back')}
       hitSlop={12}
+      style={({ pressed }) =>
+        Platform.OS === 'web' && [
+          styles.round,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
+            opacity: pressed ? 0.6 : 1,
+          },
+        ]
+      }
     >
       <ChevronLeftIcon color={colors.text} />
     </Pressable>
   );
 }
 
-// The web's header puts the title right after the arrow, so "‹ 설정" reads as one button: the title
-// goes back too. The iPhone's title is centered on its own and stays only a title.
-export function HeaderBackTitle({
-  home,
-  ...props
-}: ComponentProps<typeof HeaderTitle> & { home: Href }) {
-  return (
-    <Pressable
-      onPress={() => goBack(home)}
-      accessibilityRole="button"
-      hitSlop={{ top: 12, bottom: 12, right: 12 }}
-    >
-      <HeaderTitle {...props} />
-    </Pressable>
-  );
-}
+const styles = StyleSheet.create({
+  round: {
+    width: 44,
+    height: 44,
+    marginLeft: 16,
+    borderRadius: 22,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

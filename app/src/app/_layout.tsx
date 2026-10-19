@@ -1,13 +1,13 @@
 import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { type ComponentProps, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import i18n, { detectLanguage } from '@/i18n';
-import { HeaderBack, HeaderBackTitle } from '@/components/header-back';
+import { HeaderBack } from '@/components/header-back';
 import { StatusScreen } from '@/components/status-screen';
 import { WebFrame } from '@/components/web-frame';
 import { AuthProvider, useAuth } from '@/features/auth/auth-provider';
@@ -178,17 +178,13 @@ function RootNavigator() {
     );
   }
 
-  // Screens with a header: a back button that is always there (components/header-back.tsx). On the
-  // web the title next to it goes back too.
+  // Screens with a header: a back button that is always there (components/header-back.tsx) and the
+  // title centered, as on the iPhone (the web too).
   const withHeader = (title: string) => ({
     headerShown: true,
     title,
+    headerTitleAlign: 'center' as const,
     headerLeft: () => <HeaderBack home={home} />,
-    ...(Platform.OS === 'web' && {
-      headerTitle: (props: Omit<ComponentProps<typeof HeaderBackTitle>, 'home'>) => (
-        <HeaderBackTitle {...props} home={home} />
-      ),
-    }),
   });
 
   return (
