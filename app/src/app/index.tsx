@@ -28,14 +28,14 @@ import { MessageList } from '@/features/chat/components/message-list';
 import { useChat } from '@/features/chat/use-chat';
 import { type PushState, registerForPush, setPushEnabled } from '@/features/notifications/push';
 import { InviteSheet } from '@/features/room/components/invite-sheet';
-import type { Me, Room } from '@/features/room/api';
+import { markGuideSeen, type Me, type Room } from '@/features/room/api';
 import { useReadyRoom } from '@/features/room/room-provider';
 import { notice } from '@/lib/confirm';
 import { PartnerSheet } from '@/features/support/components/partner-sheet';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
 export default function ChatRoute() {
-  const { me, room, reload, refreshRoom } = useReadyRoom();
+  const { me, room, reload, refreshRoom, setMe } = useReadyRoom();
   const { t } = useTranslation();
   const onRoomLost = (code?: string) => {
     // The partner's code let them in from another app, browser or phone; this one is out.
@@ -50,6 +50,11 @@ export default function ChatRoute() {
       room={room}
       onRoomLost={onRoomLost}
       onRoomChanged={refreshRoom}
+      onGuideSeen={(version) =>
+        markGuideSeen(version)
+          .then(setMe)
+          .catch((e) => console.warn('saving the guide as seen failed', e))
+      }
     />
   );
 }
@@ -60,9 +65,10 @@ type ChatScreenProps = {
   onRoomLost: () => void;
   // Members joined or left, or the album grew: fetch the room again.
   onRoomChanged: () => void;
+  onGuideSeen: (version: number) => void;
 };
 
-function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
+function ChatScreen({ me, room, onRoomLost, onRoomChanged, onGuideSeen }: ChatScreenProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const care = useBuddy(room.buddy);
@@ -129,7 +135,12 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged }: ChatScreenProps) {
           onPressHelp={() => router.push('/guide')}
           onPressPartner={partner ? () => setPartnerOpen(true) : undefined}
         />
-        <GuideBanner roomId={room.id} hold={dreaming} onOpen={() => router.push('/guide')} />
+        <GuideBanner
+          seenVersion={me.guideSeenVersion ?? 0}
+          hold={dreaming}
+          onSeen={onGuideSeen}
+          onOpen={() => router.push('/guide')}
+        />
         <BuddyScene
           dreams
           albumRequest={albumRequest}
