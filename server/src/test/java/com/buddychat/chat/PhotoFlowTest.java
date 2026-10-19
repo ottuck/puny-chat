@@ -191,6 +191,28 @@ class PhotoFlowTest {
     }
 
     @Test
+    void aBigPhotoIsReadSkippingPixelsAndAHugeOneIsRefused() throws IOException {
+        createRoom("henry");
+
+        JsonNode photo = sendPhoto("henry", "p-1", jpeg(4096, 3072))
+                .expectStatus()
+                .isOk()
+                .expectBody(JsonNode.class)
+                .returnResult()
+                .getResponseBody()
+                .get("photo");
+        assertThat(photo.get("width").asInt()).isEqualTo(PhotoStore.MAX_EDGE);
+        assertThat(photo.get("height").asInt()).isEqualTo(768);
+
+        sendPhoto("henry", "p-2", png(5000, 3400))
+                .expectStatus()
+                .isBadRequest()
+                .expectBody()
+                .jsonPath("$.code")
+                .isEqualTo("INVALID_PHOTO");
+    }
+
+    @Test
     void aTooLargeBodyIsRefused() {
         createRoom("henry");
         byte[] huge = new byte[11 * 1024 * 1024];

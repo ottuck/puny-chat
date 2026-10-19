@@ -363,7 +363,7 @@ stats          { _id: "steps:<날짜>", ios|web|android: { welcome?, demo?, star
 | `BUDDY_NOT_ADULT` / `JOB_UNCHANGED` / `JOB_CHANGE_LOCKED` | 409 | 직업 바꾸기 불가(직업이 정해지기 전, 같은 직업, 바꿀 수 있는 레벨이 아님) |
 | `PARTNER_CHANGED` | 409 | 같은 `requestId`로 다른 신고 |
 | `SUPPORT_RATE_LIMIT` | 429 | 1시간에 문의 5개 이상 |
-| `INVALID_PHOTO` | 400 | 읽을 수 없는 이미지, 너무 큰 해상도(5천만 화소 초과), 잘못된 `clientMessageId` |
+| `INVALID_PHOTO` | 400 | 읽을 수 없는 이미지, 너무 큰 해상도(4096×4096 초과), 잘못된 `clientMessageId` |
 | `PHOTO_TOO_LARGE` | 413 | 본문이 10MB 초과 |
 | `PHOTO_UNAVAILABLE` | 503 | 사진 폴더가 없거나 쓸 수 없음, 디스크 남은 공간 5GB 미만 |
 
@@ -426,10 +426,10 @@ server → client
   앱이 긴 변 1024px JPEG로 줄여(`features/chat/photo.ts`, iOS 사진의 방향도 이때 펴진다) `POST /api/rooms/me/photos`로 올린다.
   고른 사진은 바로 말풍선(흐리게)으로 보이고, 실패하면 "다시 보내기"로 같은 `clientMessageId`로 다시 올린다. 올리기 전의 사진은 메모리에만 있어
   앱을 닫으면 사라진다. 사진 모듈(`expo-image-picker`·`expo-image-manipulator`)이 없는 예전 아이폰 빌드에서는 버튼을 숨긴다.
-- **서버**(`chat/PhotoService`, `PhotoStore`): 같은 `clientMessageId`의 메시지가 있으면 그대로 돌려준다. 이미지를 읽어(크기를 먼저 보고 5천만 화소가 넘으면 거절)
+- **서버**(`chat/PhotoService`, `PhotoStore`): 같은 `clientMessageId`의 메시지가 있으면 그대로 돌려준다. 이미지를 읽어(크기를 먼저 보고 4096×4096이 넘으면 거절, 저장 크기의 약 두 배까지 솎아 읽어 384MB 힙을 지킨다)
   긴 변 1024px로 줄이고(키우지 않는다. 전체 화면에서도 흐려 보이지 않을 만큼) WebP(손실, 품질 80)로 다시 만든다. 메타데이터(위치 등)는 남지 않는다. 디스크
-  `<사진 폴더>/<roomId>/<photoId>.webp`에 쓰고 `PHOTO` 메시지(`photo { id, width, height }`)를 넣는다. 동시 재시도로 중복 키가 나면 새 파일을 지우고
-  먼저 저장된 메시지를 준다. 인코딩은 CPU를 쓰는 blocking 작업이라 전용 스케줄러(동시 2개)에서 한다. WebP 인코더는 `webp-imageio`(libwebp 네이티브 포함).
+  `<사진 폴더>/<roomId>/<photoId>.webp`에 쓰고 `PHOTO` 메시지(`photo { id, width, height }`)를 넣는다. 메시지 저장이 실패하면 새 파일을 지우고, 동시 재시도로
+  중복 키가 났으면 먼저 저장된 메시지를 준다. 인코딩은 CPU를 쓰는 blocking 작업이라 전용 스케줄러(동시 2개)에서 한다. WebP 인코더는 `webp-imageio`(libwebp 네이티브 포함).
 - **전달**: 텍스트처럼 방 전체에 `message`(보낸 사람의 기기 포함, 앱은 `clientMessageId`로 합친다), 3초 뒤 읽지 않은 상대에게 푸시("사진을 보냈어요"),
   메시지 EXP +1과 둘이 함께. 돌보기 낱말·웃음·사랑은 세지 않는다. Buddy는 상대 메시지처럼 반응한다.
 - **보기**: 말풍선 안에 사진(폭 최대 220pt, 비율은 `width`·`height`), 누르면 전체 화면, 길게 누르면 반응. 주소는

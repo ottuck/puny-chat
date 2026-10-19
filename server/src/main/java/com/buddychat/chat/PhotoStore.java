@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReadParam;
 import javax.imageio.ImageReader;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
@@ -45,8 +46,12 @@ class PhotoStore implements DisposableBean {
     /** The longer side, in pixels, after scaling down: enough for a phone screen. */
     static final int MAX_EDGE = 1024;
 
-    /** Decoding a huge image would take the heap; the header says the size before that. */
-    static final long MAX_PIXELS = 50_000_000L;
+    /**
+     * The app always sends {@link #MAX_EDGE} or less; anything bigger comes from elsewhere. The header
+     * says the size before decoding, and decoding skips pixels down to about twice the stored size, so a
+     * big image never fills the heap (384 MB on the instance, two encodes at a time).
+     */
+    static final long MAX_PIXELS = 4096L * 4096L;
 
     private static final float QUALITY = 0.8f;
     private static final Pattern ROOM_ID = Pattern.compile("[0-9a-f]{24}");
@@ -136,7 +141,11 @@ class PhotoStore implements DisposableBean {
                 reader.setInput(in, true, true);
                 long pixels = (long) reader.getWidth(0) * reader.getHeight(0);
                 if (pixels <= 0 || pixels > MAX_PIXELS) throw invalid();
-                return reader.read(0);
+                int longer = Math.max(reader.getWidth(0), reader.getHeight(0));
+                int step = Math.max(1, longer / (2 * MAX_EDGE));
+                ImageReadParam param = reader.getDefaultReadParam();
+                param.setSourceSubsampling(step, step, 0, 0);
+                return reader.read(0, param);
             } finally {
                 reader.dispose();
             }

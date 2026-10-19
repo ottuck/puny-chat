@@ -117,10 +117,13 @@ public class ChatService {
                                         new Message.Photo(photo.id(), photo.width(), photo.height()),
                                         Instant.now(clock)))
                                 .map(saved -> new SendResult(saved, true))
-                                // A retry that ran at the same time stored it first: keep that one.
-                                .onErrorResume(
-                                        DuplicateKeyException.class,
-                                        e -> photos.delete(roomId, photo.id()).then(stored))))))
+                                // No message points at the new file: it goes. A retry that ran at the
+                                // same time stored it first: keep that one.
+                                .onErrorResume(e -> photos.delete(roomId, photo.id())
+                                        .then(
+                                                e instanceof DuplicateKeyException
+                                                        ? stored
+                                                        : Mono.<SendResult>error(e)))))))
                 // The room may have been deleted while the image was encoded.
                 .flatMap(result -> access.requireMember(roomId, sender.id())
                         .thenReturn(result)

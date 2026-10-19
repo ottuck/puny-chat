@@ -12,10 +12,10 @@ export type BubbleRect = { x: number; y: number; width: number; height: number }
 // The reaction pill hangs this far below the bubble; the time beside it moves up as much.
 const PILL_DROP = 16;
 
-// A photo keeps its shape inside this box, and is never thinner than PHOTO_MIN.
+// A photo keeps its shape inside this box. Only a very long strip is cut, to stay PHOTO_MIN thick.
 const PHOTO_MAX_WIDTH = 220;
 const PHOTO_MAX_HEIGHT = 280;
-const PHOTO_MIN = 96;
+const PHOTO_MIN = 40;
 
 export type BubblePhoto = { uri: string; width: number; height: number };
 
