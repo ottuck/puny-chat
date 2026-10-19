@@ -1,5 +1,4 @@
 type Props = {
-  kind: 'signIn' | 'link';
   onPress: () => void;
   disabled?: boolean;
 };

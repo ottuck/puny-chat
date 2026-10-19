@@ -5,18 +5,16 @@ import Svg, { Path } from 'react-native-svg';
 import { useColorMode } from '@/theme';
 
 type Props = {
-  kind: 'signIn' | 'link';
   onPress: () => void;
   disabled?: boolean;
 };
 
 // The web has no Apple button of its own, so it follows Apple's guidelines for a custom one: the
-// Apple logo and "Sign in with Apple" / "Continue with Apple", black (white in dark mode), sized
-// like the app's buttons and like the iPhone's (apple-button.ios.tsx).
-export function AppleButton({ kind, onPress, disabled }: Props) {
+// Apple logo and "Continue with Apple", white with a black outline (white in dark mode), sized like
+// the app's buttons and like the iPhone's (apple-button.ios.tsx).
+export function AppleButton({ onPress, disabled }: Props) {
   const { t } = useTranslation();
   const dark = useColorMode() === 'dark';
-  const foreground = dark ? '#000000' : '#ffffff';
   return (
     <Pressable
       onPress={onPress}
@@ -24,16 +22,14 @@ export function AppleButton({ kind, onPress, disabled }: Props) {
       accessibilityRole="button"
       style={({ pressed }) => [
         styles.button,
-        { backgroundColor: dark ? '#ffffff' : '#000000' },
+        { backgroundColor: '#ffffff', borderColor: dark ? '#ffffff' : '#000000' },
         { opacity: disabled ? 0.5 : pressed ? 0.7 : 1 },
       ]}
     >
       <Svg width={18} height={18} viewBox="0 0 24 24">
-        <Path fill={foreground} d={APPLE_LOGO} />
+        <Path fill="#000000" d={APPLE_LOGO} />
       </Svg>
-      <Text style={[styles.label, { color: foreground }]}>
-        {t(kind === 'signIn' ? 'signIn.apple' : 'settings.linkApple')}
-      </Text>
+      <Text style={styles.label}>{t('signIn.apple')}</Text>
     </Pressable>
   );
 }
@@ -45,6 +41,7 @@ const styles = StyleSheet.create({
   button: {
     height: 52,
     borderRadius: 26,
+    borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -52,6 +49,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   label: {
+    color: '#000000',
     fontSize: 16,
     fontWeight: '600',
   },

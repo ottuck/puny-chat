@@ -12,6 +12,7 @@ import { signInErrorKey } from '@/features/auth/actions';
 import { useAuth } from '@/features/auth/auth-provider';
 import { isCancelledSignIn, onPopupClosed } from '@/lib/social-auth';
 import { AppleButton } from '@/features/auth/components/apple-button';
+import { GoogleButton } from '@/features/auth/components/google-button';
 import { social } from '@/features/auth/social';
 import { resetStart } from '@/features/auth/start-flow';
 import { hasPendingInvite } from '@/features/room/pending-invite';
@@ -93,16 +94,11 @@ export default function SignInScreen() {
             />
           )}
           {social.google.supported ? (
-            <Button
-              label={t('signIn.google')}
-              onPress={() => run(social.google.signIn)}
-              disabled={busy}
-              variant="secondary"
-            />
+            <GoogleButton onPress={() => run(social.google.signIn)} disabled={busy} />
           ) : null}
           {/* Back to an account linked elsewhere (an iPhone, another browser), or a first start. */}
           {social.apple.supported ? (
-            <AppleButton kind="signIn" onPress={() => run(social.apple.signIn)} disabled={busy} />
+            <AppleButton onPress={() => run(social.apple.signIn)} disabled={busy} />
           ) : null}
           {/* Back after the guest's 30 days: say why this is the first screen again. */}
           <Text
