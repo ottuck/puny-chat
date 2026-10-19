@@ -16,7 +16,7 @@ import { useHome } from '@/features/auth/use-home';
 import { createRoom, updateMyName } from '@/features/room/api';
 import { RoomProvider, useRoom } from '@/features/room/room-provider';
 import { loadPreferences, usePreferences } from '@/lib/preferences';
-import { rememberInviteFromUrl, takePendingInvite } from '@/lib/pending-invite';
+import { rememberInviteFromUrl, takePendingInvite } from '@/features/room/pending-invite';
 import { registerServiceWorker } from '@/lib/service-worker';
 import { warmUpServer } from '@/lib/warm-up';
 import { watchForNewVersion } from '@/lib/web-update';

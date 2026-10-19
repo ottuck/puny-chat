@@ -449,7 +449,7 @@ togetherToday, job, leaning, canChangeJob, jobChangeAt, grown)를 그대로 보�
   짧게 두고, 참가 화면은 초대 메시지를 통째로 붙여 넣어도 링크에서 코드를 꺼낸다. 화면과 입력칸에서는 두 글자씩 끊어 `AB 23`으로 보인다(`invite-code.ts`,
   띄어쓰기는 보기용). 자리마다 글자 종류를 정하면(영어 2 + 숫자 2) 조합이 크게 줄어(31⁴ ≈ 92만 → 약 3~7만) 그렇게 하지 않는다. 짧은 대신 틀린 코드는 이용자당 10분에 10번까지
   (`INVITATION_RATE_LIMIT`, 서버가 한 대라 메모리에 센다). 만료 1주 뒤 초대 문서를 TTL 인덱스로 지워 코드를 다시 쓴다.
-  초대 링크는 `<웹 주소>/join?code=<코드>`. 웹이 로그인 전에 코드를 기억했다가 이름을 정한 뒤 참가 화면을 연다(`lib/pending-invite`).
+  초대 링크는 `<웹 주소>/join?code=<코드>`. 웹이 로그인 전에 코드를 기억했다가 이름을 정한 뒤 참가 화면을 연다(`features/room/pending-invite`).
 - solo room이 있는 사람이 수락하면 `LEAVE_CONFIRMATION_REQUIRED`. 앱이 "지금 Buddy는 사라져요"를 확인받고 `leaveCurrentRoom: true`로 다시 요청하면
   참가하고 기존 solo room은 지워진다. 2명 room의 멤버는 먼저 나가야 한다(`ALREADY_IN_ROOM`).
 - **나가기**: 2명 room이면 남은 사람이 room과 Buddy를 갖고 `left`와 SYSTEM `MEMBER_LEFT`(text = 나간 사람 이름)를 받는다. 혼자 room이면
