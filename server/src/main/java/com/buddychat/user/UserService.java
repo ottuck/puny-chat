@@ -24,6 +24,8 @@ import reactor.core.publisher.Mono;
 @Service
 public class UserService {
 
+    static final int MAX_GUIDE_VERSION = 1000;
+
     // How often a user's last-seen time is written at most.
     static final Duration SEEN_EVERY = Duration.ofDays(1);
 
@@ -164,6 +166,21 @@ public class UserService {
         return mongo.findAndModify(
                 query(where("_id").is(user.id())),
                 Update.update("displayName", name),
+                FindAndModifyOptions.options().returnNew(true),
+                User.class);
+    }
+
+    /**
+     * Notes that the user has opened the guide card of {@code version}. Only ever raises the
+     * value, so a late request from another device cannot bring the card back.
+     */
+    public Mono<User> markGuideSeen(User user, int version) {
+        if (version < 1 || version > MAX_GUIDE_VERSION) {
+            return Mono.error(new ApiException(HttpStatus.BAD_REQUEST, "INVALID_REQUEST"));
+        }
+        return mongo.findAndModify(
+                query(where("_id").is(user.id())),
+                new Update().max("guideSeenVersion", version),
                 FindAndModifyOptions.options().returnNew(true),
                 User.class);
     }

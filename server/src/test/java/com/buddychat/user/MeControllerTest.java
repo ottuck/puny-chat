@@ -91,6 +91,41 @@ class MeControllerTest {
         assertThat(users.count().block()).isEqualTo(1);
     }
 
+    @Test
+    void guideSeenFollowsTheUserAndOnlyGoesUp() {
+        assertThat(me("uid-1", null).guideSeenVersion()).isZero();
+
+        assertThat(guideSeen("uid-1", 2)
+                        .expectStatus()
+                        .isOk()
+                        .expectBody(MeController.MeResponse.class)
+                        .returnResult()
+                        .getResponseBody()
+                        .guideSeenVersion())
+                .isEqualTo(2);
+        // Another device still on an older card cannot bring the newer one back.
+        guideSeen("uid-1", 1).expectStatus().isOk();
+        assertThat(me("uid-1", null).guideSeenVersion()).isEqualTo(2);
+
+        assertThat(me("uid-2", null).guideSeenVersion()).isZero();
+    }
+
+    @Test
+    void rejectsGuideVersionsOutOfRange() {
+        me("uid-1", null);
+        guideSeen("uid-1", 0).expectStatus().isBadRequest();
+        guideSeen("uid-1", UserService.MAX_GUIDE_VERSION + 1).expectStatus().isBadRequest();
+        assertThat(me("uid-1", null).guideSeenVersion()).isZero();
+    }
+
+    private WebTestClient.ResponseSpec guideSeen(String uid, int version) {
+        return client.mutateWith(mockJwt().jwt(jwt -> jwt.subject(uid)))
+                .put()
+                .uri("/api/me/guide-seen")
+                .bodyValue(java.util.Collections.singletonMap("version", version))
+                .exchange();
+    }
+
     private WebTestClient.ResponseSpec rename(String uid, String name) {
         return client.mutateWith(mockJwt().jwt(jwt -> jwt.subject(uid)))
                 .patch()
