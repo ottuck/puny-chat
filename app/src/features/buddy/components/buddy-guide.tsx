@@ -8,7 +8,7 @@ import { type Frame, type Palette, PixelSprite } from '../pixel/pixel-sprite';
 import {
   CAT_TAIL,
   clockAt,
-  CRATE,
+  TABLE,
   FIREFLY,
   LAMP_LIT,
   LAMP,
@@ -19,7 +19,7 @@ import {
   SNAIL,
   SPARROW,
   TATAMI_SWATCH,
-  TOY_BOX,
+  TABLE_TOYS,
   TRAIN,
   WINDOW,
   WOOD_SWATCH,
@@ -63,9 +63,9 @@ const thing = (frame: Frame) => ({ frame, palette: THINGS_PALETTE });
 
 const REWARD_ICON: Record<Reward, { frame: Frame; palette: Palette }> = {
   plant1: prop(PLANTS[1][0]),
-  crate: room(CRATE),
+  crate: room(TABLE),
   bowl1: prop(bowl(true, 1)),
-  toys: room(TOY_BOX),
+  toys: room(TABLE_TOYS),
   window: { frame: WINDOW, palette: SKY_PALETTES.day },
   // One of the kinds it may grow into.
   plant2: prop(PLANTS[2][0]),
