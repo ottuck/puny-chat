@@ -17,13 +17,21 @@ export class AccountInUseError extends Error {
   }
 }
 
-// The user closed the popup or Apple's sheet, or started another one; not worth an error message.
+const CANCELLED = 'ERR_REQUEST_CANCELED';
+
+// What a native sheet that reports cancelling as a result (Google's) throws instead, so callers see
+// one kind of cancel.
+export function cancelledSignIn(): Error {
+  return Object.assign(new Error('Sign-in was cancelled.'), { code: CANCELLED });
+}
+
+// The user closed the popup or a sign-in sheet, or started another one; not worth an error message.
 export function isCancelledSignIn(error: unknown): boolean {
   const code = (error as { code?: unknown } | null)?.code;
   return (
     code === 'auth/popup-closed-by-user' ||
     code === 'auth/cancelled-popup-request' ||
-    code === 'ERR_REQUEST_CANCELED'
+    code === CANCELLED
   );
 }
 

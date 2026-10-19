@@ -11,6 +11,7 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 | --- | --- | --- |
 | Apple Developer Program 가입, App ID(`com.ottuck.buddychat`), Sign in with Apple 켜기 | 운영자 | 완료 |
 | Sign in with Apple 키, Services ID, Firebase Apple 제공업체 | 운영자 | 완료 |
+| 아이폰 Google 로그인: `@react-native-google-signin/google-signin`을 넣은 개발용 빌드 다시 만들기(Firebase iOS 앱의 OAuth client 사용) | 운영자 | 예정 |
 | 웹 Apple 로그인: Services ID에 웹 도메인(`buddy-chat-67e35.firebaseapp.com`)과 return URL(`https://buddy-chat-67e35.firebaseapp.com/__/auth/handler`) | 운영자 | 예정 |
 | Firebase iOS 앱(번들 ID `com.ottuck.buddychat`) 등록. 앱의 Apple 토큰은 수신자가 번들 ID라 이 등록이 없으면 `auth/invalid-credential` | CLI | 완료 |
 | App Store Connect 앱 등록 | 운영자 | 완료 |
@@ -45,6 +46,7 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
    완료되면 링크로 설치하고 개발자 모드를 켠다.
 2. **실기기 검증.** 웹·서버 배포 성공은 iOS 바이너리 검증이 아니다.
    - Apple 로그인·계정 연결·계정 삭제(Services ID·Team ID·Key ID·키 연결 확인 포함)
+   - Google 로그인·계정 연결·계정 삭제, 웹에서 Google로 연결한 계정이 앱에서 같은 Buddy로 열리는지
    - 앱을 닫은 상태의 푸시, 알림을 눌러 돌아오기(EAS APNs 키)
    - 백그라운드 복귀·재연결, 키보드·스크롤, 아이콘·스플래시, 설정의 선택창
    - 문의 접수 후 운영자 수신함에 알림이 실제로 오는지

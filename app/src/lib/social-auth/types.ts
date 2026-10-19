@@ -2,6 +2,17 @@ import type { AuthCredential } from 'firebase/auth';
 
 export type ProviderId = 'google' | 'apple';
 
+// OAuth client ids for native Google sign-in (public, from the Firebase project): the iOS client,
+// and the web client, which Firebase checks the Google id token against.
+export type GoogleOptions = {
+  iosClientId: string;
+  webClientId: string;
+};
+
+export type SocialAuthOptions = {
+  google?: GoogleOptions;
+};
+
 // One way to sign in (Google, Apple) on this platform, bound to a Firebase Auth instance.
 export type SocialProvider = {
   id: ProviderId;

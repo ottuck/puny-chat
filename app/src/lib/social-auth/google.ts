@@ -1,9 +1,9 @@
 import type { Auth } from 'firebase/auth';
 
 import { unsupportedProvider } from './account';
-import type { SocialProvider } from './types';
+import type { GoogleOptions, SocialProvider } from './types';
 
-// Native Google sign-in needs a native module and an iOS OAuth client, not set up yet.
-export function googleProvider(_auth: Auth): SocialProvider {
+// Google sign-in is on the web (google.web.ts) and the iPhone (google.ios.ts); Android later.
+export function googleProvider(_auth: Auth, _options?: GoogleOptions): SocialProvider {
   return unsupportedProvider('google');
 }

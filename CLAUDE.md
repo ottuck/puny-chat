@@ -74,7 +74,9 @@
 - Google·Apple 로그인은 `lib/social-auth`에 모은다. 앱 코드(`@/`, 번역, 서버 호출)를 import하지 않는 코어라 다른 Expo 앱에
   폴더째 옮겨 쓴다. 앱은 `features/auth/social.ts`의 `social.google` / `social.apple`로 쓴다. 웹은 둘 다 Firebase 팝업
   (`popup-provider.ts`), 아이폰은 Apple(`apple.ios.ts`, `expo-apple-authentication` → Firebase credential, 버튼은 Apple 기본
-  버튼 `features/auth/components/apple-button.ios.tsx`, 웹은 지침에 맞춘 `apple-button.web.tsx`). 아이폰 Google은 아직 없다.
+  버튼 `features/auth/components/apple-button.ios.tsx`, 웹은 지침에 맞춘 `apple-button.web.tsx`)과 Google(`google.ios.ts`,
+  `@react-native-google-signin/google-signin` → id token → Firebase credential). Google OAuth client id(공개 값)는 `app.json`의
+  `extra.googleSignIn`과 config plugin의 `iosUrlScheme`. 그 모듈이 없는 예전 빌드에서는 Google 버튼만 숨긴다.
   연결은 `linkOrSwitch`: 이미 다른 사용자인 계정이면 `AccountInUseError`로 전환을 묻는다(웹 확인 창은 포커스가 돌아온 뒤,
   `lib/confirm.web.ts`). Apple 계정을 지울 때는 다시 로그인하고 Apple 토큰을 취소한다(Firebase Apple 제공업체에 Services ID·키 필요).
 - **게스트는 30일.** Firebase 콘솔의 익명 계정 자동 정리(30일 지난 익명 계정 삭제)를 켜서 그대로 제품 정책으로 쓴다. 남은 일수는
