@@ -4,8 +4,8 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.buddychat.common.ApiException;
+import com.buddychat.stats.StatsService;
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Map;
@@ -14,6 +14,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -26,23 +28,22 @@ public class UserService {
 
     static final int MAX_GUIDE_VERSION = 1000;
 
-    // How often a user's last-seen time is written at most.
-    static final Duration SEEN_EVERY = Duration.ofDays(1);
-
     private final UserRepository users;
     private final ReactiveMongoTemplate mongo;
+    private final StatsService stats;
     private final Clock clock;
 
-    UserService(UserRepository users, ReactiveMongoTemplate mongo, Clock clock) {
+    UserService(UserRepository users, ReactiveMongoTemplate mongo, StatsService stats, Clock clock) {
         this.users = users;
         this.mongo = mongo;
+        this.stats = stats;
         this.clock = clock;
     }
 
     /**
      * The signed-in user, identified only by the token's subject (Firebase uid). Also notes whether
      * they are a guest and that they were here today, for the weekly clean-up of guests Firebase has
-     * deleted (account/GuestCleanup).
+     * deleted (account/GuestCleanup) and the count of users coming back (stats/StatsService).
      */
     public Mono<User> current(Jwt jwt) {
         boolean guest = isGuest(jwt);
@@ -61,24 +62,30 @@ public class UserService {
         return !(firebase.get("identities") instanceof Map<?, ?> identities) || identities.isEmpty();
     }
 
-    // At most one write a day per user, or right away when they stop being a guest.
+    // At most one write a day (Japan's day) per user, or right away when they stop being a guest.
+    // The first request of a day also counts the user as back (stats/StatsService).
     private Mono<User> noteSeen(User user, boolean guest) {
         Instant now = Instant.now(clock);
+        Instant today = StatsService.startOfDay(now);
         Instant seen = user.lastSeenAt();
+        boolean newDay = seen == null || seen.isBefore(today);
         boolean becameLinked = !guest && !Boolean.FALSE.equals(user.guest());
-        if (!becameLinked && seen != null && seen.isAfter(now.minus(SEEN_EVERY))) {
-            return Mono.just(user);
+        if (!becameLinked && !newDay) return Mono.just(user);
+        Query which = query(where("_id").is(user.id()));
+        // Only one of two requests racing into a new day writes it, so a day is counted once.
+        if (!becameLinked) {
+            which.addCriteria(new Criteria()
+                    .orOperator(
+                            where("lastSeenAt").isNull(), where("lastSeenAt").lt(today)));
         }
         Update note = new Update().set("lastSeenAt", now);
         // A token from before linking stays valid for an hour and may arrive from another device.
         // Only creation sets guest=true; later requests may only clear it. Not writing true here
         // also protects against a stale request racing with the request that recorded the link.
         if (!guest) note.set("guest", false);
-        return mongo.findAndModify(
-                        query(where("_id").is(user.id())),
-                        note,
-                        FindAndModifyOptions.options().returnNew(true),
-                        User.class)
+        return mongo.findAndModify(which, note, FindAndModifyOptions.options().returnNew(true), User.class)
+                .flatMap(updated ->
+                        newDay ? stats.cameBack(updated.createdAt(), now).thenReturn(updated) : Mono.just(updated))
                 .defaultIfEmpty(user);
     }
 
@@ -92,8 +99,9 @@ public class UserService {
 
     private Mono<User> getOrCreate(String firebaseUid, @Nullable String displayName, boolean guest) {
         return users.findByFirebaseUid(firebaseUid)
-                .switchIfEmpty(
-                        Mono.defer(() -> users.save(User.create(firebaseUid, displayName, guest, Instant.now(clock)))))
+                .switchIfEmpty(Mono.defer(() -> users.save(
+                                User.create(firebaseUid, displayName, guest, Instant.now(clock)))
+                        .flatMap(created -> stats.joined(created.createdAt()).thenReturn(created))))
                 .onErrorResume(DuplicateKeyException.class, e -> users.findByFirebaseUid(firebaseUid));
     }
 

@@ -28,6 +28,9 @@ class SecurityConfig {
                         // The WebSocket authenticates with its first message (realtime/ChatWebSocketHandler).
                         .pathMatchers("/ws")
                         .permitAll()
+                        // Steps of the start, counted before sign-in (stats/StatsController).
+                        .pathMatchers(HttpMethod.POST, "/api/stats/steps")
+                        .permitAll()
                         .pathMatchers("/api/**")
                         .authenticated()
                         .anyExchange()
