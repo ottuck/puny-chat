@@ -131,8 +131,9 @@
 - `ios/`, `android/`는 CNG로 생성되는 폴더다. 직접 만들거나 고치지 않고 `app.json`과 config plugin으로 설정한다.
 - Windows에서는 iOS 로컬 빌드가 안 된다. 네이티브 모듈을 넣거나 네이티브 설정을 바꾸면 EAS 클라우드 빌드를 다시
   해야 한다(무료 플랜은 월 빌드 수 제한) — 넣기 전에 사용자에게 먼저 확인한다.
-- 플랫폼마다 지원이 다른 기능은 `*.web.ts`로 나눈다(예: `features/notifications/push.web.ts`는 Web Push와 서비스 워커
-  `public/sw.js`, 앱은 Expo 푸시).
+- 플랫폼마다 지원이 다른 기능은 `*.web.ts`로 나눈다(예: `lib/push/push.web.ts`는 Web Push와 서비스 워커
+  `public/sw.js`, `push.ts`는 Expo 푸시). 푸시 코어 `lib/push`는 서버 호출·번역을 모르고, 앱의
+  `features/notifications/push.ts`가 `createPush`에 서버 주소(`/api/me/push-tokens`, `/api/me/web-push`)와 언어를 넘긴다.
 
 ## Principles
 
