@@ -76,8 +76,6 @@ export function MessageList({
       {/* Inverted: the newest message sits at the bottom and new ones stay in view. The list's
         "end" is the top, so reaching it loads older history. */}
       <FlatList
-        // The web page's style keeps a long press here for the reaction picker (app/+html.tsx).
-        id="message-list"
         inverted
         data={shown}
         keyExtractor={(message) => message.clientMessageId}

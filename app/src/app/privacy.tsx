@@ -19,28 +19,14 @@ const SECTIONS = [
   'changes',
 ] as const;
 
+// In the app's language (settings, or the device's); the page has no language switch of its own.
 export default function PrivacyScreen() {
   const colors = useColors();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.page}>
       <PageTitle title={t('privacy.title')} />
       <View style={styles.column}>
-        <View style={styles.languages}>
-          {(['ko', 'ja', 'en'] as const).map((language, index) => (
-            <Pressable
-              key={language}
-              accessibilityRole="button"
-              onPress={() => i18n.changeLanguage(language)}
-            >
-              <Text
-                style={{ color: i18n.language === language ? colors.accent : colors.textMuted }}
-              >
-                {['한국어', '日本語', 'English'][index]}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
         <Text style={[styles.title, { color: colors.text }]}>{t('privacy.title')}</Text>
         <Text style={[styles.date, { color: colors.textMuted }]}>{t('privacy.effective')}</Text>
         <Text style={[styles.body, { color: colors.text }]}>{t('privacy.intro')}</Text>
@@ -73,7 +59,6 @@ export default function PrivacyScreen() {
 const styles = StyleSheet.create({
   page: { alignItems: 'center', padding: 24, paddingBottom: 48 },
   column: { width: '100%', maxWidth: MAX_CONTENT_WIDTH, gap: 18 },
-  languages: { flexDirection: 'row', gap: 20, justifyContent: 'flex-end' },
   title: { fontSize: 26, fontWeight: '700' },
   date: { fontSize: 13 },
   section: { gap: 8 },
