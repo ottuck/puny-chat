@@ -1,0 +1,10 @@
+[Unit]
+Description=Back up the puny-chat database every day (03:00 in Japan and Korea)
+
+[Timer]
+OnCalendar=*-*-* 18:00:00 UTC
+RandomizedDelaySec=10min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -46,5 +46,7 @@ gh variable set EXPO_PUBLIC_API_URL --body "$(terraform output -raw server_url)"
 Files and setup are in `server/deploy`. On the instance, in `/opt/puny-chat`: `compose.yaml`, `Caddyfile`, `update.sh`
 and `.env` (from `.env.example`; the MongoDB address comes from `terraform output -raw mongodb_uri`). Install
 `puny-chat-update.service` and `.timer` into `/etc/systemd/system`, then `systemctl enable --now puny-chat-update.timer`.
+For the daily database backup, also copy `backup.sh` and install `puny-chat-backup.service` and `.timer` the same way
+(`systemctl enable --now puny-chat-backup.timer`).
 After the first image is pushed, set the GHCR package `puny-chat-server` to Public once. After changing
 `.env`, run `docker compose up -d` there. If the cluster is recreated, the new address goes into `.env` too.

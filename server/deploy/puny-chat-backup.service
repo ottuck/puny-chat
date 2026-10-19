@@ -1,0 +1,8 @@
+[Unit]
+Description=Back up the puny-chat database
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /opt/puny-chat/backup.sh
