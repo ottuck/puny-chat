@@ -396,7 +396,7 @@
     "LEVELED_UP": "{{buddy, 이가}} 레벨 업했어요! Lv.{{level}} ⬆️",
     "LEVELED_UP_REWARD": "{{buddy, 이가}} 레벨 업했어요! Lv.{{level}} ⬆️ 🎁 {{reward}}",
     "EVOLVED": "{{buddy, 이가}} 진화했어요! ✨",
-    "GROWN": "🌟 {{buddy, 이가}} 어른이 다 됐어요! 이제 직업을 바꿀 수 있어요.",
+    "GROWN": "🔄 {{buddy, 이가}} Lv.20이 됐어요! 이제 직업을 바꿀 수 있어요.",
     "MAX_LEVEL": "🎉 {{buddy, 이가}} 최고 레벨 Lv.{{level}}에 도달했어요!",
     "GRADUATED": "🎓 {{name, 이가}} 독립해서 앨범에 남았어요. 새 알이 도착했어요!",
     "TOGETHER": "🤝 오늘은 둘 다 왔어요! 함께 보너스 +{{exp}} EXP",

@@ -396,7 +396,7 @@
     "LEVELED_UP": "{{buddy}} leveled up! Lv.{{level}} ⬆️",
     "LEVELED_UP_REWARD": "{{buddy}} leveled up! Lv.{{level}} ⬆️ 🎁 {{reward}}",
     "EVOLVED": "{{buddy}} evolved! ✨",
-    "GROWN": "🌟 {{buddy}} is a grown-up now! Its job can be changed from here.",
+    "GROWN": "🔄 {{buddy}} reached Lv.20! Its job can be changed from here.",
     "MAX_LEVEL": "🎉 {{buddy}} reached the top level, Lv.{{level}}!",
     "GRADUATED": "🎓 {{name}} went its own way and is in the album now. A new egg arrived!",
     "TOGETHER": "🤝 You both showed up today! Together bonus +{{exp}} EXP",
