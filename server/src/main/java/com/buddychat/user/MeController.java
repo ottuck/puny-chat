@@ -5,6 +5,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
@@ -33,13 +34,28 @@ class MeController {
                 .map(MeResponse::from);
     }
 
+    record GuideSeenRequest(int version) {}
+
+    // The in-chat guide card was opened: kept per user, so it does not come back on other devices
+    // or in another room. The app bumps its version when the card says something new.
+    @PutMapping("/api/me/guide-seen")
+    Mono<MeResponse> guideSeen(@AuthenticationPrincipal Jwt jwt, @RequestBody GuideSeenRequest request) {
+        return userService
+                .current(jwt)
+                .flatMap(user -> userService.markGuideSeen(user, request.version()))
+                .map(MeResponse::from);
+    }
+
+    /** @param guideSeenVersion 0 until the guide card is first opened. */
     record MeResponse(
             String id,
             @Nullable String displayName,
-            @Nullable String roomId) {
+            @Nullable String roomId,
+            int guideSeenVersion) {
 
         static MeResponse from(User user) {
-            return new MeResponse(user.id(), user.displayName(), user.roomId());
+            Integer seen = user.guideSeenVersion();
+            return new MeResponse(user.id(), user.displayName(), user.roomId(), seen == null ? 0 : seen);
         }
     }
 }
