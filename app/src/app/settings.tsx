@@ -38,6 +38,7 @@ import type { Room } from '@/features/room/api';
 import {
   isCancelledSignIn,
   linkOrSwitch,
+  onPopupClosed,
   type ProviderId,
   type SocialProvider,
 } from '@/lib/social-auth';
@@ -61,6 +62,8 @@ export default function SettingsScreen() {
 
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  // Deleting a linked account signs in again in a popup first; closing it lets go quickly.
+  useEffect(() => (deleting ? onPopupClosed(() => setDeleting(false)) : undefined), [deleting]);
 
   // A guest who signs out can never come back to this account; say so first.
   const onSignOut = async () => {
@@ -225,6 +228,8 @@ function AccountCard({
   const [error, setError] = useState<string | null>(null);
   // Where this guest lives, so they know where to open puny-chat to find it again.
   const [place] = useState(currentGuestPlace);
+  // A closed popup takes Firebase 8 seconds to report; the buttons come back as soon as it closes.
+  useEffect(() => (busy ? onPopupClosed(() => setBusy(false)) : undefined), [busy]);
 
   const link = async (provider: SocialProvider) => {
     setBusy(true);

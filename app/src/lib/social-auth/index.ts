@@ -34,4 +34,5 @@ export {
   linkOrSwitch,
   reauthenticateLinked,
 } from './account';
+export { onPopupClosed } from './popup-closed';
 export type { GoogleOptions, ProviderId, SocialAuthOptions, SocialProvider } from './types';

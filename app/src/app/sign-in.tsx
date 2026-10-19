@@ -10,7 +10,7 @@ import { BuddyAvatar } from '@/features/buddy/components/buddy-avatar';
 import { Button } from '@/components/button';
 import { signInErrorKey } from '@/features/auth/actions';
 import { useAuth } from '@/features/auth/auth-provider';
-import { isCancelledSignIn } from '@/lib/social-auth';
+import { isCancelledSignIn, onPopupClosed } from '@/lib/social-auth';
 import { AppleButton } from '@/features/auth/components/apple-button';
 import { social } from '@/features/auth/social';
 import { resetStart } from '@/features/auth/start-flow';
@@ -23,6 +23,8 @@ export default function SignInScreen() {
   const { guestExpired } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A closed popup takes Firebase 8 seconds to report; the buttons come back as soon as it closes.
+  useEffect(() => (busy ? onPopupClosed(() => setBusy(false)) : undefined), [busy]);
   // Came with a friend's invite link: after starting, they go straight to joining. Read after the
   // first render, which the web builds ahead of time without the link.
   const [invited, setInvited] = useState(false);
