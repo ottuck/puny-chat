@@ -26,8 +26,8 @@
   },
   "signIn": {
     "tagline": "Chat with someone you like, and raise a tiny buddy together.",
-    "google": "Start with Google",
-    "apple": "Sign in with Apple",
+    "google": "Continue with Google",
+    "apple": "Continue with Apple",
     "error": "Couldn’t sign in. Please try again.",
     "startNow": "Start now",
     "noAccountNeeded": "No account needed. Guests can use puny-chat for 30 days, and linking an account keeps everything.",
@@ -422,7 +422,6 @@
       "browser": "this browser"
     },
     "linkGoogle": "Link Google account",
-    "linkApple": "Continue with Apple",
     "linkNotReady": "Linking an account in the app is coming soon.",
     "linkedGoogle": "Linked to Google",
     "linkedApple": "Linked to Apple",

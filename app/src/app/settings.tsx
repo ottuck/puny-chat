@@ -295,7 +295,7 @@ function AccountCard({
           ) : null}
           {social.apple.supported ? (
             <View style={styles.section}>
-              <AppleButton kind="link" onPress={() => link(social.apple)} disabled={busy} />
+              <AppleButton onPress={() => link(social.apple)} disabled={busy} />
             </View>
           ) : null}
           {social.google.supported || social.apple.supported ? null : (
