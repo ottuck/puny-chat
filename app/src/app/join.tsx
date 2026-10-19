@@ -117,7 +117,7 @@ export default function JoinScreen() {
         <TextInput
           value={spacedCode(code)}
           onChangeText={(value) => setCode(codeFrom(value))}
-          placeholder="AB 23"
+          placeholder="K7 PM"
           placeholderTextColor={colors.border}
           autoCapitalize="characters"
           autoCorrect={false}
