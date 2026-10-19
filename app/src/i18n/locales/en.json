@@ -31,6 +31,7 @@
     "error": "Couldn’t sign in. Please try again.",
     "startNow": "Start now",
     "noAccountNeeded": "No account needed. Guests can use puny-chat for 30 days, and linking an account keeps everything.",
+    "guestExpired": "It has been more than 30 days since you started as a guest, so your old Buddy and chats are gone. You can start again anytime.",
     "invited": "You were invited by a friend. Start, and you will go straight to their room.",
     "withCode": "Start with an invite code",
     "start": "Get started",
