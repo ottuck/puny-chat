@@ -1,40 +1,25 @@
 import { api } from '@/lib/api';
 import { apiUrl } from '@/lib/api-url';
 
+import { resizePhoto } from './photo-resize';
 import type { ServerMessage } from './types';
 
 // The server stores at most this on the longer side (server: chat/PhotoStore.MAX_EDGE). Resizing here
-// first keeps the upload small; the server writes it again as WebP either way.
-const MAX_EDGE = 1024;
+// first keeps the upload small (the original never leaves the device); the server writes it again as
+// WebP either way.
+const MAX_EDGE = 1600;
 const JPEG_QUALITY = 0.85;
 
 export type PreparedPhoto = { uri: string; width: number; height: number };
 
-// One photo from the library, made small enough to send, or null when the user cancelled. JPEG,
-// because Safari cannot encode WebP; drawing it again also turns an iPhone photo upright.
+// One photo from the library, made small enough to send, or null when the user cancelled.
 export async function pickPhoto(): Promise<PreparedPhoto | null> {
   // Loaded on use: older iPhone builds lack the native modules (photo-support.ts).
   const ImagePicker = await import('expo-image-picker');
   const picked = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1 });
   const asset = picked.canceled ? undefined : picked.assets[0];
   if (!asset) return null;
-
-  const { ImageManipulator, SaveFormat } = await import('expo-image-manipulator');
-  // The picker may not know the size (0 on some browsers); the rendered image does.
-  const original = await ImageManipulator.manipulate(asset.uri).renderAsync();
-  const scale = MAX_EDGE / Math.max(original.width, original.height);
-  // Both sides: on the web, a side left null comes out as 0.
-  const image =
-    scale < 1
-      ? await ImageManipulator.manipulate(asset.uri)
-          .resize({
-            width: Math.round(original.width * scale),
-            height: Math.round(original.height * scale),
-          })
-          .renderAsync()
-      : original;
-  const saved = await image.saveAsync({ format: SaveFormat.JPEG, compress: JPEG_QUALITY });
-  return { uri: saved.uri, width: saved.width, height: saved.height };
+  return resizePhoto(asset.uri, MAX_EDGE, JPEG_QUALITY);
 }
 
 // Stores the photo as a message (docs/PROJECT.md, 사진). The same clientMessageId again returns the
