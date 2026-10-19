@@ -23,6 +23,7 @@ import { isCancelledSignIn } from '@/lib/social-auth';
 import { useAuth } from '@/features/auth/auth-provider';
 import { useHome } from '@/features/auth/use-home';
 import { finishStart, resetStart, setStartName, useStart } from '@/features/auth/start-flow';
+import { countStartStep } from '@/features/stats/start-steps';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
 // The name the friend sees. Three ways here: starting (no account yet: the guest is made with it,
@@ -53,6 +54,7 @@ export default function NameScreen() {
       // Joining a friend: this is the last step, the guest is made now and goes into their room.
       // Otherwise on to the egg's name, still without an account.
       if (!pending.code) {
+        countStartStep('name');
         setBusy(false);
         router.push('/welcome');
         return;

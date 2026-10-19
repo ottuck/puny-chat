@@ -15,6 +15,7 @@ import { AppleButton } from '@/features/auth/components/apple-button';
 import { GoogleButton } from '@/features/auth/components/google-button';
 import { social } from '@/features/auth/social';
 import { resetStart } from '@/features/auth/start-flow';
+import { countStartStep } from '@/features/stats/start-steps';
 import { hasPendingInvite } from '@/features/room/pending-invite';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
@@ -26,6 +27,7 @@ export default function SignInScreen() {
   const [error, setError] = useState<string | null>(null);
   // A closed popup takes Firebase 8 seconds to report; the buttons come back as soon as it closes.
   useEffect(() => (busy ? onPopupClosed(() => setBusy(false)) : undefined), [busy]);
+  useEffect(() => countStartStep('welcome'), []);
   // Came with a friend's invite link: after starting, they go straight to joining. Read after the
   // first render, which the web builds ahead of time without the link.
   const [invited, setInvited] = useState(false);

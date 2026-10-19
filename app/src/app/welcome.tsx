@@ -20,6 +20,7 @@ import { signInErrorKey } from '@/features/auth/actions';
 import { isCancelledSignIn } from '@/lib/social-auth';
 import { useAuth } from '@/features/auth/auth-provider';
 import { finishStart, useStart } from '@/features/auth/start-flow';
+import { countStartStep } from '@/features/stats/start-steps';
 import { createRoom } from '@/features/room/api';
 import { errorMessage } from '@/features/room/error-message';
 import { useRoom } from '@/features/room/room-provider';
@@ -48,6 +49,7 @@ export default function WelcomeScreen() {
     if (starting) {
       try {
         await finishStart(name.trim());
+        countStartStep('wake');
       } catch (e) {
         if (!isCancelledSignIn(e)) setError(t(signInErrorKey(e)));
         setBusy(false);

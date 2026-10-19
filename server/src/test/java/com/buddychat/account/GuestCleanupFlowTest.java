@@ -11,6 +11,7 @@ import com.buddychat.chat.Message;
 import com.buddychat.room.Room;
 import com.buddychat.user.User;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -118,6 +119,7 @@ class GuestCleanupFlowTest {
 
     @Test
     void aGuestIsSeenAtMostOnceADay() {
+        clock.set(Instant.parse("2026-01-10T00:00:00Z")); // 09:00 in Japan
         me(guestToken("daily"));
         var first = user("daily").lastSeenAt();
 
@@ -125,7 +127,7 @@ class GuestCleanupFlowTest {
         me(guestToken("daily"));
         assertThat(user("daily").lastSeenAt()).isEqualTo(first);
 
-        clock.advance(Duration.ofHours(20));
+        clock.advance(Duration.ofHours(10)); // the next day in Japan, 19 hours later
         me(guestToken("daily"));
         assertThat(user("daily").lastSeenAt()).isAfter(first);
     }

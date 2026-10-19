@@ -5,7 +5,7 @@ name: Deploy
 # passes on a push to main, or run by hand on main.
 # Secrets: CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID (Workers deploy). Variables:
 # EXPO_PUBLIC_API_URL and the app's public Firebase settings
-# EXPO_PUBLIC_FIREBASE_{API_KEY,AUTH_DOMAIN,PROJECT_ID,APP_ID}.
+# EXPO_PUBLIC_FIREBASE_{API_KEY,AUTH_DOMAIN,PROJECT_ID,APP_ID}, and EXPO_PUBLIC_CF_BEACON_TOKEN (optional).
 on:
   workflow_call:
     secrets:
@@ -128,6 +128,8 @@ jobs:
           EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ vars.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN }}
           EXPO_PUBLIC_FIREBASE_PROJECT_ID: ${{ vars.EXPO_PUBLIC_FIREBASE_PROJECT_ID }}
           EXPO_PUBLIC_FIREBASE_APP_ID: ${{ vars.EXPO_PUBLIC_FIREBASE_APP_ID }}
+          # Cloudflare Web Analytics (infra: web_analytics_token); unset, the page loads no beacon.
+          EXPO_PUBLIC_CF_BEACON_TOKEN: ${{ vars.EXPO_PUBLIC_CF_BEACON_TOKEN }}
 
       # The Worker, its static assets and its custom domain (app/wrangler.jsonc).
       - name: Deploy

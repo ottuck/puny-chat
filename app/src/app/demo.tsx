@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   KeyboardAvoidingView,
@@ -15,6 +15,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Button } from '@/components/button';
 import { PageTitle } from '@/components/page-title';
 import { setStartCode } from '@/features/auth/start-flow';
+import { countStartStep } from '@/features/stats/start-steps';
 import { BuddySheet } from '@/features/buddy/components/buddy-sheet';
 import { BuddyStage } from '@/features/buddy/components/buddy-stage';
 import { StageShade } from '@/features/buddy/components/stage-shade';
@@ -52,9 +53,12 @@ function DemoScreen({ onReplay }: { onReplay: () => void }) {
   const { height: windowHeight } = useWindowDimensions();
   const stageHeight = Math.round(Math.min(280, Math.max(180, windowHeight * 0.3)));
 
+  useEffect(() => countStartStep('demo'), []);
+
   // The auth listener then leaves the tour for naming, as from the sign-in screen.
   // On to the name; the guest is made only once it is picked (start-flow.ts).
   const start = () => {
+    countStartStep('start');
     setStartCode(null);
     router.push('/name');
   };

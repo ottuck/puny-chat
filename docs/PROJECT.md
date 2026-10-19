@@ -294,6 +294,8 @@ supportTickets { _id: requestId, kind (INQUIRY | REPORT | REMOVE), reporterId, r
                  roomId?, roomSnapshot?, targetId?, targetName?, nextRoomId?, evidence [], createdAt, expiresAt, completedAt?,
                  closureConfirmed, emailStatus, emailAttempts, nextEmailAttemptAt }
 history_deletions  계정 삭제 중 영향받는 방 id(삭제 진행 표식)
+stats          { _id: "steps:<날짜>", ios|web|android: { welcome?, demo?, start?, name?, wake? } }
+               { _id: "joined:<날짜>", joined?, d1?..d60? }   이용 통계(날짜는 일본 날짜, 사람별 기록 없음)
 ```
 
 - **Buddy는 room에 embed한다.** room과 1:1로 생기고 지워지며 항상 같이 읽는다. 돌봄을 room 문서 하나의 atomic update로 처리한다.
@@ -309,7 +311,7 @@ history_deletions  계정 삭제 중 영향받는 방 id(삭제 진행 표식)
 
 ## REST API
 
-모든 요청은 `Authorization: Bearer <Firebase ID token>`. 에러 응답은 `{ "code": "..." }`이고 문구는 앱이 정한다.
+모든 요청은 `Authorization: Bearer <Firebase ID token>`(시작 단계 집계 `POST /api/stats/steps`만 토큰 없이). 에러 응답은 `{ "code": "..." }`이고 문구는 앱이 정한다.
 
 | Method | Path | 설명 |
 | --- | --- | --- |
@@ -336,6 +338,7 @@ history_deletions  계정 삭제 중 영향받는 방 id(삭제 진행 표식)
 | GET | `/api/me/web-push/key` | VAPID 공개 키 `{ publicKey }` |
 | POST | `/api/me/web-push` | Web Push 구독 등록 `{ endpoint, p256dh, auth, language }` → 204 |
 | DELETE | `/api/me/web-push?endpoint=` | 구독 삭제(자기 것만) → 204 |
+| POST | `/api/stats/steps` | 시작 단계 집계 `{ step, platform }` → 204. 토큰 없이, 정해진 값만 받는다 |
 
 | code | HTTP | 상황 |
 | --- | --- | --- |
@@ -509,10 +512,27 @@ App Store Guideline 5.1.1(v) 때문에 있다. 게스트는 Firebase가 30일 �
 서버가 **매주 월요일 04:00(일본 시간)** 정리한다(`account/GuestCleanup`, `@Scheduled`). 서버가 항상 켜져 있어서 가능하고, 두 번 돌아도 같다.
 
 - 게스트 판단: 토큰의 `firebase.sign_in_provider`가 `anonymous`이고 `firebase.identities`가 비어 있으면 게스트.
-- 인증된 요청마다 `guest`와 `lastSeenAt`을 적는다(하루 한 번까지, 게스트 여부가 바뀌면 바로). `guest=true`는 만들 때만 적고 연결 뒤에는 `false`로만
+- 인증된 요청마다 `guest`와 `lastSeenAt`을 적는다(일본 날짜로 하루 한 번까지, 게스트 여부가 바뀌면 바로). `guest=true`는 만들 때만 적고 연결 뒤에는 `false`로만
   바꾼다(연결 전 토큰이 다른 기기에 남아 있어도 되돌리지 않는다). 계정을 연결한 직후 앱이 `GET /api/me`를 한 번 부른다.
 - 대상: 게스트이고, 만든 지 30일이 지났고, 7일 동안 요청이 없는 사용자. 지우는 방법은 계정 삭제와 같다. 이 필드가 없는 옛 사용자는 건드리지 않는다.
 - 첫 단계에서 사용자가 이미 없는 고아 삭제 표식을 지운다.
+
+## 이용 통계
+
+출시 뒤 어디서 사람이 빠지는지와 다시 오는지를 본다. 사람별 기록은 남기지 않고 날짜별 합계만 `stats`에 올린다(`stats/StatsService`).
+날짜는 일본 날짜(한국과 같은 시간대).
+
+- **시작 흐름**: 첫 화면(`welcome`) → 구경하기(`demo`) → 그 안의 시작하기(`start`) → 이름(`name`) → 버디 깨우기(`wake`). 앱이 기기마다
+  단계별로 한 번만 보내고(`features/stats/start-steps.ts`, 보낸 단계는 기기에 기억), 서버는 그날·플랫폼의 숫자만 올린다. 대부분 로그인
+  전이라 토큰 없이 받으며, 정해진 단계·플랫폼이 아니면 400. 개발 빌드는 보내지 않는다. 초대 코드로 온 사람은 이름에서 바로 참가하므로
+  `name`·`wake`에 들어가지 않는다.
+- **재방문**: 사용자가 생기면 가입한 날의 `joined`, 다음 날부터 그날 첫 요청이면 가입한 날 문서의 `d<N>`(1~60일째)을 올린다.
+  `lastSeenAt`을 하루 한 번 적는 조건부 update와 같은 자리라, 동시에 온 요청도 하루 한 번만 센다.
+- **보기**: 매주 월요일 09:00(일본 시간) 지난 7일의 시작 흐름과 최근 6주 가입자의 1·7·30일째 재방문을 문의 메일과 같은 주소로
+  보낸다(`stats/StatsReport`). 메일 설정이 없으면 로그에만 남긴다.
+- **웹 방문**: Cloudflare Web Analytics(쿠키 없음). 웹 빌드에 저장소 변수 `EXPO_PUBLIC_CF_BEACON_TOKEN`이 있으면 페이지가
+  비콘을 싣는다(`app/+html.tsx`). 지금은 토큰이 없어 싣지 않는다.
+- **스토어**: 노출 → 페이지 조회 → 다운로드는 App Store Connect 분석에서 본다.
 
 ## 푸시 알림
 
