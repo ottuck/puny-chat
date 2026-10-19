@@ -98,8 +98,9 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   const deletedUsers = useRef(new Set<string>());
   // Kept synchronously in event handlers: ready can arrive before React commits the pending bubble.
   const outbox = useRef(new Map<string, { text: string; status: 'sending' | 'failed' }>());
-  // Photos go over REST, not the socket: kept until stored, for "retry".
-  const photoOutbox = useRef(new Map<string, PreparedPhoto>());
+  // Photos go over REST, not the socket: kept until stored, for "retry". One that failed for want of
+  // a connection goes again on the next ready, like a text.
+  const photoOutbox = useRef(new Map<string, { photo: PreparedPhoto; retryOnReady: boolean }>());
   const socketRef = useRef<ChatSocket | null>(null);
   const onRoomLostRef = useRef(onRoomLost);
   const onRoomChangedRef = useRef(onRoomChanged);
@@ -194,6 +195,46 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
     );
   }, []);
 
+  // Stored over REST (docs/PROJECT.md, 사진); the room hears it from the server like a text.
+  const uploadPending = useCallback(
+    async (clientMessageId: string) => {
+      const pending = photoOutbox.current.get(clientMessageId);
+      if (!pending) return;
+      const { photo } = pending;
+      pending.retryOnReady = false;
+      try {
+        const message = await uploadPhoto(clientMessageId, photo);
+        photoOutbox.current.delete(clientMessageId);
+        apply([message]);
+        cueFrom(message);
+        // Once the server's copy is loaded, show it instead and let the picked file go (in a
+        // browser it stays in memory until then). Without it, the picked file stays on screen.
+        if (message.photo) {
+          // Native resolves true, the web nothing: only a rejection or false means not loaded.
+          const loaded = await Image.prefetch(photoUrl(message.roomId, message.photo.id)).then(
+            (ok: boolean | void) => ok !== false,
+            () => false,
+          );
+          if (loaded) {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.clientMessageId === clientMessageId && m.type === 'PHOTO' && m.photo.localUri
+                  ? { ...m, photo: { ...m.photo, localUri: undefined } }
+                  : m,
+              ),
+            );
+            releasePhoto(photo.uri);
+          }
+        }
+      } catch (e) {
+        console.warn('sending a photo failed', e);
+        pending.retryOnReady = e instanceof ApiError && e.code === 'NETWORK';
+        markStatus(clientMessageId, 'failed');
+      }
+    },
+    [apply, cueFrom, markStatus],
+  );
+
   useEffect(() => {
     const sync = new MessageSync({
       fetchNewest,
@@ -279,6 +320,12 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
             socket.send(clientMessageId, message.text);
           }
         }
+        for (const [clientMessageId, pending] of photoOutbox.current) {
+          if (pending.retryOnReady) {
+            markStatus(clientMessageId, 'sending');
+            void uploadPending(clientMessageId);
+          }
+        }
       },
       onAck: (_clientMessageId, message) => {
         outbox.current.delete(message.clientMessageId);
@@ -355,7 +402,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
       for (const timer of timers.values()) clearTimeout(timer);
       timers.clear();
     };
-  }, [apply, applyReactions, cheerPartnerHere, cueFrom, markStatus, setTypingOf]);
+  }, [apply, applyReactions, cheerPartnerHere, cueFrom, markStatus, setTypingOf, uploadPending]);
 
   // While the chat is on screen, tell the others how far I have read: up to the newest message
   // that is not my own. Hex ids sort by time, so comparing strings compares age.
@@ -404,43 +451,6 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
     [myId],
   );
 
-  // Stored over REST (docs/PROJECT.md, 사진); the room hears it from the server like a text.
-  const uploadPending = useCallback(
-    async (clientMessageId: string) => {
-      const photo = photoOutbox.current.get(clientMessageId);
-      if (!photo) return;
-      try {
-        const message = await uploadPhoto(clientMessageId, photo);
-        photoOutbox.current.delete(clientMessageId);
-        apply([message]);
-        cueFrom(message);
-        // Once the server's copy is loaded, show it instead and let the picked file go (in a
-        // browser it stays in memory until then). Without it, the picked file stays on screen.
-        if (message.photo) {
-          // Native resolves true, the web nothing: only a rejection or false means not loaded.
-          const loaded = await Image.prefetch(photoUrl(message.roomId, message.photo.id)).then(
-            (ok: boolean | void) => ok !== false,
-            () => false,
-          );
-          if (loaded) {
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.clientMessageId === clientMessageId && m.type === 'PHOTO' && m.photo.localUri
-                  ? { ...m, photo: { ...m.photo, localUri: undefined } }
-                  : m,
-              ),
-            );
-            releasePhoto(photo.uri);
-          }
-        }
-      } catch (e) {
-        console.warn('sending a photo failed', e);
-        markStatus(clientMessageId, 'failed');
-      }
-    },
-    [apply, cueFrom, markStatus],
-  );
-
   const sendPhoto = useCallback(
     (photo: PreparedPhoto) => {
       const clientMessageId = randomUUID();
@@ -452,7 +462,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
         createdAt: new Date().toISOString(),
         status: 'sending',
       };
-      photoOutbox.current.set(clientMessageId, photo);
+      photoOutbox.current.set(clientMessageId, { photo, retryOnReady: false });
       setMessages((prev) => sortTimeline([pending, ...prev]));
       void uploadPending(clientMessageId);
     },

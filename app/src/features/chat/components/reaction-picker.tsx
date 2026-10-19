@@ -61,7 +61,7 @@ export function ReactionPicker({ target, mine, current, onPick, onClose }: Props
               }}
               accessibilityRole="button"
               accessibilityLabel={t(`chat.reaction.${reaction}`)}
-              accessibilityState={{ selected }}
+              aria-selected={selected}
               style={({ pressed }) => [
                 styles.button,
                 (selected || pressed) && { backgroundColor: colors.bubbleMine },
