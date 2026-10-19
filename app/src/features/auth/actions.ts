@@ -6,9 +6,9 @@ import { unregisterPush } from '@/features/notifications/push';
 import { api } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 
-import { reauthenticateApple } from './apple-sign-in';
-import { linkedProvider } from './auth-provider';
-import { reauthenticateGoogle } from './google-sign-in';
+import { linkedProvider } from '@/lib/social-auth';
+
+import { social } from './social';
 
 // "Start now": a Firebase anonymous account, so there is a uid for the server like any other
 // sign-in. Google (or Apple) can be linked later without changing it (docs/PROJECT.md).
@@ -18,11 +18,11 @@ export async function signInAsGuest(): Promise<void> {
   await signInAnonymously(auth);
 }
 
-// Leaves the guest account for an existing Google or Apple account (see AccountInUseError).
-export async function switchAccount(switchTo: () => Promise<void>): Promise<void> {
+// Before leaving the guest account for an existing Google or Apple account (linkOrSwitch): what
+// belongs to the guest on this device goes.
+export async function prepareAccountSwitch(): Promise<void> {
   await unregisterPush().catch((e) => console.warn('removing the push token failed', e));
   await clearDrafts().catch((e) => console.warn('clearing drafts failed', e));
-  await switchTo();
 }
 
 // Tells the server right away that the guest has linked an account. The server marks guests as
@@ -47,8 +47,8 @@ export async function signOut(): Promise<void> {
 export async function deleteAccount(): Promise<void> {
   const user = auth.currentUser;
   if (!user) return;
-  if (linkedProvider(user) === 'apple') await reauthenticateApple();
-  else if (!user.isAnonymous) await reauthenticateGoogle();
+  const provider = linkedProvider(user);
+  if (provider) await social[provider].reauthenticate();
   await unregisterPush().catch((e) => console.warn('removing the push token failed', e));
   await api<void>('/api/me', { method: 'DELETE' });
   await clearDrafts().catch((e) => console.warn('clearing drafts failed', e));
@@ -78,14 +78,4 @@ export function signInErrorKey(error: unknown): 'signIn.tooMany' | 'signIn.error
   return error instanceof FirebaseError && error.code === 'auth/too-many-requests'
     ? 'signIn.tooMany'
     : 'signIn.error';
-}
-
-// The user closed the popup or Apple's sheet, or started another one; not worth an error message.
-export function isCancelledSignIn(error: unknown): boolean {
-  if (error instanceof FirebaseError) {
-    return (
-      error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request'
-    );
-  }
-  return (error as { code?: unknown } | null)?.code === 'ERR_REQUEST_CANCELED';
 }

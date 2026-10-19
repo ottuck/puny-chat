@@ -71,10 +71,12 @@
   게스트도 모든 기능을 쓴다. 이름·알 이름을 계정 없이 먼저 받고(`features/auth/start-flow`), 마지막 단계에서 익명 로그인 후 이름 저장·방 만들기.
 - 계정은 나중에 설정에서 연결한다. 익명 계정에 Google을 `linkWithPopup`으로 붙이므로 Firebase uid가 그대로라 서버 데이터를
   옮기지 않는다. 이미 다른 사용자인 Google 계정이면 합치지 않고, 확인 후 그 계정으로 전환한다(게스트 데이터는 이 기기에서 못 봄).
-- 연결은 웹은 Google, 아이폰은 Apple(`features/auth/apple-sign-in.ios.ts`, `expo-apple-authentication` → Firebase
-  credential, 버튼은 Apple 기본 버튼 `components/apple-button.ios.tsx`). 아이폰 Google은 아직 없다. 이미 다른 사용자인
-  계정이면 Google·Apple 모두 `AccountInUseError`(`account-in-use.ts`)로 전환을 묻는다. Apple 계정을 지울 때는 다시
-  로그인하고 Apple 토큰을 `revokeAccessToken`으로 취소한다(Firebase Apple 제공업체에 Services ID·키 필요).
+- Google·Apple 로그인은 `lib/social-auth`에 모은다. 앱 코드(`@/`, 번역, 서버 호출)를 import하지 않는 코어라 다른 Expo 앱에
+  폴더째 옮겨 쓴다. 앱은 `features/auth/social.ts`의 `social.google` / `social.apple`로 쓴다. 웹은 둘 다 Firebase 팝업
+  (`popup-provider.ts`), 아이폰은 Apple(`apple.ios.ts`, `expo-apple-authentication` → Firebase credential, 버튼은 Apple 기본
+  버튼 `features/auth/components/apple-button.ios.tsx`, 웹은 지침에 맞춘 `apple-button.web.tsx`). 아이폰 Google은 아직 없다.
+  연결은 `linkOrSwitch`: 이미 다른 사용자인 계정이면 `AccountInUseError`로 전환을 묻는다(웹 확인 창은 포커스가 돌아온 뒤,
+  `lib/confirm.web.ts`). Apple 계정을 지울 때는 다시 로그인하고 Apple 토큰을 취소한다(Firebase Apple 제공업체에 Services ID·키 필요).
 - **게스트는 30일.** Firebase 콘솔의 익명 계정 자동 정리(30일 지난 익명 계정 삭제)를 켜서 그대로 제품 정책으로 쓴다. 남은 일수는
   Firebase 계정 생성 시각으로 앱이 계산한다(`features/auth/guest-expiry.ts`). 서버에 남은 만료 게스트의 데이터는 서버가
   주 1회 지운다(`account/GuestCleanup`). 첫 화면과 설정에 안내하고

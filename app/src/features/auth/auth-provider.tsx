@@ -2,13 +2,14 @@ import { onIdTokenChanged, type User } from 'firebase/auth';
 import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 
 import { auth } from '@/lib/firebase';
+import { linkedProvider, type ProviderId } from '@/lib/social-auth';
 
 // What the screens show about the account. Read off the user each time Firebase reports it:
 // linking updates the same User object in place, and the React Compiler, which reuses what it
 // computed from an object while the reference stays the same, would keep showing the guest.
 export type Account = {
   guest: boolean;
-  provider: 'google' | 'apple' | null;
+  provider: ProviderId | null;
   email: string | null;
   // When the Firebase account was created (the guest's 30 days count from it).
   createdAt: string | undefined;
@@ -22,12 +23,6 @@ type AuthState = {
 };
 
 const AuthContext = createContext<AuthState>({ user: null, account: null, initializing: true });
-
-// Which account a signed-in user has linked; null for a guest.
-export function linkedProvider(user: User): 'google' | 'apple' | null {
-  if (user.isAnonymous) return null;
-  return user.providerData.some((p) => p.providerId === 'apple.com') ? 'apple' : 'google';
-}
 
 const accountOf = (user: User): Account => ({
   guest: user.isAnonymous,

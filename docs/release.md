@@ -11,6 +11,7 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 | --- | --- | --- |
 | Apple Developer Program 가입, App ID(`com.ottuck.buddychat`), Sign in with Apple 켜기 | 운영자 | 완료 |
 | Sign in with Apple 키, Services ID, Firebase Apple 제공업체 | 운영자 | 완료 |
+| 웹 Apple 로그인: Services ID에 웹 도메인(`buddy-chat-67e35.firebaseapp.com`)과 return URL(`https://buddy-chat-67e35.firebaseapp.com/__/auth/handler`) | 운영자 | 예정 |
 | Firebase iOS 앱(번들 ID `com.ottuck.buddychat`) 등록. 앱의 Apple 토큰은 수신자가 번들 ID라 이 등록이 없으면 `auth/invalid-credential` | CLI | 완료 |
 | App Store Connect 앱 등록 | 운영자 | 완료 |
 | 코드 쪽 준비(아래) | 코드 | 완료 |
@@ -21,7 +22,7 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 
 ## 코드 쪽 준비 (완료)
 
-- Sign in with Apple: `app.json`의 `ios.usesAppleSignIn`, `expo-apple-authentication` 플러그인, 로그인·연결·삭제(`features/auth/apple-sign-in.ios.ts`).
+- Sign in with Apple: `app.json`의 `ios.usesAppleSignIn`, `expo-apple-authentication` 플러그인, 로그인·연결·삭제(`lib/social-auth/apple.ios.ts`).
   계정 삭제 때 Apple 토큰을 취소한다.
 - 앱 안 계정 삭제(Guideline 5.1.1(v)), 개인정보처리방침·지원 페이지(로그인 없이, 세 언어), 문의·상대 신고·내보내기.
 - 푸시: `expo-notifications`, EAS projectId 연결. 아이콘·스플래시: `app/assets/README.md`.
