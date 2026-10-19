@@ -8,9 +8,9 @@ HC_SERVER=
 HC_DEPLOY_FILES=
 [ -f healthchecks.env ] && . ./healthchecks.env
 
-report() { # <address> [message]
+report() { # <check address> [/fail] [message]
 	[ -n "$1" ] || return 0
-	curl -fsS --max-time 10 --retry 3 -o /dev/null --data-raw "${2:-}" "$1" || true
+	curl -fsS --max-time 10 --retry 3 -o /dev/null --data-raw "${3:-}" "$1${2:-}" || true
 }
 
 # The server, as the apps reach it: DNS, Caddy, the certificate, the server and its database.
@@ -33,7 +33,7 @@ else
 			echo 0 > "$failures_file"
 		fi
 		echo "$message"
-		report "$HC_SERVER/fail" "$message"
+		report "$HC_SERVER" /fail "$message"
 	fi
 fi
 
@@ -53,7 +53,7 @@ if docker cp "$(docker compose ps -q server):/app/deploy/." "$expected" 2> /dev/
 	done
 	if [ -n "$differ" ]; then
 		echo "differ from Git:$differ"
-		report "$HC_DEPLOY_FILES/fail" "differ from Git:$differ. Copy them from server/deploy (docs/PROJECT.md, 인프라)."
+		report "$HC_DEPLOY_FILES" /fail "differ from Git:$differ. Copy them from server/deploy (docs/PROJECT.md, 인프라)."
 	else
 		report "$HC_DEPLOY_FILES"
 	fi
