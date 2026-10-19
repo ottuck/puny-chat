@@ -23,7 +23,8 @@ class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .authorizeExchange(exchange -> exchange.pathMatchers(HttpMethod.OPTIONS)
                         .permitAll()
-                        .pathMatchers("/actuator/health")
+                        // health/liveness tells the instance's watchdog whether to restart (server/deploy/health.sh).
+                        .pathMatchers("/actuator/health", "/actuator/health/liveness")
                         .permitAll()
                         // The WebSocket authenticates with its first message (realtime/ChatWebSocketHandler).
                         .pathMatchers("/ws")

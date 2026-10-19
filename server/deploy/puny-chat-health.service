@@ -1,0 +1,8 @@
+[Unit]
+Description=Check the puny-chat server and report to healthchecks.io
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /opt/puny-chat/health.sh

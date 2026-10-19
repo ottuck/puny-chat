@@ -623,7 +623,7 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
   나눠 쓰므로 힙 `-Xmx384m`·SerialGC, 컨테이너 640MB로 제한한다. 항상 켜져 있어 콜드 스타트가 없다(앱의 미리 깨우기 `lib/warm-up.ts`는 남겨 둔다).
   서버 설정은 인스턴스의 `/opt/puny-chat/.env`(견본 `server/deploy/.env.example`)에만 있다. 사진은 인스턴스 디스크 `/opt/puny-chat/photos`
   (컨테이너 `/data/photos`, 서버 사용자 uid 1001 소유, `update.sh`가 만든다)에 둔다. 이 폴더를 마운트하지 않으면 이미지 안의 `/data`에 쓸 수 없어
-  사진만 `PHOTO_UNAVAILABLE`이 되고 나머지는 그대로 동작한다. `compose.yaml`·`update.sh`는 CI가 옮기지 않으므로 바꾸면 인스턴스에 손으로 복사한다. 방화벽은 80·443만 열고 SSH는 Lightsail 브라우저 연결만 허용한다.
+  사진만 `PHOTO_UNAVAILABLE`이 되고 나머지는 그대로 동작한다. `server/deploy`의 파일(compose·스크립트·systemd 단위)은 CI가 옮기지 않으므로 바꾸면 인스턴스에 손으로 복사한다(다르면 감시가 알린다). 방화벽은 80·443만 열고 SSH는 Lightsail 브라우저 연결만 허용한다.
   용량(2026-10 확인): 디스크 60GB 중 약 9.4GB 사용. 메모리는 컨테이너를 모두 합쳐 평소 약 0.8GB이고 스왑을 0.7GB쯤 차지하지만, 스왑을 오가는 양(`vmstat`의 si/so)이
   거의 0이고 OOM이 없어 4GB 요금제로 올리지 않는다. `update.sh`가 새 이미지를 받을 때마다 옛 이미지를 지운다. 같은 저장소의 이미지끼리 레이어를 나눠 써서
   `docker system df`의 회수 가능 크기는 실제보다 크게 나온다(옛 태그 세 개를 지워도 31MB였다).
@@ -641,6 +641,15 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
   운영 DB에 넣기 전에 확인하려면 임시 MongoDB 컨테이너(`--memory 400m`, `--wiredTigerCacheSizeGB 0.25`, `/backups` 마운트)에서 `mongorestore`로 넣고
   문서 수를 본 뒤 지운다. 인스턴스 커널(7.0)에서는 `mongod` 8.0이 뜨지 않으므로(SERVER-121912) 이 확인은 `mongo:8.2`로 한다. `mongodump`·`mongorestore`는
   클라이언트라 8.0 이미지로 된다. 같은 이유로 DB를 인스턴스 안으로 옮기려면 이 커널에서 뜨는 버전을 써야 한다.
+- **감시**: healthchecks.io(이미 다른 서비스에 쓰는 계정, 알림은 메일·텔레그램)의 체크 세 개에 인스턴스가 신호를 보내고, 신호가 끊기거나 `/fail`이 오면
+  알림이 온다. 주소는 인스턴스의 `/opt/puny-chat/healthchecks.env`(견본 `server/deploy/healthchecks.env.example`, Git 제외)에만 있다.
+  - `HC_SERVER`: `health.sh`(`puny-chat-health.timer`, 2분마다)가 공개 주소 `https://api.puny-chat.com/actuator/health`(DNS·Caddy·인증서·서버·DB)를
+    확인해 성공하면 보낸다. 세 번 연속(약 6분, 배포의 재시작은 1분 안에 끝난다) 실패하면 `/fail`로 바로 알리고, 그때 서버 자체도 응답하지 않으면
+    (`/actuator/health/liveness`, DB를 보지 않는다) `server`·`caddy` 컨테이너를 다시 시작한다. Atlas 장애처럼 다시 시작해도 낫지 않는 경우는 알리기만 한다.
+    인스턴스가 통째로 멈추면 신호가 끊겨 알림이 온다.
+  - `HC_BACKUP`: `backup.sh`가 시작(`/start`)과 성공·실패를 보낸다. 하루에 한 번 성공이 없으면 알림이 온다.
+  - `HC_DEPLOY_FILES`: 서버 이미지에 들어 있는 `server/deploy` 사본(`/app/deploy`)과 인스턴스의 파일·systemd 단위를 `health.sh`가 비교해 다르면
+    `/fail`과 다른 파일 이름을 보낸다. CI가 옮기지 않는 파일이라 커밋한 뒤 손으로 복사할 때까지 알림이 남는다.
 - **웹 앱**: Cloudflare Worker의 정적 자산(`app/wrangler.jsonc`). `pnpm build:web`이 `expo export -p web` 뒤에 `scripts/worker-assets.mjs`로 404 페이지와
   `_headers`(서비스 워커 no-cache 등), 배포 버전(`version.json`, 커밋 sha)을 만든다. 홈 화면에 추가한 웹 앱은 새로고침 버튼이 없고 닫아도
   멈춰 있을 뿐이라, 앱이 다시 보일 때(1분에 한 번까지) 번들에 넣은 버전과 `version.json`을 비교해 다르면 새로 불러온다(`lib/web-update`). 커스텀 도메인은 wrangler 배포가 붙인다(같은 이름의 CNAME이 있으면 안 된다).

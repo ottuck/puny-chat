@@ -22,6 +22,11 @@ management:
     # Mail authorization or provider outages must not take durable report intake offline.
     mail:
       enabled: false
+  endpoint:
+    health:
+      # /actuator/health/liveness is the process alone (no database), for restarting a stuck server.
+      probes:
+        enabled: true
   endpoints:
     web:
       exposure:
