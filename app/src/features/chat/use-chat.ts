@@ -101,6 +101,8 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   // Photos go over REST, not the socket: kept until stored, for "retry". One that failed for want of
   // a connection goes again on the next ready, like a text.
   const photoOutbox = useRef(new Map<string, { photo: PreparedPhoto; retryOnReady: boolean }>());
+  // How many times the socket has become ready, to tell whether it reconnected during an upload.
+  const readyCount = useRef(0);
   const socketRef = useRef<ChatSocket | null>(null);
   const onRoomLostRef = useRef(onRoomLost);
   const onRoomChangedRef = useRef(onRoomChanged);
@@ -201,9 +203,25 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
       const pending = photoOutbox.current.get(clientMessageId);
       if (!pending) return;
       const { photo } = pending;
-      pending.retryOnReady = false;
+      let message: ServerMessage;
+      for (;;) {
+        const readyAtStart = readyCount.current;
+        pending.retryOnReady = false;
+        try {
+          message = await uploadPhoto(clientMessageId, photo);
+          break;
+        } catch (e) {
+          console.warn('sending a photo failed', e);
+          const offline = e instanceof ApiError && e.code === 'NETWORK';
+          // The connection came back while this one was on its way: that ready did not wait for it,
+          // so try again now on the new connection.
+          if (offline && readyCount.current !== readyAtStart) continue;
+          pending.retryOnReady = offline;
+          markStatus(clientMessageId, 'failed');
+          return;
+        }
+      }
       try {
-        const message = await uploadPhoto(clientMessageId, photo);
         photoOutbox.current.delete(clientMessageId);
         apply([message]);
         cueFrom(message);
@@ -227,9 +245,8 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
           }
         }
       } catch (e) {
-        console.warn('sending a photo failed', e);
-        pending.retryOnReady = e instanceof ApiError && e.code === 'NETWORK';
-        markStatus(clientMessageId, 'failed');
+        // Stored already; only showing the server's copy failed.
+        console.warn('showing the sent photo failed', e);
       }
     },
     [apply, cueFrom, markStatus],
@@ -290,6 +307,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
         }
       },
       onReady: (onlineNow, readsNow, version) => {
+        readyCount.current += 1;
         setOnline(onlineNow);
         if (onlineNow.length > 0) cheerPartnerHere();
         setReads(readsNow);
