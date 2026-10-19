@@ -41,7 +41,7 @@
 
 ## App structure
 
-- 서버 통신: `lib/api.ts`(REST, Firebase ID token 첨부) · `features/chat/socket.ts`(채팅·Buddy 이벤트).
+- 서버 통신: `lib/api.ts`(REST, `lib/api-client.ts`에 서버 주소와 Firebase ID token을 넘긴다) · `features/chat/socket.ts`(채팅·Buddy 이벤트).
   연결 자체(첫 메시지 인증, 재연결·백오프, 일시정지)는 `lib/realtime-socket.ts`로, 이벤트 타입은 제네릭이고 주소·토큰은 주입받는다.
 - `features/room/room-provider.tsx`: 로그인 후 `/api/me` → room 유무로 `welcome` / 채팅 화면을 나눈다(`_layout.tsx` 가드).
 - `features/chat/use-chat.ts`: 타임라인 상태. `message-sync.ts`가 실시간 메시지와 별개인 복구 커서로 `after`를 읽고,
