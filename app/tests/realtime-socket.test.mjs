@@ -187,3 +187,99 @@ test('an old socket closing after a reconnect changes nothing', () => {
   assert.equal(statuses.at(-1), 'online');
   assert.equal(s.send({ type: 'x' }), true);
 });
+
+function readySocket(overrides = {}) {
+  const made = socket({ ping: { type: 'ping' }, ...overrides });
+  made.s.start();
+  latest().serverSends({ type: 'ready' });
+  return made;
+}
+
+const pings = (ws) => ws.sent.filter((frame) => frame.type === 'ping').length;
+
+test('a quiet connection is asked for a reply, and one that does not answer is replaced', () => {
+  const { statuses } = readySocket();
+  const first = latest();
+  mock.timers.tick(19_999);
+  assert.equal(pings(first), 0);
+  mock.timers.tick(1);
+  assert.equal(pings(first), 1);
+
+  first.serverSends({ type: 'pong' });
+  mock.timers.tick(19_999);
+  assert.equal(pings(first), 1);
+  mock.timers.tick(1);
+  assert.equal(pings(first), 2);
+
+  mock.timers.tick(8_000);
+  assert.equal(first.closed, true);
+  assert.equal(statuses.at(-1), 'offline');
+  mock.timers.tick(1000);
+  assert.equal(FakeWebSocket.all.length, 2);
+});
+
+test('a send into a dead connection is found out without waiting for the close event', () => {
+  const { s, statuses } = readySocket();
+  const first = latest();
+  assert.equal(s.send({ type: 'send', text: 'hi' }), true);
+  assert.deepEqual(first.sent.slice(-2), [{ type: 'send', text: 'hi' }, { type: 'ping' }]);
+  // A second send while the first ping waits for its reply does not ask again.
+  s.send({ type: 'typing' });
+  assert.equal(pings(first), 1);
+  mock.timers.tick(8_000);
+  assert.equal(statuses.at(-1), 'offline');
+  // The given-up socket closing late does not schedule a second retry.
+  first.onclose();
+  mock.timers.tick(1000);
+  assert.equal(FakeWebSocket.all.length, 2);
+});
+
+test('any frame counts as a reply', () => {
+  const { s } = readySocket();
+  const first = latest();
+  s.send({ type: 'send', text: 'hi' });
+  first.serverSends({ type: 'ack' });
+  mock.timers.tick(8_000);
+  assert.equal(first.closed, false);
+});
+
+test('a connection that never gets ready is given up on', () => {
+  const { s, statuses } = socket();
+  s.start();
+  latest().serverSends({ type: 'hello' });
+  mock.timers.tick(14_999);
+  assert.equal(latest().closed, false);
+  mock.timers.tick(1);
+  assert.equal(latest().closed, true);
+  assert.deepEqual(statuses, ['connecting', 'offline']);
+  mock.timers.tick(1000);
+  assert.equal(FakeWebSocket.all.length, 2);
+});
+
+test('reconnectNow on an open connection checks it instead', () => {
+  const { s } = readySocket();
+  s.reconnectNow();
+  assert.equal(FakeWebSocket.all.length, 1);
+  assert.equal(pings(latest()), 1);
+});
+
+test('the browser telling the network came back or went away', () => {
+  const realWindow = globalThis.window;
+  const win = new EventTarget();
+  win.ononline = null;
+  globalThis.window = win;
+  try {
+    const { s } = readySocket();
+    win.dispatchEvent(new Event('offline'));
+    assert.equal(pings(latest()), 1);
+    latest().drop();
+    win.dispatchEvent(new Event('online'));
+    assert.equal(FakeWebSocket.all.length, 2);
+
+    s.stop();
+    win.dispatchEvent(new Event('online'));
+    assert.equal(FakeWebSocket.all.length, 2);
+  } finally {
+    globalThis.window = realWindow;
+  }
+});

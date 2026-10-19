@@ -72,6 +72,9 @@ export class ChatSocket {
       token: idToken,
       onStatus: (status) => listener.onStatus(status),
       onEvent: (event) => this.onEvent(event),
+      ping: { type: 'ping' },
+      // Phones say nothing when the network comes back, so the wait between attempts stays short.
+      maxBackoffMs: 10_000,
     });
   }
 
@@ -99,8 +102,11 @@ export class ChatSocket {
   }
 
   // Returns false when not connected; the caller keeps the message pending and resends on ready.
+  // Someone sending is a good moment to try again without waiting out the backoff.
   send(clientMessageId: string, text: string): boolean {
-    return this.socket.send({ type: 'send', clientMessageId, text });
+    const sent = this.socket.send({ type: 'send', clientMessageId, text });
+    if (!sent) this.socket.reconnectNow();
+    return sent;
   }
 
   // Typing and read marks are not worth queueing: while offline they are simply dropped.
