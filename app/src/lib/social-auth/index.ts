@@ -32,5 +32,6 @@ export {
   linkedProvider,
   type LinkOutcome,
   linkOrSwitch,
+  reauthenticateLinked,
 } from './account';
 export type { GoogleOptions, ProviderId, SocialAuthOptions, SocialProvider } from './types';

@@ -1,29 +1,27 @@
-import { FirebaseError } from 'firebase/app';
-import { deleteUser, signInAnonymously, signOut as firebaseSignOut } from 'firebase/auth';
-
 import { clearDrafts } from '@/features/chat/draft';
 import { unregisterPush } from '@/features/notifications/push';
+import { createAccountActions, isTooManyRequests } from '@/lib/account';
 import { api } from '@/lib/api';
 import { auth } from '@/lib/firebase';
-
-import { linkedProvider } from '@/lib/social-auth';
+import { reauthenticateLinked } from '@/lib/social-auth';
 
 import { social } from './social';
 
-// "Start now": a Firebase anonymous account, so there is a uid for the server like any other
-// sign-in. Google (or Apple) can be linked later without changing it (docs/PROJECT.md).
-// Needs the Anonymous provider in the Firebase console. Its automatic clean-up of anonymous
-// accounts after 30 days is on on purpose: that is how long a guest lasts (guest-expiry.ts).
-export async function signInAsGuest(): Promise<void> {
-  await signInAnonymously(auth);
-}
-
-// Before leaving the guest account for an existing Google or Apple account (linkOrSwitch): what
-// belongs to the guest on this device goes.
-export async function prepareAccountSwitch(): Promise<void> {
-  await unregisterPush().catch((e) => console.warn('removing the push token failed', e));
-  await clearDrafts().catch((e) => console.warn('clearing drafts failed', e));
-}
+// Signing in as a guest, out, and deleting the account (lib/account) for this app: deleting removes
+// the user's data on our server first (docs/PROJECT.md, 계정 삭제). Leaving the account removes this
+// device's push token while still signed in (the server removes only the user's own tokens), then
+// the drafts. The Firebase console's automatic clean-up of anonymous accounts after 30 days is on
+// on purpose: that is how long a guest lasts (guest-expiry.ts).
+export const { signInAsGuest, prepareAccountSwitch, signOut, deleteAccount, cancelStart } =
+  createAccountActions({
+    auth,
+    reauthenticate: () => reauthenticateLinked(auth, social),
+    // Running it again after a failed Firebase deletion is harmless, and a request in between only
+    // creates an empty user that the retry deletes.
+    deleteServerData: () => api<void>('/api/me', { method: 'DELETE' }),
+    cleanUpSignedIn: unregisterPush,
+    cleanUpDevice: clearDrafts,
+  });
 
 // Tells the server right away that the guest has linked an account. The server marks guests as
 // such on their requests, and its weekly clean-up deletes guests it still thinks are guests; a
@@ -33,49 +31,7 @@ export async function noteAccountLinked(): Promise<void> {
   await api('/api/me').catch((e) => console.warn('telling the server about the link failed', e));
 }
 
-export async function signOut(): Promise<void> {
-  // While still signed in: the server removes only the user's own tokens.
-  await unregisterPush().catch((e) => console.warn('removing the push token failed', e));
-  await clearDrafts().catch((e) => console.warn('clearing drafts failed', e));
-  await firebaseSignOut(auth);
-}
-
-// Deletes the account (App Store Guideline 5.1.1(v)): first the user's data on the server, then
-// the Firebase account, which signs out. A linked account confirms with Google or Apple first, since
-// Firebase deletes only after a recent sign-in, and asking later would leave the server data gone
-// but the account still there. A failure is thrown, not hidden: see below.
-export async function deleteAccount(): Promise<void> {
-  const user = auth.currentUser;
-  if (!user) return;
-  const provider = linkedProvider(user);
-  if (provider) await social[provider].reauthenticate();
-  await unregisterPush().catch((e) => console.warn('removing the push token failed', e));
-  await api<void>('/api/me', { method: 'DELETE' });
-  await clearDrafts().catch((e) => console.warn('clearing drafts failed', e));
-  // If this fails the account is not deleted, so it is not reported as done: the user stays signed
-  // in and can try again. The server steps run again harmlessly, and a request in between only
-  // creates an empty user that the retry deletes.
-  await deleteUser(user);
-}
-
-// Back from the name screen before doing anything: a guest made a moment ago is deleted (nothing of
-// theirs is worth keeping, and no empty account is left behind); an account just signs out.
-export async function cancelStart(): Promise<void> {
-  const user = auth.currentUser;
-  if (!user) return;
-  if (!user.isAnonymous) return signOut();
-  try {
-    await deleteAccount();
-  } catch (e) {
-    console.warn('deleting the new guest failed; signing out', e);
-    await signOut();
-  }
-}
-
-// What to tell someone whose start failed: Firebase allows only so many new guests from one place
-// in a while (e.g. starting over and over while trying the app), which passes with time.
+// What to tell someone whose start failed: too many new guests from one place passes with time.
 export function signInErrorKey(error: unknown): 'signIn.tooMany' | 'signIn.error' {
-  return error instanceof FirebaseError && error.code === 'auth/too-many-requests'
-    ? 'signIn.tooMany'
-    : 'signIn.error';
+  return isTooManyRequests(error) ? 'signIn.tooMany' : 'signIn.error';
 }

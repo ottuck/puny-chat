@@ -91,7 +91,8 @@
   주 1회 지운다(`account/GuestCleanup`). 첫 화면과 설정에 안내하고
   계정 연결 권유와 마지막 7·3·1일 안내는 무대의 우편함 편지로(같은 날 서버 푸시도). 문구는 "회원가입"이 아니라 "계정 연결".
 - 계정 삭제는 설정 맨 아래. 서버(`DELETE /api/me`)를 먼저 지우고 Firebase 계정은 앱이 `deleteUser`로 지운다. Google 연결
-  계정은 그 전에 다시 로그인한다(`features/auth/actions.ts`, 순서와 이유는 `docs/PROJECT.md` 계정 삭제).
+  계정은 그 전에 다시 로그인한다. 순서(재인증 → 푸시 토큰 해제 → 서버 삭제 → 초안 정리 → `deleteUser`)는 `lib/account/actions.ts`의
+  `createAccountActions`가 지키고, 서버 호출과 정리할 것은 `features/auth/actions.ts`가 넘긴다(이유는 `docs/PROJECT.md` 계정 삭제).
 
 ## Server commands (`server/`에서 실행)
 

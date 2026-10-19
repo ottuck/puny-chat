@@ -41,6 +41,16 @@ export function linkedProvider(user: User): ProviderId | null {
   return user.providerData.some((p) => p.providerId === 'apple.com') ? 'apple' : 'google';
 }
 
+// Signs the current user in again with the provider they linked, e.g. before deleting the account
+// (Firebase deletes only after a recent sign-in); nothing for a guest or no one.
+export async function reauthenticateLinked(
+  auth: Auth,
+  providers: Record<ProviderId, Pick<SocialProvider, 'reauthenticate'>>,
+): Promise<void> {
+  const provider = auth.currentUser && linkedProvider(auth.currentUser);
+  if (provider) await providers[provider].reauthenticate();
+}
+
 export function signedInUser(auth: Auth): User {
   if (!auth.currentUser) throw new Error('Not signed in.');
   return auth.currentUser;
