@@ -141,3 +141,12 @@ jobs:
     secrets:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  # After the server is up, an app change also goes to installed iPhone apps (EAS Update) while the
+  # EAS_AUTO_UPDATE repository variable is "true". It is off while a build is in App Review.
+  app-update:
+    needs: [changes, deploy]
+    if: ${{ !cancelled() && needs.deploy.result == 'success' && needs.changes.outputs.app == 'true' && vars.EAS_AUTO_UPDATE == 'true' }}
+    uses: ./.github/workflows/app-update.yml
+    secrets:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

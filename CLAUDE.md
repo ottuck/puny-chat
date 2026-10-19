@@ -19,6 +19,8 @@
   `main`에서는 직전 push가 아니라 마지막으로 CI를 통과한 `main` 커밋과 비교한다(다음 push에 취소된 실행의 변경도 검사하도록).
   deploy는 건너뛴 잡이 있어도 실패한 잡이 없으면 돈다.
 - `.github/workflows/deploy.yml` — main에서 CI 통과 후 서버 이미지를 GHCR에 올리고(인스턴스가 1분마다 받아 간다) 웹(Cloudflare Worker, `wrangler deploy`)을 배포
+- `.github/workflows/app-update.yml` — 배포 뒤 `app/`이 바뀌었으면 아이폰 앱에 EAS Update(production 채널). 저장소 변수 `EAS_AUTO_UPDATE`가
+  `true`일 때만 돌고 심사 중에는 끈다(`docs/release.md`).
 - 로컬 전용(gitignore): `.claude/`(desktop app preview 설정), `.idea/`, `.env*`
 
 ## App commands (`app/`에서 실행)
@@ -27,7 +29,7 @@
 - 아이폰은 **개발용 빌드**(`expo-dev-client`, bundle id `com.ottuck.buddychat`)로 연다. Expo Go에는 푸시가 없어 쓰지 않는다.
   JS 수정은 Metro로 바로 반영되고, 네이티브 설정(패키지·config plugin·`app.json`)이 바뀔 때만 다시 빌드한다:
   `npx eas-cli build --profile development --platform ios`(Apple 계정 로그인이 필요해 사용자가 실행, `eas.json`).
-- 출시된 iOS 앱의 JS·그림·번역 변경은 EAS Update로 보낸다(`docs/release.md`의 앱 업데이트). 네이티브가 바뀌면 `app.json`의 `version`을 올리고 새로 빌드한다.
+- 출시된 iOS 앱의 JS·그림·번역 변경은 EAS Update로 보낸다(`docs/release.md`의 앱 업데이트, `EAS_AUTO_UPDATE`가 켜져 있으면 main 배포 때 자동). 네이티브가 바뀌면 `app.json`의 `version`을 올리고 새로 빌드한다.
 - 번역 JSON 등 수정이 화면에 반영되지 않으면 Metro 캐시 문제다: `pnpm start --clear`
 - `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm format:check` · 한 번에: `pnpm check`
 - `pnpm test` — Node 내장 테스트 러너로 메시지 복구 실패·페이지네이션·재연결·취소 회귀 테스트. 새 라이브러리는 쓰지 않는다.

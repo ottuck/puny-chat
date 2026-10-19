@@ -1,0 +1,51 @@
+name: App update
+
+# Sends the app's JS, pictures and translations to installed iPhone apps with EAS Update
+# (docs/release.md, 앱 업데이트). Only builds of the same app.json version get it. Called by CI after a
+# deploy that changed the app while the EAS_AUTO_UPDATE repository variable is "true" (turned off
+# while a build is in App Review), or run by hand on main, which ignores the switch.
+# Secret: EXPO_TOKEN (an expo.dev access token). EXPO_PUBLIC_* come from the EAS production
+# environment, as with a manual update.
+on:
+  workflow_call:
+    secrets:
+      EXPO_TOKEN:
+        required: true
+  workflow_dispatch:
+
+concurrency:
+  group: app-update
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  update:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: app/package.json
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: app/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      # main's commits are merges ("Merge pull request #…"), so the message names the work merged.
+      - name: Publish
+        run: |
+          message="$(git rev-parse --short HEAD) $(git log -1 --no-merges --format=%s)"
+          eas update --channel production --environment production --message "$message" --non-interactive
