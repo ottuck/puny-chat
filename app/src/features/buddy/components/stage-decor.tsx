@@ -331,7 +331,8 @@ const SHELF_TOP = 48;
 const RAINBOW_MS = 20_000;
 
 // The things in the room the buddy answers when tapped (buddy-stage.tsx); the rest only move.
-export type RoomProp = 'plant' | 'clock' | 'window' | 'fish' | 'plush' | 'kotatsu' | 'table';
+export type RoomProp =
+  'plant' | 'clock' | 'window' | 'fish' | 'plush' | 'kotatsu' | 'table' | 'rug';
 
 type WallProps = {
   decor: Decor;
@@ -649,7 +650,7 @@ export function WallDecor({
         ]}
       >
         <Arrive fresh={decor.rug > 0 && fresh(`rug${decor.rug}` as Reward)} width={rugWidth}>
-          <Tappable kind="squish" label={t('buddy.room.rug')}>
+          <Tappable kind="squish" label={t('buddy.room.rug')} onTap={() => onProp('rug')}>
             <PixelSprite frame={rug} palette={ROOM_PALETTE} scale={3} />
           </Tappable>
         </Arrive>

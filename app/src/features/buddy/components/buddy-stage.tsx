@@ -1704,8 +1704,9 @@ export function BuddyStage({
     perform(next, true);
   };
   // A tap on a thing in the room (stage-decor.tsx): the buddy notices. At the window a guest drops
-  // by, if the room has grown any, or it looks out at the sky; the clock gives it a start; a plant or
-  // a portrait gets a word (from a child up, like every word).
+  // by, if the room has grown any, or it looks out at the sky; the clock gives it a start; on the rug
+  // a child or grown-up comes and sits down (a baby has no legs to fold); a plant or a portrait gets a
+  // word (from a child up, like every word).
   const touchProp = (prop: RoomProp) => {
     if (egg || leaving || active || dream) return;
     if (prop === 'window') {
@@ -1715,6 +1716,11 @@ export function BuddyStage({
       return perform('lookAround', true, WINDOW_LINE[skyAt(now.getHours())]);
     }
     if (prop === 'clock') return perform('startle', true, 'clock');
+    if (prop === 'rug') {
+      // Already there: it stays sitting.
+      if (atTable && act !== 'sit') perform('sit', true);
+      return;
+    }
     say(prop);
   };
   // A grown-up's station: a tap sends it off to work there (EXP once an hour, the server decides).
