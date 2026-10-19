@@ -208,8 +208,13 @@ function RootNavigator() {
       </Stack.Protected>
       {/* Not before a name: there is nothing of theirs to show or sign out of yet. */}
       <Stack.Protected guard={!!me && named}>
-        <Stack.Screen name="settings" options={withHeader(t('settings.title'))} />
-        <Stack.Screen name="guide" options={withHeader(t('guide.title'))} />
+        {/* Opened from the chat's icons: a second tap while it opens does not stack another. */}
+        <Stack.Screen
+          name="settings"
+          options={withHeader(t('settings.title'))}
+          dangerouslySingular
+        />
+        <Stack.Screen name="guide" options={withHeader(t('guide.title'))} dangerouslySingular />
         <Stack.Screen name="move" options={withHeader(t('invite.moveTitle'))} />
       </Stack.Protected>
       {/* Also before signing in: "start with an invite code" types the code first (join.tsx). */}
