@@ -26,6 +26,7 @@ import { useGuestDaysLeft } from '@/features/auth/guest-expiry';
 import { currentGuestPlace } from '@/features/auth/guest-place';
 import { isInAppBrowser } from '@/features/auth/guest-place-ua';
 import { AppleButton } from '@/features/auth/components/apple-button';
+import { DeleteAccountDialog } from '@/features/auth/components/delete-account-dialog';
 import { social } from '@/features/auth/social';
 import {
   registerForPush,
@@ -80,24 +81,11 @@ export default function SettingsScreen() {
     await signOut();
   };
 
+  const room = state.status === 'ready' ? state.room : null;
+  const partner = room?.members.find((member) => member.id !== me?.id);
+  const [askingDelete, setAskingDelete] = useState(false);
   const onDelete = async () => {
-    const room = state.status === 'ready' ? state.room : null;
-    const partner = room?.members.find((member) => member.id !== me?.id);
-    const ok = await confirm({
-      title: t('settings.deleteTitle'),
-      message: !room
-        ? t('settings.deleteNoRoom')
-        : partner
-          ? t('settings.deleteDuo', {
-              buddy: room.buddy.name,
-              partner: partner.displayName ?? t('chat.guestName'),
-            })
-          : t('settings.deleteSolo', { buddy: room.buddy.name }),
-      confirmLabel: t('settings.deleteConfirm'),
-      cancelLabel: t('common.cancel'),
-      destructive: true,
-    });
-    if (!ok) return;
+    setAskingDelete(false);
     setDeleting(true);
     setDeleteError(null);
     try {
@@ -186,7 +174,7 @@ export default function SettingsScreen() {
 
         {/* Quiet, at the very end: needed, but not something to press by accident. */}
         <Pressable
-          onPress={onDelete}
+          onPress={() => setAskingDelete(true)}
           disabled={deleting}
           accessibilityRole="button"
           hitSlop={8}
@@ -204,6 +192,14 @@ export default function SettingsScreen() {
           <Text style={[styles.email, styles.centered, { color: colors.accent }]}>
             {deleteError}
           </Text>
+        ) : null}
+        {askingDelete ? (
+          <DeleteAccountDialog
+            buddy={room?.buddy.name}
+            partner={partner ? (partner.displayName ?? t('chat.guestName')) : undefined}
+            onCancel={() => setAskingDelete(false)}
+            onConfirm={onDelete}
+          />
         ) : null}
       </View>
     </ScrollView>
