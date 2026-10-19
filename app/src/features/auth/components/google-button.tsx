@@ -2,19 +2,19 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
-import { useColorMode } from '@/theme';
+import { useColors } from '@/theme';
 
 type Props = {
   onPress: () => void;
   disabled?: boolean;
 };
 
-// Google's sign-in button as its branding guidelines ask: the "G" in its own colours, "Continue with
-// Google", and the light theme (white, grey outline) or the dark one (#131314). Sized like the
-// app's buttons and the Apple one beside it (apple-button.*.tsx).
+// Google's sign-in button as its branding guidelines ask: the "G" in its own colours and "Continue
+// with Google". Filled and outlined like the app's other secondary buttons (components/button.tsx)
+// and the Apple one beside it, so the screen's buttons read as one set.
 export function GoogleButton({ onPress, disabled }: Props) {
   const { t } = useTranslation();
-  const dark = useColorMode() === 'dark';
+  const colors = useColors();
   return (
     <Pressable
       onPress={onPress}
@@ -22,9 +22,7 @@ export function GoogleButton({ onPress, disabled }: Props) {
       accessibilityRole="button"
       style={({ pressed }) => [
         styles.button,
-        dark
-          ? { backgroundColor: '#131314', borderColor: '#8E918F' }
-          : { backgroundColor: '#FFFFFF', borderColor: '#747775' },
+        { backgroundColor: colors.surface, borderColor: colors.border },
         { opacity: disabled ? 0.5 : pressed ? 0.7 : 1 },
       ]}
     >
@@ -46,9 +44,7 @@ export function GoogleButton({ onPress, disabled }: Props) {
           d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
         />
       </Svg>
-      <Text style={[styles.label, { color: dark ? '#E3E3E3' : '#1F1F1F' }]}>
-        {t('signIn.google')}
-      </Text>
+      <Text style={[styles.label, { color: colors.text }]}>{t('signIn.google')}</Text>
     </Pressable>
   );
 }
