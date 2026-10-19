@@ -24,8 +24,6 @@ COPY --from=build /src/extracted/dependencies/ ./
 COPY --from=build /src/extracted/spring-boot-loader/ ./
 COPY --from=build /src/extracted/snapshot-dependencies/ ./
 COPY --from=build /src/extracted/application/ ./
-# The instance's copies of these must match: deploy/health.sh compares them and reports a difference.
-COPY deploy/ /app/deploy/
 EXPOSE 8080
 # Photos go to a volume the instance mounts here (deploy/compose.yaml). Without it /data is not writable:
 # sending photos then fails with PHOTO_UNAVAILABLE and the rest works.
