@@ -141,6 +141,7 @@
 - 플랫폼마다 지원이 다른 기능은 `*.web.ts`로 나눈다(예: `lib/push/push.web.ts`는 Web Push와 서비스 워커
   `public/sw.js`, `push.ts`는 Expo 푸시). 푸시 코어 `lib/push`는 서버 호출·번역을 모르고, 앱의
   `features/notifications/push.ts`가 `createPush`에 서버 주소(`/api/me/push-tokens`, `/api/me/web-push`)와 언어를 넘긴다.
+  알림을 누르면 `onNotificationTap`(웹은 `sw.js`가 열린 창에 메시지를 보냄)으로 채팅 화면(`app/index.tsx`)이 `/`로 돌아온다.
 
 ## Principles
 

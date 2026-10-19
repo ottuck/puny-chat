@@ -92,5 +92,26 @@ export function createPush(server: PushServer, options: PushOptions = {}): Push 
     await server.removeExpoToken(token);
   }
 
-  return { pushSupported: true, pushEnabled, registerForPush, setPushEnabled, unregisterPush };
+  // A tap on a notification (not on one of its action buttons). The tap that opened the app came
+  // before anyone listened, so it is read once on subscribing; cleared so it is handled only once.
+  function onNotificationTap(listener: (data: Record<string, unknown>) => void): () => void {
+    const handle = (response: Notifications.NotificationResponse) => {
+      Notifications.clearLastNotificationResponse();
+      if (response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
+      listener(response.notification.request.content.data ?? {});
+    };
+    const opened = Notifications.getLastNotificationResponse();
+    if (opened) handle(opened);
+    const subscription = Notifications.addNotificationResponseReceivedListener(handle);
+    return () => subscription.remove();
+  }
+
+  return {
+    pushSupported: true,
+    pushEnabled,
+    registerForPush,
+    setPushEnabled,
+    unregisterPush,
+    onNotificationTap,
+  };
 }
