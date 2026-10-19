@@ -1,6 +1,6 @@
 import type { Frame, Palette } from './pixel-sprite';
 
-// The room's things that come with levels (docs/fun-improvements.md, 방 소품): a crate that fills with
+// The room's things that come with levels (docs/fun-improvements.md, 방 소품): a table that gets
 // toys, a window whose sky follows the device's clock, a wall clock, a music box, rugs, a standing
 // lamp, and the guests that drop by (a snail on the glass, a sparrow on the sill, a
 // cat's tail, a toy train across the floor). And the bundle a buddy carries when it moves out.
@@ -189,36 +189,36 @@ export function clockAt(hours: number, minutes: number): Frame {
 // --- The left of the floor, until the job's station comes (Lv.4, Lv.8) ---
 
 // prettier-ignore
-const CRATE_ROWS: Frame = [
+const TABLE_ROWS: Frame = [
   'kkkkkkkkkkkkkkkk',
-  'kqLLLLLLLLLLLLqk',
-  'kqDDDDDDDDDDDDqk',
-  'kqkkkkkkkkkkkkqk',
-  'kqLLLLLLLLLLLLqk',
-  'kqDDDDDDDDDDDDqk',
-  'kqkkkkkkkkkkkkqk',
-  'kqLLLLLLLLLLLLqk',
-  'kqDDDDDDDDDDDDqk',
-  'kqqqqqqqqqqqqqqk',
+  'kLLLLLLLLLLLLLLk',
+  'kDDDDDDDDDDDDDDk',
   'kkkkkkkkkkkkkkkk',
+  '.kqqqqqqqqqqqqk.',
+  '.kkkkkkkkkkkkkk.',
+  '.kDk........kDk.',
+  '.kDk........kDk.',
+  '.kDk........kDk.',
+  '.kqk........kqk.',
+  '.kkk........kkk.',
 ];
 
-// A wooden crate, empty for now.
-export const CRATE: Frame = CRATE_ROWS;
+// A wooden table, bare for now.
+export const TABLE: Frame = TABLE_ROWS;
 
-// The same crate full of toys: a ball, a star on a stick, a block.
+// The same table with toys on it: a ball, a star on a stick, a block.
 // prettier-ignore
-export const TOY_BOX: Frame = [
+export const TABLE_TOYS: Frame = [
   '.........k......',
   '..kkkk..kyk.....',
   '.kuwuukkyyykkkkk',
   '.kwuuuk.kykkaaAk',
   '.kuuuUk..k.kaaAk',
   '.kuuUUk..k.kAAAk',
-  ...CRATE_ROWS,
+  ...TABLE_ROWS,
 ];
 
-// The ball, popping out when the box is tapped.
+// The ball, bouncing off the table when the toys are tapped.
 // prettier-ignore
 export const BALL: Frame = [
   '.kkkk.',

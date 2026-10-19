@@ -11,7 +11,7 @@ import {
   CAT_TAIL,
   CLOCK_FINE,
   clockAt,
-  CRATE,
+  TABLE,
   LAMP,
   LAMP_LIT,
   MUSIC_BOX,
@@ -20,7 +20,7 @@ import {
   skyAt,
   SNAIL,
   SPARROW,
-  TOY_BOX,
+  TABLE_TOYS,
   TRAIN,
   WINDOW,
   WINDOW_GLASS,
@@ -155,7 +155,7 @@ export function Arrive({
 
 // --- Taps ---
 
-// What a tap does to a thing in the room: a plant sways from its pot, the clock and the crate
+// What a tap does to a thing in the room: a plant sways from its pot, the clock and the table
 // rattle, a portrait swings on its pin, a rug or cushion gives under a pat.
 export type Jiggle = 'sway' | 'rattle' | 'swing' | 'squish';
 const JIGGLE_MS = 750;
@@ -585,8 +585,8 @@ function CuckooOut({ scale }: { scale: number }) {
 
 // --- On the floor ---
 
-// The left of the floor until a job's station takes it: a crate (Lv.4), then full of toys (Lv.8).
-// A tap rattles the crate; on the toys it sends the ball bouncing out, and the buddy is glad.
+// The left of the floor until a job's station takes it: a table (Lv.4), then toys on it (Lv.8).
+// A tap rattles the table; on the toys it sends the ball bouncing out, and the buddy is glad.
 export function FloorToy({
   toys,
   scale,
@@ -614,7 +614,7 @@ export function FloorToy({
   if (!toys) {
     return (
       <Tappable kind="rattle" label={t('buddy.room.crate')}>
-        <PixelSprite frame={CRATE} palette={ROOM_PALETTE} scale={scale} />
+        <PixelSprite frame={TABLE} palette={ROOM_PALETTE} scale={scale} />
       </Tappable>
     );
   }
@@ -624,7 +624,7 @@ export function FloorToy({
   };
   return (
     <Pressable onPress={play} accessibilityRole="button" accessibilityLabel={t('buddy.room.toys')}>
-      <PixelSprite frame={TOY_BOX} palette={ROOM_PALETTE} scale={scale} />
+      <PixelSprite frame={TABLE_TOYS} palette={ROOM_PALETTE} scale={scale} />
       {run > 0 ? (
         <Animated.View
           style={[
@@ -642,7 +642,7 @@ export function FloorToy({
                   }),
                 },
                 {
-                  // Up out of the box, down onto the floor, two smaller bounces.
+                  // Up off the table, down onto the floor, two smaller bounces.
                   translateY: bounce.interpolate({
                     inputRange: [0, 0.3, 0.6, 0.75, 0.9, 1],
                     outputRange: [0, -12 * scale, 12 * scale, 8 * scale, 12 * scale, 12 * scale],

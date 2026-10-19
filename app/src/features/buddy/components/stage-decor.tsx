@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { PixelSprite } from '../pixel/pixel-sprite';
 import {
-  CRATE,
+  TABLE,
   LAMP,
   MUSIC_BOX,
   type RugTier,
@@ -243,7 +243,7 @@ export function decorFor(level: number, seed = '', kind?: number, now = new Date
     plantKind: kind !== undefined ? kind % kinds : plant === 0 ? 0 : kindOf(seed, plant, kinds),
     plantScale: plantScale(plant, level),
     bowl: tierOf<Exclude<BowlTier, 0>>(has, ['bowl1', 'bowl2', 'bowl3']) as BowlTier,
-    // The left of the floor until a station takes it: 1 a crate, 2 full of toys.
+    // The left of the floor until a station takes it: 1 a table, 2 toys on it (ids stay crate, toys).
     toy: tierOf<1 | 2>(has, ['crate', 'toys']),
     rug: tierOf<Exclude<RugTier, 0>>(has, ['rug1', 'rug2', 'rug3', 'rug4']) as RugTier,
     floor: has('tatami') ? ('tatami' as const) : has('wood') ? ('wood' as const) : null,
@@ -322,7 +322,7 @@ export function sideRoom(decor: Decor): number {
 }
 
 const TOY_LEFT = 14;
-const TOY_WIDTH = CRATE[0].length * FLOOR_SCALE;
+const TOY_WIDTH = TABLE[0].length * FLOOR_SCALE;
 const CLOCK_LEFT = 16;
 // The shelf, under the corner's buttons (CORNER_SIZE in buddy-stage.tsx, 4 from the top).
 const SHELF_RIGHT = 12;
@@ -340,7 +340,7 @@ type WallProps = {
   top: number;
   width: number;
   height: number;
-  // Where a job's station on the left of the floor ends (0: no station; the crate is there).
+  // Where a job's station on the left of the floor ends (0: no station; the table is there).
   stationRight: number;
   // Floor kept at the right for the plant, or the season's corner.
   plantRoom: number;
