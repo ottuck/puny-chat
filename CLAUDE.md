@@ -115,7 +115,8 @@
 - 서버 코드는 Terraform이 아니라 deploy workflow가 배포한다(GHCR 이미지 + 인스턴스의 update 타이머). Terraform은 Atlas와 DNS만.
 - Lightsail 인스턴스는 다른 서비스(quant-lab, ur-check)와 나눠 쓴다. 메모리가 빠듯하니(2GB) 서버 힙·컨테이너 한도를 함부로 키우지 않고,
   방화벽·SSH 설정은 사용자에게 먼저 확인한다(SSH는 Lightsail 브라우저 연결만 허용). 서버 설정(`.env`)은 인스턴스의 `/opt/puny-chat`에만 있다.
-  사진 파일도 인스턴스 디스크(`/opt/puny-chat/photos`, compose 볼륨)에 있고 따로 백업하지 않는다(인스턴스 자동 스냅샷에만 7일). `server/deploy`의 compose·스크립트는 CI가 옮기지 않으니 바꾸면 인스턴스에 손으로 복사한다.
+  사진 파일도 인스턴스 디스크(`/opt/puny-chat/photos`, compose 볼륨)에 있고 따로 백업하지 않는다(인스턴스 자동 스냅샷에만 7일). `server/deploy`의 `compose.yaml`·`Caddyfile`·`backup.sh`·`health.sh`는 서버 이미지에 실려 `update.sh`가 인스턴스에 맞춘다. `update.sh` 자신과 systemd 단위만 바꾸면 손으로 복사한다.
+  감시는 healthchecks.io(서버 상태·백업·`server/deploy` 파일 불일치, 알림은 메일): 인스턴스의 `health.sh`·`backup.sh`가 `/opt/puny-chat/healthchecks.env`의 주소로 알린다(`docs/PROJECT.md`의 감시).
 
 ## Server principles
 
