@@ -255,6 +255,8 @@ Buddy 상태(레벨, 배고픔, 💩, 돌볼 수 있는지)는 서버가 계산�
 
 - Java 25, Spring Boot 4.1, Gradle(Kotlin DSL), Spring WebFlux, Reactor, Spring Data Reactive MongoDB.
 - 로컬은 Docker Compose의 MongoDB(`bootRun` 때 자동 실행). 테스트는 JUnit 5, Testcontainers(MongoDB), WebTestClient.
+  Spring을 쓰는 테스트는 모두 `@FlowTest` 설정 하나를 같이 써서 컨텍스트와 MongoDB를 한 번만 띄운다. 클래스마다 설정·속성·빈 교체가
+  다르면 컨텍스트가 따로 생겨 띄우고 닫는 시간이 늘어난다. 필요한 것은 `FlowTest`에 넣고, 데이터와 시계는 매 테스트 전 `CleanSlate`가 비운다.
 - **Firebase ID token은 Admin SDK가 아니라 Spring Security reactive JWT로 검증한다.** Admin SDK의 `verifyIdToken`은 blocking이라서다.
   JWK set `https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com`,
   `iss` = `https://securetoken.google.com/<projectId>`, `aud` = `<projectId>`, `sub` = Firebase uid. 사용자 식별은 항상 `sub`.

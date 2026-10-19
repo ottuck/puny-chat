@@ -6,10 +6,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import com.buddychat.FlowTest;
 import com.buddychat.MutableClock;
-import com.buddychat.TestJwtConfiguration;
 import com.buddychat.TestSocket;
-import com.buddychat.TestcontainersConfiguration;
 import com.buddychat.chat.ChatService;
 import com.buddychat.chat.Message;
 import com.buddychat.common.ApiException;
@@ -30,11 +29,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
@@ -47,16 +43,8 @@ import reactor.core.scheduler.Schedulers;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-@SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {"buddychat.support.email=operator@example.com", "buddychat.support.from=sender@example.com"})
-@Import({
-    TestcontainersConfiguration.class,
-    TestJwtConfiguration.class,
-    MutableClock.Config.class,
-    SupportFlowTest.MailConfig.class
-})
-class SupportFlowTest {
+@FlowTest
+public class SupportFlowTest {
     @LocalServerPort
     int port;
 
@@ -87,8 +75,9 @@ class SupportFlowTest {
     private WebTestClient http;
     private final List<TestSocket> sockets = new ArrayList<>();
 
-    @TestConfiguration(proxyBeanMethods = false)
-    static class MailConfig {
+    // Imported by FlowTest. Not @TestConfiguration: Boot would then pick it up for this class alone,
+    // and a class with its own configuration gets its own context.
+    public static class MailConfig {
         @Bean
         @Primary
         RecordingMail recordingMail() {

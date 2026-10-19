@@ -3,9 +3,8 @@ package com.buddychat.notification;
 import static com.buddychat.TestJwtConfiguration.token;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.buddychat.TestJwtConfiguration;
+import com.buddychat.FlowTest;
 import com.buddychat.TestSocket;
-import com.buddychat.TestcontainersConfiguration;
 import com.buddychat.chat.ChatService;
 import com.buddychat.chat.Message;
 import com.buddychat.room.Invitation;
@@ -27,11 +26,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -42,10 +38,7 @@ import reactor.core.publisher.Mono;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-@SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {"buddychat.push.grace-period=1s", "buddychat.push.receipt-delay=300ms"})
-@Import({TestcontainersConfiguration.class, TestJwtConfiguration.class, NotificationFlowTest.FakePush.class})
+@FlowTest
 public class NotificationFlowTest {
 
     static final String YUKI_PHONE = "ExponentPushToken[yuki-phone]";
@@ -94,7 +87,8 @@ public class NotificationFlowTest {
         }
     }
 
-    @TestConfiguration(proxyBeanMethods = false)
+    // Imported by FlowTest. Not @TestConfiguration: Boot would then pick it up for this class alone,
+    // and a class with its own configuration gets its own context.
     public static class FakePush {
         @Bean
         @Primary
