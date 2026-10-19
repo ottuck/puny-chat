@@ -148,7 +148,17 @@ Buddy의 볼거리(대화 반응, 사건, 직업, 기간 한정 모습, 온천, 
 
 ## 그림 작업
 
-모든 그림은 문자열 격자 → SVG 사각형이다. 새 라이브러리와 비트맵 이미지는 쓰지 않는다.
+모든 그림은 문자열 격자 → SVG다. 새 라이브러리와 비트맵 이미지는 쓰지 않는다.
+
+**성능: 그림 하나는 색마다 `<Path>` 하나.** 아이폰에서는 SVG 요소 하나하나가 네이티브 뷰라, 요소 수가 곧 무게다. 예전에는 한 줄에서 같은 색이
+이어진 칸마다 `<Rect>`를 하나씩 그려 Lv.60 방의 무대가 약 1,900개, 도움말의 보상 그림 50개가 3,203개였다. 채팅을 열 때와 버디가 움직일
+때마다 이만큼 만들어져 화면이 늦게 열리고 두 번 눌리는 일이 생겼다. 지금은 `PixelSprite`가 같은 색의 칸을 경로 하나로 묶어 그림 하나가 색
+개수만큼(보통 5~8개)이다(Lv.60 무대 146개). 지킬 것:
+
+- 그림은 `PixelSprite`로 그린다. 바닥 무늬·눈·비·별처럼 사각형을 늘어놓는 것은 `pixel/boxes.ts`의 `boxPaths`로 색마다 경로 하나로 묶는다.
+  칸마다 `<Rect>`·`<View>`를 늘어놓는 그리기를 새로 만들지 않는다.
+- 한 화면에 그림을 많이 늘어놓으면(목록, 도감) 처음에는 몇 개만 그리고 펼칠 때 나머지를 그린다(도움말의 레벨 보상: 처음 5개, "더 보기").
+- 새 그림이나 화면을 넣으면 웹에서 `document.querySelectorAll('svg path, svg rect').length`로 요소 수를 세어 본다.
 버디(몸과 직업·계절 장식 겹)는 그릴 때 격자를 2배로 늘리고 대각선 계단을 잇는다(Scale2x, `PixelSprite`의 `smooth`). 둥근 몸의 외곽이
 덜 거칠어지고 새 색은 생기지 않으며 크기는 그대로다. 격자는 지금처럼 원래 크기로 그린다. 방 소품은 또렷한 도트 그대로 둔다.
 
@@ -167,7 +177,7 @@ Buddy의 볼거리(대화 반응, 사건, 직업, 기간 한정 모습, 온천, 
 
 | 무엇 | 어디 |
 | --- | --- |
-| 격자 → SVG | `pixel/pixel-sprite.tsx` |
+| 격자 → SVG | `pixel/pixel-sprite.tsx`, 사각형 묶기 `pixel/boxes.ts` |
 | 단계별 격자(`EGG`, `BABY`, `CHILD`, `ADULT`), 자세(`makePoses`, `ANATOMY`), 팔레트(`BUDDY_PALETTE`, `PROP_PALETTE`), 장치(`JOB_STATIONS`), 화분(`PLANTS`, 단계마다 종류 목록)·밥상(`mealTable`)·밥 생각 풍선(`THOUGHT_FOOD`) | `pixel/sprites.ts` |
 | 직업 모습(`JOB_LOOKS`), 기간 한정 모습(`seasonOn`, `FIT`, `seasonBehind`, `seasonFront`, `SEASON_CORNER`), 나비·우산·큰 하트, 얹기(`dressedFrame`) | `pixel/looks.ts` |
 | 무대(자세 고르기, 사건, 움직임, 말풍선) | `components/buddy-stage.tsx` |

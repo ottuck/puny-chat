@@ -1,10 +1,11 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Animated, Easing, Platform, Pressable, StyleSheet, View } from 'react-native';
-import Svg, { Rect } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 
 import { useColors } from '@/theme';
 
+import { type Box, boxPaths } from '../pixel/boxes';
 import { PixelSprite } from '../pixel/pixel-sprite';
 import {
   BALL,
@@ -966,7 +967,7 @@ export function FloorPattern({
   height: number;
 }) {
   const colors = useColors();
-  const rects: { x: number; y: number; w: number; h: number; fill: string }[] = [];
+  const rects: Box[] = [];
   if (kind === 'wood') {
     const board = (height - 2) / 2;
     rects.push({ x: 0, y: 0, w: width, h: height, fill: colors.stageWood });
@@ -992,8 +993,8 @@ export function FloorPattern({
   }
   return (
     <Svg width={width} height={height}>
-      {rects.map((rect, i) => (
-        <Rect key={i} x={rect.x} y={rect.y} width={rect.w} height={rect.h} fill={rect.fill} />
+      {boxPaths(rects).map(({ fill, d }) => (
+        <Path key={fill} d={d} fill={fill} />
       ))}
     </Svg>
   );

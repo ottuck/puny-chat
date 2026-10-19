@@ -1,11 +1,12 @@
 import { memo, useMemo } from 'react';
 import Svg, { Path } from 'react-native-svg';
 
+import { boxPaths } from './boxes';
+
 // A pixel-art frame: equal-length rows, one character per pixel. '.' is transparent; every other
 // character is looked up in the palette. Drawn as SVG squares, so it stays crisp at any size on
-// iOS and the web (a scaled-up bitmap would be smoothed and blurry). One path per color rather than
-// a rectangle per run: on the iPhone each SVG element is a native view, and a screen of sprites (the
-// guide's rewards) made thousands of them at once, slow enough to tap twice.
+// iOS and the web (a scaled-up bitmap would be smoothed and blurry). One path per color, not a
+// rectangle per run (boxes.ts).
 export type Frame = readonly string[];
 export type Palette = Readonly<Record<string, string>>;
 
@@ -55,19 +56,6 @@ function toRuns(frame: Frame, palette: Palette): Run[] {
   return runs;
 }
 
-// Each color's runs as one path of rectangles, in the order the colors first appear. Each is a hair
-// bigger than its run: without it, anti-aliasing leaves faint seams between squares.
-function toPaths(runs: Run[]): { color: string; d: string }[] {
-  const byColor = new Map<string, string[]>();
-  for (const { x, y, width, color } of runs) {
-    const w = width + 0.02;
-    const parts = byColor.get(color) ?? [];
-    parts.push(`M${x} ${y}h${w}v1.02h${-w}z`);
-    byColor.set(color, parts);
-  }
-  return [...byColor].map(([color, parts]) => ({ color, d: parts.join('') }));
-}
-
 type Props = {
   frame: Frame;
   palette: Palette;
@@ -87,7 +75,20 @@ export const PixelSprite = memo(function PixelSprite({
   smooth = false,
 }: Props) {
   const drawn = useMemo(() => (smooth ? smoothFrame(frame) : frame), [frame, smooth]);
-  const paths = useMemo(() => toPaths(toRuns(drawn, palette)), [drawn, palette]);
+  // Each a hair bigger than its run: without it, anti-aliasing leaves faint seams between squares.
+  const paths = useMemo(
+    () =>
+      boxPaths(
+        toRuns(drawn, palette).map(({ x, y, width: w, color }) => ({
+          x,
+          y,
+          w: w + 0.02,
+          h: 1.02,
+          fill: color,
+        })),
+      ),
+    [drawn, palette],
+  );
   const width = frame[0]?.length ?? 0;
   const height = frame.length;
   return (
@@ -97,8 +98,8 @@ export const PixelSprite = memo(function PixelSprite({
       viewBox={`0 0 ${drawn[0]?.length ?? 0} ${drawn.length}`}
       style={flipped ? { transform: [{ scaleX: -1 }] } : undefined}
     >
-      {paths.map(({ color, d }) => (
-        <Path key={color} d={d} fill={color} />
+      {paths.map(({ fill, d }) => (
+        <Path key={fill} d={d} fill={fill} />
       ))}
     </Svg>
   );
