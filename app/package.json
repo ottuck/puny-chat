@@ -15,7 +15,11 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm format:check",
-    "build:web": "expo export -p web && node scripts/worker-assets.mjs dist"
+    "build:web": "expo export -p web && node scripts/worker-assets.mjs dist",
+    "app-update": "gh workflow run app-update.yml --ref main",
+    "app-update:on": "gh variable set EAS_AUTO_UPDATE --body true",
+    "app-update:off": "gh variable set EAS_AUTO_UPDATE --body false",
+    "app-update:status": "gh variable get EAS_AUTO_UPDATE"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",

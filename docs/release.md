@@ -74,15 +74,19 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 - **자동으로 보내기.** `main` push에서 `app/`이 바뀌었고 배포가 성공하면 CI가 `.github/workflows/app-update.yml`로 production 채널에
   보낸다. 저장소 변수 `EAS_AUTO_UPDATE`가 `true`일 때만 돈다(끄면 건너뜀). 시크릿 `EXPO_TOKEN`(expo.dev → Account Settings →
   Access Tokens)이 필요하다. 메시지는 짧은 sha와 합친 작업의 커밋 제목. Actions의 "App update"를 손으로 돌리면 스위치와 상관없이 보낸다.
-  ```bash
-  gh variable set EAS_AUTO_UPDATE --body true
-  ```
+  `app/`에서(`gh` 로그인 필요):
+
+  | 명령 | 하는 일 |
+  | --- | --- |
+  | `pnpm app-update:status` | 스위치 확인(`true` / `false`) |
+  | `pnpm app-update:on` / `pnpm app-update:off` | 자동 업데이트 켜기 / 끄기 |
+  | `pnpm app-update` | 지금 main을 한 번 보내기("App update" 실행, 스위치와 상관없이) |
 - **손으로 보내기.** main CI·웹 배포를 확인한 뒤, 같은 커밋의 `app/` 폴더에서(저장소 최상위에서는 "Run this command inside a project directory"로 실패한다):
   ```bash
   npx eas-cli update --channel production --environment production --message "방 소품 탭 반응"
   ```
   `--environment`로 EAS의 production 환경변수(`EXPO_PUBLIC_*`)를 쓴다.
-- **심사 중에는 production 채널에 보내지 않는다.** 제출 전에 `EAS_AUTO_UPDATE`를 `false`로 바꾸고 승인 뒤 다시 켠다. 심사자가 받는 앱이 심사 대상과 달라진다. 고칠 것이 생기면 승인 뒤 업데이트로 보낸다.
+- **심사 중에는 production 채널에 보내지 않는다.** 제출 전에 `pnpm app-update:off`, 승인 뒤 `pnpm app-update:on`. 심사자가 받는 앱이 심사 대상과 달라진다. 고칠 것이 생기면 승인 뒤 업데이트로 보낸다.
   앱의 주된 목적이나 기능을 바꾸는 변경은 업데이트가 아니라 새 빌드로 심사받는다(App Store 가이드라인 2.5.2).
 - **되돌리기.** 문제가 있는 업데이트는 `npx eas-cli update:republish`로 이전 업데이트를 다시 보내거나 `npx eas-cli update:rollback`으로 되돌린다.
 
@@ -90,7 +94,7 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 
 - 서버 `.env`의 `BUDDYCHAT_BUDDY_EXPPERLEVEL`이 5인지(값을 읽지 않아 운영자가 확인한다).
 - 서버가 심사 기간과 출시 후 늘 켜져 있는지(심사자가 아무 때나 연다).
-- 자동 앱 업데이트를 껐는지: `gh variable set EAS_AUTO_UPDATE --body false`(승인 뒤 다시 `true`).
+- 자동 앱 업데이트를 껐는지: `app/`에서 `pnpm app-update:status`가 `false`인지(끄기는 `pnpm app-update:off`, 승인 뒤 `pnpm app-update:on`).
 - 데이터 백업: 인스턴스가 매일 `mongodump`를 받아 30일까지 둔다(`docs/PROJECT.md` 인프라의 백업). 최근 백업 파일이 있는지 본다.
 - iPhone 스크린샷 규격: 제출 시점의 App Store Connect 안내를 기준으로 확인한다.
 
