@@ -51,6 +51,7 @@
   무대 꾸미기(`stage-decor.tsx`의 `REWARDS`)는 서버가 준 레벨로 앱이 고른다(표시 규칙이라 서버에 없음). 도움말
   (`app/guide.tsx`)과 Buddy 상세의 다음 보상도 같은 목록을 쓴다. 철 따라 나오는 소품과 방의 빛은 기기 날짜·시각으로 정한다.
   우편함(`features/mailbox`)의 공지·편지도 앱에 넣고(`mail.ts`, 번역 `mailbox.mail.*`) 배포로 보낸다. 읽음은 기기에 둔다.
+  여러 기기·플랫폼에 걸쳐 같아야 하는 판단(예: 안내 카드를 본 사람인지, `guideSeenVersion`)은 서버에 둔다.
   예외는 로그인 전 "구경하기"(`app/demo.tsx`, `features/demo`)뿐이다. 대본으로 채팅 화면 부품을 그대로 재생하고 서버를 쓰지 않는다.
 - Buddy 무대(`features/buddy/components/buddy-stage.tsx`): 채팅 화면 위쪽 약 1/3, 접히지 않는다(접었다 펴면 스크롤이 튐).
   마운트 전에 받은 반응은 재생하지 않는다. 한 단어 메시지("밥", "똥", "춤", "노래" 등, `chat-words.ts`)에 답한다.
