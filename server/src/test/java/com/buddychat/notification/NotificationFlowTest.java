@@ -282,7 +282,8 @@ public class NotificationFlowTest {
                 null,
                 henry.id(),
                 "buddy:FED:1",
-                Instant.now());
+                Instant.now(),
+                null);
 
         notifications.onNewMessage(fed, henry);
 

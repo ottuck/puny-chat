@@ -192,6 +192,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged, onGuideSeen }: ChatSc
               buddyName={buddy.name}
               partnerReadId={partner ? reads[partner.id] : undefined}
               onRetry={chat.retry}
+              onReact={chat.react}
               onLoadOlder={chat.loadOlder}
               onGraduate={buddy.grown ? () => setBuddyOpen(true) : undefined}
               onOpenAlbum={() => setAlbumRequest(String(Date.now()))}

@@ -63,6 +63,12 @@
     "guestName": "Guest",
     "typing": "typing…",
     "read": "Read",
+    "react": "React",
+    "reaction": {
+      "LIKE": "Like",
+      "SAD": "Sad",
+      "WOW": "Wow"
+    },
     "online": "Online",
     "offline": "Offline",
     "emptySolo": "{{buddy}} has hatched!\nInvite a friend to raise it together.",

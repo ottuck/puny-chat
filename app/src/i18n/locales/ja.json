@@ -63,6 +63,12 @@
     "guestName": "ゲスト",
     "typing": "入力中…",
     "read": "既読",
+    "react": "リアクション",
+    "reaction": {
+      "LIKE": "いいね",
+      "SAD": "悲しい",
+      "WOW": "びっくり"
+    },
     "online": "オンライン",
     "offline": "オフライン",
     "emptySolo": "{{buddy}}が生まれました！\n友だちを招待して一緒に育てましょう。",

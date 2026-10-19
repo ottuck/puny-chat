@@ -86,7 +86,8 @@ class AccountDeletionFlowTest {
                         null,
                         null,
                         "h-1",
-                        java.time.Instant.now()))
+                        java.time.Instant.now(),
+                        null))
                 .block();
         yuki.send(Map.of("type", "send", "clientMessageId", "c-1", "text", "bye"))
                 .expect("ack");
@@ -150,7 +151,8 @@ class AccountDeletionFlowTest {
                         null,
                         yukiId,
                         "care-event",
-                        java.time.Instant.now()))
+                        java.time.Instant.now(),
+                        null))
                 .block();
 
         delete("yuki").expectStatus().isNoContent();

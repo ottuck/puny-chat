@@ -121,16 +121,16 @@ Yuki:  니가 치워
 | --- | --- | --- |
 | 인증 | 게스트 시작, 이름, 계정 연결(웹·아이폰 Google·Apple), 로그아웃, 계정 삭제 | 됨. 아이폰 Apple·Google은 실기기 확인 전(Google은 새 개발용 빌드 필요), 웹 Apple은 Services ID 웹 설정 전 |
 | Room | 만들기, solo, 초대 코드·링크, 참가, 최대 2명, 나가기 | 됨 |
-| Chat | 실시간 텍스트, 히스토리, 재연결, 중복 방지, 읽음, 입력 중, 접속 표시 | 됨 |
+| Chat | 실시간 텍스트, 히스토리, 재연결, 중복 방지, 읽음, 입력 중, 접속 표시, 메시지 반응(👍 😢 😮) | 됨 |
 | 푸시 | 상대 메시지 알림 | 웹 푸시 됨. 아이폰 앱 푸시는 실기기 확인 전 |
 | Buddy | 이름, 배고픔, 청결, 밥·청소, 경험치, 레벨, 진화, 독립과 앨범, 직업 | 됨 |
 | 고객 지원 | 개인정보처리방침·연락처, 문의, 상대 신고·내보내기 | 됨 |
 | 이용 통계 | 시작 흐름·재방문 합계와 주간 메일, 웹 방문(Cloudflare) | 됨. 아이폰 앱은 이 기능이 담긴 EAS Update부터 단계를 보낸다 |
 
-넣지 않는 것: 그룹 채팅, 여러 room·여러 상대, 음성·영상 통화, 사진·파일 첨부, 스레드, 리액션, 스티커, 공개 프로필·피드·커뮤니티,
+넣지 않는 것: 그룹 채팅, 여러 room·여러 상대, 음성·영상 통화, 사진·파일 첨부, 스레드, 정해진 셋 밖의 이모지 반응, 스티커, 공개 프로필·피드·커뮤니티,
 캘린더·공유 앨범·기념일, AI 기능, Buddy 여러 종류·분기 진화·교배, 게임 요소 전부.
 
-나중에 고려할 수 있는 것: Buddy 종류 추가, room 테마(레트로 채팅), 스티커, 리액션, 사진 메시지, Android 출시, 유료화,
+나중에 고려할 수 있는 것: Buddy 종류 추가, room 테마(레트로 채팅), 스티커, 사진 메시지, Android 출시, 유료화,
 출시 후 사용량에 따른 Buddy 수치 조정.
 
 ## 성공 기준
@@ -287,7 +287,7 @@ rooms          { _id, memberIds [1..2], memberCount, createdAt, closureId?, hist
                          talkDay?, talkers?, togetherDay?, fedCount?, cleanedCount?, nightCount?, laughCount?, loveCount?,
                          job?, jobChangedLevel? } }
 messages       { _id, roomId, senderId?, type (TEXT | SYSTEM | BUDDY_EVENT), text?, buddyEvent?, systemEvent?, actorId?,
-                 clientMessageId, createdAt }
+                 clientMessageId, createdAt, reactions? { <userId>: LIKE | SAD | WOW } }
 invitations    { _id, roomId, code (unique), createdBy, createdAt, expiresAt, usedAt?, usedBy?, previousRoomId?, replacesId? }
 reads          { _id: "<roomId>:<userId>", roomId, userId, messageId, updatedAt }
 push_tokens    { _id: <Expo push token | Web Push endpoint>, userId, updatedAt, p256dh?, auth? }
@@ -372,6 +372,7 @@ client → server
   { type: "typing", typing }                      입력 중이면 3초마다 다시
   { type: "read", messageId }                     화면에 보이는 가장 최근 상대 메시지(또는 Buddy 이벤트)
   { type: "pet" }                                  쓰다듬기. 저장하지 않고 상대에게 전달만
+  { type: "react", messageId, reaction }          텍스트 메시지에 반응(LIKE | SAD | WOW, null이면 뗀다)
   { type: "ping" }
 
 server → client
@@ -387,6 +388,7 @@ server → client
   { type: "presence", userId, online }            그 사용자의 첫 연결이 열리거나 마지막 연결이 닫힐 때
   { type: "read", userId, messageId }             읽음 위치가 앞으로 움직였을 때만
   { type: "pet", userId }                          상대가 쓰다듬음. 다른 멤버에게만
+  { type: "reaction", message }                   반응이 바뀐 메시지(저장된 반응 전부). 반응한 사람의 기기를 포함해 방 전체에
   { type: "error", code }
   { type: "pong" }
 ```
@@ -402,6 +404,11 @@ server → client
 - 세션·presence·typing은 서버 메모리에만 둔다(재배포하면 사라진다). presence는 연결로 계산하고 기기 여러 대는 하나로 본다.
 - **읽음**은 앞으로만 움직인다: `messageId < 새 id` 조건부 upsert. 첫 읽음이 동시에 와서 중복 키가 나면 같은 조건으로 한 번 더 update한다.
   앱은 상대가 읽은 위치 이하인 내 메시지 중 가장 최근 것에 "읽음"을 표시한다.
+- **반응**: 텍스트 메시지를 길게 누르면(웹은 마우스를 누르고 있으면) 말풍선 위에 👍 😢 😮이 뜬다. 한 사람이 메시지 하나에 하나만 단다.
+  고른 걸 다시 누르면 떼고, 다른 걸 누르면 바뀐다. 내 메시지에도 달 수 있다. 말풍선 아래 알약에 달린 반응이 보이고(같은 게 둘이면 "2",
+  내 반응이 있으면 테두리 강조) 알약을 눌러도 고르는 창이 열린다. 서버는 `reactions.<userId>`를 조건부 `$set`/`$unset`(같은 방의 TEXT만)으로
+  바꿔 끝 상태를 저장하므로 같은 요청이 두 번 와도 같다. 앱은 바로 그려 두고 `reaction`으로 받은 저장 상태로 맞춘다. 끊겨 있으면 보내지 않는다.
+  재연결 복구는 새 메시지만 읽으므로, 다시 연결되면 최신 페이지를 한 번 더 읽어 이미 보이는 메시지의 반응만 고친다. 푸시는 보내지 않고 Buddy도 반응하지 않는다.
 - 유휴 연결 타임아웃 때문에 서버가 25초마다 ping 프레임을 보낸다.
 
 ## Buddy 규칙
@@ -479,7 +486,7 @@ togetherToday, job, leaning, canChangeJob, jobChangeAt, grown)를 그대로 보�
   - 수락하면 그 자리를 넘겨받는다. 만든 사람과 그 자리의 사람이 방에 있을 때 한 번의 조건부 update로 `memberIds`의 그 자리를 바꾼다(순서 유지).
     같은 자리를 두 코드가 동시에 노리면 하나만 되고 나머지는 `ROOM_FULL`. 상대가 이미 나갔으면 빈자리로 참가하고, 만든 사람이 나갔으면
     `INVITATION_EXPIRED`.
-  - 넘겨받은 사람에게 그 방의 상대 메시지(`senderId`)·이름 남긴 기록(`actorId`)·읽음 위치·오늘 대화한 사람(`buddy.talkers`)이 옮겨 오고,
+  - 넘겨받은 사람에게 그 방의 상대 메시지(`senderId`)·이름 남긴 기록(`actorId`)·반응·읽음 위치·오늘 대화한 사람(`buddy.talkers`)이 옮겨 오고,
     기록이 바뀌었으니 `historyChanged`. SYSTEM `MEMBER_RETURNED`(text = 새 이름)와 `member`를 보낸다. 예전 계정은 방이 비워지고,
     만들어 둔 그 방 코드가 지워지며, 연결된 기기는 `SEAT_TAKEN`으로 끊긴다. 모든 단계는 다시 수락하면 이어서 끝낸다(알림 줄은 한 번).
   - 상대의 동의 없이 자리를 넘길 수 있다. 1:1로 아는 사이이고 남은 사람은 원래 대화를 다 보던 사람이라 막지 않고, 예전 기기에 알린다.
@@ -500,9 +507,9 @@ togetherToday, job, leaning, canChangeJob, jobChangeAt, grown)를 그대로 보�
 
 App Store Guideline 5.1.1(v) 때문에 있다. 게스트는 Firebase가 30일 뒤 지우지만 서버 데이터는 남으므로 스스로 지울 방법이 필요하다.
 
-- 서버(`DELETE /api/me`, `account/AccountService`): 삭제 진행 표식 → room 나가기 → 내가 만든 초대 → 모든 방의 본인 메시지·작성자 정보 → 내 읽음 위치
+- 서버(`DELETE /api/me`, `account/AccountService`): 삭제 진행 표식 → room 나가기 → 내가 만든 초대 → 모든 방의 본인 메시지·반응·작성자 정보 → 내 읽음 위치
   → 푸시 토큰 → 사용자 문서 → 표식 순으로 지운다. 단계마다 다시 해도 되는 삭제라 중간에 실패해도 다시 요청하면 끝난다.
-- 본인 텍스트와 본인 이름이 든 SYSTEM 기록은 예전에 나간 방까지 지운다. Buddy 이벤트는 작성자 id만 지우고 `buddy.talkers`에서도 뺀다.
+- 본인 텍스트와 본인 이름이 든 SYSTEM 기록, 상대 메시지에 단 본인 반응은 예전에 나간 방까지 지운다. Buddy 이벤트는 작성자 id만 지우고 `buddy.talkers`에서도 뺀다.
 - 바뀐 방은 `historyVersion`을 올리고 `historyChanged`를 보낸다. 앱은 기록을 비우고 다시 읽으며, 재연결의 `ready.historyVersion`이 달라도 같다.
   삭제 표식이 있는 동안 늦게 저장된 이름 기록·작성자 id도 지우고 그 방을 다시 갱신한다.
 - 앱: 연결한 계정은 먼저 다시 로그인한다(Firebase는 최근 로그인 뒤에만 계정 삭제를 허용한다). Apple은 이때 토큰을 취소한다(iOS는

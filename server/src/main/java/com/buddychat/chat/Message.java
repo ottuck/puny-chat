@@ -1,6 +1,8 @@
 package com.buddychat.chat;
 
 import java.time.Instant;
+import java.util.Map;
+import java.util.Set;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -13,6 +15,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
  *     actor's name at the time, since they may no longer be a member. Null on entries stored before.
  * @param text for TEXT, the message; for SYSTEM, the actor's name; for the buddy event LEVELED_UP, the
  *     new level (e.g. "3"); otherwise null.
+ * @param reactions on TEXT, each member's reaction (user id → one of {@link #REACTIONS}). Null on entries
+ *     nobody has reacted to.
  */
 @Document("messages")
 public record Message(
@@ -25,9 +29,13 @@ public record Message(
         @Nullable String systemEvent,
         @Nullable String actorId,
         String clientMessageId,
-        Instant createdAt) {
+        Instant createdAt,
+        @Nullable Map<String, String> reactions) {
 
     public static final int MAX_TEXT_LENGTH = 2000;
+
+    /** 👍, 😢, 😮. A member has at most one reaction on a message. */
+    public static final Set<String> REACTIONS = Set.of("LIKE", "SAD", "WOW");
 
     public enum Type {
         TEXT,
@@ -38,19 +46,20 @@ public record Message(
     /** {@code key} makes the event idempotent: recording the same key twice stores it once. */
     static Message buddyEvent(
             String roomId, String event, @Nullable String detail, @Nullable String actorId, String key, Instant now) {
-        return new Message(null, roomId, null, Type.BUDDY_EVENT, detail, event, null, actorId, key, now);
+        return new Message(null, roomId, null, Type.BUDDY_EVENT, detail, event, null, actorId, key, now, null);
     }
 
     static Message system(
             String roomId, String event, String actorId, @Nullable String actorName, String key, Instant now) {
-        return new Message(null, roomId, null, Type.SYSTEM, actorName, null, event, actorId, key, now);
+        return new Message(null, roomId, null, Type.SYSTEM, actorName, null, event, actorId, key, now, null);
     }
 
     static Message text(String roomId, String senderId, String clientMessageId, String text, Instant now) {
-        return new Message(null, roomId, senderId, Type.TEXT, text, null, null, null, clientMessageId, now);
+        return new Message(null, roomId, senderId, Type.TEXT, text, null, null, null, clientMessageId, now, null);
     }
 
     Message withoutActor() {
-        return new Message(id, roomId, senderId, type, text, buddyEvent, systemEvent, null, clientMessageId, createdAt);
+        return new Message(
+                id, roomId, senderId, type, text, buddyEvent, systemEvent, null, clientMessageId, createdAt, reactions);
     }
 }

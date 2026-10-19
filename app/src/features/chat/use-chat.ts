@@ -16,7 +16,14 @@ import { ApiError } from '@/lib/api';
 import { fetchNewer, fetchNewest, fetchOlder } from './api';
 import { MessageSync } from './message-sync';
 import { ChatSocket, type ConnectionStatus } from './socket';
-import { fromServer, type Message, redactDeletedActor, type ServerMessage } from './types';
+import {
+  fromServer,
+  knownReactions,
+  type Message,
+  type MessageReaction,
+  redactDeletedActor,
+  type ServerMessage,
+} from './types';
 
 // While typing, "typing" is repeated this often; the partner drops it when it stops coming.
 const TYPING_REPEAT_MS = 3_000;
@@ -136,6 +143,18 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
     setMessages((prev) => merge(prev, visible));
   }, []);
 
+  // Only the reactions, on messages already shown: catching up adds the messages themselves.
+  const applyReactions = useCallback((incoming: ServerMessage[]) => {
+    const byId = new Map(incoming.map((message) => [message.id, message.reactions]));
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.type === 'TEXT' && m.id && byId.has(m.id)
+          ? { ...m, reactions: knownReactions(byId.get(m.id)) }
+          : m,
+      ),
+    );
+  }, []);
+
   const setTypingOf = useCallback(function updateTyping(userId: string, on: boolean) {
     const timers = typingTimers.current;
     clearTimeout(timers.get(userId));
@@ -226,8 +245,19 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
         if (historyVersion.current !== undefined && historyVersion.current !== version) {
           resetHistory(version, readsNow[myIdRef.current]);
         } else {
+          const reconnected = historyVersion.current !== undefined;
           historyVersion.current = version;
           sync.start(readsNow[myIdRef.current]);
+          // Catching up only reads what is newer. Reactions put on recent messages while this
+          // device was away come with the newest page.
+          if (reconnected) {
+            const generation = historyGeneration.current;
+            fetchNewest()
+              .then((page) => {
+                if (generation === historyGeneration.current) applyReactions(page.messages);
+              })
+              .catch((e: unknown) => console.warn('refreshing reactions failed', e));
+          }
         }
         // Outgoing messages do not wait for REST history recovery. The same id keeps retries safe.
         for (const [clientMessageId, message] of outbox.current) {
@@ -271,6 +301,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
         else setTypingOf(userId, false);
       },
       onPet: () => setPartnerPet({ id: randomUUID() }),
+      onReaction: (message) => applyReactions([message]),
       onTyping: setTypingOf,
       onRead: (userId, messageId) =>
         setReads((prev) =>
@@ -310,7 +341,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
       for (const timer of timers.values()) clearTimeout(timer);
       timers.clear();
     };
-  }, [apply, cheerPartnerHere, cueFrom, markStatus, setTypingOf]);
+  }, [apply, applyReactions, cheerPartnerHere, cueFrom, markStatus, setTypingOf]);
 
   // While the chat is on screen, tell the others how far I have read: up to the newest message
   // that is not my own. Hex ids sort by time, so comparing strings compares age.
@@ -355,6 +386,24 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
       typingSentAt.current = 0;
       // If offline it stays 'sending' and goes out after the next reconnect.
       socketRef.current?.send(clientMessageId, text);
+    },
+    [myId],
+  );
+
+  // Shown at once; the server's reaction event then brings the stored state. Offline it is not
+  // queued: the bubble stays as it was.
+  const react = useCallback(
+    (messageId: string, reaction: MessageReaction | null) => {
+      if (!socketRef.current?.sendReaction(messageId, reaction)) return;
+      setMessages((prev) =>
+        prev.map((m) => {
+          if (m.type !== 'TEXT' || m.id !== messageId) return m;
+          const next = { ...m.reactions };
+          delete next[myId];
+          if (reaction) next[myId] = reaction;
+          return { ...m, reactions: Object.keys(next).length > 0 ? next : undefined };
+        }),
+      );
     },
     [myId],
   );
@@ -410,6 +459,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
     loaded,
     send,
     retry,
+    react,
     loadOlder,
     notifyTyping,
   };

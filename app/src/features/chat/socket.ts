@@ -3,7 +3,7 @@ import { idToken } from '@/lib/api';
 import { wsUrl } from '@/lib/api-url';
 import { type ConnectionStatus, RealtimeSocket } from '@/lib/realtime-socket';
 
-import type { ServerMessage } from './types';
+import type { MessageReaction, ServerMessage } from './types';
 
 export type { ConnectionStatus };
 
@@ -29,6 +29,7 @@ type ServerEvent =
   | { type: 'typing'; userId: string; typing: boolean }
   | { type: 'read'; userId: string; messageId: string }
   | { type: 'pet'; userId: string }
+  | { type: 'reaction'; message: ServerMessage }
   | { type: 'error'; code: string; clientMessageId: string | null }
   | { type: 'pong' };
 
@@ -49,6 +50,8 @@ export type SocketListener = {
   onRead: (userId: string, messageId: string) => void;
   // The partner petted the buddy just now.
   onPet: (userId: string) => void;
+  // Someone's reaction on a text message changed (mine too, as stored); the message carries them all.
+  onReaction: (message: ServerMessage) => void;
   onSendFailed: (clientMessageId: string, code: string) => void;
   // The server refused the connection for a reason reconnecting will not fix (e.g. no room).
   onFatal: (code: string) => void;
@@ -110,6 +113,11 @@ export class ChatSocket {
     this.socket.send({ type: 'pet' });
   }
 
+  // null takes my reaction off. Says the state to end in, so sending it twice is harmless.
+  sendReaction(messageId: string, reaction: MessageReaction | null): boolean {
+    return this.socket.send({ type: 'react', messageId, reaction });
+  }
+
   sendRead(messageId: string): boolean {
     return this.socket.send({ type: 'read', messageId });
   }
@@ -139,6 +147,9 @@ export class ChatSocket {
         break;
       case 'pet':
         this.listener.onPet(event.userId);
+        break;
+      case 'reaction':
+        this.listener.onReaction(event.message);
         break;
       case 'member':
       case 'left':
