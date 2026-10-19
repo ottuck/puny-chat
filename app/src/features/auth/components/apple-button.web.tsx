@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
-import { useColorMode } from '@/theme';
+import { useColors } from '@/theme';
 
 type Props = {
   onPress: () => void;
@@ -10,11 +10,11 @@ type Props = {
 };
 
 // The web has no Apple button of its own, so it follows Apple's guidelines for a custom one: the
-// Apple logo and "Continue with Apple", white with a black outline (white in dark mode), sized like
-// the app's buttons and like the iPhone's (apple-button.ios.tsx).
+// Apple logo and "Continue with Apple", white, with the same light outline as the app's other
+// secondary buttons, sized like them and like the iPhone's (apple-button.ios.tsx).
 export function AppleButton({ onPress, disabled }: Props) {
   const { t } = useTranslation();
-  const dark = useColorMode() === 'dark';
+  const colors = useColors();
   return (
     <Pressable
       onPress={onPress}
@@ -22,7 +22,7 @@ export function AppleButton({ onPress, disabled }: Props) {
       accessibilityRole="button"
       style={({ pressed }) => [
         styles.button,
-        { backgroundColor: '#ffffff', borderColor: dark ? '#ffffff' : '#000000' },
+        { backgroundColor: '#ffffff', borderColor: colors.border },
         { opacity: disabled ? 0.5 : pressed ? 0.7 : 1 },
       ]}
     >

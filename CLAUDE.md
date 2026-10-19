@@ -82,7 +82,7 @@
 - Google·Apple 로그인은 `lib/social-auth`에 모은다. 앱 코드(`@/`, 번역, 서버 호출)를 import하지 않는 코어라 다른 Expo 앱에
   폴더째 옮겨 쓴다. 앱은 `features/auth/social.ts`의 `social.google` / `social.apple`로 쓴다. 웹은 둘 다 Firebase 팝업
   (`popup-provider.ts`), 아이폰은 Apple(`apple.ios.ts`, `expo-apple-authentication` → Firebase credential, 버튼은 Apple 기본
-  버튼 `features/auth/components/apple-button.ios.tsx`, 웹은 지침에 맞춘 `apple-button.web.tsx`. 둘 다 "Apple로 계속하기", 흰색 테두리 스타일)과 Google(`google.ios.ts`,
+  버튼 `features/auth/components/apple-button.ios.tsx`, 웹은 지침에 맞춘 `apple-button.web.tsx`. 둘 다 "Apple로 계속하기", 흰색 버튼에 앱의 다른 보조 버튼과 같은 옅은 테두리)과 Google(`google.ios.ts`,
   `@react-native-google-signin/google-signin` → id token → Firebase credential). Google 버튼은 브랜드 지침대로 G 로고를 넣은
   `features/auth/components/google-button.tsx`("Google로 계속하기"). Google OAuth client id(공개 값)는 `app.json`의
   `extra.googleSignIn`과 config plugin의 `iosUrlScheme`. 그 모듈이 없는 예전 빌드에서는 Google 버튼만 숨긴다.
