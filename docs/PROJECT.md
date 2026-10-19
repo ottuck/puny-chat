@@ -366,6 +366,7 @@ stats          { _id: "steps:<날짜>", ios|web|android: { welcome?, demo?, star
 | `INVALID_PHOTO` | 400 | 읽을 수 없는 이미지, 너무 큰 해상도(4096×4096 초과), 잘못된 `clientMessageId` |
 | `PHOTO_TOO_LARGE` | 413 | 본문이 10MB 초과 |
 | `PHOTO_UNAVAILABLE` | 503 | 사진 폴더가 없거나 쓸 수 없음, 디스크 남은 공간 5GB 미만 |
+| `PHOTO_RATE_LIMIT` | 429 | 보내기 제한(1분 10장·하루 200장)을 넘음 |
 
 ## WebSocket 프로토콜
 
@@ -402,7 +403,7 @@ server → client
 
 - 연결 종료 에러: `UNAUTHORIZED`, `AUTH_TIMEOUT`, `ROOM_NOT_FOUND`, `TOKEN_EXPIRED`(토큰의 `exp`가 되면, 앱이 새 토큰으로 재연결),
   `SEAT_TAKEN`(다시 초대 코드로 다른 곳에서 이 자리에 들어옴, 앱이 알리고 방 없는 화면으로).
-  연결 유지 에러: `INVALID_MESSAGE`(빈 문자열·2000자 초과), `INVALID_EVENT`, `INVALID_REQUEST`.
+  연결 유지 에러: `INVALID_MESSAGE`(빈 문자열·2000자 초과), `MESSAGE_RATE_LIMIT`(보내기 제한), `INVALID_EVENT`, `INVALID_REQUEST`.
 - 토큰은 연결할 때 한 번 확인한다. 즉시 폐기는 토큰 수명(1시간)만큼 늦는 걸 허용한다.
 - 연결은 인증 시점의 room에 묶인다. room이 바뀌면 앱이 다시 연결한다. 한 연결의 이벤트는 순서대로 처리한다.
 - **재연결 복구**(`features/chat/message-sync.ts`): REST로 연속해서 확인한 마지막 메시지 이후를 `after`로 채운다. 실시간 메시지는 화면에 바로
@@ -416,7 +417,12 @@ server → client
   내 반응이 있으면 테두리 강조) 알약을 눌러도 고르는 창이 열린다. 서버는 `reactions.<userId>`를 조건부 `$set`/`$unset`(같은 방의 TEXT·PHOTO만)으로
   바꿔 끝 상태를 저장하므로 같은 요청이 두 번 와도 같다. 앱은 바로 그려 두고 `reaction`으로 받은 저장 상태로 맞춘다. 끊겨 있으면 보내지 않는다.
   재연결 복구는 새 메시지만 읽으므로, 다시 연결되면 최신 페이지를 한 번 더 읽어 이미 보이는 메시지의 반응만 고친다. 푸시는 보내지 않고 Buddy도 반응하지 않는다.
-- 유휴 연결 타임아웃 때문에 서버가 25초마다 ping 프레임을 보낸다.
+- 유휴 연결 타임아웃 때문에 서버가 25초마다 ping 프레임을 보낸다. 앱의 `ping`은 처리 중인 이벤트를 기다리지 않고 DB도 읽지 않고 바로 `pong`으로 답한다
+  (연결이 살아 있는지를 보는 것이라 서버가 바쁜지와 섞지 않는다).
+- **보내기 제한**(`chat/SendLimiter`): 한 사람이 텍스트는 1분에 120개·하루 3,000개, 사진은 1분에 10장·하루 200장까지(UTC 기준 날, 서버 메모리라
+  재배포하면 다시 센다). 둘이 대화하는 양보다 훨씬 많아 고장 난 클라이언트나 DB를 채우려는 경우만 걸린다. 넘으면 텍스트는 `error`
+  (`MESSAGE_RATE_LIMIT`, `clientMessageId` 포함), 사진은 429 `PHOTO_RATE_LIMIT`이고 앱은 그 메시지를 실패로 보여 "다시 보내기"를 둔다.
+  텍스트는 재전송도 세고(여유가 충분하다), 사진은 이미 저장된 것의 재시도는 세지 않는다. 익명 게스트를 여러 개 만드는 것까지 막지는 않는다.
 - **끊김 감지**(`lib/realtime-socket.ts`): 네트워크가 사라져도 close 이벤트는 한참 늦을 수 있어 앱이 직접 확인한다. 서버에서 20초 동안 아무 프레임이
   없거나 무언가를 보낸 직후 `ping`을 보내고, 8초 안에 어떤 프레임도 오지 않으면 끊긴 것으로 보고 새로 연결한다. 연결 후 15초 안에 `ready`가
   없어도 같다. 재연결 대기는 1초부터 두 배씩 최대 10초. 웹은 브라우저의 `online`이면 바로 연결하고 `offline`이면 확인한다. 아이폰은 네트워크
@@ -617,7 +623,7 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
   나눠 쓰므로 힙 `-Xmx384m`·SerialGC, 컨테이너 640MB로 제한한다. 항상 켜져 있어 콜드 스타트가 없다(앱의 미리 깨우기 `lib/warm-up.ts`는 남겨 둔다).
   서버 설정은 인스턴스의 `/opt/puny-chat/.env`(견본 `server/deploy/.env.example`)에만 있다. 사진은 인스턴스 디스크 `/opt/puny-chat/photos`
   (컨테이너 `/data/photos`, 서버 사용자 uid 1001 소유, `update.sh`가 만든다)에 둔다. 이 폴더를 마운트하지 않으면 이미지 안의 `/data`에 쓸 수 없어
-  사진만 `PHOTO_UNAVAILABLE`이 되고 나머지는 그대로 동작한다. `compose.yaml`·`update.sh`는 CI가 옮기지 않으므로 바꾸면 인스턴스에 손으로 복사한다. 방화벽은 80·443만 열고 SSH는 Lightsail 브라우저 연결만 허용한다.
+  사진만 `PHOTO_UNAVAILABLE`이 되고 나머지는 그대로 동작한다. `server/deploy`의 파일(compose·스크립트·systemd 단위)은 CI가 옮기지 않으므로 바꾸면 인스턴스에 손으로 복사한다(다르면 감시가 알린다). 방화벽은 80·443만 열고 SSH는 Lightsail 브라우저 연결만 허용한다.
   용량(2026-10 확인): 디스크 60GB 중 약 9.4GB 사용. 메모리는 컨테이너를 모두 합쳐 평소 약 0.8GB이고 스왑을 0.7GB쯤 차지하지만, 스왑을 오가는 양(`vmstat`의 si/so)이
   거의 0이고 OOM이 없어 4GB 요금제로 올리지 않는다. `update.sh`가 새 이미지를 받을 때마다 옛 이미지를 지운다. 같은 저장소의 이미지끼리 레이어를 나눠 써서
   `docker system df`의 회수 가능 크기는 실제보다 크게 나온다(옛 태그 세 개를 지워도 31MB였다).
@@ -635,6 +641,15 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
   운영 DB에 넣기 전에 확인하려면 임시 MongoDB 컨테이너(`--memory 400m`, `--wiredTigerCacheSizeGB 0.25`, `/backups` 마운트)에서 `mongorestore`로 넣고
   문서 수를 본 뒤 지운다. 인스턴스 커널(7.0)에서는 `mongod` 8.0이 뜨지 않으므로(SERVER-121912) 이 확인은 `mongo:8.2`로 한다. `mongodump`·`mongorestore`는
   클라이언트라 8.0 이미지로 된다. 같은 이유로 DB를 인스턴스 안으로 옮기려면 이 커널에서 뜨는 버전을 써야 한다.
+- **감시**: healthchecks.io(이미 다른 서비스에 쓰는 계정, 알림은 메일·텔레그램)의 체크 세 개에 인스턴스가 신호를 보내고, 신호가 끊기거나 `/fail`이 오면
+  알림이 온다. 주소는 인스턴스의 `/opt/puny-chat/healthchecks.env`(견본 `server/deploy/healthchecks.env.example`, Git 제외)에만 있다.
+  - `HC_SERVER`: `health.sh`(`puny-chat-health.timer`, 2분마다)가 공개 주소 `https://api.puny-chat.com/actuator/health`(DNS·Caddy·인증서·서버·DB)를
+    확인해 성공하면 보낸다. 세 번 연속(약 6분, 배포의 재시작은 1분 안에 끝난다) 실패하면 `/fail`로 바로 알리고, 그때 서버 자체도 응답하지 않으면
+    (`/actuator/health/liveness`, DB를 보지 않는다) `server`·`caddy` 컨테이너를 다시 시작한다. Atlas 장애처럼 다시 시작해도 낫지 않는 경우는 알리기만 한다.
+    인스턴스가 통째로 멈추면 신호가 끊겨 알림이 온다.
+  - `HC_BACKUP`: `backup.sh`가 시작(`/start`)과 성공·실패를 보낸다. 하루에 한 번 성공이 없으면 알림이 온다.
+  - `HC_DEPLOY_FILES`: 서버 이미지에 들어 있는 `server/deploy` 사본(`/app/deploy`)과 인스턴스의 파일·systemd 단위를 `health.sh`가 비교해 다르면
+    `/fail`과 다른 파일 이름을 보낸다. CI가 옮기지 않는 파일이라 커밋한 뒤 손으로 복사할 때까지 알림이 남는다.
 - **웹 앱**: Cloudflare Worker의 정적 자산(`app/wrangler.jsonc`). `pnpm build:web`이 `expo export -p web` 뒤에 `scripts/worker-assets.mjs`로 404 페이지와
   `_headers`(서비스 워커 no-cache 등), 배포 버전(`version.json`, 커밋 sha)을 만든다. 홈 화면에 추가한 웹 앱은 새로고침 버튼이 없고 닫아도
   멈춰 있을 뿐이라, 앱이 다시 보일 때(1분에 한 번까지) 번들에 넣은 버전과 `version.json`을 비교해 다르면 새로 불러온다(`lib/web-update`). 커스텀 도메인은 wrangler 배포가 붙인다(같은 이름의 CNAME이 있으면 안 된다).

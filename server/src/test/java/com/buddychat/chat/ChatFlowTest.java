@@ -4,12 +4,14 @@ import static com.buddychat.TestJwtConfiguration.token;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.buddychat.FlowTest;
+import com.buddychat.MutableClock;
 import com.buddychat.TestSocket;
 import com.buddychat.room.Invitation;
 import com.buddychat.room.Room;
 import com.buddychat.user.User;
 import com.buddychat.user.UserService;
 import java.net.URI;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +44,9 @@ class ChatFlowTest {
 
     @Autowired
     ChatService chatService;
+
+    @Autowired
+    MutableClock clock;
 
     private final List<TestSocket> sockets = new ArrayList<>();
     private WebTestClient http;
@@ -206,6 +211,23 @@ class ChatFlowTest {
 
         henry.send(Map.of("type", "ping")).expect("pong");
         henry.send(Map.of("nonsense", true)).expect("error");
+    }
+
+    @Test
+    void textsBeyondTheLimitAreRefusedUntilTheNextMinute() {
+        createRoom("henry");
+        User user = userService.getOrCreate("henry", "henry").block();
+        for (int i = 0; i < 120; i++) chatService.send(user, "l-" + i, "m" + i).block();
+        TestSocket henry = connect("henry");
+
+        JsonNode error = henry.send(Map.of("type", "send", "clientMessageId", "l-120", "text", "one more"))
+                .expect("error");
+        assertThat(error.get("code").asString()).isEqualTo("MESSAGE_RATE_LIMIT");
+        assertThat(error.get("clientMessageId").asString()).isEqualTo("l-120");
+
+        clock.set(clock.instant().plus(Duration.ofMinutes(1)));
+        henry.send(Map.of("type", "send", "clientMessageId", "l-120", "text", "one more"))
+                .expect("ack");
     }
 
     @Test

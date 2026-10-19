@@ -1,5 +1,6 @@
 package com.buddychat;
 
+import com.buddychat.chat.SendLimiter;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.springframework.context.ApplicationContext;
@@ -22,5 +23,6 @@ class CleanSlate implements BeforeEachCallback {
                 .flatMap(name -> mongo.remove(new Query(), name))
                 .blockLast();
         context.getBean(MutableClock.class).reset();
+        context.getBean(SendLimiter.class).clear();
     }
 }

@@ -48,5 +48,8 @@ and `.env` (from `.env.example`; the MongoDB address comes from `terraform outpu
 `puny-chat-update.service` and `.timer` into `/etc/systemd/system`, then `systemctl enable --now puny-chat-update.timer`.
 For the daily database backup, also copy `backup.sh` and install `puny-chat-backup.service` and `.timer` the same way
 (`systemctl enable --now puny-chat-backup.timer`).
+For monitoring, copy `health.sh`, install `puny-chat-health.service` and `.timer` (`systemctl enable --now
+puny-chat-health.timer`) and write the healthchecks.io ping addresses into `healthchecks.env` (from
+`healthchecks.env.example`, `chmod 600`). `health.sh` reports when any of these files differs from the image's copy.
 After the first image is pushed, set the GHCR package `puny-chat-server` to Public once. After changing
 `.env`, run `docker compose up -d` there. If the cluster is recreated, the new address goes into `.env` too.

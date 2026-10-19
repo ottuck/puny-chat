@@ -36,6 +36,7 @@ public class ChatService {
     private final RoomAccess access;
     private final UserService userService;
     private final PhotoStore photos;
+    private final SendLimiter limiter;
 
     ChatService(
             MessageRepository messages,
@@ -43,13 +44,15 @@ public class ChatService {
             Clock clock,
             RoomAccess access,
             UserService userService,
-            PhotoStore photos) {
+            PhotoStore photos,
+            SendLimiter limiter) {
         this.messages = messages;
         this.mongo = mongo;
         this.clock = clock;
         this.access = access;
         this.userService = userService;
         this.photos = photos;
+        this.limiter = limiter;
     }
 
     /** {@code created} is false when this was a resend of an already stored message. */
@@ -71,6 +74,10 @@ public class ChatService {
                 || text.isEmpty()
                 || text.length() > Message.MAX_TEXT_LENGTH) {
             return Mono.error(new ApiException(HttpStatus.BAD_REQUEST, "INVALID_MESSAGE"));
+        }
+        // Counted before knowing whether this is a resend: the limits leave room for those.
+        if (!limiter.tryAcquire(sender.id(), SendLimiter.Kind.TEXT, Instant.now(clock))) {
+            return Mono.error(new ApiException(HttpStatus.TOO_MANY_REQUESTS, "MESSAGE_RATE_LIMIT"));
         }
         Message message = Message.text(roomId, sender.id(), clientMessageId, text, Instant.now(clock));
         return access.requireMember(roomId, sender.id())
@@ -108,22 +115,25 @@ public class ChatService {
         Mono<SendResult> stored = Mono.defer(
                 () -> messages.findByRoomIdAndSenderIdAndClientMessageId(roomId, sender.id(), clientMessageId)
                         .map(existing -> new SendResult(existing, false)));
+        Mono<SendResult> created = Mono.defer(() -> photos.store(roomId, image)
+                .flatMap(photo -> messages.insert(Message.photo(
+                                roomId,
+                                sender.id(),
+                                clientMessageId,
+                                new Message.Photo(photo.id(), photo.width(), photo.height()),
+                                Instant.now(clock)))
+                        .map(saved -> new SendResult(saved, true))
+                        // No message points at the new file: it goes. A retry that ran at the
+                        // same time stored it first: keep that one.
+                        .onErrorResume(e -> photos.delete(roomId, photo.id())
+                                .then(e instanceof DuplicateKeyException ? stored : Mono.<SendResult>error(e)))));
+        // Only a new photo counts toward the limit: a retry of a stored one is answered without it.
+        Mono<SendResult> limited =
+                Mono.defer(() -> limiter.tryAcquire(sender.id(), SendLimiter.Kind.PHOTO, Instant.now(clock))
+                        ? created
+                        : Mono.error(new ApiException(HttpStatus.TOO_MANY_REQUESTS, "PHOTO_RATE_LIMIT")));
         return access.requireMember(roomId, sender.id())
-                .then(stored.switchIfEmpty(Mono.defer(() -> photos.store(roomId, image)
-                        .flatMap(photo -> messages.insert(Message.photo(
-                                        roomId,
-                                        sender.id(),
-                                        clientMessageId,
-                                        new Message.Photo(photo.id(), photo.width(), photo.height()),
-                                        Instant.now(clock)))
-                                .map(saved -> new SendResult(saved, true))
-                                // No message points at the new file: it goes. A retry that ran at the
-                                // same time stored it first: keep that one.
-                                .onErrorResume(e -> photos.delete(roomId, photo.id())
-                                        .then(
-                                                e instanceof DuplicateKeyException
-                                                        ? stored
-                                                        : Mono.<SendResult>error(e)))))))
+                .then(stored.switchIfEmpty(limited))
                 // The room may have been deleted while the image was encoded.
                 .flatMap(result -> access.requireMember(roomId, sender.id())
                         .thenReturn(result)
