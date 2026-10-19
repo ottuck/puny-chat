@@ -73,6 +73,8 @@ type Props = ComponentProps<typeof BuddyStage> & {
   album?: AlbumEntry[];
   // A new value opens the album (the chat's card for a buddy gone its own way).
   albumRequest?: string | null;
+  // A new value opens the mailbox (the chat's card for the top level: its letter is there).
+  mailRequest?: string | null;
   // The account and device now, for the mail that is only for that (docs/fun-improvements.md, 우편함).
   situation?: Situation;
   onTurnOnPush?: () => Promise<PushState>;
@@ -247,6 +249,7 @@ export function BuddyScene({
   onBathe,
   album = [],
   albumRequest = null,
+  mailRequest = null,
   situation,
   onTurnOnPush,
   ...props
@@ -306,7 +309,12 @@ export function BuddyScene({
     landed: () => void;
   } | null>(null);
   const [mailOpen, setMailOpen] = useState(false);
-  const mailbox = useMailbox(buddy.level, situation);
+  const mailbox = useMailbox(buddy.level, situation, album.length);
+  useEffect(() => {
+    if (!mailRequest) return;
+    const timer = setTimeout(() => setMailOpen(true), 0);
+    return () => clearTimeout(timer);
+  }, [mailRequest]);
 
   // The dream: only for an egg, only once on this device.
   const egg = buddy.stage === 'EGG';
@@ -538,6 +546,7 @@ export function BuddyScene({
         onClose={() => setMailOpen(false)}
         guest={situation?.guestDaysLeft != null}
         onTurnOnPush={onTurnOnPush}
+        onGraduate={buddy.grown ? props.onOpenDetail : undefined}
       />
     </View>
   );

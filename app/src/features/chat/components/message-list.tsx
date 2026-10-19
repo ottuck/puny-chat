@@ -39,8 +39,10 @@ type Props = {
   // Long-pressing a text or photo offers the reactions. Without it (the demo) a long press does nothing.
   onReact?: (messageId: string, reaction: MessageReaction | null) => void;
   onLoadOlder: () => void;
-  // The top level's card offers going its own way while the buddy is still the grown one.
-  onGraduate?: () => void;
+  // Lv.20's card offers changing the job while it may be changed (in the buddy's details).
+  onChangeJob?: () => void;
+  // The top level's card opens the mailbox, where its letter offers going its own way.
+  onOpenMail?: () => void;
   // A buddy gone its own way: its card opens the memory album.
   onOpenAlbum?: () => void;
 };
@@ -54,7 +56,8 @@ export function MessageList({
   onRetry,
   onReact,
   onLoadOlder,
-  onGraduate,
+  onChangeJob,
+  onOpenMail,
   onOpenAlbum,
 }: Props) {
   const { t, i18n } = useTranslation();
@@ -102,8 +105,8 @@ export function MessageList({
                 <EventCard
                   title={t('buddyEvent.GROWN', { buddy: buddyName })}
                   body={t('chat.grownBody')}
-                  action={onGraduate ? `🎓 ${t('buddy.graduate.button')}` : undefined}
-                  onAction={onGraduate}
+                  action={onChangeJob ? `🔄 ${t('buddy.jobCard.change')}` : undefined}
+                  onAction={onChangeJob}
                 />
               </View>
             );
@@ -113,9 +116,9 @@ export function MessageList({
               <View style={styles.spaced}>
                 <EventCard
                   title={t('buddyEvent.MAX_LEVEL', { buddy: buddyName, level: item.level })}
-                  body={`${t('chat.maxLevelThanks')} ${t('chat.maxLevelJob')}`}
-                  action={onGraduate ? `🎓 ${t('buddy.graduate.button')}` : undefined}
-                  onAction={onGraduate}
+                  body={`${t('chat.maxLevelThanks')} ${t('chat.maxLevelJob')} ${t('chat.maxLevelMail')}`}
+                  action={onOpenMail ? `💌 ${t('chat.readLetter')}` : undefined}
+                  onAction={onOpenMail}
                 />
               </View>
             );

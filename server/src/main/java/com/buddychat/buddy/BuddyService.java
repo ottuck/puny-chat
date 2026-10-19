@@ -477,8 +477,9 @@ public class BuddyService {
         Mono<Message> event;
         if (stage != BuddyRules.stage(levelBefore)) {
             event = chatService.recordBuddyEvent(roomId, "EVOLVED", null, eventKey(after, "evolved:" + stage));
-        } else if (level == BuddyRules.GRADUATE_AT && levelBefore < level) {
-            // Grown: it may go its own way now, or keep growing. A card with the way to do it.
+        } else if (level == BuddyRules.JOB_CHANGE_FROM && levelBefore < level) {
+            // Grown up: from here its job may be changed, and the room keeps growing up to the top level.
+            // A card with the way to it. ("GROWN" as it is stored.)
             event = chatService.recordBuddyEvent(
                     roomId, "GROWN", String.valueOf(level), null, eventKey(after, "grown:" + BuddyRules.expPerLevel()));
         } else if (level == BuddyRules.MAX_LEVEL && levelBefore < level) {

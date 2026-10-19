@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
@@ -26,6 +26,7 @@ export function MailboxSheet({
   onClose,
   guest = false,
   onTurnOnPush,
+  onGraduate,
 }: {
   visible: boolean;
   mails: (Mail & { date: string })[];
@@ -35,6 +36,8 @@ export function MailboxSheet({
   guest?: boolean;
   // Must run straight from the tap: the browser asks for permission only while handling one.
   onTurnOnPush?: () => Promise<PushState>;
+  // While the room's buddy may go its own way: opens its details, where that is done.
+  onGraduate?: () => void;
 }) {
   const colors = useColors();
   const { t, i18n } = useTranslation();
@@ -48,6 +51,14 @@ export function MailboxSheet({
       day: 'numeric',
     }).format(new Date(`${day}T00:00:00`));
   const [denied, setDenied] = useState(false);
+  // What to open once this sheet is gone: an iPhone shows one sheet at a time, so the next waits for
+  // this one to be dismissed.
+  const next = useRef<(() => void) | null>(null);
+  const dismissed = () => {
+    const then = next.current;
+    next.current = null;
+    then?.();
+  };
   const close = () => {
     setOpen(null);
     setDenied(false);
@@ -59,13 +70,23 @@ export function MailboxSheet({
       router.push('/settings');
       return;
     }
+    if (action === 'graduate') {
+      next.current = onGraduate ?? null;
+      close();
+      if (Platform.OS !== 'ios') dismissed();
+      return;
+    }
     onTurnOnPush?.()
       .then((next) => setDenied(next === 'denied'))
       .catch((e) => console.warn('turning on notifications failed', e));
   };
   const action = opened?.action;
   const showAction =
-    action === 'turnOnPush' ? !!onTurnOnPush && !denied : action === 'linkAccount' && guest;
+    action === 'turnOnPush'
+      ? !!onTurnOnPush && !denied
+      : action === 'graduate'
+        ? !!onGraduate
+        : action === 'linkAccount' && guest;
 
   return (
     <Modal
@@ -73,6 +94,7 @@ export function MailboxSheet({
       animationType="slide"
       presentationStyle="pageSheet"
       onRequestClose={close}
+      onDismiss={dismissed}
     >
       <WebFrame>
         <View style={[styles.screen, { backgroundColor: colors.background }]}>

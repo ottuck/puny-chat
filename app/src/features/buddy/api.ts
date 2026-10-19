@@ -26,7 +26,8 @@ export type BuddyJob = 'CHEF' | 'GARDENER' | 'DJ' | 'WRITER' | 'BARISTA';
 
 // Once a day, when both members have sent a message that day. server: BuddyRules.TOGETHER_EXP
 export const TOGETHER_EXP = 10;
-// From this level it may go its own way. server: BuddyRules.GRADUATE_AT
+// Grown up (the GROWN card): from here the job may be changed, and past it a day's level-ups fold
+// into one line. It goes its own way only at the top level (`grown`). server: BuddyRules.JOB_CHANGE_FROM
 export const GROWN_LEVEL = 20;
 // The level each stage after it starts at, and where its job is settled; told to the user as goals.
 // server: BuddyRules.BABY_AT, CHILD_AT, ADULT_AT, JOB_AT

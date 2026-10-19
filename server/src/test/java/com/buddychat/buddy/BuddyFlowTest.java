@@ -279,6 +279,7 @@ class BuddyFlowTest {
         BuddyView buddy = room("henry").buddy();
         assertThat(buddy.level()).isEqualTo(BuddyRules.MAX_LEVEL);
         assertThat(buddy.levelProgress()).isEqualTo(1.0);
+        assertThat(buddy.grown()).isTrue();
         assertThat(timeline("henry")).containsExactly("MAX_LEVEL");
     }
 
@@ -296,19 +297,24 @@ class BuddyFlowTest {
     }
 
     @Test
-    void growingUpSaysSoOnceAndItMayGoItsOwnWayBeforeTheTopLevel() {
+    void growingUpSaysSoOnceButItGoesItsOwnWayOnlyAtTheTopLevel() {
         String roomId = createRoom("henry").id();
-        setExp(roomId, BuddyRules.minExp(BuddyRules.GRADUATE_AT) - 1);
-        assertThat(room("henry").buddy().grown()).isFalse();
+        setExp(roomId, BuddyRules.minExp(BuddyRules.JOB_CHANGE_FROM) - 1);
 
         buddyService.onMessageSent(roomId).block();
         buddyService.onMessageSent(roomId).block();
 
         BuddyView buddy = room("henry").buddy();
-        assertThat(buddy.level()).isEqualTo(BuddyRules.GRADUATE_AT);
-        assertThat(buddy.grown()).isTrue();
+        assertThat(buddy.level()).isEqualTo(BuddyRules.JOB_CHANGE_FROM);
+        assertThat(buddy.grown()).isFalse();
         assertThat(timeline("henry")).containsExactly("GROWN");
-        assertThat(BuddyRules.GRADUATE_AT).isLessThan(BuddyRules.MAX_LEVEL);
+        assertThat(BuddyRules.GRADUATE_AT).isEqualTo(BuddyRules.MAX_LEVEL);
+
+        setExp(roomId, BuddyRules.minExp(BuddyRules.MAX_LEVEL) - 1);
+        assertThat(room("henry").buddy().grown()).isFalse();
+        post("henry", "/api/rooms/me/buddy/graduate", Map.of("buddyName", "Mochi"))
+                .expectStatus()
+                .isEqualTo(409);
     }
 
     @Test

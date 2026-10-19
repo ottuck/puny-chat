@@ -81,9 +81,11 @@
     "emptySolo": "{{buddy}} has hatched!\nInvite a friend to raise it together.",
     "emptySoloHint": "While you wait for a friend, try sending a message.\n{{buddy}} grows as you chat.",
     "emptyDuo": "You and {{partner}} are together now.\nSay hello!",
-    "grownBody": "If it goes its own way it stays in the album and a new egg comes. Keep raising it to the top level (Lv.60) instead and the room keeps getting new and better things every level: visitors, new floors, a fruit tree. You can also change its job once now, in the buddy details.",
+    "grownBody": "You can change its job once each at Lv.20, 30, 40 and 50, so it can try all five. Up to the top level (Lv.60) the room keeps getting new and better things every level: visitors, new floors, a fruit tree. Raise it all the way and it can go its own way, into the memory album.",
     "maxLevelThanks": "Thank you so much! New characters, a collection and more are on the way. Stay tuned!",
     "maxLevelJob": "From now on you can change its job any time in the buddy details.",
+    "readLetter": "Read the letter",
+    "maxLevelMail": "A letter came to the mailbox.",
     "jobChangeOpen": "🔄 the job can be changed once",
     "togetherBody": "{{buddy}} is thrilled. When you both send a message on the same day, you get it once a day.",
     "jobChangeRule": "The job can be changed once each at Lv.20, 30, 40 and 50, and any time from Lv.60.",
@@ -224,7 +226,7 @@
     },
     "graduate": {
       "title": "Its own way",
-      "body": "{{buddy}} is all grown up. Let it go its own way: it stays in the album, and a new egg comes to the stage. It takes its things when it moves out, so the room is decorated again from scratch. Keep raising it to Lv.60 instead and the room keeps getting new and better things every level.",
+      "body": "{{buddy}} has grown all the way to the top. Let it go its own way: it stays in the memory album, and a new egg comes to the stage. It takes its things when it moves out, so the room is decorated again from scratch. There's no hurry: keep living together and let it go when you're ready.",
       "namePlaceholder": "Name for the new egg",
       "button": "Let it go its own way",
       "confirmTitle": "Let {{buddy}} go its own way?",
@@ -394,7 +396,7 @@
     "LEVELED_UP": "{{buddy}} leveled up! Lv.{{level}} ⬆️",
     "LEVELED_UP_REWARD": "{{buddy}} leveled up! Lv.{{level}} ⬆️ 🎁 {{reward}}",
     "EVOLVED": "{{buddy}} evolved! ✨",
-    "GROWN": "🎓 {{buddy}} is all grown up! It can go its own way now.",
+    "GROWN": "🌟 {{buddy}} is a grown-up now! Its job can be changed from here.",
     "MAX_LEVEL": "🎉 {{buddy}} reached the top level, Lv.{{level}}!",
     "GRADUATED": "🎓 {{name}} went its own way and is in the album now. A new egg arrived!",
     "TOGETHER": "🤝 You both showed up today! Together bonus +{{exp}} EXP",
@@ -524,7 +526,7 @@
     "title": "Raising your buddy",
     "banner": {
       "title": "🥚 How to raise your buddy",
-      "body": "It grows as you chat and take care of it. At level 12 it gets a job based on how you raised it, and from level 20 it can go its own way.",
+      "body": "It grows as you chat and take care of it. At level 12 it gets a job based on how you raised it, and once it reaches the top level, 60, it can go its own way.",
       "open": "See the guide ›"
     },
     "care": {
@@ -554,7 +556,7 @@
     },
     "graduate": {
       "title": "🎓 Its own way",
-      "top": "From level 20 you can let your buddy go its own way from its details. It is your choice, you can keep raising it: up to the top level, 60, the room gets new and better things every level, and EXP keeps counting after it.",
+      "top": "Once it reaches the top level, 60, you can let your buddy go its own way from its details or from the letter in the mailbox. It is your choice, you can keep living together: up to 60 the room gets new and better things every level, and EXP keeps counting after it.",
       "album": "It stays as a photo in the memory album on the stage. A new egg comes to the stage.",
       "keep": "It takes its things when it moves out. The new egg’s room starts bare and fills up again."
     }
@@ -663,7 +665,7 @@
     "mail": {
       "topLevelLetter": {
         "title": "Thank you for coming all the way",
-        "body": "Hi, I'm the one who made puny-chat.\n\nThank you so much for getting here. The top level isn't somewhere you reach in a day or two, so if you're reading this, you two must have been talking every day for quite a while.\n\nGuests at the window, books filling the shelf one by one, a kotatsu in winter: this room was built from your conversations. You now have every one of the things I made for it.\n\nFrom now on you can change the job any time. You can keep living together just like this, or, when you're ready, let your buddy go its own way and start again with a new egg. Buddies who move out stay in the memory album.\n\nIf there's anything you'd like, or anything that bothers you, tell me any time through \"Help & reports\" in settings. I read every one.\n\nI hope today is full of good talks.",
+        "body": "Hi, I'm the one who made puny-chat.\n\nThank you so much for getting here. The top level isn't somewhere you reach in a day or two, so if you're reading this, you two must have been talking every day for quite a while.\n\nGuests at the window, books filling the shelf one by one, a kotatsu in winter: this room was built from your conversations. You now have every one of the things I made for it.\n\nFrom now on you can change the job any time. You can keep living together just like this, or, when you're ready, let your buddy go its own way with the button below and start again with a new egg. Buddies who move out stay in the memory album.\n\nIf there's anything you'd like, or anything that bothers you, tell me any time through \"Help & reports\" in settings. I read every one.\n\nI hope today is full of good talks.",
         "from": "The puny-chat developer"
       },
       "roomUpdate": {
@@ -704,7 +706,8 @@
     },
     "action": {
       "linkAccount": "Link an account",
-      "turnOnPush": "Turn on notifications"
+      "turnOnPush": "Turn on notifications",
+      "graduate": "🎓 Let it go its own way"
     }
   },
   "room": {
