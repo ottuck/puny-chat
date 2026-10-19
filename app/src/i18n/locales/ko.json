@@ -72,6 +72,8 @@
     "photo": "사진 보내기",
     "photoMessage": "사진",
     "photoOpen": "사진 크게 보기",
+    "photoUnreadableTitle": "사진을 보낼 수 없어요",
+    "photoUnreadable": "이 사진을 읽지 못했어요. 다른 사진을 골라 주세요.",
     "online": "접속 중",
     "offline": "접속 안 함",
     "emptySolo": "{{buddy, 이가}} 태어났어요!\n친구를 초대해서 같이 키워 볼까요?",

@@ -76,6 +76,7 @@ type ChatScreenProps = {
 };
 
 function ChatScreen({ me, room, onRoomLost, onRoomChanged, onGuideSeen }: ChatScreenProps) {
+  const { t } = useTranslation();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const care = useBuddy(room.buddy);
@@ -102,7 +103,11 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged, onGuideSeen }: ChatSc
       .then((photo) => {
         if (photo) chat.sendPhoto(photo);
       })
-      .catch((e: unknown) => console.warn('picking a photo failed', e));
+      .catch((e: unknown) => {
+        // A file the browser cannot read (a HEIC photo on Windows, a broken file).
+        console.warn('picking a photo failed', e);
+        notice(t('chat.photoUnreadableTitle'), t('chat.photoUnreadable'));
+      });
   };
   const [buddyOpen, setBuddyOpen] = useState(false);
   const [partnerOpen, setPartnerOpen] = useState(false);

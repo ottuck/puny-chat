@@ -72,6 +72,8 @@
     "photo": "Send a photo",
     "photoMessage": "Photo",
     "photoOpen": "View photo",
+    "photoUnreadableTitle": "Can't send this photo",
+    "photoUnreadable": "This photo couldn't be read. Please choose another one.",
     "online": "Online",
     "offline": "Offline",
     "emptySolo": "{{buddy}} has hatched!\nInvite a friend to raise it together.",
