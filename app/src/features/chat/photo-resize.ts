@@ -24,3 +24,6 @@ export async function resizePhoto(
   const saved = await image.saveAsync({ format: SaveFormat.JPEG, compress: quality });
   return { uri: saved.uri, width: saved.width, height: saved.height };
 }
+
+// The resized file sits in the app's cache, which the system clears: nothing to give back here.
+export function releasePhoto(_uri: string) {}

@@ -35,3 +35,8 @@ function load(uri: string): Promise<HTMLImageElement> {
     image.src = uri;
   });
 }
+
+// The resized photo is held in memory under a blob: address until it is let go.
+export function releasePhoto(uri: string) {
+  if (uri.startsWith('blob:')) URL.revokeObjectURL(uri);
+}
