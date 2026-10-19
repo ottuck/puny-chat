@@ -14,8 +14,8 @@ import { useColors } from '@/theme';
 import { type Frame, PixelSprite } from '../pixel/pixel-sprite';
 
 // Reaching the top level (docs/fun-improvements.md, 최고 레벨): light coming down from the sky onto
-// the buddy, white feathers drifting down over the room, and three notes one after another: the top
-// level reached, a letter from the developer in the mailbox (tap to read), and the job free to change.
+// the buddy, white feathers drifting down over the room, and notes one after another: the top level
+// reached, and the job free to change.
 
 const NATIVE_DRIVER = Platform.OS !== 'web';
 // Each note shows this long; the whole moment lasts while they do.
@@ -274,7 +274,7 @@ function Feather({
 // --- The notes ---
 
 // One after another at the top of the stage, each fading in and out. A note with `onPress` can be
-// tapped (the letter: opens the mailbox).
+// tapped.
 export function TopLevelNotes({ notes }: { notes: { text: string; onPress?: () => void }[] }) {
   const colors = useColors();
   const [step, setStep] = useState(0);
