@@ -60,8 +60,50 @@ const REACTIONS: ReactionKind[] = [
   'joined',
 ];
 
-// Levels where the room gets something new (the rewards), for looking at each step.
-const LEVELS = [1, ...REWARDS.map((entry) => entry.level)];
+// The level grid: every level up to the top, and what comes at each besides the room's rewards
+// (docs/PROJECT.md, 성장). server: BuddyRules.BABY_AT, CHILD_AT, ADULT_AT, JOB_AT, JOB_CHANGE_FROM, MAX_LEVEL
+const MAX_LEVEL = 60;
+const MILESTONES: Record<number, string> = {
+  3: '🐣 BABY',
+  5: '🌱 CHILD',
+  10: '🌸 ADULT',
+  12: '💼 job settled',
+  20: '🔄 job change',
+  30: '🔄 job change',
+  40: '🔄 job change',
+  50: '🔄 job change',
+  60: '🎓 top · own way',
+};
+const REWARD_AT = new Map(REWARDS.map((entry) => [entry.level, entry.reward]));
+// Each stage's band on the grid.
+const STAGE_TINT: Record<BuddyStage, string> = {
+  EGG: '#F4ECDC',
+  BABY: '#FBE4D8',
+  CHILD: '#E4F0DD',
+  ADULT: '#E1EBF4',
+};
+const stageAt = (level: number): BuddyStage =>
+  level >= LEVEL.ADULT
+    ? 'ADULT'
+    : level >= LEVEL.CHILD
+      ? 'CHILD'
+      : level >= LEVEL.BABY
+        ? 'BABY'
+        : 'EGG';
+
+// As the server has it (BuddyRules.canChangeJob, jobChangeAt): once in each of 20–29, 30–39, 40–49 and
+// 50–59 (`changedAt`: the level of the last change), any time from the top, and a first job any time.
+function jobChange(level: number, job: BuddyJob | null, changedAt: number | null) {
+  const window = (l: number) => Math.floor(l / 10);
+  const can =
+    level >= 12 &&
+    (!job ||
+      level >= MAX_LEVEL ||
+      (level >= 20 && (changedAt === null || window(changedAt) < window(level))));
+  const at =
+    level >= 12 && !can ? Math.min(MAX_LEVEL, Math.max(20, (window(level) + 1) * 10)) : null;
+  return { canChangeJob: can, jobChangeAt: at };
+}
 // The room's window, lamp and light by the hour: morning, day, dusk, night.
 const HOURS = [7, 12, 18, 22];
 // Days for the room's seasonal things (stage-decor.tsx, SEASONAL): the New Year (kotatsu, mochi),
@@ -74,11 +116,14 @@ function buddyOf(
   hungry: boolean,
   poops: number,
   level: number | null,
+  jobChangedAt: number | null = null,
 ): BuddyView {
+  const shown = level ?? LEVEL[stage];
+  const adultJob = stage === 'ADULT' ? job : null;
   return {
     name: 'Preview',
     exp: 0,
-    level: level ?? LEVEL[stage],
+    level: shown,
     stage,
     levelProgress: 0.4,
     fullness: hungry ? 10 : 100,
@@ -88,15 +133,12 @@ function buddyOf(
     canClean: poops > 0,
     // As the server would have it (BuddyRules.GRADUATE_AT): the details and the top level's letter
     // offer going its own way.
-    grown: (level ?? 0) >= 60,
+    grown: shown >= MAX_LEVEL,
     talkedToday: [],
     togetherToday: false,
-    job: stage === 'ADULT' ? job : null,
+    job: adultJob,
     leaning: null,
-    // As the server would have it for a job never changed (BuddyRules.canChangeJob), to see the notes.
-    canChangeJob: stage === 'ADULT' && !!job && (level ?? 0) >= 20,
-    jobChangeAt:
-      stage === 'ADULT' && job && (level ?? LEVEL[stage]) >= 12 && (level ?? 0) < 20 ? 20 : null,
+    ...jobChange(shown, adultJob, jobChangedAt),
   };
 }
 
@@ -134,10 +176,18 @@ function Chip({
 const FoldAll = createContext({ open: false, run: 0 });
 
 // Folded until its title is tapped, so the stage above stays in view.
-function Group({ title, children }: { title: string; children: ReactNode }) {
+function Group({
+  title,
+  startOpen = false,
+  children,
+}: {
+  title: string;
+  startOpen?: boolean;
+  children: ReactNode;
+}) {
   const colors = useColors();
   const all = useContext(FoldAll);
-  const [open, setOpen] = useState(all.open);
+  const [open, setOpen] = useState(all.open || startOpen);
   const [run, setRun] = useState(all.run);
   if (all.run !== run) {
     setRun(all.run);
@@ -151,6 +201,60 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
         </Text>
       </Pressable>
       {open ? <View style={styles.row}>{children}</View> : null}
+    </View>
+  );
+}
+
+// Every level up to the top, ten to a row and tinted by stage: a ring where something happens (a new
+// stage, the job, a chance to change it, the top), a dot where the room gets a reward. Under it, what
+// the chosen level brings, and a step either way.
+function LevelGrid({ level, onChoose }: { level: number; onChoose: (level: number) => void }) {
+  const colors = useColors();
+  const reward = REWARD_AT.get(level);
+  const notes = [MILESTONES[level], reward ? `🎁 ${reward}` : null].filter(Boolean);
+  return (
+    <View style={styles.levels}>
+      <View style={styles.grid}>
+        {Array.from({ length: MAX_LEVEL }, (_, i) => i + 1).map((l) => {
+          const chosen = l === level;
+          return (
+            <View key={l} style={styles.slot}>
+              <Pressable
+                onPress={() => onChoose(l)}
+                accessibilityRole="button"
+                accessibilityLabel={`Lv.${l}`}
+                style={[
+                  styles.cell,
+                  {
+                    backgroundColor: chosen ? colors.accent : STAGE_TINT[stageAt(l)],
+                    borderColor: MILESTONES[l] ? colors.accent : 'transparent',
+                  },
+                ]}
+              >
+                <Text style={[styles.cellText, { color: chosen ? colors.onAccent : '#4A3B33' }]}>
+                  {l}
+                </Text>
+                {REWARD_AT.has(l) ? (
+                  <View
+                    style={[styles.dot, { backgroundColor: chosen ? colors.onAccent : '#B9A48F' }]}
+                  />
+                ) : null}
+              </Pressable>
+            </View>
+          );
+        })}
+      </View>
+      <View style={styles.levelBar}>
+        <Chip label="‹" onPress={() => onChoose(Math.max(1, level - 1))} />
+        <Text style={[styles.levelNote, { color: colors.text }]} numberOfLines={2}>
+          <Text style={styles.levelName}>Lv.{level}</Text> {stageAt(level)}
+          {notes.length > 0 ? ` · ${notes.join(' · ')}` : ''}
+        </Text>
+        <Chip label="›" onPress={() => onChoose(Math.min(MAX_LEVEL, level + 1))} />
+      </View>
+      <Text style={[styles.legend, { color: colors.textMuted }]}>
+        ring: stage · job · job change · top — dot: reward — tint: EGG / BABY / CHILD / ADULT
+      </Text>
     </View>
   );
 }
@@ -226,12 +330,27 @@ function Preview() {
   const linkedCut = params.scene?.startsWith('cut') ? Number(params.scene.slice(3)) - 1 : null;
   const linkedSeason = SEASONS.find((s) => s === params.season);
   const { height: windowHeight } = useWindowDimensions();
-  const [stage, setStage] = useState<BuddyStage>(STAGES.find((s) => s === params.stage) ?? 'ADULT');
+  const [stage, setStage] = useState<BuddyStage>(
+    STAGES.find((s) => s === params.stage) ??
+      (params.level ? stageAt(Number(params.level)) : 'ADULT'),
+  );
   // Overrides the level the stage implies (null: the stage's first level).
   const [level, setLevel] = useState<number | null>(params.level ? Number(params.level) : null);
   const [job, setJob] = useState<BuddyJob | null>(
     params.job === 'none' ? null : (JOB_ORDER.find((j) => j === params.job) ?? 'CHEF'),
   );
+  // The level its job was last changed at, for when it may be changed again (null: never).
+  const [jobChangedAt, setJobChangedAt] = useState<number | null>(null);
+  const shownLevel = level ?? LEVEL[stage];
+  const goTo = (next: number) => {
+    setStage(stageAt(next));
+    setLevel(next);
+  };
+  const leave = () => {
+    setStage('EGG');
+    setLevel(null);
+    setJobChangedAt(null);
+  };
   const [hungry, setHungry] = useState(false);
   const [poops, setPoops] = useState(0);
   const [cue, setCue] = useState<Cue | null>(null);
@@ -247,10 +366,7 @@ function Preview() {
   const leaves = params.leave === '1';
   useEffect(() => {
     if (!leaves) return;
-    const timer = setTimeout(() => {
-      setStage('EGG');
-      setLevel(null);
-    }, 2000);
+    const timer = setTimeout(leave, 2000);
     return () => clearTimeout(timer);
   }, [leaves]);
   const [reaction, setReaction] = useState<Reaction | null>(null);
@@ -304,7 +420,7 @@ function Preview() {
               key={dreamRun}
               dreams={dreamRun > 0 ? 'always' : false}
               startInBath={params.scene === 'bath'}
-              buddy={buddyOf(stage, job, hungry, poops, level)}
+              buddy={buddyOf(stage, job, hungry, poops, level, jobChangedAt)}
               busy={false}
               height={stageHeight}
               // As in the room: the change at once, and the buddy's reaction with it (use-buddy.ts).
@@ -347,13 +463,16 @@ function Preview() {
           </View>
           <BuddySheet
             visible={detail}
-            buddy={buddyOf(stage, job, hungry, poops, level)}
+            buddy={buddyOf(stage, job, hungry, poops, level, jobChangedAt)}
             onClose={() => setDetail(false)}
-            onChangeJob={async (next) => setJob(next)}
+            onChangeJob={async (next) => {
+              // A first job does not count, as on the server.
+              if (job && stage === 'ADULT') setJobChangedAt(shownLevel);
+              setJob(next);
+            }}
             onGraduate={async () => {
               setDetail(false);
-              setStage('EGG');
-              setLevel(null);
+              leave();
             }}
           />
           <Group title="scene">
@@ -368,13 +487,7 @@ function Preview() {
             ))}
           </Group>
           <Group title="moving out (from a hatched buddy)">
-            <Chip
-              label="go its own way"
-              onPress={() => {
-                setStage('EGG');
-                setLevel(null);
-              }}
-            />
+            <Chip label="go its own way" onPress={leave} />
           </Group>
           <Group title="hour (window, clock, lamp, fireflies)">
             <Chip label="now" onPress={() => setHour(undefined)} active={hour === undefined} />
@@ -403,31 +516,26 @@ function Preview() {
               />
             ))}
           </Group>
-          <Group title="stage">
-            {STAGES.map((s) => (
-              <Chip
-                key={s}
-                label={s}
-                onPress={() => {
-                  setStage(s);
-                  setLevel(null);
-                }}
-                active={s === stage}
-              />
-            ))}
-          </Group>
-          <Group title="level (the room's rewards)">
-            {LEVELS.map((l) => (
-              <Chip key={l} label={`Lv.${l}`} onPress={() => setLevel(l)} active={l === level} />
-            ))}
+          <Group title={`level · Lv.${shownLevel} ${stage}`} startOpen>
+            <LevelGrid level={shownLevel} onChoose={goTo} />
           </Group>
           <Group title="job (ADULT)">
-            <Chip label="none" onPress={() => setJob(null)} active={job === null} />
+            <Chip
+              label="none"
+              onPress={() => {
+                setJob(null);
+                setJobChangedAt(null);
+              }}
+              active={job === null}
+            />
             {JOB_ORDER.map((j) => (
               <Chip
                 key={j}
                 label={`${JOB_ICON[j]} ${j}`}
-                onPress={() => setJob(j)}
+                onPress={() => {
+                  setJob(j);
+                  setJobChangedAt(null);
+                }}
                 active={j === job}
               />
             ))}
@@ -492,4 +600,21 @@ const styles = StyleSheet.create({
   poseName: { fontSize: 10 },
   held: { marginHorizontal: 12, borderRadius: 20, overflow: 'hidden' },
   chip: { borderWidth: 1, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6 },
+  levels: { flex: 1, gap: 8 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -2 },
+  // Ten to a row, so each row ends on a ten (the job's chances, the top).
+  slot: { width: '10%', padding: 2 },
+  cell: {
+    aspectRatio: 1,
+    borderRadius: 8,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cellText: { fontSize: 11, fontWeight: '600', fontVariant: ['tabular-nums'] },
+  dot: { position: 'absolute', bottom: 3, width: 4, height: 4, borderRadius: 2 },
+  levelBar: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  levelNote: { flex: 1, fontSize: 13, textAlign: 'center' },
+  levelName: { fontWeight: '700' },
+  legend: { fontSize: 11 },
 });
