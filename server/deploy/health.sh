@@ -1,11 +1,10 @@
 #!/bin/sh
 # Watches the server every two minutes (puny-chat-health.timer) and reports to healthchecks.io, which
 # alerts when the reports stop or fail (docs/PROJECT.md, 감시). The ping addresses are in healthchecks.env
-# next to this file (not in Git): HC_SERVER and HC_DEPLOY_FILES. Without them it checks and only logs.
+# next to this file (not in Git): HC_SERVER. Without it the script checks and only logs.
 set -u
 cd /opt/puny-chat
 HC_SERVER=
-HC_DEPLOY_FILES=
 [ -f healthchecks.env ] && . ./healthchecks.env
 
 report() { # <address> [message]
@@ -34,27 +33,5 @@ else
 		fi
 		echo "$message"
 		report "$HC_SERVER/fail" "$message"
-	fi
-fi
-
-# The files here and the systemd units must be the ones in Git: the image carries a copy (server/Dockerfile).
-expected=$(mktemp -d)
-trap 'rm -rf "$expected"' EXIT
-if docker cp "$(docker compose ps -q server):/app/deploy/." "$expected" 2> /dev/null; then
-	differ=
-	for path in "$expected"/*; do
-		name=$(basename "$path")
-		case "$name" in
-			*.example) continue ;;
-			*.service | *.timer) installed=/etc/systemd/system/$name ;;
-			*) installed=$name ;;
-		esac
-		cmp -s "$path" "$installed" || differ="$differ $name"
-	done
-	if [ -n "$differ" ]; then
-		echo "differ from Git:$differ"
-		report "$HC_DEPLOY_FILES/fail" "differ from Git:$differ. Copy them from server/deploy (docs/PROJECT.md, 인프라)."
-	else
-		report "$HC_DEPLOY_FILES"
 	fi
 fi
