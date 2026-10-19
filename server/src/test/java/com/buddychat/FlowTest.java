@@ -32,7 +32,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
             "buddychat.push.grace-period=1s",
             "buddychat.push.receipt-delay=300ms",
             "buddychat.support.email=operator@example.com",
-            "buddychat.support.from=sender@example.com"
+            "buddychat.support.from=sender@example.com",
+            "buddychat.photos.dir=build/test-photos",
+            "buddychat.photos.min-free-space=0B"
         })
 @Import({
     TestcontainersConfiguration.class,

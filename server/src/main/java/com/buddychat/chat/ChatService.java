@@ -35,18 +35,21 @@ public class ChatService {
     private final Clock clock;
     private final RoomAccess access;
     private final UserService userService;
+    private final PhotoStore photos;
 
     ChatService(
             MessageRepository messages,
             ReactiveMongoTemplate mongo,
             Clock clock,
             RoomAccess access,
-            UserService userService) {
+            UserService userService,
+            PhotoStore photos) {
         this.messages = messages;
         this.mongo = mongo;
         this.clock = clock;
         this.access = access;
         this.userService = userService;
+        this.photos = photos;
     }
 
     /** {@code created} is false when this was a resend of an already stored message. */
@@ -90,7 +93,51 @@ public class ChatService {
     }
 
     /**
-     * Sets the user's reaction on a text message in their room ({@code reaction} null takes it off).
+     * Stores a photo message in the sender's room (docs/PROJECT.md, 사진): the image is written again
+     * as WebP, then the message is stored. Like {@link #send}, the same {@code clientMessageId} again
+     * returns the stored message, without decoding the image a second time.
+     */
+    public Mono<SendResult> sendPhoto(User sender, String clientMessageId, byte[] image) {
+        String roomId = sender.roomId();
+        if (roomId == null) return Mono.error(new ApiException(HttpStatus.CONFLICT, "ROOM_NOT_FOUND"));
+        if (clientMessageId == null
+                || clientMessageId.isBlank()
+                || clientMessageId.length() > MAX_CLIENT_MESSAGE_ID_LENGTH) {
+            return Mono.error(new ApiException(HttpStatus.BAD_REQUEST, "INVALID_PHOTO"));
+        }
+        Mono<SendResult> stored = Mono.defer(
+                () -> messages.findByRoomIdAndSenderIdAndClientMessageId(roomId, sender.id(), clientMessageId)
+                        .map(existing -> new SendResult(existing, false)));
+        return access.requireMember(roomId, sender.id())
+                .then(stored.switchIfEmpty(Mono.defer(() -> photos.store(roomId, image)
+                        .flatMap(photo -> messages.insert(Message.photo(
+                                        roomId,
+                                        sender.id(),
+                                        clientMessageId,
+                                        new Message.Photo(photo.id(), photo.width(), photo.height()),
+                                        Instant.now(clock)))
+                                .map(saved -> new SendResult(saved, true))
+                                // A retry that ran at the same time stored it first: keep that one.
+                                .onErrorResume(
+                                        DuplicateKeyException.class,
+                                        e -> photos.delete(roomId, photo.id()).then(stored))))))
+                // The room may have been deleted while the image was encoded.
+                .flatMap(result -> access.requireMember(roomId, sender.id())
+                        .thenReturn(result)
+                        .onErrorResume(
+                                ApiException.class,
+                                e -> (result.created() ? forget(result.message()) : Mono.<Void>empty())
+                                        .then(Mono.error(e))));
+    }
+
+    private Mono<Void> forget(Message message) {
+        Message.Photo photo = message.photo();
+        return messages.deleteById(message.id())
+                .then(photo == null ? Mono.empty() : photos.delete(message.roomId(), photo.id()));
+    }
+
+    /**
+     * Sets the user's reaction on a text or photo message in their room ({@code reaction} null takes it off).
      * It says the state to end in rather than toggling, so a repeat changes nothing. Emits the message
      * as stored afterwards.
      */
@@ -109,7 +156,7 @@ public class ChatService {
                 .and("roomId")
                 .is(roomId)
                 .and("type")
-                .is(Message.Type.TEXT));
+                .in(Message.Type.TEXT, Message.Type.PHOTO));
         Update update = reaction == null ? new Update().unset(field) : new Update().set(field, reaction);
         return access.requireMember(roomId, user.id())
                 .then(mongo.findAndModify(
@@ -251,11 +298,12 @@ public class ChatService {
                 .then(access.invalidateHistory(List.of(roomId), null));
     }
 
-    /** Removes a deleted room's timeline and read marks. */
+    /** Removes a deleted room's timeline, read marks and photos. */
     public Mono<Void> deleteRoomHistory(String roomId) {
         return Mono.when(
                 mongo.remove(query(where("roomId").is(roomId)), Message.class),
-                mongo.remove(query(where("roomId").is(roomId)), ReadMark.class));
+                mongo.remove(query(where("roomId").is(roomId)), ReadMark.class),
+                photos.deleteRoom(roomId));
     }
 
     /** Removes how far the user has read, in any room (account deletion). */
@@ -263,7 +311,10 @@ public class ChatService {
         return mongo.remove(query(where("userId").is(userId)), ReadMark.class).then();
     }
 
-    /** Deletes authored text, reactions and named system notes in every room, not just the current one. */
+    /**
+     * Deletes authored text and photos, reactions and named system notes in every room, not just the
+     * current one. Photo files go before their messages, so a retry still finds them.
+     */
     public Mono<Void> deleteUserHistory(String userId) {
         String reaction = "reactions." + userId;
         Criteria authored = new Criteria()
@@ -282,7 +333,13 @@ public class ChatService {
                                 new Update().addToSet("roomIds").each(roomIds.toArray()),
                                 HistoryDeletion.class)
                         .then(mongo.findById(userId, HistoryDeletion.class)))
-                .flatMap(deletion -> mongo.remove(
+                .flatMap(deletion -> mongo.find(
+                                query(where("senderId").is(userId).and("type").is(Message.Type.PHOTO)), Message.class)
+                        .concatMap(message -> message.photo() == null
+                                ? Mono.<Void>empty()
+                                : photos.delete(
+                                        message.roomId(), message.photo().id()))
+                        .then(mongo.remove(
                                 query(new Criteria()
                                         .orOperator(
                                                 where("senderId").is(userId),
@@ -290,7 +347,7 @@ public class ChatService {
                                                         .is(Message.Type.SYSTEM)
                                                         .and("actorId")
                                                         .is(userId))),
-                                Message.class)
+                                Message.class))
                         .then(mongo.updateMulti(
                                 query(where("actorId").is(userId)), new Update().unset("actorId"), Message.class))
                         .then(mongo.updateMulti(
@@ -303,7 +360,7 @@ public class ChatService {
     /** A bounded copy for a report, kept separately before the conversation is deleted. */
     public Mono<List<Message>> reportEvidence(String roomId) {
         return mongo.find(
-                        query(where("roomId").is(roomId).and("type").is(Message.Type.TEXT))
+                        query(where("roomId").is(roomId).and("type").in(Message.Type.TEXT, Message.Type.PHOTO))
                                 .with(Sort.by(Sort.Direction.DESC, "_id"))
                                 .limit(50),
                         Message.class)

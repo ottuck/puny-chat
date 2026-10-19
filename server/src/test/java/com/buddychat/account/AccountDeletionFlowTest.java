@@ -83,6 +83,7 @@ class AccountDeletionFlowTest {
                         null,
                         "h-1",
                         java.time.Instant.now(),
+                        null,
                         null))
                 .block();
         yuki.send(Map.of("type", "send", "clientMessageId", "c-1", "text", "bye"))
@@ -148,6 +149,7 @@ class AccountDeletionFlowTest {
                         yukiId,
                         "care-event",
                         java.time.Instant.now(),
+                        null,
                         null))
                 .block();
 

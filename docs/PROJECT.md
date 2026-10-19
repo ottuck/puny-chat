@@ -113,7 +113,7 @@ Yuki:  니가 치워
   오면 채팅으로 보낸다(시작한 뒤 브라우저 뒤로가기).
   혼자 방에는 나가기가 없다: 친구 코드로 참가하면 확인 후 저절로 나간다. 신고하고 내보내기는 확인 후 상대를 퇴장시키고 **두 사람의 기존 대화 전체를 지우고** 기존 초대를
   모두 무효화한다. 실행한 사람에게 Buddy와 앨범이 남는다. 새 초대로 다시 연결할 수 있고, 서비스 전체 이용 제한이나 영구 차단 목록은 없다.
-- 신고만 삭제 전 최근 텍스트 최대 50개를 운영자 검토용으로 90일 보관한다. 전용 관리자 페이지나 콘텐츠 사전 필터는 없다(운영은 Gmail과 DB 콘솔, 아래 운영).
+- 신고만 삭제 전 최근 메시지 최대 50개(사진은 보냈다는 표시만)를 운영자 검토용으로 90일 보관한다. 전용 관리자 페이지나 콘텐츠 사전 필터는 없다(운영은 Gmail과 DB 콘솔, 아래 운영).
 
 ## MVP 범위
 
@@ -121,16 +121,16 @@ Yuki:  니가 치워
 | --- | --- | --- |
 | 인증 | 게스트 시작, 이름, 계정 연결(웹·아이폰 Google·Apple), 로그아웃, 계정 삭제 | 됨. 아이폰 Apple·Google은 실기기 확인 전(Google은 새 개발용 빌드 필요), 웹 Apple은 Services ID 웹 설정 전 |
 | Room | 만들기, solo, 초대 코드·링크, 참가, 최대 2명, 나가기 | 됨 |
-| Chat | 실시간 텍스트, 히스토리, 재연결, 중복 방지, 읽음, 입력 중, 접속 표시, 메시지 반응(👍 😢 😮) | 됨 |
+| Chat | 실시간 텍스트, 사진(한 장씩), 히스토리, 재연결, 중복 방지, 읽음, 입력 중, 접속 표시, 메시지 반응(👍 😢 😮) | 됨. 아이폰 앱의 사진 보내기는 다음 네이티브 빌드부터 |
 | 푸시 | 상대 메시지 알림 | 웹 푸시 됨. 아이폰 앱 푸시는 실기기 확인 전 |
 | Buddy | 이름, 배고픔, 청결, 밥·청소, 경험치, 레벨, 진화, 독립과 앨범, 직업 | 됨 |
 | 고객 지원 | 개인정보처리방침·연락처, 문의, 상대 신고·내보내기 | 됨 |
 | 이용 통계 | 시작 흐름·재방문 합계와 주간 메일, 웹 방문(Cloudflare) | 됨. 아이폰 앱은 이 기능이 담긴 EAS Update부터 단계를 보낸다 |
 
-넣지 않는 것: 그룹 채팅, 여러 room·여러 상대, 음성·영상 통화, 사진·파일 첨부, 스레드, 정해진 셋 밖의 이모지 반응, 스티커, 공개 프로필·피드·커뮤니티,
+넣지 않는 것: 그룹 채팅, 여러 room·여러 상대, 음성·영상 통화, 파일·동영상 첨부, 여러 장 사진·카메라 촬영·사진 저장, 스레드, 정해진 셋 밖의 이모지 반응, 스티커, 공개 프로필·피드·커뮤니티,
 캘린더·공유 앨범·기념일, AI 기능, Buddy 여러 종류·분기 진화·교배, 게임 요소 전부.
 
-나중에 고려할 수 있는 것: Buddy 종류 추가, room 테마(레트로 채팅), 스티커, 사진 메시지, Android 출시, 유료화,
+나중에 고려할 수 있는 것: Buddy 종류 추가, room 테마(레트로 채팅), 스티커, Android 출시, 유료화,
 출시 후 사용량에 따른 Buddy 수치 조정.
 
 ## 성공 기준
@@ -288,8 +288,8 @@ rooms          { _id, memberIds [1..2], memberCount, createdAt, closureId?, hist
                  buddy { name, exp, bornAt, lastFedAt?, lastCleanedAt?, poopsCleaned?, lastWorkedAt?, lastBathedAt?, expDay?, messageExpToday?,
                          talkDay?, talkers?, togetherDay?, fedCount?, cleanedCount?, nightCount?, laughCount?, loveCount?,
                          job?, jobChangedLevel? } }
-messages       { _id, roomId, senderId?, type (TEXT | SYSTEM | BUDDY_EVENT), text?, buddyEvent?, systemEvent?, actorId?,
-                 clientMessageId, createdAt, reactions? { <userId>: LIKE | SAD | WOW } }
+messages       { _id, roomId, senderId?, type (TEXT | PHOTO | SYSTEM | BUDDY_EVENT), text?, photo? { id, width, height }, buddyEvent?,
+                 systemEvent?, actorId?, clientMessageId, createdAt, reactions? { <userId>: LIKE | SAD | WOW } }
 invitations    { _id, roomId, code (unique), createdBy, createdAt, expiresAt, usedAt?, usedBy?, previousRoomId?, replacesId? }
 reads          { _id: "<roomId>:<userId>", roomId, userId, messageId, updatedAt }
 push_tokens    { _id: <Expo push token | Web Push endpoint>, userId, updatedAt, p256dh?, auth? }
@@ -315,7 +315,7 @@ stats          { _id: "steps:<날짜>", ios|web|android: { welcome?, demo?, star
 
 ## REST API
 
-모든 요청은 `Authorization: Bearer <Firebase ID token>`(시작 단계 집계 `POST /api/stats/steps`만 토큰 없이). 에러 응답은 `{ "code": "..." }`이고 문구는 앱이 정한다.
+모든 요청은 `Authorization: Bearer <Firebase ID token>`(시작 단계 집계 `POST /api/stats/steps`와 사진 파일만 토큰 없이). 에러 응답은 `{ "code": "..." }`이고 문구는 앱이 정한다.
 
 | Method | Path | 설명 |
 | --- | --- | --- |
@@ -329,6 +329,8 @@ stats          { _id: "steps:<날짜>", ios|web|android: { welcome?, demo?, star
 | POST | `/api/invitations/{code}/accept` | 초대 수락 → room 참가 `{ leaveCurrentRoom, takeSeat }` |
 | POST | `/api/rooms/me/leave` | room 나가기 → 204 |
 | GET | `/api/rooms/me/messages?before=&after=&limit=` | 타임라인(최신순, limit ≤ 50) `{ messages, hasMore }` |
+| POST | `/api/rooms/me/photos?clientMessageId=` | 사진 보내기. 본문은 이미지 바이트(`image/jpeg`·`png`·`webp`, 10MB까지) → 저장한 메시지(아래 사진) |
+| GET | `/photos/{roomId}/{photoId}.webp` | 사진 파일. 토큰 없이(아래 사진) |
 | POST | `/api/rooms/me/buddy/feed` | 밥 → `{ buddy, changed }` |
 | POST | `/api/rooms/me/buddy/clean` | 💩 하나 치우기 → `{ buddy, changed }` |
 | POST | `/api/rooms/me/buddy/work` | 어른의 일 → `{ buddy, changed }` |
@@ -361,6 +363,9 @@ stats          { _id: "steps:<날짜>", ios|web|android: { welcome?, demo?, star
 | `BUDDY_NOT_ADULT` / `JOB_UNCHANGED` / `JOB_CHANGE_LOCKED` | 409 | 직업 바꾸기 불가(직업이 정해지기 전, 같은 직업, 바꿀 수 있는 레벨이 아님) |
 | `PARTNER_CHANGED` | 409 | 같은 `requestId`로 다른 신고 |
 | `SUPPORT_RATE_LIMIT` | 429 | 1시간에 문의 5개 이상 |
+| `INVALID_PHOTO` | 400 | 읽을 수 없는 이미지, 너무 큰 해상도(5천만 화소 초과), 잘못된 `clientMessageId` |
+| `PHOTO_TOO_LARGE` | 413 | 본문이 10MB 초과 |
+| `PHOTO_UNAVAILABLE` | 503 | 사진 폴더가 없거나 쓸 수 없음, 디스크 남은 공간 5GB 미만 |
 
 ## WebSocket 프로토콜
 
@@ -374,14 +379,14 @@ client → server
   { type: "typing", typing }                      입력 중이면 3초마다 다시
   { type: "read", messageId }                     화면에 보이는 가장 최근 상대 메시지(또는 Buddy 이벤트)
   { type: "pet" }                                  쓰다듬기. 저장하지 않고 상대에게 전달만
-  { type: "react", messageId, reaction }          텍스트 메시지에 반응(LIKE | SAD | WOW, null이면 뗀다)
+  { type: "react", messageId, reaction }          텍스트·사진 메시지에 반응(LIKE | SAD | WOW, null이면 뗀다)
   { type: "ping" }
 
 server → client
   { type: "hello" }
   { type: "ready", userId, roomId, online, reads, historyVersion }
   { type: "ack", clientMessageId, message }       내 메시지 저장 완료(재전송이어도 같은 응답)
-  { type: "message", message }                    상대 메시지, Buddy 이벤트
+  { type: "message", message }                    상대 메시지, Buddy 이벤트, 사진(보낸 사람의 기기 포함 방 전체에)
   { type: "member", userId, displayName }         친구가 참가(solo → duo)
   { type: "left", userId }                         친구가 나감(duo → solo)
   { type: "historyChanged", historyVersion, deletedUserId }  계정 삭제·다시 초대로 기록이 바뀜. 다시 읽는다
@@ -406,12 +411,33 @@ server → client
 - 세션·presence·typing은 서버 메모리에만 둔다(재배포하면 사라진다). presence는 연결로 계산하고 기기 여러 대는 하나로 본다.
 - **읽음**은 앞으로만 움직인다: `messageId < 새 id` 조건부 upsert. 첫 읽음이 동시에 와서 중복 키가 나면 같은 조건으로 한 번 더 update한다.
   앱은 상대가 읽은 위치 이하인 내 메시지 중 가장 최근 것에 "읽음"을 표시한다.
-- **반응**: 텍스트 메시지를 길게 누르면(웹은 마우스를 누르고 있으면) 말풍선 위에 👍 😢 😮이 뜬다. 한 사람이 메시지 하나에 하나만 단다.
+- **반응**: 텍스트·사진 메시지를 길게 누르면(웹은 마우스를 누르고 있으면) 말풍선 위에 👍 😢 😮이 뜬다. 한 사람이 메시지 하나에 하나만 단다.
   고른 걸 다시 누르면 떼고, 다른 걸 누르면 바뀐다. 내 메시지에도 달 수 있다. 말풍선 아래 알약에 달린 반응이 보이고(같은 게 둘이면 "2",
-  내 반응이 있으면 테두리 강조) 알약을 눌러도 고르는 창이 열린다. 서버는 `reactions.<userId>`를 조건부 `$set`/`$unset`(같은 방의 TEXT만)으로
+  내 반응이 있으면 테두리 강조) 알약을 눌러도 고르는 창이 열린다. 서버는 `reactions.<userId>`를 조건부 `$set`/`$unset`(같은 방의 TEXT·PHOTO만)으로
   바꿔 끝 상태를 저장하므로 같은 요청이 두 번 와도 같다. 앱은 바로 그려 두고 `reaction`으로 받은 저장 상태로 맞춘다. 끊겨 있으면 보내지 않는다.
   재연결 복구는 새 메시지만 읽으므로, 다시 연결되면 최신 페이지를 한 번 더 읽어 이미 보이는 메시지의 반응만 고친다. 푸시는 보내지 않고 Buddy도 반응하지 않는다.
 - 유휴 연결 타임아웃 때문에 서버가 25초마다 ping 프레임을 보낸다.
+
+## 사진
+
+1:1 대화에서 사진은 대화 자체라 한 장씩 보내는 것만 둔다. 여러 장, 카메라 촬영, 설명 글, 동영상, 기기에 저장, 확대는 없다.
+
+- **보내기**: 입력창 왼쪽의 사진 버튼으로 앨범에서 한 장 고른다(아이폰은 시스템 사진 선택기라 사진 권한을 묻지 않는다, 웹은 파일 선택).
+  앱이 긴 변 1024px JPEG로 줄여(`features/chat/photo.ts`, iOS 사진의 방향도 이때 펴진다) `POST /api/rooms/me/photos`로 올린다.
+  고른 사진은 바로 말풍선(흐리게)으로 보이고, 실패하면 "다시 보내기"로 같은 `clientMessageId`로 다시 올린다. 올리기 전의 사진은 메모리에만 있어
+  앱을 닫으면 사라진다. 사진 모듈(`expo-image-picker`·`expo-image-manipulator`)이 없는 예전 아이폰 빌드에서는 버튼을 숨긴다.
+- **서버**(`chat/PhotoService`, `PhotoStore`): 같은 `clientMessageId`의 메시지가 있으면 그대로 돌려준다. 이미지를 읽어(크기를 먼저 보고 5천만 화소가 넘으면 거절)
+  긴 변 1024px로 줄이고(키우지 않는다. 전체 화면에서도 흐려 보이지 않을 만큼) WebP(손실, 품질 80)로 다시 만든다. 메타데이터(위치 등)는 남지 않는다. 디스크
+  `<사진 폴더>/<roomId>/<photoId>.webp`에 쓰고 `PHOTO` 메시지(`photo { id, width, height }`)를 넣는다. 동시 재시도로 중복 키가 나면 새 파일을 지우고
+  먼저 저장된 메시지를 준다. 인코딩은 CPU를 쓰는 blocking 작업이라 전용 스케줄러(동시 2개)에서 한다. WebP 인코더는 `webp-imageio`(libwebp 네이티브 포함).
+- **전달**: 텍스트처럼 방 전체에 `message`(보낸 사람의 기기 포함, 앱은 `clientMessageId`로 합친다), 3초 뒤 읽지 않은 상대에게 푸시("사진을 보냈어요"),
+  메시지 EXP +1과 둘이 함께. 돌보기 낱말·웃음·사랑은 세지 않는다. Buddy는 상대 메시지처럼 반응한다.
+- **보기**: 말풍선 안에 사진(폭 최대 220pt, 비율은 `width`·`height`), 누르면 전체 화면, 길게 누르면 반응. 주소는
+  `<API 주소>/photos/<roomId>/<photoId>.webp`이고 앱이 메시지로 만든다. 웹의 `<img>`가 토큰을 붙일 수 없어 **토큰 없이** 주고, 대신 `photoId`를
+  추측할 수 없는 128비트 난수로 둔다(주소를 아는 사람만 볼 수 있다). `Cache-Control: private, max-age=31536000, immutable`.
+- **지우기**: 방이 지워지면(혼자 나가기, 신고·내보내기, 참가하며 두고 온 방) 그 방 폴더를 지운다. 계정 삭제·게스트 정리는 본인이 보낸 사진 파일을
+  메시지보다 먼저 지운다(다시 해도 같다). 지운 사진의 주소는 404. 사진은 DB 백업에 들어가지 않는다(지우면 바로 사라진다).
+- **용량**: 한 장 약 80~150KB. 디스크 남은 공간이 5GB 아래면 받지 않는다(`PHOTO_UNAVAILABLE`, `buddychat.photos.min-free-space`).
 
 ## Buddy 규칙
 
@@ -497,7 +523,7 @@ togetherToday, job, leaning, canChangeJob, jobChangeAt, grown)를 그대로 보�
 
 - 접수는 인증 필요, 내용 1~4000자. 문의는 이용자당 1시간에 5개까지(`SUPPORT_RATE_LIMIT`), 신고·내보내기는 제한이 없다.
 - 앱이 만든 UUID `requestId`가 접수 문서의 키다. 같은 요청의 재시도는 이어서 끝내고, 작성자·방·대상·유형이 다르면 `PARTNER_CHANGED`.
-- `roomId`·`targetId`가 지금의 방과 상대인지 확인한다. 신고만 최근 TEXT 최대 50개를 복사한다. 접수를 먼저 저장하고 방의 `closureId`를 조건부로
+- `roomId`·`targetId`가 지금의 방과 상대인지 확인한다. 신고만 최근 TEXT·PHOTO 최대 50개를 복사한다(사진 파일은 방과 함께 지워지고 메일에는 "[사진]"으로 적는다). 접수를 먼저 저장하고 방의 `closureId`를 조건부로
   설정해서 둘이 동시에 요청해도 한 작업만 방을 닫는다.
 - 요청자는 새 solo 방 id로 Buddy·앨범을 옮긴다. 대상의 방 포인터, 모든 기존 초대와 예약, 기존 방, 메시지·읽음 위치를 지우고 두 사람의 소켓을
   닫는다. 메시지·읽음·Buddy·소켓 이벤트는 현재 멤버십을 확인하므로 예전 토큰이나 소켓으로 권한이 살아나지 않는다.
@@ -509,9 +535,9 @@ togetherToday, job, leaning, canChangeJob, jobChangeAt, grown)를 그대로 보�
 
 App Store Guideline 5.1.1(v) 때문에 있다. 게스트는 Firebase가 30일 뒤 지우지만 서버 데이터는 남으므로 스스로 지울 방법이 필요하다.
 
-- 서버(`DELETE /api/me`, `account/AccountService`): 삭제 진행 표식 → room 나가기 → 내가 만든 초대 → 모든 방의 본인 메시지·반응·작성자 정보 → 내 읽음 위치
+- 서버(`DELETE /api/me`, `account/AccountService`): 삭제 진행 표식 → room 나가기 → 내가 만든 초대 → 모든 방의 본인 사진 파일 → 본인 메시지·반응·작성자 정보 → 내 읽음 위치
   → 푸시 토큰 → 사용자 문서 → 표식 순으로 지운다. 단계마다 다시 해도 되는 삭제라 중간에 실패해도 다시 요청하면 끝난다.
-- 본인 텍스트와 본인 이름이 든 SYSTEM 기록, 상대 메시지에 단 본인 반응은 예전에 나간 방까지 지운다. Buddy 이벤트는 작성자 id만 지우고 `buddy.talkers`에서도 뺀다.
+- 본인 텍스트·사진과 본인 이름이 든 SYSTEM 기록, 상대 메시지에 단 본인 반응은 예전에 나간 방까지 지운다. Buddy 이벤트는 작성자 id만 지우고 `buddy.talkers`에서도 뺀다.
 - 바뀐 방은 `historyVersion`을 올리고 `historyChanged`를 보낸다. 앱은 기록을 비우고 다시 읽으며, 재연결의 `ready.historyVersion`이 달라도 같다.
   삭제 표식이 있는 동안 늦게 저장된 이름 기록·작성자 id도 지우고 그 방을 다시 갱신한다.
 - 앱: 연결한 계정은 먼저 다시 로그인한다(Firebase는 최근 로그인 뒤에만 계정 삭제를 허용한다). Apple은 이때 토큰을 취소한다(iOS는
@@ -547,7 +573,7 @@ App Store Guideline 5.1.1(v) 때문에 있다. 게스트는 Firebase가 30일 �
 
 ## 푸시 알림
 
-- **무엇을**: 상대의 새 텍스트 메시지. 제목은 보낸 사람 이름, 본문은 메시지(180자까지). 그리고 서버가 쓰는 안내(게스트의 남은 날,
+- **무엇을**: 상대의 새 텍스트·사진 메시지. 제목은 보낸 사람 이름, 본문은 메시지(180자까지, 사진은 기기 언어로 "사진을 보냈어요"). 그리고 서버가 쓰는 안내(게스트의 남은 날,
   친구가 초대로 들어옴 — 초대한 사람에게, 메시지처럼 읽지 않았을 때만):
   기기마다 등록할 때 보낸 앱 언어(`language`, ko/ja/en)로 쓰고, 언어를 모르는 예전 토큰은 영어.
 - **누구에게**: 저장 **3초 뒤에도 그 메시지까지 읽지 않은** 다른 멤버의 모든 기기. 채팅을 보고 있는 앱은 1초 안에 읽음을 보내므로 가지 않는다.
@@ -581,7 +607,9 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
 - **서버**: Lightsail 인스턴스(`quant-lab-02`, ap-southeast-2, 2GB + 스왑 2GB, 고정 IP)의 Docker Compose(`server/deploy`, 인스턴스 `/opt/puny-chat`).
   컨테이너는 서버(복제 1: 연결·presence·typing이 메모리에 있다)와 Caddy(80/443, 인증서 자동, WebSocket 전달). 다른 서비스(quant-lab, ur-check)와
   나눠 쓰므로 힙 `-Xmx384m`·SerialGC, 컨테이너 640MB로 제한한다. 항상 켜져 있어 콜드 스타트가 없다(앱의 미리 깨우기 `lib/warm-up.ts`는 남겨 둔다).
-  서버 설정은 인스턴스의 `/opt/puny-chat/.env`(견본 `server/deploy/.env.example`)에만 있다. 방화벽은 80·443만 열고 SSH는 Lightsail 브라우저 연결만 허용한다.
+  서버 설정은 인스턴스의 `/opt/puny-chat/.env`(견본 `server/deploy/.env.example`)에만 있다. 사진은 인스턴스 디스크 `/opt/puny-chat/photos`
+  (컨테이너 `/data/photos`, 서버 사용자 uid 1001 소유, `update.sh`가 만든다)에 둔다. 이 폴더를 마운트하지 않으면 이미지 안의 `/data`에 쓸 수 없어
+  사진만 `PHOTO_UNAVAILABLE`이 되고 나머지는 그대로 동작한다. `compose.yaml`·`update.sh`는 CI가 옮기지 않으므로 바꾸면 인스턴스에 손으로 복사한다. 방화벽은 80·443만 열고 SSH는 Lightsail 브라우저 연결만 허용한다.
   용량(2026-10 확인): 디스크 60GB 중 약 9.4GB 사용. 메모리는 컨테이너를 모두 합쳐 평소 약 0.8GB이고 스왑을 0.7GB쯤 차지하지만, 스왑을 오가는 양(`vmstat`의 si/so)이
   거의 0이고 OOM이 없어 4GB 요금제로 올리지 않는다. `update.sh`가 새 이미지를 받을 때마다 옛 이미지를 지운다. 같은 저장소의 이미지끼리 레이어를 나눠 써서
   `docker system df`의 회수 가능 크기는 실제보다 크게 나온다(옛 태그 세 개를 지워도 31MB였다).
@@ -612,8 +640,8 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
   될 때까지 기다린 뒤 health를 본다. 서버는 `/_revision`의 커밋에서 `server/`가 바뀌었을 때만 다시 배포한다(새 배포는 모든 WebSocket을 끊는다).
   수동 실행(`workflow_dispatch`)은 늘 배포한다. 롤백은 인스턴스에서 `compose.yaml`의 이미지 태그를 이전 sha로 바꾸고 타이머를 멈춘 뒤 `docker compose up -d`.
   GitHub secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`. 변수: `EXPO_PUBLIC_*`(빌드에 들어가는 공개 값).
-- **쓰지 않는 것**: Redis(레플리카 1개라 메모리로 충분하다. 수평 확장이 필요하면 `RoomHub.publish` 뒤에 Pub/Sub), 파일 저장소(사진은 MVP 밖,
-  넣으면 바이너리는 R2), 전용 VM, self-hosted MongoDB, Kubernetes, Kafka.
+- **쓰지 않는 것**: Redis(레플리카 1개라 메모리로 충분하다. 수평 확장이 필요하면 `RoomHub.publish` 뒤에 Pub/Sub), 오브젝트 저장소(사진은
+  인스턴스 디스크로 충분하다: 60GB 중 약 47GB가 비어 있고 서버가 한 대다. 서버가 여러 대가 되면 R2), 전용 VM, self-hosted MongoDB, Kubernetes, Kafka.
 
 # 포트폴리오로서
 
@@ -669,7 +697,7 @@ presence, 푸시, 모바일 생명주기, 크로스플랫폼.
 
 ### 심사 설명에 쓸 사실
 
-초대 코드로 연결되는 최대 2인 텍스트 채팅이며, 채팅 헤더의 상대 이름과 "문의 및 신고" 화면에서 상대를 신고할 수 있다. 신고와 동시에 대화를 끝내고 상대의 접근·초대와
+초대 코드로 연결되는 최대 2인 텍스트·사진 채팅이며, 채팅 헤더의 상대 이름과 "문의 및 신고" 화면에서 상대를 신고할 수 있다. 신고와 동시에 대화를 끝내고 상대의 접근·초대와
 전체 대화 기록을 지운다. 운영자는 신고 자료를 이메일로 확인하며 개별 답장은 보내지 않는다. 개인정보처리방침과 연락처는 로그인 없이 공개한다.
 관리자 페이지, 콘텐츠 사전 필터, 영구 이용 제한은 없다. 지금 구현이 심사 지침 1.2의 모든 요건을 충족한다고 약속하지 않는다.
 

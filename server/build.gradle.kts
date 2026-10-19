@@ -25,6 +25,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-mail")
+    // Photos are stored as WebP; ImageIO has no WebP writer. Bundles libwebp for Linux, macOS and Windows.
+    implementation("com.github.usefulness:webp-imageio:0.10.0")
     // Starts compose.yaml (local MongoDB) on bootRun.
     developmentOnly("org.springframework.boot:spring-boot-docker-compose")
     testImplementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive-test")
@@ -38,6 +40,8 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    // The WebP encoder loads libwebp (chat/PhotoStore).
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
 spotless {
@@ -45,6 +49,11 @@ spotless {
         palantirJavaFormat("2.99.0")
         removeUnusedImports()
     }
+}
+
+tasks.bootRun {
+    // The WebP encoder loads libwebp (chat/PhotoStore).
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
 // A fixed name for the Dockerfile.

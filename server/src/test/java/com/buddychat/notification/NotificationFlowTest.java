@@ -262,6 +262,27 @@ public class NotificationFlowTest {
     }
 
     @Test
+    void aPhotoIsAnnouncedInTheDevicesLanguage() {
+        Message photo = new Message(
+                new ObjectId().toHexString(),
+                new ObjectId().toHexString(),
+                new ObjectId().toHexString(),
+                Message.Type.PHOTO,
+                null,
+                null,
+                null,
+                null,
+                "p-1",
+                Instant.now(),
+                null,
+                new Message.Photo("AAAAAAAAAAAAAAAAAAAAAA", 1024, 768));
+
+        assertThat(NotificationService.body(photo, "ko")).isEqualTo("사진을 보냈어요");
+        assertThat(NotificationService.body(photo, "ja")).isEqualTo("写真を送りました");
+        assertThat(NotificationService.body(photo, null)).isEqualTo("Sent a photo");
+    }
+
+    @Test
     void buddyEventsAreNotPushed() {
         duoRoom("henry", "yuki");
         register("yuki", YUKI_PHONE);
@@ -277,6 +298,7 @@ public class NotificationFlowTest {
                 henry.id(),
                 "buddy:FED:1",
                 Instant.now(),
+                null,
                 null);
 
         notifications.onNewMessage(fed, henry);
