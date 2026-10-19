@@ -36,7 +36,7 @@ type Props = {
   // Newest message id the partner has read, if any.
   partnerReadId?: string;
   onRetry: (clientMessageId: string) => void;
-  // Long-pressing a text or photo offers 👍 😢 😮. Without it (the demo) a long press does nothing.
+  // Long-pressing a text or photo offers the reactions. Without it (the demo) a long press does nothing.
   onReact?: (messageId: string, reaction: MessageReaction | null) => void;
   onLoadOlder: () => void;
   // The top level's card offers going its own way while the buddy is still the grown one.
@@ -76,6 +76,8 @@ export function MessageList({
       {/* Inverted: the newest message sits at the bottom and new ones stay in view. The list's
         "end" is the top, so reaching it loads older history. */}
       <FlatList
+        // The web page's style keeps a long press here for the reaction picker (app/+html.tsx).
+        id="message-list"
         inverted
         data={shown}
         keyExtractor={(message) => message.clientMessageId}
