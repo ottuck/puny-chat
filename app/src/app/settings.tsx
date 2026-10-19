@@ -169,7 +169,6 @@ export default function SettingsScreen() {
           <Text style={[styles.label, { color: colors.textMuted }]}>
             {t('support.serviceInfo')}
           </Text>
-          <NavRow label={t('guide.title')} onPress={() => router.push('/guide')} />
           <NavRow label={t('support.title')} onPress={() => router.push('/support')} />
           <NavRow label={t('privacy.title')} onPress={() => router.push('/privacy')} />
         </View>
