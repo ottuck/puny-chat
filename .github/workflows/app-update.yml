@@ -28,7 +28,10 @@ jobs:
       run:
         working-directory: app
     steps:
+      # Two levels, so a merge commit's second parent (the merged work) is there for the message.
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
       - uses: pnpm/action-setup@v6
         with:
           package_json_file: app/package.json
@@ -44,8 +47,10 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      # main's commits are merges ("Merge pull request #…"), so the message names the work merged.
+      # main's commits are merges ("Merge pull request #…"), so the message names the work merged:
+      # the subject of the merged branch's last commit, or of HEAD when it is no merge.
       - name: Publish
         run: |
-          message="$(git rev-parse --short HEAD) $(git log -1 --no-merges --format=%s)"
+          subject=$(git log -1 --format=%s HEAD^2 2>/dev/null || git log -1 --format=%s HEAD)
+          message="$(git rev-parse --short HEAD) $subject"
           eas update --channel production --environment production --message "$message" --non-interactive
