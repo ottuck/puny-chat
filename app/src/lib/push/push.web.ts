@@ -35,6 +35,24 @@ async function registration(): Promise<ServiceWorkerRegistration> {
   return navigator.serviceWorker.ready;
 }
 
+// What public/sw.js posts to an open window when one of its notifications is tapped.
+type TapMessage = { type: 'notification-tap'; data?: Record<string, unknown> };
+
+// The service worker focuses an open window and posts it the tap; with no window open it opens the
+// notification's url instead, so there is nothing to tell.
+function onNotificationTap(listener: (data: Record<string, unknown>) => void): () => void {
+  if (!('serviceWorker' in navigator)) return () => {};
+  const container = navigator.serviceWorker;
+  const handle = (event: MessageEvent) => {
+    const message = event.data as TapMessage | null;
+    if (message?.type === 'notification-tap') listener(message.data ?? {});
+  };
+  container.addEventListener('message', handle);
+  // Messages wait until the page says it is listening.
+  container.startMessages();
+  return () => container.removeEventListener('message', handle);
+}
+
 export function createPush(server: PushServer): Push {
   // Subscribes (again, if the server's key changed) and tells the server where to send.
   async function subscribe(): Promise<void> {
@@ -94,5 +112,12 @@ export function createPush(server: PushServer): Push {
     await subscription.unsubscribe();
   }
 
-  return { pushSupported: true, pushEnabled, registerForPush, setPushEnabled, unregisterPush };
+  return {
+    pushSupported: true,
+    pushEnabled,
+    registerForPush,
+    setPushEnabled,
+    unregisterPush,
+    onNotificationTap,
+  };
 }

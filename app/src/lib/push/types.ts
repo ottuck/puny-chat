@@ -31,4 +31,7 @@ export type Push = {
   setPushEnabled: (enabled: boolean) => Promise<PushState>;
   // Before signing out, so the next person on this device does not get this user's notifications.
   unregisterPush: () => Promise<void>;
+  // The user tapped one of the app's notifications: called with the data the server sent with it,
+  // also for the tap that opened the app. Returns a function that stops listening.
+  onNotificationTap: (listener: (data: Record<string, unknown>) => void) => () => void;
 };

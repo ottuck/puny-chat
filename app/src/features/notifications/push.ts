@@ -8,26 +8,32 @@ import { createPush } from '@/lib/push';
 export type { PushState } from '@/lib/push';
 
 // While the app is open the chat already shows new messages, so no banner or sound on top.
-export const { pushSupported, pushEnabled, registerForPush, setPushEnabled, unregisterPush } =
-  createPush(
-    {
-      addExpoToken: (token) =>
-        api<void>('/api/me/push-tokens', {
-          method: 'POST',
-          body: { token, language: i18n.language },
-        }),
-      removeExpoToken: (token) =>
-        api<void>(`/api/me/push-tokens/${encodeURIComponent(token)}`, { method: 'DELETE' }),
-      webPushKey: async () => (await api<{ publicKey: string }>('/api/me/web-push/key')).publicKey,
-      addWebPush: (subscription) =>
-        api<void>('/api/me/web-push', {
-          method: 'POST',
-          body: { ...subscription, language: i18n.language },
-        }),
-      removeWebPush: (endpoint) =>
-        api<void>(`/api/me/web-push?endpoint=${encodeURIComponent(endpoint)}`, {
-          method: 'DELETE',
-        }),
-    },
-    { showWhileOpen: false },
-  );
+export const {
+  pushSupported,
+  pushEnabled,
+  registerForPush,
+  setPushEnabled,
+  unregisterPush,
+  onNotificationTap,
+} = createPush(
+  {
+    addExpoToken: (token) =>
+      api<void>('/api/me/push-tokens', {
+        method: 'POST',
+        body: { token, language: i18n.language },
+      }),
+    removeExpoToken: (token) =>
+      api<void>(`/api/me/push-tokens/${encodeURIComponent(token)}`, { method: 'DELETE' }),
+    webPushKey: async () => (await api<{ publicKey: string }>('/api/me/web-push/key')).publicKey,
+    addWebPush: (subscription) =>
+      api<void>('/api/me/web-push', {
+        method: 'POST',
+        body: { ...subscription, language: i18n.language },
+      }),
+    removeWebPush: (endpoint) =>
+      api<void>(`/api/me/web-push?endpoint=${encodeURIComponent(endpoint)}`, {
+        method: 'DELETE',
+      }),
+  },
+  { showWhileOpen: false },
+);

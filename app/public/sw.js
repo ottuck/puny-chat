@@ -1,5 +1,7 @@
 // The web app's service worker: shows new-message notifications sent by the server (Web Push,
-// docs/PROJECT.md) and opens the chat when one is tapped. Nothing is cached here.
+// docs/PROJECT.md) and opens the chat when one is tapped: an open window is focused and told
+// (lib/push/push.web.ts, onNotificationTap), otherwise the notification's url is opened. Nothing is
+// cached here.
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
@@ -25,7 +27,11 @@ self.addEventListener('notificationclick', (event) => {
     (async () => {
       const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
       for (const client of windows) {
-        if ('focus' in client) return client.focus();
+        if ('focus' in client) {
+          await client.focus();
+          client.postMessage({ type: 'notification-tap', data: event.notification.data || {} });
+          return;
+        }
       }
       return self.clients.openWindow(event.notification.data?.url || '/');
     })(),
