@@ -482,6 +482,7 @@ export function BuddyScene({
         onWalk={onWalk}
         buddy={shown}
         reaction={reaction}
+        onOpenMail={() => setMailOpen(true)}
         corners={1 + (canBathe ? 1 : 0) + (hasAlbum ? 1 : 0)}
         corner={
           <View style={styles.corners}>
