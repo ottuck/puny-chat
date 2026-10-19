@@ -3,10 +3,9 @@ package com.buddychat.buddy;
 import static com.buddychat.TestJwtConfiguration.token;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.buddychat.FlowTest;
 import com.buddychat.MutableClock;
-import com.buddychat.TestJwtConfiguration;
 import com.buddychat.TestSocket;
-import com.buddychat.TestcontainersConfiguration;
 import com.buddychat.chat.Message;
 import com.buddychat.room.Invitation;
 import com.buddychat.room.Room;
@@ -28,9 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.DefaultApplicationArguments;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -42,8 +39,7 @@ import reactor.core.scheduler.Schedulers;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import({TestcontainersConfiguration.class, TestJwtConfiguration.class, MutableClock.Config.class})
+@FlowTest
 class BuddyFlowTest {
 
     @LocalServerPort

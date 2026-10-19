@@ -7,8 +7,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.springSecurity;
 
-import com.buddychat.TestcontainersConfiguration;
+import com.buddychat.FlowTest;
 import com.buddychat.chat.ChatService;
 import com.buddychat.chat.Message;
 import com.buddychat.common.ApiException;
@@ -25,9 +26,7 @@ import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
-import org.springframework.context.annotation.Import;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -39,13 +38,19 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-@SpringBootTest
-@AutoConfigureWebTestClient
-@Import(TestcontainersConfiguration.class)
+@FlowTest
 class RoomFlowTest {
 
-    @Autowired
+    // Bound to the application rather than the port, so mockJwt() can stand in for a token.
     WebTestClient client;
+
+    @Autowired
+    void bind(ApplicationContext context) {
+        client = WebTestClient.bindToApplicationContext(context)
+                .apply(springSecurity())
+                .configureClient()
+                .build();
+    }
 
     @Autowired
     ReactiveMongoTemplate mongo;

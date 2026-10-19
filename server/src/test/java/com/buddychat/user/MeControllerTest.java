@@ -2,26 +2,31 @@ package com.buddychat.user;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.springSecurity;
 
-import com.buddychat.TestcontainersConfiguration;
+import com.buddychat.FlowTest;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
-import org.springframework.context.annotation.Import;
+import org.springframework.context.ApplicationContext;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
-@SpringBootTest
-@AutoConfigureWebTestClient
-@Import(TestcontainersConfiguration.class)
+@FlowTest
 class MeControllerTest {
 
-    @Autowired
+    // Bound to the application rather than the port, so mockJwt() can stand in for a token.
     WebTestClient client;
+
+    @Autowired
+    void bind(ApplicationContext context) {
+        client = WebTestClient.bindToApplicationContext(context)
+                .apply(springSecurity())
+                .configureClient()
+                .build();
+    }
 
     @Autowired
     UserRepository users;

@@ -3,9 +3,8 @@ package com.buddychat.stats;
 import static com.buddychat.TestJwtConfiguration.guestToken;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.buddychat.FlowTest;
 import com.buddychat.MutableClock;
-import com.buddychat.TestJwtConfiguration;
-import com.buddychat.TestcontainersConfiguration;
 import com.buddychat.user.User;
 import java.time.Duration;
 import java.time.Instant;
@@ -15,16 +14,13 @@ import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import({TestcontainersConfiguration.class, TestJwtConfiguration.class, MutableClock.Config.class})
+@FlowTest
 class StatsFlowTest {
 
     @LocalServerPort

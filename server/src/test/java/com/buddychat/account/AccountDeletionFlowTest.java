@@ -3,9 +3,8 @@ package com.buddychat.account;
 import static com.buddychat.TestJwtConfiguration.token;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.buddychat.TestJwtConfiguration;
+import com.buddychat.FlowTest;
 import com.buddychat.TestSocket;
-import com.buddychat.TestcontainersConfiguration;
 import com.buddychat.chat.Message;
 import com.buddychat.room.Room;
 import com.buddychat.user.User;
@@ -18,9 +17,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -30,8 +27,7 @@ import reactor.core.publisher.Flux;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import({TestcontainersConfiguration.class, TestJwtConfiguration.class})
+@FlowTest
 class AccountDeletionFlowTest {
 
     @LocalServerPort
@@ -49,7 +45,7 @@ class AccountDeletionFlowTest {
     @Autowired
     com.buddychat.buddy.BuddyService buddyService;
 
-    @org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+    @Autowired // a spy (FlowTest)
     com.buddychat.user.UserService userService;
 
     private final List<TestSocket> sockets = new ArrayList<>();
