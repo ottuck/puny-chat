@@ -27,7 +27,7 @@ import {
 } from '../pixel/bath';
 import { bathFrame, type Hatched } from '../pixel/looks';
 import { type Frame, PixelSprite } from '../pixel/pixel-sprite';
-import { BUDDY_PALETTE, buddyFrame, type Pose } from '../pixel/sprites';
+import { BUDDY_PALETTE, buddyFrame, NOTE, type Pose } from '../pixel/sprites';
 import { CORNER_SIZE, FLOOR, gridScale } from './buddy-stage';
 import { SpeechBubble } from './speech-bubble';
 import { Snowfall } from './weather';
@@ -35,8 +35,8 @@ import { Snowfall } from './weather';
 // The hot spring (docs/fun-improvements.md, 목욕): the buddy soaks in a wooden tub in the middle of
 // the stage, steam rising, a towel on its head. Nothing happens to it here: it shows the buddy as it
 // was when it came (buddy-scene.tsx keeps that), and what happens in the room meanwhile is only in the
-// chat. Tapping the tub splashes the water; tapping the buddy makes it hop up, smiling, and from a
-// child up say something. From a child up it also says something now and then on its own.
+// chat. Tapping the tub splashes the water; tapping the buddy makes it hum, smiling, notes rising
+// over its head, and from a child up say something. From a child up it also says something now and then on its own.
 
 const NATIVE_DRIVER = Platform.OS !== 'web';
 const TICK_MS = 450;
@@ -47,7 +47,11 @@ const SPLASH_MS = 700;
 const RATTLE_MS = 650;
 const TALK_EVERY_MS = 9000;
 const TALK_MS = 3000;
-const HOP_MS = 600;
+// Two notes rise over the head, the second a little after the first.
+const HUM_MS = 1400;
+const NOTE_LAG = 0.3;
+// The notes, at the size they are over the singing buddy at home.
+const NOTE_SCALE = 4;
 const LINES = ['bath1', 'bath2', 'bath3'] as const;
 // What it says when tapped, in turn.
 const TAP_LINES = ['bathTap1', 'bathTap2', 'bathTap3'] as const;
@@ -210,9 +214,9 @@ export function BathStage({
   const [splashing, setSplashing] = useState(false);
   const splashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [rattle] = useState(() => new Animated.Value(0));
-  const [hop] = useState(() => new Animated.Value(0));
-  const [hopping, setHopping] = useState(false);
-  const hopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [hum] = useState(() => new Animated.Value(0));
+  const [humming, setHumming] = useState(false);
+  const humTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [line, setLine] = useState<Line | null>(null);
   const hideLine = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saidAt = useRef(0);
@@ -265,36 +269,29 @@ export function BathStage({
   useEffect(
     () => () => {
       if (splashTimer.current) clearTimeout(splashTimer.current);
-      if (hopTimer.current) clearTimeout(hopTimer.current);
+      if (humTimer.current) clearTimeout(humTimer.current);
       if (hideLine.current) clearTimeout(hideLine.current);
     },
     [],
   );
 
-  // The buddy, tapped: a hop up out of the water with a big smile, and from a child up a word.
+  // The buddy, tapped: a hum with a big smile, notes rising over its head, and from a child up a
+  // word. It stays down in the water.
   const tapBuddy = () => {
-    if (hopTimer.current) clearTimeout(hopTimer.current);
-    setHopping(true);
-    hop.stopAnimation();
-    hop.setValue(0);
-    Animated.sequence([
-      Animated.timing(hop, {
-        toValue: 1,
-        duration: HOP_MS * 0.4,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: NATIVE_DRIVER,
-      }),
-      Animated.timing(hop, {
-        toValue: 0,
-        duration: HOP_MS * 0.6,
-        easing: Easing.bounce,
-        useNativeDriver: NATIVE_DRIVER,
-      }),
-    ]).start();
-    hopTimer.current = setTimeout(() => {
-      hopTimer.current = null;
-      setHopping(false);
-    }, HOP_MS);
+    if (humTimer.current) clearTimeout(humTimer.current);
+    setHumming(true);
+    hum.stopAnimation();
+    hum.setValue(0);
+    Animated.timing(hum, {
+      toValue: 1,
+      duration: HUM_MS,
+      easing: Easing.linear,
+      useNativeDriver: NATIVE_DRIVER,
+    }).start();
+    humTimer.current = setTimeout(() => {
+      humTimer.current = null;
+      setHumming(false);
+    }, HUM_MS);
     if (talks) say(TAP_LINES[nextTap.current++ % TAP_LINES.length]);
   };
 
@@ -338,10 +335,11 @@ export function BathStage({
   const buddyLeft = tubLeft + tub.inset * scale;
   const buddyBottom = tubBottom + TUB_SINK * scale;
   const spriteHeight = grid.length * scale;
+  const spriteWidth = grid[0].length * scale;
   // Eyes shut and smiling most of the time; a blink in between; a big smile when splashed or tapped.
   const cycle = tick % (BLISS_TICKS + AWAKE_TICKS);
   const pose: Pose =
-    splashing || hopping
+    splashing || humming
       ? 'happy'
       : cycle < BLISS_TICKS
         ? 'happy'
@@ -418,7 +416,7 @@ export function BathStage({
 
       {width > 0 ? (
         <>
-          {/* The tub's rim and front splash the water; the buddy between them hops (above). */}
+          {/* The tub's rim and front splash the water; the buddy between them hums (above). */}
           <Pressable
             onPress={splashWater}
             accessibilityElementsHidden
@@ -436,12 +434,7 @@ export function BathStage({
             <Animated.View
               style={{
                 transform: [
-                  {
-                    translateY: Animated.add(
-                      bob.interpolate({ inputRange: [0, 1], outputRange: [0, -scale] }),
-                      hop.interpolate({ inputRange: [0, 1], outputRange: [0, -4 * scale] }),
-                    ),
-                  },
+                  { translateY: bob.interpolate({ inputRange: [0, 1], outputRange: [0, -scale] }) },
                 ],
               }}
             >
@@ -452,6 +445,38 @@ export function BathStage({
                 smooth
               />
             </Animated.View>
+            {/* Over the head, left of where a word comes up (the bubble is on the right). */}
+            {humming
+              ? [0, NOTE_LAG].map((lag, i) => (
+                  <Animated.View
+                    key={lag}
+                    style={[
+                      styles.absolute,
+                      styles.passThrough,
+                      {
+                        left: spriteWidth * (i === 0 ? 0.05 : 0.38),
+                        bottom: spriteHeight * 0.8,
+                        opacity: hum.interpolate({
+                          inputRange: [lag, lag + 0.15, 1 - NOTE_LAG + lag],
+                          outputRange: [0, 1, 0],
+                          extrapolate: 'clamp',
+                        }),
+                        transform: [
+                          {
+                            translateY: hum.interpolate({
+                              inputRange: [lag, 1 - NOTE_LAG + lag],
+                              outputRange: [0, -28],
+                              extrapolate: 'clamp',
+                            }),
+                          },
+                        ],
+                      },
+                    ]}
+                  >
+                    <PixelSprite frame={NOTE} palette={BUDDY_PALETTE} scale={NOTE_SCALE} />
+                  </Animated.View>
+                ))
+              : null}
             {line ? (
               <SpeechBubble
                 text={t(`buddy.say.${line}`)}
