@@ -21,36 +21,61 @@ export function createPush(server: PushServer, options: PushOptions = {}): Push 
   let registeredToken: string | null = null;
   // The device's own token (APNs / FCM) the registered Expo token was made from.
   let deviceToken: string | null = null;
+  // Moves on when the token is removed (switched off, signing out): a registration still on its
+  // way then keeps nothing, and removes what it added.
+  let session = 0;
+  let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function clearRetry() {
+    if (retryTimer) clearTimeout(retryTimer);
+    retryTimer = null;
+  }
 
   // The push service can replace the device's token while the app is running; the old one stops
   // working. While registered, tell the server the new one right away. Not getDevicePushTokenAsync
   // here (nor getExpoPushTokenAsync without the token): that fires this again.
   Notifications.addPushTokenListener((token) => {
     if (!registeredToken || token.data === deviceToken) return;
-    const previous = registeredToken;
-    deviceToken = token.data;
-    tellServer(token)
-      .then((next) => {
-        if (next !== previous) {
-          server.removeExpoToken(previous).catch(() => {}); // it no longer works anyway
-        }
-      })
-      .catch((e) => console.warn('registering the new push token failed', e));
+    rotate(token, session, 0);
   });
+
+  // Registers the new device token in place of the old one. Offline or a failing server is tried
+  // again later (Expo suggests so), waiting longer each time, until it works or push is removed.
+  function rotate(device: Notifications.DevicePushToken, from: number, attempt: number) {
+    clearRetry();
+    const previous = registeredToken;
+    register(device, from)
+      .then(() => {
+        if (from !== session || !previous || previous === registeredToken) return;
+        server.removeExpoToken(previous).catch(() => {}); // it no longer works anyway
+      })
+      .catch((e) => {
+        if (from !== session) return;
+        console.warn('registering the new push token failed; trying again later', e);
+        const delay = Math.min(60_000 * 2 ** attempt, 60 * 60_000);
+        retryTimer = setTimeout(() => rotate(device, from, attempt + 1), delay);
+      });
+  }
 
   function projectId(): string | undefined {
     return Constants.expoConfig?.extra?.eas?.projectId as string | undefined;
   }
 
-  // The Expo token for this device token, told to the server.
-  async function tellServer(device: Notifications.DevicePushToken): Promise<string> {
+  // The Expo token for this device token, told to the server, unless push was removed meanwhile.
+  async function register(device: Notifications.DevicePushToken, from: number): Promise<void> {
     const { data: token } = await Notifications.getExpoPushTokenAsync({
       projectId: projectId(),
       devicePushToken: device,
     });
+    if (from !== session) return;
     await server.addExpoToken(token);
+    if (from !== session) {
+      await server.removeExpoToken(token).catch(() => {});
+      return;
+    }
+    clearRetry(); // an older token's retry must not replace this one
     registeredToken = token;
-    return token;
+    deviceToken = device.data;
   }
 
   // On unless turned off.
@@ -72,9 +97,7 @@ export function createPush(server: PushServer, options: PushOptions = {}): Push 
       status = (await Notifications.requestPermissionsAsync()).status;
     }
     if (status !== 'granted') return 'denied';
-    const device = await Notifications.getDevicePushTokenAsync();
-    deviceToken = device.data;
-    await tellServer(device);
+    await register(await Notifications.getDevicePushTokenAsync(), session);
     return 'on';
   }
 
@@ -86,6 +109,9 @@ export function createPush(server: PushServer, options: PushOptions = {}): Push 
   }
 
   async function unregisterPush(): Promise<void> {
+    session += 1;
+    clearRetry();
+    deviceToken = null;
     if (!registeredToken) return;
     const token = registeredToken;
     registeredToken = null;
