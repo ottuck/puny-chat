@@ -65,9 +65,11 @@
     "read": "Read",
     "react": "React",
     "reaction": {
+      "LOVE": "Love",
       "LIKE": "Like",
-      "SAD": "Sad",
-      "WOW": "Wow"
+      "CHECK": "Got it",
+      "WOW": "Wow",
+      "SAD": "Sad"
     },
     "photo": "Send a photo",
     "photoMessage": "Photo",

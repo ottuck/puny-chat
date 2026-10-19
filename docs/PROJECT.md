@@ -121,7 +121,7 @@ Yuki:  니가 치워
 | --- | --- | --- |
 | 인증 | 게스트 시작, 이름, 계정 연결(웹·아이폰 Google·Apple), 로그아웃, 계정 삭제 | 됨. 아이폰 Apple·Google은 실기기 확인 전(Google은 새 개발용 빌드 필요), 웹 Apple은 Services ID 웹 설정 전 |
 | Room | 만들기, solo, 초대 코드·링크, 참가, 최대 2명, 나가기 | 됨 |
-| Chat | 실시간 텍스트, 사진(한 장씩), 히스토리, 재연결, 중복 방지, 읽음, 입력 중, 접속 표시, 메시지 반응(👍 😢 😮) | 됨. 아이폰 앱의 사진 보내기는 다음 네이티브 빌드부터 |
+| Chat | 실시간 텍스트, 사진(한 장씩), 히스토리, 재연결, 중복 방지, 읽음, 입력 중, 접속 표시, 메시지 반응(❤️ 👍 ✅ 😮 😢) | 됨. 아이폰 앱의 사진 보내기는 다음 네이티브 빌드부터 |
 | 푸시 | 상대 메시지 알림 | 웹 푸시 됨. 아이폰 앱 푸시는 실기기 확인 전 |
 | Buddy | 이름, 배고픔, 청결, 밥·청소, 경험치, 레벨, 진화, 독립과 앨범, 직업 | 됨 |
 | 고객 지원 | 개인정보처리방침·연락처, 문의, 상대 신고·내보내기 | 됨 |
@@ -289,7 +289,7 @@ rooms          { _id, memberIds [1..2], memberCount, createdAt, closureId?, hist
                          talkDay?, talkers?, togetherDay?, fedCount?, cleanedCount?, nightCount?, laughCount?, loveCount?,
                          job?, jobChangedLevel? } }
 messages       { _id, roomId, senderId?, type (TEXT | PHOTO | SYSTEM | BUDDY_EVENT), text?, photo? { id, width, height }, buddyEvent?,
-                 systemEvent?, actorId?, clientMessageId, createdAt, reactions? { <userId>: LIKE | SAD | WOW } }
+                 systemEvent?, actorId?, clientMessageId, createdAt, reactions? { <userId>: LOVE | LIKE | CHECK | WOW | SAD } }
 invitations    { _id, roomId, code (unique), createdBy, createdAt, expiresAt, usedAt?, usedBy?, previousRoomId?, replacesId? }
 reads          { _id: "<roomId>:<userId>", roomId, userId, messageId, updatedAt }
 push_tokens    { _id: <Expo push token | Web Push endpoint>, userId, updatedAt, p256dh?, auth? }
@@ -380,7 +380,7 @@ client → server
   { type: "typing", typing }                      입력 중이면 3초마다 다시
   { type: "read", messageId }                     화면에 보이는 가장 최근 상대 메시지(또는 Buddy 이벤트)
   { type: "pet" }                                  쓰다듬기. 저장하지 않고 상대에게 전달만
-  { type: "react", messageId, reaction }          텍스트·사진 메시지에 반응(LIKE | SAD | WOW, null이면 뗀다)
+  { type: "react", messageId, reaction }          텍스트·사진 메시지에 반응(LOVE | LIKE | CHECK | WOW | SAD, null이면 뗀다)
   { type: "ping" }
 
 server → client
@@ -412,9 +412,9 @@ server → client
 - 세션·presence·typing은 서버 메모리에만 둔다(재배포하면 사라진다). presence는 연결로 계산하고 기기 여러 대는 하나로 본다.
 - **읽음**은 앞으로만 움직인다: `messageId < 새 id` 조건부 upsert. 첫 읽음이 동시에 와서 중복 키가 나면 같은 조건으로 한 번 더 update한다.
   앱은 상대가 읽은 위치 이하인 내 메시지 중 가장 최근 것에 "읽음"을 표시한다.
-- **반응**: 텍스트·사진 메시지를 길게 누르면(웹은 마우스를 누르고 있으면) 말풍선 위에 👍 😢 😮이 뜬다. 한 사람이 메시지 하나에 하나만 단다.
-  고른 걸 다시 누르면 떼고, 다른 걸 누르면 바뀐다. 내 메시지에도 달 수 있다. 말풍선 아래 알약에 달린 반응이 보이고(같은 게 둘이면 "2",
-  내 반응이 있으면 테두리 강조) 알약을 눌러도 고르는 창이 열린다. 서버는 `reactions.<userId>`를 조건부 `$set`/`$unset`(같은 방의 TEXT·PHOTO만)으로
+- **반응**: 텍스트·사진 메시지를 길게 누르면(웹은 마우스를 누르고 있으면) 말풍선 위에 ❤️ 👍 ✅ 😮 😢이 뜬다. 한 사람이 메시지 하나에 하나만 단다.
+  고른 걸 다시 누르면 떼고, 다른 걸 누르면 바뀐다. 내 메시지에도 달 수 있다. 달린 반응은 말풍선 아래에 종류마다 칩(이모지와 개수)으로 보이고
+  (내가 단 칩은 강조) 칩을 눌러도 고르는 창이 열린다. 웹은 채팅 목록에서 글자 선택과 iOS Safari의 사진 메뉴를 막아 길게 누르기가 반응만 연다. 서버는 `reactions.<userId>`를 조건부 `$set`/`$unset`(같은 방의 TEXT·PHOTO만)으로
   바꿔 끝 상태를 저장하므로 같은 요청이 두 번 와도 같다. 앱은 바로 그려 두고 `reaction`으로 받은 저장 상태로 맞춘다. 끊겨 있으면 보내지 않는다.
   재연결 복구는 새 메시지만 읽으므로, 다시 연결되면 최신 페이지를 한 번 더 읽어 이미 보이는 메시지의 반응만 고친다. 푸시는 보내지 않고 Buddy도 반응하지 않는다.
 - 유휴 연결 타임아웃 때문에 서버가 25초마다 ping 프레임을 보낸다. 앱의 `ping`은 처리 중인 이벤트를 기다리지 않고 DB도 읽지 않고 바로 `pong`으로 답한다
@@ -446,7 +446,7 @@ server → client
   중복 키가 났으면 먼저 저장된 메시지를 준다. 인코딩은 CPU를 쓰는 blocking 작업이라 전용 스케줄러(동시 2개)에서 한다. WebP 인코더는 `webp-imageio`(libwebp 네이티브 포함).
 - **전달**: 텍스트처럼 방 전체에 `message`(보낸 사람의 기기 포함, 앱은 `clientMessageId`로 합친다), 3초 뒤 읽지 않은 상대에게 푸시("사진을 보냈어요"),
   메시지 EXP +1과 둘이 함께. 돌보기 낱말·웃음·사랑은 세지 않는다. Buddy는 상대 메시지처럼 반응한다.
-- **보기**: 말풍선 안에 사진(폭 최대 220pt, 비율은 `width`·`height`), 누르면 전체 화면, 길게 누르면 반응. 주소는
+- **보기**: 말풍선 안에 사진(폭 최대 220pt, 비율은 `width`·`height`), 누르면 전체 화면(아무 데나 누르면 닫히고 왼쪽 위에 뒤로 가기 화살표), 길게 누르면 반응. 주소는
   `<API 주소>/photos/<roomId>/<photoId>.webp`이고 앱이 메시지로 만든다. 웹의 `<img>`가 토큰을 붙일 수 없어 **토큰 없이** 주고, 대신 `photoId`를
   추측할 수 없는 128비트 난수로 둔다(주소를 아는 사람만 볼 수 있다). `Cache-Control: private, max-age=31536000, immutable`.
 - **지우기**: 방이 지워지면(혼자 나가기, 신고·내보내기, 참가하며 두고 온 방) 그 방 폴더를 지운다. 계정 삭제·게스트 정리는 본인이 보낸 사진 파일을

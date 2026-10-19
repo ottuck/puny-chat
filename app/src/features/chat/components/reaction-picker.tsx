@@ -24,7 +24,7 @@ type Props = {
   onClose: () => void;
 };
 
-// 👍 😢 😮 just above the bubble (below it when there is no room), on the sender's side.
+// ❤️ 👍 ✅ 😮 😢 just above the bubble (below it when there is no room), on the sender's side.
 export function ReactionPicker({ target, mine, current, onPick, onClose }: Props) {
   const colors = useColors();
   const { t } = useTranslation();

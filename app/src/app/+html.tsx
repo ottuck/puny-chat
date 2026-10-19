@@ -59,6 +59,8 @@ export default function Root({ children }: PropsWithChildren) {
 // line still breaks. Only for Korean: Japanese has no spaces to break at.
 const pageStyle = `
 body { background-color: #F6F4F1; }
+/* A long press in the chat opens the reaction picker, as in the app: not a text selection or iOS Safari's photo menu. */
+#message-list { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 @media (prefers-color-scheme: dark) {
   body { background-color: #16161A; }
 }

@@ -8,11 +8,11 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   View,
 } from 'react-native';
 
+import { AppSwitch } from '@/components/app-switch';
 import { PageTitle } from '@/components/page-title';
 import {
   deleteAccount,
@@ -374,13 +374,10 @@ function NotificationsCard() {
             {t('settings.notificationsBody')}
           </Text>
         </View>
-        <Switch
+        <AppSwitch
           value={state === 'on' || bouncing}
           onValueChange={toggle}
           disabled={state === null}
-          trackColor={{ false: colors.switchTrack, true: colors.accent }}
-          ios_backgroundColor={colors.switchTrack}
-          thumbColor={Platform.OS === 'ios' ? undefined : colors.onAccent}
           accessibilityLabel={t('settings.notifications')}
         />
       </View>

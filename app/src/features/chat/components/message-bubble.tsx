@@ -4,13 +4,14 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useColors } from '@/theme';
 
-import { type MessageReaction, REACTION_EMOJI } from '../types';
+import { MESSAGE_REACTIONS, type MessageReaction, REACTION_EMOJI } from '../types';
 
 // Where the bubble is on screen, for the reaction picker to open next to it.
 export type BubbleRect = { x: number; y: number; width: number; height: number };
 
-// The reaction pill hangs this far below the bubble; the time beside it moves up as much.
-const PILL_DROP = 16;
+// Reactions sit in a row of chips under the bubble; the time beside the bubble moves up as much.
+const CHIP_HEIGHT = 24;
+const CHIP_GAP = 4;
 
 // A photo keeps its shape inside this box. Only a very long strip is cut, to stay PHOTO_MIN thick.
 const PHOTO_MAX_WIDTH = 220;
@@ -45,7 +46,7 @@ type Props = {
   // User id → reaction, and whose this device is (to mark my own).
   reactions?: Record<string, MessageReaction>;
   myId?: string;
-  // Long press (or the pill): open the reaction picker. Absent while the message is unconfirmed.
+  // Long press (or a reaction chip): open the reaction picker. Absent while the message is unconfirmed.
   onReact?: (rect: BubbleRect) => void;
 };
 
@@ -66,11 +67,12 @@ export function MessageBubble({
   const { t } = useTranslation();
   const bubbleRef = useRef<View>(null);
   const given = Object.entries(reactions ?? {});
-  // In the order the picker shows them; two of the same say "2".
-  const kinds = (Object.keys(REACTION_EMOJI) as MessageReaction[]).filter((kind) =>
-    given.some(([, reaction]) => reaction === kind),
-  );
-  const minePicked = given.some(([userId]) => userId === myId);
+  // In the order the picker shows them, each with how many gave it and whether I am one of them.
+  const kinds = MESSAGE_REACTIONS.map((kind) => ({
+    kind,
+    count: given.filter(([, reaction]) => reaction === kind).length,
+    mine: given.some(([userId, reaction]) => userId === myId && reaction === kind),
+  })).filter(({ count }) => count > 0);
   const openPicker = () =>
     bubbleRef.current?.measureInWindow((x, y, width, height) => onReact?.({ x, y, width, height }));
 
@@ -121,28 +123,35 @@ export function MessageBubble({
           )}
         </Pressable>
         {kinds.length > 0 ? (
-          <Pressable
-            onPress={openPicker}
-            disabled={!onReact}
-            accessibilityRole="button"
-            accessibilityLabel={kinds.map((kind) => t(`chat.reaction.${kind}`)).join(', ')}
-            hitSlop={6}
-            style={[
-              styles.pill,
-              mine ? styles.pillMine : styles.pillTheirs,
-              {
-                backgroundColor: colors.surface,
-                borderColor: minePicked ? colors.accent : colors.border,
-              },
-            ]}
-          >
-            <Text style={styles.pillEmoji}>
-              {kinds.map((kind) => REACTION_EMOJI[kind]).join('')}
-            </Text>
-            {given.length > 1 && kinds.length === 1 ? (
-              <Text style={[styles.pillCount, { color: colors.textMuted }]}>{given.length}</Text>
-            ) : null}
-          </Pressable>
+          <View style={[styles.chips, mine ? styles.chipsMine : styles.chipsTheirs]}>
+            {kinds.map(({ kind, count, mine: picked }) => (
+              <Pressable
+                key={kind}
+                onPress={openPicker}
+                disabled={!onReact}
+                accessibilityRole="button"
+                accessibilityLabel={`${t(`chat.reaction.${kind}`)} ${count}`}
+                hitSlop={4}
+                style={[
+                  styles.chip,
+                  {
+                    backgroundColor: picked ? colors.bubbleMine : colors.surface,
+                    borderColor: picked ? colors.accent : colors.border,
+                  },
+                ]}
+              >
+                <Text style={styles.chipEmoji}>{REACTION_EMOJI[kind]}</Text>
+                <Text
+                  style={[
+                    styles.chipCount,
+                    { color: picked ? colors.bubbleMineText : colors.textMuted },
+                  ]}
+                >
+                  {count}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
         ) : null}
       </View>
       {status === 'failed' ? (
@@ -153,7 +162,7 @@ export function MessageBubble({
         <View
           style={[
             mine ? styles.metaMine : styles.metaTheirs,
-            kinds.length > 0 && { marginBottom: 2 + PILL_DROP },
+            kinds.length > 0 && { marginBottom: 2 + CHIP_GAP + CHIP_HEIGHT },
           ]}
         >
           {receipt ? (
@@ -204,29 +213,34 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 22,
   },
-  // Overlaps the bubble's lower edge a little, on the sender's side.
-  pill: {
+  // Under the bubble, from the sender's edge.
+  chips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginTop: CHIP_GAP,
+  },
+  chipsMine: {
+    justifyContent: 'flex-end',
+  },
+  chipsTheirs: {
+    justifyContent: 'flex-start',
+  },
+  chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
-    marginTop: -6,
-    height: 6 + PILL_DROP,
-    paddingHorizontal: 6,
-    borderRadius: 11,
-    borderWidth: 1,
+    gap: 3,
+    height: CHIP_HEIGHT,
+    paddingHorizontal: 8,
+    borderRadius: CHIP_HEIGHT / 2,
+    borderWidth: StyleSheet.hairlineWidth,
   },
-  pillMine: {
-    marginRight: 10,
-  },
-  pillTheirs: {
-    marginLeft: 10,
-  },
-  pillEmoji: {
+  chipEmoji: {
     fontSize: 13,
     lineHeight: 16,
   },
-  pillCount: {
-    fontSize: 11,
+  chipCount: {
+    fontSize: 12,
     fontWeight: '600',
   },
   metaMine: {

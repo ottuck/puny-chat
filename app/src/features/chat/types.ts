@@ -5,9 +5,15 @@ import type { BuddyEvent } from '@/features/buddy/api';
 export type SystemEvent = 'MEMBER_JOINED' | 'MEMBER_LEFT' | 'MEMBER_RETURNED';
 
 // What a long press on a text message offers. Each member has at most one on a message.
-export const MESSAGE_REACTIONS = ['LIKE', 'SAD', 'WOW'] as const;
+export const MESSAGE_REACTIONS = ['LOVE', 'LIKE', 'CHECK', 'WOW', 'SAD'] as const;
 export type MessageReaction = (typeof MESSAGE_REACTIONS)[number];
-export const REACTION_EMOJI: Record<MessageReaction, string> = { LIKE: '👍', SAD: '😢', WOW: '😮' };
+export const REACTION_EMOJI: Record<MessageReaction, string> = {
+  LOVE: '❤️',
+  LIKE: '👍',
+  CHECK: '✅',
+  WOW: '😮',
+  SAD: '😢',
+};
 
 // As the server sends it (server/src/main/java/com/buddychat/chat/Message.java).
 export type ServerMessage = {

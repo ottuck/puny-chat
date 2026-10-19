@@ -36,8 +36,8 @@ public record Message(
 
     public static final int MAX_TEXT_LENGTH = 2000;
 
-    /** 👍, 😢, 😮. A member has at most one reaction on a message. */
-    public static final Set<String> REACTIONS = Set.of("LIKE", "SAD", "WOW");
+    /** ❤️, 👍, ✅, 😮, 😢. A member has at most one reaction on a message. */
+    public static final Set<String> REACTIONS = Set.of("LOVE", "LIKE", "CHECK", "WOW", "SAD");
 
     public enum Type {
         TEXT,

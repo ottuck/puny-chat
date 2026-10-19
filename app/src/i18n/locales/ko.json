@@ -65,9 +65,11 @@
     "read": "읽음",
     "react": "반응 남기기",
     "reaction": {
+      "LOVE": "사랑해요",
       "LIKE": "좋아요",
-      "SAD": "슬퍼요",
-      "WOW": "놀라워요"
+      "CHECK": "확인했어요",
+      "WOW": "놀라워요",
+      "SAD": "슬퍼요"
     },
     "photo": "사진 보내기",
     "photoMessage": "사진",
