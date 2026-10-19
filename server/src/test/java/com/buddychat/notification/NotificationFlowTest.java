@@ -275,7 +275,7 @@ public class NotificationFlowTest {
                 "p-1",
                 Instant.now(),
                 null,
-                new Message.Photo("AAAAAAAAAAAAAAAAAAAAAA", 1024, 768));
+                new Message.Photo("AAAAAAAAAAAAAAAAAAAAAA", 1600, 1200));
 
         assertThat(NotificationService.body(photo, "ko")).isEqualTo("사진을 보냈어요");
         assertThat(NotificationService.body(photo, "ja")).isEqualTo("写真を送りました");

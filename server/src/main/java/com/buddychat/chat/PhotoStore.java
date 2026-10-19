@@ -43,13 +43,16 @@ import reactor.core.scheduler.Schedulers;
 @Component
 class PhotoStore implements DisposableBean {
 
-    /** The longer side, in pixels, after scaling down: enough for a phone screen. */
-    static final int MAX_EDGE = 1024;
+    /**
+     * The longer side, in pixels, after scaling down: a portrait photo across a phone screen (about
+     * 1570 px tall on an iPhone), like the default size of KakaoTalk and LINE.
+     */
+    static final int MAX_EDGE = 1600;
 
     /**
      * The app always sends {@link #MAX_EDGE} or less; anything bigger comes from elsewhere. The header
-     * says the size before decoding, and decoding skips pixels down to about twice the stored size, so a
-     * big image never fills the heap (384 MB on the instance, two encodes at a time).
+     * says the size before decoding, and decoding skips pixels down to no less than the stored size, so
+     * a big image never fills the heap (384 MB on the instance, two encodes at a time).
      */
     static final long MAX_PIXELS = 4096L * 4096L;
 
@@ -142,7 +145,7 @@ class PhotoStore implements DisposableBean {
                 long pixels = (long) reader.getWidth(0) * reader.getHeight(0);
                 if (pixels <= 0 || pixels > MAX_PIXELS) throw invalid();
                 int longer = Math.max(reader.getWidth(0), reader.getHeight(0));
-                int step = Math.max(1, longer / (2 * MAX_EDGE));
+                int step = Math.max(1, longer / MAX_EDGE);
                 ImageReadParam param = reader.getDefaultReadParam();
                 param.setSourceSubsampling(step, step, 0, 0);
                 return reader.read(0, param);

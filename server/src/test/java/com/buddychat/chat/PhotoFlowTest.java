@@ -85,7 +85,7 @@ class PhotoFlowTest {
         JsonNode photo = sent.get("photo");
         // Scaled to the longer side, never past it, keeping the shape.
         assertThat(photo.get("width").asInt()).isEqualTo(PhotoStore.MAX_EDGE);
-        assertThat(photo.get("height").asInt()).isEqualTo(683);
+        assertThat(photo.get("height").asInt()).isEqualTo(1067);
         // The sender's own connection hears it too: the upload did not come through it.
         assertThat(henry.expect("message").get("message").get("id").asString())
                 .isEqualTo(sent.get("id").asString());
@@ -108,7 +108,7 @@ class PhotoFlowTest {
         assertThat(new String(file, 8, 4, StandardCharsets.US_ASCII)).isEqualTo("WEBP");
         BufferedImage stored = ImageIO.read(new ByteArrayInputStream(file));
         assertThat(stored.getWidth()).isEqualTo(PhotoStore.MAX_EDGE);
-        assertThat(file.length).isLessThan(200_000);
+        assertThat(file.length).isLessThan(400_000);
     }
 
     @Test
@@ -202,7 +202,7 @@ class PhotoFlowTest {
                 .getResponseBody()
                 .get("photo");
         assertThat(photo.get("width").asInt()).isEqualTo(PhotoStore.MAX_EDGE);
-        assertThat(photo.get("height").asInt()).isEqualTo(768);
+        assertThat(photo.get("height").asInt()).isEqualTo(1200);
 
         sendPhoto("henry", "p-2", png(5000, 3400))
                 .expectStatus()
