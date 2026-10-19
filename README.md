@@ -66,7 +66,7 @@ at you, no daily missions. Just **having something to raise together** makes the
 - **It never dies.** Forget it for a few days and it's fine; a little care and it's back on its feet
 - A little after it grows up (Lv.12), it takes a job from how you two raised it (chef, gardener, radio DJ, writer, barista), each with its own look and spot on the stage. You can change it once each at level 20, 30, 40 and 50, and any time from 60. It dresses up for the season (bunny ears in spring, antlers at Christmas) and now and then a butterfly lands on it or a shooting star crosses the sky
 - Every level the room gets something: toys on a wooden table, a window whose sky follows your clock, a wall shelf with a music box and a radio, plush friends on the sill, a goldfish bowl, a low table that turns into a kotatsu in winter, new rugs and floors, a tree that bears fruit, and guests at the window (a snail, a sparrow, a stray cat, an owl at night, a red dragonfly in autumn). From level 20 it can go its own way; keep it to level 60 and the room keeps growing (below)
-- The same room in the light of the hour: a fresh morning, sunset light slanting through the panes, a night lit only by the lamp. At level 60, light comes down from the sky and a letter from the developer arrives in the stage's mailbox
+- The same room in the light of the hour: a fresh morning, sunset light slanting through the panes, a night lit only by the lamp. At level 60, light comes down from the sky and a thank-you letter arrives in the stage's mailbox
 - **A hot spring** to send it to, and **a dream** of what it will become before the first egg (below)
 
 **🤝 For two**
