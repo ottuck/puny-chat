@@ -407,7 +407,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
         socket.resume();
         socket.reconnectNow();
       } else if (state === 'background' && Platform.OS !== 'web') {
-        // Web has no push notifications, so a hidden tab stays connected.
+        // Web push is off until someone turns it on, so a hidden tab stays connected to keep receiving.
         socket.pause();
       }
     });
