@@ -163,7 +163,8 @@ function TogetherCard({
 }
 
 // What it grows up to be (docs/fun-improvements.md, 직업): the job once an adult, and before that where
-// it is heading, so the way they raise it shows. The server says when it can be changed.
+// it is heading, so the way they raise it shows. The server says when it can be changed; while it
+// cannot, the button stays, greyed with a lock, and a press says when it opens.
 function JobCard({
   buddy,
   onChangeJob,
@@ -174,6 +175,10 @@ function JobCard({
   const colors = useColors();
   const { t } = useTranslation();
   const [choosing, setChoosing] = useState(false);
+  // A press on the locked button: why, and when it opens.
+  const [explaining, setExplaining] = useState(false);
+  // Just changed here: the stage shows it once this closes.
+  const [changedTo, setChangedTo] = useState<BuddyJob | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const job = buddy.job ?? buddy.leaning;
@@ -195,6 +200,7 @@ function JobCard({
     try {
       await onChangeJob(next);
       setChoosing(false);
+      setChangedTo(next);
     } catch (e) {
       setError(errorMessage(t, e));
     } finally {
@@ -289,10 +295,40 @@ function JobCard({
             ) : null}
           </>
         ) : buddy.jobChangeAt ? (
-          <Text style={[styles.body, { color: colors.textMuted }]}>
-            {t('buddy.jobCard.changeAt', { level: buddy.jobChangeAt })}
-          </Text>
+          // Still a button, so a press says why it is locked instead of nothing happening.
+          <>
+            <Pressable
+              onPress={() => setExplaining((open) => !open)}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: true }}
+              style={({ pressed }) => [
+                styles.jobButton,
+                { borderColor: colors.border, opacity: pressed ? 0.6 : 1 },
+              ]}
+            >
+              <Text style={[styles.careLabel, { color: colors.textMuted }]}>
+                {t('buddy.jobCard.locked', { level: buddy.jobChangeAt })}
+              </Text>
+            </Pressable>
+            {explaining ? (
+              <View style={[styles.jobNote, { backgroundColor: colors.background }]}>
+                <Text
+                  lineBreakStrategyIOS="hangul-word"
+                  style={[styles.body, { color: colors.text }]}
+                >
+                  {t('buddy.jobCard.lockedWhy', { level: buddy.jobChangeAt })}
+                </Text>
+              </View>
+            ) : null}
+          </>
         ) : null
+      ) : null}
+      {changedTo && buddy.job === changedTo ? (
+        <View style={[styles.jobNote, { backgroundColor: colors.bubbleMine }]}>
+          <Text lineBreakStrategyIOS="hangul-word" style={[styles.body, { color: colors.text }]}>
+            {t('buddy.jobCard.changed', { icon: JOB_ICON[changedTo], job: nameOf(changedTo) })}
+          </Text>
+        </View>
       ) : null}
       {error ? <Text style={[styles.body, { color: colors.accent }]}>{error}</Text> : null}
     </View>
@@ -468,6 +504,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     gap: 4,
+  },
+  jobNote: {
+    borderRadius: 12,
+    padding: 12,
   },
   jobButton: {
     height: 44,

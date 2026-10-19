@@ -23,6 +23,8 @@ export type ReactionKind =
   // The top level: the room sparkles.
   | 'maxLevel'
   | 'evolved'
+  // A new job: the old and new looks in turn, as in an evolution, then a word about it.
+  | 'jobChanged'
   | 'together'
   // The partner is here too (docs/fun-improvements.md, 함께 있을 때): not from a message but from presence.
   | 'here'
@@ -41,6 +43,7 @@ const BY_EVENT: Partial<Record<string, ReactionKind>> = {
   // The new egg arrives with the same rings of light as an evolution.
   GRADUATED: 'evolved',
   EVOLVED: 'evolved',
+  JOB_CHANGED: 'jobChanged',
   TOGETHER: 'together',
 };
 

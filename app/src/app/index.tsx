@@ -110,6 +110,10 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged, onGuideSeen }: ChatSc
       });
   };
   const [buddyOpen, setBuddyOpen] = useState(false);
+  // While the buddy's details cover the stage, what happens waits for them to close: a job changed
+  // there plays its transformation once the stage is in view. Only something new plays then.
+  const [stageReaction, setStageReaction] = useState(chat.reaction);
+  if (!buddyOpen && stageReaction !== chat.reaction) setStageReaction(chat.reaction);
   const [partnerOpen, setPartnerOpen] = useState(false);
   const { account } = useAuth();
   const guestDaysLeft = useGuestDaysLeft(account);
@@ -186,7 +190,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged, onGuideSeen }: ChatSc
           onWork={work}
           onBathe={bathe}
           onOpenDetail={() => setBuddyOpen(true)}
-          reaction={chat.reaction}
+          reaction={stageReaction}
           cue={cue}
           lastTalkAt={chat.lastTalkAt}
           partnerPet={chat.partnerPet}

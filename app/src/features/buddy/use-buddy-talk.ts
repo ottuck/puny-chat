@@ -101,7 +101,13 @@ export type Line =
   | 'barista4'
   | 'chefFed'
   | 'gardenerCleaned'
-  | 'writerLove';
+  | 'writerLove'
+  // Just changed to the job.
+  | 'nowChef'
+  | 'nowGardener'
+  | 'nowDj'
+  | 'nowWriter'
+  | 'nowBarista';
 
 const SAY_MS = 3000;
 const CHATTER_MIN_MS = 60_000;
@@ -131,6 +137,14 @@ export const JOB_LINES: Record<BuddyJob, Line[]> = {
   DJ: ['dj1', 'dj2', 'dj3', 'dj4'],
   WRITER: ['writer1', 'writer2', 'writer3', 'writer4'],
   BARISTA: ['barista1', 'barista2', 'barista3', 'barista4'],
+};
+// What it says once it has changed to a job.
+export const NEW_JOB_LINE: Record<BuddyJob, Line> = {
+  CHEF: 'nowChef',
+  GARDENER: 'nowGardener',
+  DJ: 'nowDj',
+  WRITER: 'nowWriter',
+  BARISTA: 'nowBarista',
 };
 // A barista talks this much more often, and also while the two are chatting.
 const BARISTA_PACE = 0.6;
