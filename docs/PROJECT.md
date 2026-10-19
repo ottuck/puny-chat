@@ -624,7 +624,7 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
 - **DB**: Atlas M0(무료, 512MB, 초당 100 ops), 서버와 같은 시드니. 접근 목록은 Lightsail 고정 IP 하나, 비밀번호(Terraform이 만들어 서버 `.env`로만)와 TLS.
   인스턴스를 바꾸면 고정 IP를 옮기거나 `var.server_ip`를 바꿔 다시 apply한다. M0는 자동 백업이 없어 인스턴스가 받아 둔다(아래 백업).
 - **백업**: 인스턴스의 systemd 타이머(`puny-chat-backup.timer`, 매일 18:00 UTC)가 `server/deploy/backup.sh`를 실행한다. compose의 `backup` 서비스(`mongo:8.0`,
-  profile이 있어 `up`으로는 뜨지 않고 실행할 때만 잠깐 뜬다)가 `mongodump`로 gzip 아카이브를 받아 `/opt/puny-chat/backups`에 둔다. 매일 것 7개와 일요일 것 4개를
+  profile이 있어 `up`으로는 뜨지 않고 실행할 때만 잠깐 뜬다)가 `mongodump`로 gzip 아카이브를 받아 `/opt/puny-chat/backups`에 둔다. 매일 것 7개와 일요일 것 3개를
   남겨 가장 오래된 것도 21일을 넘지 않는다. Atlas 접근 목록이 Lightsail IP뿐이라 GitHub Actions에서는 받을 수 없다.
   인스턴스는 Lightsail 자동 스냅샷(매일 18:18 UTC쯤, 최근 7개, 인스턴스를 같이 쓰는 서비스 공용)도 남겨서, 덤프와 사진 파일(`photos`)이 스냅샷에 최대 7일 더 남는다.
   그래서 덤프는 스냅샷까지 합쳐 30일, 지운 사진은 7일을 넘지 않는다(개인정보처리방침의 보관 기간). 덤프를 더 오래 두려면 방침부터 고친다.
