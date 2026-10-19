@@ -1,6 +1,6 @@
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Svg, { Rect } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 import {
   Animated,
   Easing,
@@ -32,6 +32,7 @@ import {
   seasonOn,
   umbrellaFor,
 } from '../pixel/looks';
+import { boxPaths } from '../pixel/boxes';
 import { type Palette, PixelSprite } from '../pixel/pixel-sprite';
 import { BUNDLE, ROOM_PALETTE, skyAt } from '../pixel/room';
 import {
@@ -1890,9 +1891,20 @@ export function BuddyStage({
           ]}
         >
           <Svg width={width} height={height - FLOOR}>
-            {STARS.map(([sx, sy], i) => (
-              <Rect key={i} x={sx * width} y={sy * height} width={4} height={4} fill={STAR} />
-            ))}
+            <Path
+              d={boxPaths(
+                STARS.map(([sx, sy]) => ({
+                  x: sx * width,
+                  y: sy * height,
+                  w: 4,
+                  h: 4,
+                  fill: STAR,
+                })),
+              )
+                .map(({ d }) => d)
+                .join('')}
+              fill={STAR}
+            />
           </Svg>
           <Animated.View
             style={[
@@ -1957,9 +1969,20 @@ export function BuddyStage({
           ]}
         >
           <Svg width={width} height={height - FLOOR + RAIN_GAP}>
-            {rainDrops(width, height - FLOOR, 26, shelter).map(([dx, dy]) => (
-              <Rect key={dx + ',' + dy} x={dx} y={dy} width={2} height={9} fill={RAIN} />
-            ))}
+            <Path
+              d={boxPaths(
+                rainDrops(width, height - FLOOR, 26, shelter).map(([x, y]) => ({
+                  x,
+                  y,
+                  w: 2,
+                  h: 9,
+                  fill: RAIN,
+                })),
+              )
+                .map(({ d }) => d)
+                .join('')}
+              fill={RAIN}
+            />
           </Svg>
         </Animated.View>
       ) : null}

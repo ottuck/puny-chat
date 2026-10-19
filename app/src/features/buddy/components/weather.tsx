@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Platform, StyleSheet } from 'react-native';
-import Svg, { G, Rect } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
+
+import { boxPaths } from '../pixel/boxes';
 
 // Rain and snow over the stage (docs/fun-improvements.md, 가끔 생기는 사건), and the snow in the hot
 // spring in winter.
@@ -58,11 +60,13 @@ export function Snowfall({ width, height }: { width: number; height: number }) {
       ]}
     >
       <Svg width={width} height={height + RAIN_GAP}>
-        {rainDrops(width, height, 34, null).map(([dx, dy]) => (
-          <G key={dx + ',' + dy}>
-            <Rect x={dx + 1} y={dy + 1} width={4} height={4} fill={SNOW_SHADE} />
-            <Rect x={dx} y={dy} width={4} height={4} fill={SNOW} />
-          </G>
+        {boxPaths(
+          rainDrops(width, height, 34, null).flatMap(([x, y]) => [
+            { x: x + 1, y: y + 1, w: 4, h: 4, fill: SNOW_SHADE },
+            { x, y, w: 4, h: 4, fill: SNOW },
+          ]),
+        ).map(({ fill, d }) => (
+          <Path key={fill} d={d} fill={fill} />
         ))}
       </Svg>
     </Animated.View>
