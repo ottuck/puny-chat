@@ -530,8 +530,8 @@ App Store Guideline 5.1.1(v) 때문에 있다. 게스트는 Firebase가 30일 �
   `lastSeenAt`을 하루 한 번 적는 조건부 update와 같은 자리라, 동시에 온 요청도 하루 한 번만 센다.
 - **보기**: 매주 월요일 09:00(일본 시간) 지난 7일의 시작 흐름과 최근 6주 가입자의 1·7·30일째 재방문을 문의 메일과 같은 주소로
   보낸다(`stats/StatsReport`). 메일 설정이 없으면 로그에만 남긴다.
-- **웹 방문**: Cloudflare Web Analytics(쿠키 없음). 웹 빌드에 저장소 변수 `EXPO_PUBLIC_CF_BEACON_TOKEN`이 있으면 페이지가
-  비콘을 싣는다(`app/+html.tsx`). 지금은 토큰이 없어 싣지 않는다.
+- **웹 방문**: Cloudflare Web Analytics(쿠키 없음). Cloudflare가 puny-chat.com 페이지에 비콘을 자동으로 넣으므로 앱에는 코드가 없다.
+  대시보드의 Web Analytics에서 페이지·유입 경로·나라를 본다.
 - **스토어**: 노출 → 페이지 조회 → 다운로드는 App Store Connect 분석에서 본다.
 
 ## 푸시 알림

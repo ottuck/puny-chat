@@ -4,9 +4,6 @@ import { type PropsWithChildren } from 'react';
 // The public address, for link previews: crawlers need absolute URLs (infra: web_custom_domains).
 const SITE = 'https://puny-chat.com';
 const TITLE = 'puny-chat';
-// Cloudflare Web Analytics: page visits without cookies (docs/PROJECT.md, 이용 통계). The token is
-// public; without it (local builds) nothing loads.
-const BEACON_TOKEN = process.env.EXPO_PUBLIC_CF_BEACON_TOKEN;
 const DESCRIPTION =
   'ふたりで育てる、ドット絵のバディつき1対1チャットアプリ。登録なしで、まずは見てみよう。';
 
@@ -50,13 +47,6 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="theme-color" content="#16161A" media="(prefers-color-scheme: dark)" />
         <ScrollViewStyleReset />
         <style dangerouslySetInnerHTML={{ __html: pageStyle }} />
-        {BEACON_TOKEN ? (
-          <script
-            defer
-            src="https://static.cloudflareinsights.com/beacon.min.js"
-            data-cf-beacon={JSON.stringify({ token: BEACON_TOKEN, spa: true })}
-          />
-        ) : null}
       </head>
       <body>{children}</body>
     </html>
