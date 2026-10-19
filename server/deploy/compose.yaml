@@ -25,5 +25,15 @@ services:
     depends_on:
       - server
 
+  # The daily database dump into ./backups (backup.sh). Its profile keeps `up` from starting it.
+  backup:
+    image: mongo:8.0
+    profiles: [backup]
+    env_file: .env
+    mem_limit: 256m
+    volumes:
+      - ./backups:/backups
+    command: sh -c 'mongodump --uri="$$SPRING_MONGODB_URI" --db="$$SPRING_MONGODB_DATABASE" --gzip --archive=/backups/dump.archive.gz --quiet'
+
 volumes:
   caddy_data:

@@ -573,8 +573,20 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
   컨테이너는 서버(복제 1: 연결·presence·typing이 메모리에 있다)와 Caddy(80/443, 인증서 자동, WebSocket 전달). 다른 서비스(quant-lab, ur-check)와
   나눠 쓰므로 힙 `-Xmx384m`·SerialGC, 컨테이너 640MB로 제한한다. 항상 켜져 있어 콜드 스타트가 없다(앱의 미리 깨우기 `lib/warm-up.ts`는 남겨 둔다).
   서버 설정은 인스턴스의 `/opt/puny-chat/.env`(견본 `server/deploy/.env.example`)에만 있다. 방화벽은 80·443만 열고 SSH는 Lightsail 브라우저 연결만 허용한다.
+  용량(2026-10 확인): 디스크 60GB 중 약 9.4GB 사용. 메모리는 컨테이너를 모두 합쳐 평소 약 0.8GB이고 스왑을 0.7GB쯤 차지하지만, 스왑을 오가는 양(`vmstat`의 si/so)이
+  거의 0이고 OOM이 없어 4GB 요금제로 올리지 않는다. `update.sh`가 새 이미지를 받을 때마다 옛 이미지를 지운다. 같은 저장소의 이미지끼리 레이어를 나눠 써서
+  `docker system df`의 회수 가능 크기는 실제보다 크게 나온다(옛 태그 세 개를 지워도 31MB였다).
 - **DB**: Atlas M0(무료, 512MB, 초당 100 ops), 서버와 같은 시드니. 접근 목록은 Lightsail 고정 IP 하나, 비밀번호(Terraform이 만들어 서버 `.env`로만)와 TLS.
-  인스턴스를 바꾸면 고정 IP를 옮기거나 `var.server_ip`를 바꿔 다시 apply한다. M0는 자동 백업이 없다.
+  인스턴스를 바꾸면 고정 IP를 옮기거나 `var.server_ip`를 바꿔 다시 apply한다. M0는 자동 백업이 없어 인스턴스가 받아 둔다(아래 백업).
+- **백업**: 인스턴스의 systemd 타이머(`puny-chat-backup.timer`, 매일 18:00 UTC)가 `server/deploy/backup.sh`를 실행한다. compose의 `backup` 서비스(`mongo:8.0`,
+  profile이 있어 `up`으로는 뜨지 않고 실행할 때만 잠깐 뜬다)가 `mongodump`로 gzip 아카이브를 받아 `/opt/puny-chat/backups`에 둔다. 매일 것 7개와 일요일 것 4개를
+  남겨 가장 오래된 것도 30일을 넘지 않는다(개인정보처리방침의 보관 기간). Atlas 접근 목록이 Lightsail IP뿐이라 GitHub Actions에서는 받을 수 없다.
+  인스턴스 밖 사본은 두지 않는다: 인스턴스를 잃어도 운영 데이터는 Atlas에 있고, 인스턴스 침해까지 대비하는 건 이 규모에 과하다.
+  2026-10(사용자 20명, 메시지 220개) 기준 데이터는 약 70KB, 30일치를 모두 합쳐도 1MB가 안 된다. 실패는 `journalctl -u puny-chat-backup`으로 본다.
+  복원은 `/opt/puny-chat`에서 `docker compose run --rm -T backup sh -c 'mongorestore --uri="$SPRING_MONGODB_URI" --gzip --archive=/backups/daily/<날짜>.archive.gz --drop'`.
+  운영 DB에 넣기 전에 확인하려면 임시 MongoDB 컨테이너(`--memory 400m`, `--wiredTigerCacheSizeGB 0.25`, `/backups` 마운트)에서 `mongorestore`로 넣고
+  문서 수를 본 뒤 지운다. 인스턴스 커널(7.0)에서는 `mongod` 8.0이 뜨지 않으므로(SERVER-121912) 이 확인은 `mongo:8.2`로 한다. `mongodump`·`mongorestore`는
+  클라이언트라 8.0 이미지로 된다. 같은 이유로 DB를 인스턴스 안으로 옮기려면 이 커널에서 뜨는 버전을 써야 한다.
 - **웹 앱**: Cloudflare Worker의 정적 자산(`app/wrangler.jsonc`). `pnpm build:web`이 `expo export -p web` 뒤에 `scripts/worker-assets.mjs`로 404 페이지와
   `_headers`(서비스 워커 no-cache 등), 배포 버전(`version.json`, 커밋 sha)을 만든다. 홈 화면에 추가한 웹 앱은 새로고침 버튼이 없고 닫아도
   멈춰 있을 뿐이라, 앱이 다시 보일 때(1분에 한 번까지) 번들에 넣은 버전과 `version.json`을 비교해 다르면 새로 불러온다(`lib/web-update`). 커스텀 도메인은 wrangler 배포가 붙인다(같은 이름의 CNAME이 있으면 안 된다).
