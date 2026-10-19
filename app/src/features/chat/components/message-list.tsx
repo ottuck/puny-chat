@@ -21,6 +21,8 @@ type Props = {
   onLoadOlder: () => void;
   // The top level's card offers going its own way while the buddy is still the grown one.
   onGraduate?: () => void;
+  // A buddy gone its own way: its card opens the memory album.
+  onOpenAlbum?: () => void;
 };
 
 export function MessageList({
@@ -32,6 +34,7 @@ export function MessageList({
   onRetry,
   onLoadOlder,
   onGraduate,
+  onOpenAlbum,
 }: Props) {
   const { t, i18n } = useTranslation();
   const nameOf = (id?: string) =>
@@ -89,6 +92,18 @@ export function MessageList({
                 body={`${t('chat.maxLevelThanks')} ${t('chat.maxLevelJob')}`}
                 action={onGraduate ? `🎓 ${t('buddy.graduate.button')}` : undefined}
                 onAction={onGraduate}
+              />
+            </View>
+          );
+        }
+        if (item.type === 'BUDDY_EVENT' && item.event === 'GRADUATED') {
+          return (
+            <View style={styles.spaced}>
+              <EventCard
+                title={t('buddyEvent.GRADUATED', { name: item.detail })}
+                body={t('chat.graduatedBody', { name: item.detail })}
+                action={onOpenAlbum ? `📷 ${t('buddy.album.view')}` : undefined}
+                onAction={onOpenAlbum}
               />
             </View>
           );
