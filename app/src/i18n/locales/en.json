@@ -69,6 +69,9 @@
       "SAD": "Sad",
       "WOW": "Wow"
     },
+    "photo": "Send a photo",
+    "photoMessage": "Photo",
+    "photoOpen": "View photo",
     "online": "Online",
     "offline": "Offline",
     "emptySolo": "{{buddy}} has hatched!\nInvite a friend to raise it together.",
@@ -590,7 +593,7 @@
   "privacy": {
     "title": "Privacy policy",
     "effective": "Effective · October 19, 2026",
-    "intro": "puny-chat provides invite-only, one-to-one text chat and a shared Buddy. This policy explains the information we process and your choices.",
+    "intro": "puny-chat provides invite-only, one-to-one text and photo chat and a shared Buddy. This policy explains the information we process and your choices.",
     "sections": {
       "operator": {
         "title": "1. Operator and contact",
@@ -598,7 +601,7 @@
       },
       "collection": {
         "title": "2. Information processed",
-        "body": "We process your account identifier (Firebase UID), display name, creation and recent activity times, guest/link status, room membership and invitations. We store message text, send times, read positions, and Buddy and album state. If you enable notifications, we process device push tokens or web push subscriptions. Google or Apple processes login information such as your email when you link an account; the app may display it to identify your account. Questions and reports include your message, selected reason, related user/room identifiers. Reply emails collected by earlier versions follow the retention period for existing submissions. Reports retain up to 50 recent text messages separately. Network and hosting operations may process IP addresses, request times and error information."
+        "body": "We process your account identifier (Firebase UID), display name, creation and recent activity times, guest/link status, room membership and invitations. We store message text and photos you send (photos are saved again without metadata such as location), send times, read positions, and Buddy and album state. If you enable notifications, we process device push tokens or web push subscriptions. Google or Apple processes login information such as your email when you link an account; the app may display it to identify your account. Questions and reports include your message, selected reason, related user/room identifiers. Reply emails collected by earlier versions follow the retention period for existing submissions. Reports retain up to 50 recent text messages separately (for photos only the fact that one was sent; the files are deleted with the conversation). Network and hosting operations may process IP addresses, request times and error information."
       },
       "purposes": {
         "title": "3. Purposes",
@@ -614,7 +617,7 @@
       },
       "retention": {
         "title": "6. Retention and deletion",
-        "body": "Account and service data are retained while you use the service. Delete your account in Settings. If your partner remains after ordinary room departure, their room, Buddy and shared conversation remain. Account deletion removes messages you sent and system records containing your name, including in rooms you previously left, and removes your actor information from care events. Your partner’s messages, room, Buddy and album remain. When the last member leaves, the room and conversation are deleted. Reporting/removal deletes the conversation for both people, while report evidence is retained separately. Server records for questions, reports and removals become eligible for automatic deletion 90 days after submission and are removed by the database cleanup cycle. Operator email copies are manually deleted when no longer needed after handling. Unlinked guest accounts are cleaned up by Firebase after 30 days from creation; expired guest service data is cleaned up periodically. Database backups for recovery are kept on the server for up to 30 days and then deleted automatically; until then, deleted data may remain in a backup. Technical security/error information follows the relevant infrastructure provider retention policies."
+        "body": "Account and service data are retained while you use the service. Delete your account in Settings. If your partner remains after ordinary room departure, their room, Buddy and shared conversation remain. Account deletion removes messages you sent and system records containing your name, including in rooms you previously left, and removes your actor information from care events. Your partner’s messages, room, Buddy and album remain. When the last member leaves, the room and conversation are deleted. Reporting/removal deletes the conversation for both people, while report evidence is retained separately. Server records for questions, reports and removals become eligible for automatic deletion 90 days after submission and are removed by the database cleanup cycle. Operator email copies are manually deleted when no longer needed after handling. Unlinked guest accounts are cleaned up by Firebase after 30 days from creation; expired guest service data is cleaned up periodically. Database backups for recovery are kept on the server for up to 30 days and then deleted automatically; until then, deleted data may remain in a backup. Photo files are not backed up and are removed as soon as they are deleted. Technical security/error information follows the relevant infrastructure provider retention policies."
       },
       "security": {
         "title": "7. Safeguards",

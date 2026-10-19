@@ -25,6 +25,8 @@ import { MessageComposer } from '@/features/chat/components/message-composer';
 import { EmptyChat } from '@/features/chat/components/empty-chat';
 import { nothingSaidYet } from '@/features/chat/timeline';
 import { MessageList } from '@/features/chat/components/message-list';
+import { pickPhoto } from '@/features/chat/photo';
+import { canSendPhotos } from '@/features/chat/photo-support';
 import { useChat } from '@/features/chat/use-chat';
 import {
   onNotificationTap,
@@ -94,6 +96,14 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged, onGuideSeen }: ChatSc
     setCue(chat.cue);
   }
   const { messages, status, online, typing, reads, unreadWhileAway } = chat;
+  // One photo from the library, made small, then sent (docs/PROJECT.md, 사진).
+  const sendPhoto = () => {
+    pickPhoto()
+      .then((photo) => {
+        if (photo) chat.sendPhoto(photo);
+      })
+      .catch((e: unknown) => console.warn('picking a photo failed', e));
+  };
   const [buddyOpen, setBuddyOpen] = useState(false);
   const [partnerOpen, setPartnerOpen] = useState(false);
   const { account } = useAuth();
@@ -204,6 +214,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged, onGuideSeen }: ChatSc
           roomId={room.id}
           onSend={chat.send}
           onTyping={chat.notifyTyping}
+          onPickPhoto={canSendPhotos ? sendPhoto : undefined}
         />
       </KeyboardAvoidingView>
 

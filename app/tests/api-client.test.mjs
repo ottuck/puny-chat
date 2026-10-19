@@ -30,6 +30,22 @@ test('sends the token, and JSON only when there is a body', async () => {
   assert.equal(calls[1].init.body, '{"name":"Yuki"}');
 });
 
+test('a Blob goes as it is, with its content type', async () => {
+  const calls = [];
+  const fetch = serve((url, init) => {
+    calls.push(init);
+    return Response.json({ id: 'm1' });
+  });
+  const image = new Blob([new Uint8Array([0xff, 0xd8, 0xff])]);
+  try {
+    await api('/api/rooms/me/photos', { method: 'POST', body: image, contentType: 'image/jpeg' });
+  } finally {
+    fetch.mock.restore();
+  }
+  assert.equal(calls[0].headers['Content-Type'], 'image/jpeg');
+  assert.equal(calls[0].body, image);
+});
+
 test('204 is undefined', async () => {
   const fetch = serve(() => new Response(null, { status: 204 }));
   try {

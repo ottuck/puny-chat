@@ -14,15 +14,17 @@ export type ServerMessage = {
   id: string;
   roomId: string;
   senderId: string | null;
-  type: 'TEXT' | 'SYSTEM' | 'BUDDY_EVENT';
+  type: 'TEXT' | 'PHOTO' | 'SYSTEM' | 'BUDDY_EVENT';
   text: string | null;
+  // PHOTO: the stored file (docs/PROJECT.md, 사진).
+  photo?: { id: string; width: number; height: number } | null;
   buddyEvent: BuddyEvent | null;
   // SYSTEM entries: what happened; text then holds the actor's name at the time.
   systemEvent?: SystemEvent | null;
   actorId: string | null;
   clientMessageId: string;
   createdAt: string;
-  // TEXT: user id → their reaction. Null or absent when nobody has reacted.
+  // TEXT, PHOTO: user id → their reaction. Null or absent when nobody has reacted.
   reactions?: Record<string, MessageReaction> | null;
 };
 
@@ -57,6 +59,21 @@ export type TextMessage = MessageBase & {
   reactions?: Record<string, MessageReaction>;
 };
 
+// A photo a member sent. While mine is on its way it shows the picked file (`localUri`); the server's
+// copy is then at photoUrl(roomId, id) (photo.ts).
+export type PhotoMessage = MessageBase & {
+  type: 'PHOTO';
+  senderId: string;
+  photo: { id?: string; roomId?: string; localUri?: string; width: number; height: number };
+  status?: 'sending' | 'failed';
+  reactions?: Record<string, MessageReaction>;
+};
+
+// What a member sent (not the room's or the buddy's lines): it has a bubble, reactions and a read mark.
+export type MemberMessage = TextMessage | PhotoMessage;
+export const isMemberMessage = (message: Message): message is MemberMessage =>
+  message.type === 'TEXT' || message.type === 'PHOTO';
+
 export type BuddyEventMessage = MessageBase & {
   type: 'BUDDY_EVENT';
   event: BuddyEvent;
@@ -75,7 +92,7 @@ export type SystemMessage = MessageBase & {
   actorName: string | null;
 };
 
-export type Message = TextMessage | BuddyEventMessage | SystemMessage;
+export type Message = TextMessage | PhotoMessage | BuddyEventMessage | SystemMessage;
 
 export type Member = {
   id: string;
@@ -95,6 +112,15 @@ export function fromServer(message: ServerMessage): Message | null {
       type: 'TEXT',
       senderId: message.senderId,
       text: message.text,
+      reactions: knownReactions(message.reactions),
+    };
+  }
+  if (message.type === 'PHOTO' && message.senderId && message.photo) {
+    return {
+      ...base,
+      type: 'PHOTO',
+      senderId: message.senderId,
+      photo: { ...message.photo, roomId: message.roomId },
       reactions: knownReactions(message.reactions),
     };
   }

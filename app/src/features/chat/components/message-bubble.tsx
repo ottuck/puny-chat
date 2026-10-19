@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useColors } from '@/theme';
 
@@ -12,8 +12,29 @@ export type BubbleRect = { x: number; y: number; width: number; height: number }
 // The reaction pill hangs this far below the bubble; the time beside it moves up as much.
 const PILL_DROP = 16;
 
+// A photo keeps its shape inside this box, and is never thinner than PHOTO_MIN.
+const PHOTO_MAX_WIDTH = 220;
+const PHOTO_MAX_HEIGHT = 280;
+const PHOTO_MIN = 96;
+
+export type BubblePhoto = { uri: string; width: number; height: number };
+
+function photoBox({ width, height }: BubblePhoto) {
+  const w = Math.max(width, 1);
+  const h = Math.max(height, 1);
+  const scale = Math.min(PHOTO_MAX_WIDTH / w, PHOTO_MAX_HEIGHT / h);
+  return {
+    width: Math.max(PHOTO_MIN, Math.round(w * scale)),
+    height: Math.max(PHOTO_MIN, Math.round(h * scale)),
+  };
+}
+
 type Props = {
-  text: string;
+  // A text message has text, a photo message a photo.
+  text?: string;
+  photo?: BubblePhoto;
+  // A tap on the photo: show it across the screen.
+  onOpenPhoto?: () => void;
   mine: boolean;
   // Formatted time, shown only on the last message of a consecutive run.
   time?: string;
@@ -30,6 +51,8 @@ type Props = {
 
 export function MessageBubble({
   text,
+  photo,
+  onOpenPhoto,
   mine,
   time,
   status,
@@ -56,15 +79,18 @@ export function MessageBubble({
       <View style={[styles.column, mine ? styles.columnMine : styles.columnTheirs]}>
         <Pressable
           ref={bubbleRef}
-          onLongPress={openPicker}
+          onPress={photo ? onOpenPhoto : undefined}
+          onLongPress={onReact ? openPicker : undefined}
           delayLongPress={350}
-          disabled={!onReact}
+          disabled={!onReact && !(photo && onOpenPhoto)}
+          accessibilityRole={photo ? 'button' : undefined}
+          accessibilityLabel={photo ? t('chat.photoOpen') : undefined}
           accessibilityActions={onReact ? [{ name: 'longpress', label: t('chat.react') }] : []}
           onAccessibilityAction={(event) => {
             if (event.nativeEvent.actionName === 'longpress') openPicker();
           }}
           style={[
-            styles.bubble,
+            photo ? styles.photoBubble : styles.bubble,
             mine
               ? { backgroundColor: colors.bubbleMine }
               : {
@@ -76,11 +102,23 @@ export function MessageBubble({
             status === 'sending' && styles.sending,
           ]}
         >
-          <Text
-            style={[styles.text, { color: mine ? colors.bubbleMineText : colors.bubbleTheirsText }]}
-          >
-            {text}
-          </Text>
+          {photo ? (
+            <Image
+              source={{ uri: photo.uri }}
+              style={[photoBox(photo), { backgroundColor: colors.border }]}
+              resizeMode="cover"
+              accessibilityIgnoresInvertColors
+            />
+          ) : (
+            <Text
+              style={[
+                styles.text,
+                { color: mine ? colors.bubbleMineText : colors.bubbleTheirsText },
+              ]}
+            >
+              {text}
+            </Text>
+          )}
         </Pressable>
         {kinds.length > 0 ? (
           <Pressable
@@ -153,6 +191,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 18,
+  },
+  // No padding: the photo is the bubble, with its corners.
+  photoBubble: {
+    borderRadius: 18,
+    overflow: 'hidden',
   },
   sending: {
     opacity: 0.55,

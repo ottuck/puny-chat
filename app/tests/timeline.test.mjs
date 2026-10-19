@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { foldLevelUps, nothingSaidYet } from '../src/features/chat/timeline.ts';
+import { foldLevelUps, nothingSaidYet, runPosition } from '../src/features/chat/timeline.ts';
 
 const levelUp = (level, createdAt) => ({
   type: 'BUDDY_EVENT',
@@ -50,4 +50,19 @@ test('the note that the friend came in alone still counts as nothing said', () =
   assert.equal(nothingSaidYet([joined]), true);
   assert.equal(nothingSaidYet([text('t1', '2026-10-18T12:00:00'), joined]), false);
   assert.equal(nothingSaidYet([left, joined]), false);
+});
+
+test('a photo joins the run of texts the same member sent that minute', () => {
+  const photo = {
+    type: 'PHOTO',
+    senderId: 'a',
+    photo: { width: 100, height: 100 },
+    createdAt: '2026-10-19T10:00:30Z',
+    clientMessageId: 'p1',
+  };
+  // Newest first.
+  const messages = [photo, text('t1', '2026-10-19T10:00:10Z')];
+  assert.deepEqual(runPosition(messages, 0), { continuesOlder: true, showTime: true });
+  assert.deepEqual(runPosition(messages, 1), { continuesOlder: false, showTime: false });
+  assert.equal(nothingSaidYet([photo]), false);
 });
