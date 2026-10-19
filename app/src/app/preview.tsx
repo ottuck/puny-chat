@@ -1,6 +1,6 @@
 import { randomUUID } from 'expo-crypto';
 import { Redirect, useLocalSearchParams } from 'expo-router';
-import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -55,6 +55,7 @@ const REACTIONS: ReactionKind[] = [
   'levelUp',
   'maxLevel',
   'evolved',
+  'jobChanged',
   'together',
   'here',
   'joined',
@@ -341,12 +342,22 @@ function Preview() {
   );
   // The level its job was last changed at, for when it may be changed again (null: never).
   const [jobChangedAt, setJobChangedAt] = useState<number | null>(null);
+  // The memory album: the link's (&album=), and each buddy that goes its own way here.
+  const [album, setAlbum] = useState(() => PAST_BUDDIES.slice(0, Number(params.album ?? 0)));
   const shownLevel = level ?? LEVEL[stage];
   const goTo = (next: number) => {
     setStage(stageAt(next));
     setLevel(next);
   };
   const leave = () => {
+    // Only a hatched buddy goes its own way (an egg has nothing to take along).
+    if (stage !== 'EGG') {
+      const now = new Date().toISOString();
+      setAlbum((list) => [
+        ...list,
+        { name: 'Preview', bornAt: now, graduatedAt: now, job: stage === 'ADULT' ? job : null },
+      ]);
+    }
     setStage('EGG');
     setLevel(null);
     setJobChangedAt(null);
@@ -364,9 +375,13 @@ function Preview() {
   }, [linkedCue]);
   // &leave=1: the buddy goes its own way two seconds in (moving out, then the new egg).
   const leaves = params.leave === '1';
+  const leaving = useRef(leave);
+  useEffect(() => {
+    leaving.current = leave;
+  });
   useEffect(() => {
     if (!leaves) return;
-    const timer = setTimeout(leave, 2000);
+    const timer = setTimeout(() => leaving.current(), 2000);
     return () => clearTimeout(timer);
   }, [leaves]);
   const [reaction, setReaction] = useState<Reaction | null>(null);
@@ -392,7 +407,8 @@ function Preview() {
   // The day of the room's seasonal things (undefined: today).
   const [date, setDate] = useState<string | undefined>(params.date);
 
-  const album = PAST_BUDDIES.slice(0, Number(params.album ?? 0));
+  // A job changed in the details plays on the stage once they close, as in the app.
+  const [jobCheer, setJobCheer] = useState<Reaction | null>(null);
   const [foldAll, setFoldAll] = useState({ open: false, run: 0 });
 
   return (
@@ -464,11 +480,16 @@ function Preview() {
           <BuddySheet
             visible={detail}
             buddy={buddyOf(stage, job, hungry, poops, level, jobChangedAt)}
-            onClose={() => setDetail(false)}
+            onClose={() => {
+              setDetail(false);
+              if (jobCheer) setReaction(jobCheer);
+              setJobCheer(null);
+            }}
             onChangeJob={async (next) => {
               // A first job does not count, as on the server.
               if (job && stage === 'ADULT') setJobChangedAt(shownLevel);
               setJob(next);
+              setJobCheer({ id: randomUUID(), kind: 'jobChanged' });
             }}
             onGraduate={async () => {
               setDetail(false);
