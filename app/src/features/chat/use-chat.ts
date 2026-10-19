@@ -5,7 +5,12 @@ import { AppState, Platform } from 'react-native';
 import type { BuddyView } from '@/features/buddy/api';
 import { chatMood, chatWord } from '@/features/buddy/chat-words';
 import type { Cue } from '@/features/buddy/components/buddy-stage';
-import { missedMoment, type Reaction, reactionTo } from '@/features/buddy/reactions';
+import {
+  missedMoment,
+  type Reaction,
+  type ReactionKind,
+  reactionTo,
+} from '@/features/buddy/reactions';
 import { ApiError } from '@/lib/api';
 
 import { fetchNewer, fetchNewest, fetchOlder } from './api';
@@ -97,6 +102,14 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   const [partnerPet, setPartnerPet] = useState<{ id: string } | null>(null);
   // When the partner's arrival last made the buddy cheer: once in a while, not at every reconnect.
   const hereAt = useRef(0);
+  // Care this user did, already shown on the tap (use-buddy.ts): its event from the server, a moment
+  // later, is not played again.
+  const playedMine = useRef<{ kind: ReactionKind; at: number }[]>([]);
+  const playMine = useCallback((kind: 'fed' | 'cleaned') => {
+    const now = Date.now();
+    playedMine.current.push({ kind, at: now });
+    setReaction({ id: `mine-${kind}-${now}`, kind });
+  }, []);
   const cheerPartnerHere = useCallback(() => {
     const now = Date.now();
     if (now - hereAt.current < HERE_AGAIN_MS) return;
@@ -235,7 +248,12 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
         if (message.senderId) setTypingOf(message.senderId, false);
         apply([message]);
         const next = reactionTo(message, myIdRef.current);
-        if (next) setReaction(next);
+        const shownAlready =
+          next &&
+          message.type === 'BUDDY_EVENT' &&
+          message.actorId === myIdRef.current &&
+          takePlayed(playedMine.current, next.kind);
+        if (next && !shownAlready) setReaction(next);
         // The friend's first arrival is cheered already; "together now" would follow right after.
         if (next?.kind === 'joined') hereAt.current = Date.now();
         cueFrom(message);
@@ -384,6 +402,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
     reads,
     unreadWhileAway,
     reaction,
+    playMine,
     cue,
     lastTalkAt,
     partnerPet,
@@ -394,4 +413,17 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
     loadOlder,
     notifyTyping,
   };
+}
+
+// The oldest care of this kind shown on the tap in the last while, taken off the list.
+const PLAYED_FOR_MS = 15_000;
+function takePlayed(played: { kind: ReactionKind; at: number }[], kind: ReactionKind): boolean {
+  const now = Date.now();
+  for (let i = played.length - 1; i >= 0; i--) {
+    if (now - played[i].at > PLAYED_FOR_MS) played.splice(i, 1);
+  }
+  const index = played.findIndex((entry) => entry.kind === kind);
+  if (index < 0) return false;
+  played.splice(index, 1);
+  return true;
 }

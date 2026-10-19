@@ -148,10 +148,7 @@ function DemoScreen({ onReplay }: { onReplay: () => void }) {
       <BuddySheet
         visible={buddyOpen}
         buddy={demo.buddy}
-        busy={false}
         onClose={() => setBuddyOpen(false)}
-        onFeed={demo.feed}
-        onClean={demo.clean}
         together={{ myId: DEMO_ME, partnerId: DEMO_PARTNER, partnerName: t('demo.partner') }}
       />
     </SafeAreaView>
