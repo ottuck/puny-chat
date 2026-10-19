@@ -43,6 +43,11 @@
 
 - 서버 통신: `lib/api.ts`(REST, `lib/api-client.ts`에 서버 주소와 Firebase ID token을 넘긴다) · `features/chat/socket.ts`(채팅·Buddy 이벤트).
   연결 자체(첫 메시지 인증, 재연결·백오프, 일시정지)는 `lib/realtime-socket.ts`로, 이벤트 타입은 제네릭이고 주소·토큰은 주입받는다.
+- `lib/`의 재사용 코어(`social-auth`, `realtime-socket.ts`, `api-client.ts`, `push`)는 앱 코드(`@/features`, `@/app`,
+  `@/i18n`)와 서버 경로를 import하지 않는다. 앱은 `lib/api.ts`, `features/chat/socket.ts`, `features/notifications/push.ts`,
+  `features/auth/social.ts`에서 주소·번역·인증을 넘겨 묶는다. 다른 앱에는 파일·폴더째 복사해 쓴다.
+- `features/chat` → `features/buddy` 한 방향으로만 import한다. buddy는 chat 타입을 모르고, 반응은 `reactions.ts`의
+  `ReactionSource`(메시지에서 쓰는 필드만)로 받는다. Buddy 사건 종류 `BuddyEvent`는 `features/buddy/api.ts`에 있다.
 - `features/room/room-provider.tsx`: 로그인 후 `/api/me` → room 유무로 `welcome` / 채팅 화면을 나눈다(`_layout.tsx` 가드).
 - `features/chat/use-chat.ts`: 타임라인 상태. `message-sync.ts`가 실시간 메시지와 별개인 복구 커서로 `after`를 읽고,
   실패하면 마지막 성공 페이지에서 재시도한다. 복구 중 읽음은 보내지 않는다. ack 못 받은 메시지는 `ready`에서 같은

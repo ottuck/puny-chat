@@ -1,20 +1,5 @@
-export type BuddyEvent =
-  | 'HUNGRY'
-  | 'FED'
-  | 'POOPED'
-  | 'CLEANED'
-  // A grown-up's work at its station (docs/PROJECT.md, 직업 무대 장치).
-  | 'WORKED'
-  // A trip to the hot spring that earned EXP (docs/fun-improvements.md, 목욕).
-  | 'BATHED'
-  | 'LEVELED_UP'
-  | 'EVOLVED'
-  | 'GROWN'
-  | 'MAX_LEVEL'
-  | 'GRADUATED'
-  | 'TOGETHER'
-  | 'JOB'
-  | 'JOB_CHANGED';
+import type { BuddyEvent } from '@/features/buddy/api';
+
 // MEMBER_JOINED: a friend came in with an invite. MEMBER_RETURNED: someone came in with a code made
 // for the partner and took their seat.
 export type SystemEvent = 'MEMBER_JOINED' | 'MEMBER_LEFT' | 'MEMBER_RETURNED';

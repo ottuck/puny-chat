@@ -1,11 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { type BuddyStage, type BuddyView, TOGETHER_EXP } from '@/features/buddy/api';
+import {
+  type BuddyEvent,
+  type BuddyStage,
+  type BuddyView,
+  TOGETHER_EXP,
+} from '@/features/buddy/api';
 import { chatMood } from '@/features/buddy/chat-words';
 import { STAGE_ORDER } from '@/features/buddy/pixel/sprites';
 import type { Cue } from '@/features/buddy/components/buddy-stage';
 import type { Reaction, ReactionKind } from '@/features/buddy/reactions';
-import type { BuddyEvent, Message } from '@/features/chat/types';
+import type { Message } from '@/features/chat/types';
 
 import { DEMO_ME, DEMO_PARTNER, REPLIES, SCRIPT, type Step, type Who } from './script';
 
