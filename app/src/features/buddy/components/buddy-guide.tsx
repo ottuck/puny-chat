@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useColors } from '@/theme';
 
@@ -121,9 +122,15 @@ export function rewardIcon(reward: Reward, size = 30) {
   return <PixelSprite frame={frame} palette={palette} scale={scale} />;
 }
 
+// The rewards shown before "more": the list is long, and each icon is drawn only once it shows.
+const FIRST_REWARDS = 5;
+
 export function BuddyGuide() {
   const colors = useColors();
   const { t } = useTranslation();
+  const [allRewards, setAllRewards] = useState(false);
+  const rewards = allRewards ? REWARDS : REWARDS.slice(0, FIRST_REWARDS);
+  const hidden = REWARDS.length - rewards.length;
 
   const section = (title: string, lines: string[]) => (
     <View style={[styles.card, { backgroundColor: colors.surface }]}>
@@ -172,7 +179,7 @@ export function BuddyGuide() {
         <Text lineBreakStrategyIOS="hangul-word" style={[styles.line, { color: colors.textMuted }]}>
           {t('guide.rewards.body')}
         </Text>
-        {REWARDS.map(({ level, reward }) => (
+        {rewards.map(({ level, reward }) => (
           <View key={reward} style={styles.reward}>
             <View style={styles.icon}>{rewardIcon(reward)}</View>
             <Text style={[styles.level, { color: colors.accent }]}>Lv.{level}</Text>
@@ -181,6 +188,20 @@ export function BuddyGuide() {
             </Text>
           </View>
         ))}
+        {hidden > 0 ? (
+          <Pressable
+            onPress={() => setAllRewards(true)}
+            accessibilityRole="button"
+            style={({ pressed }) => [
+              styles.more,
+              { borderColor: colors.border, opacity: pressed ? 0.6 : 1 },
+            ]}
+          >
+            <Text style={[styles.moreLabel, { color: colors.accent }]}>
+              {t('guide.rewards.more', { count: hidden })}
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
@@ -223,5 +244,17 @@ const styles = StyleSheet.create({
   rewardName: {
     flex: 1,
     fontSize: 15,
+  },
+  more: {
+    height: 44,
+    marginTop: 4,
+    borderRadius: 22,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  moreLabel: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

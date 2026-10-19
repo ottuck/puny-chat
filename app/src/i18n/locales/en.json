@@ -549,7 +549,8 @@
     },
     "rewards": {
       "title": "🎁 Level rewards",
-      "body": "Every few levels the room gets a new prop, and the ones it has get finer."
+      "body": "Every few levels the room gets a new prop, and the ones it has get finer.",
+      "more": "See {{count}} more rewards"
     },
     "graduate": {
       "title": "🎓 Its own way",
