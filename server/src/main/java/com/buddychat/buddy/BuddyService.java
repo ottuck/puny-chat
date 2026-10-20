@@ -329,7 +329,7 @@ public class BuddyService {
 
     /**
      * What the message says about how they chat, for the buddy's job ({@link BuddyJob}): written at
-     * night, with a laugh, or with a "love you" (the laugh only if not the love). Counts only, so a
+     * night, or with a "love you". Counts only, so a
      * message that is none of these writes nothing.
      */
     private Mono<Void> noteHabits(String roomId, String text, Instant now) {
@@ -341,9 +341,6 @@ public class BuddyService {
         }
         if (MoodWords.love(text)) {
             habits.inc("buddy.loveCount", 1);
-            any = true;
-        } else if (MoodWords.laugh(text)) {
-            habits.inc("buddy.laughCount", 1);
             any = true;
         }
         if (!any) return Mono.empty();

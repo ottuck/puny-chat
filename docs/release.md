@@ -11,18 +11,19 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 | --- | --- | --- |
 | Apple Developer Program 가입, App ID(`com.ottuck.buddychat`), Sign in with Apple 켜기 | 운영자 | 완료 |
 | Sign in with Apple 키, Services ID, Firebase Apple 제공업체 | 운영자 | 완료 |
-| 아이폰 Google 로그인: `@react-native-google-signin/google-signin`을 넣은 개발용 빌드 다시 만들기(Firebase iOS 앱의 OAuth client 사용) | 운영자 | 예정 |
-| 아이폰 사진 보내기: `expo-image-picker`·`expo-image-manipulator`가 든 개발용 빌드(위 Google 빌드와 한 번에). 그 전 빌드는 사진 버튼만 숨기고 받은 사진은 보인다 | 운영자 | 예정 |
+| 아이폰 Google 로그인: `@react-native-google-signin/google-signin`이 든 빌드(Firebase iOS 앱의 OAuth client 사용). production 빌드 4에서 확인 | 운영자 | 완료 |
+| 아이폰 사진 보내기: `expo-image-picker`·`expo-image-manipulator`가 든 빌드. production 빌드 4에서 확인(그 모듈이 없는 예전 빌드는 사진 버튼만 숨기고 받은 사진은 보인다) | 운영자 | 완료 |
 | App Store Connect 앱 개인정보: "사진 또는 비디오"(사용자 콘텐츠, 앱 기능, 사용자와 연결됨) 추가 | 운영자 | 예정 |
 | 웹 Apple 로그인: Services ID에 웹 도메인(`buddy-chat-67e35.firebaseapp.com`)과 return URL(`https://buddy-chat-67e35.firebaseapp.com/__/auth/handler`) | 운영자 | 예정 |
 | Firebase iOS 앱(번들 ID `com.ottuck.buddychat`) 등록. 앱의 Apple 토큰은 수신자가 번들 ID라 이 등록이 없으면 `auth/invalid-credential` | CLI | 완료 |
 | App Store Connect 앱 등록 | 운영자 | 완료 |
 | 코드 쪽 준비(아래) | 코드 | 완료 |
 | EAS iOS 개발용 빌드·설치 | 운영자(Apple 인증, 기기 등록) | 완료 |
-| iPhone 실기기 검증 | 운영자 조작, 결과에 따른 코드 수정 | 진행 중 |
+| iPhone 실기기 검증 | 운영자 조작, 결과에 따른 코드 수정 | 완료 |
 | production 빌드·TestFlight 업로드(1.0.0 빌드 4). 배포 인증서·App Store 프로필·App Store Connect API 키는 EAS에 있다 | 운영자 인증, CLI는 지원 | 완료 |
-| TestFlight로 실기기 확인 | 운영자 | 진행 중 |
+| TestFlight로 실기기 확인(빌드 4) | 운영자 | 완료 |
 | 스토어 정보 입력·심사 제출 | 문안은 지원, 최종 확인·제출은 운영자 | 예정 |
+| 일본 전기통신사업 届出: 1:1 채팅은 "다른 사람의 통신 중개"지만, 총무성 참입 매뉴얼(追補版, 2023-01 개정)은 "営む"를 요금·광고 등으로 그 서비스 자체에서 이익을 얻으려는 것으로 보고 "無償・原価ベース"는 빼며, 개인이 운영하는 무료·무광고 메일을 "営む에 해당하지 않음(규율 대상 외)" 사례로 든다. 그래서 광고·결제·수익이 없는 지금은 届出 없이 일본에도 판매한다. **광고·결제·후원 등 수익을 붙이기 전에 届出(e-Gov)를 먼저 낸다** | 운영자 | 해당 없음(수익 없음) |
 
 ## 코드 쪽 준비 (완료)
 
@@ -59,9 +60,14 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
    ```
    빌드 번호는 EAS가 올린다(`appVersionSource: remote`). 첫 빌드 때 Apple 로그인으로 만든 배포 인증서·App Store 프로필·
    App Store Connect API 키가 EAS에 있고 `eas.json`에 `ascAppId`가 있어서, 다음부터는 `--non-interactive`로도 빌드·업로드된다.
-   Apple 처리(5~10분)가 끝나면 메일이 오고 TestFlight 탭에 보인다. 내부 테스터("Team (Expo)" 그룹)는 심사 없이 설치한다.
+   Apple 처리(5–10분)가 끝나면 메일이 오고 TestFlight 탭에 보인다. 내부 테스터("Team (Expo)" 그룹)는 심사 없이 설치한다.
 4. **App Store Connect 정보.**
    - 개인정보처리방침 `https://puny-chat.com/privacy`, 지원 URL `https://puny-chat.com/support`
+   - 판매 지역: 중국 본토와 EU를 뺀 전 세계. 중국 본토는 ICP 등록이 필요하고, EU는 DSA 판매자 신고를 하지 않는다.
+   - 스토어 언어: 기본 언어 영어(그 밖의 나라는 영어 페이지), 일본어·한국어 현지화. 설명·키워드·스크린샷을 세 언어로 따로 넣는다.
+     스크린샷은 `docs/app-store/{ja,ko,en}`의 6.3인치(1206×2622) 6장을 파일 이름 순서로 올린다. 웹 빌드의 구경하기(`/demo`)와
+     `/preview` 장면을 그 언어로 찍어 문구를 얹었다. 이름·부제·프로모션 텍스트·키워드·설명은 같은 폴더의 `listing.txt`.
+     기능이 바뀌면 설명도 실제 앱과 맞춘다(없는 기능을 적지 않는다, Guideline 2.3).
    - 개인정보 수집 항목(처리방침의 실제 수집 내용과 맞춘다), 연령 등급, 스크린샷, 설명, 키워드
      이용 통계(시작 단계·재방문 합계, `docs/PROJECT.md` 이용 통계)는 사용 데이터 > 제품 상호작용, 사용자와 연결되지 않음, 분석 목적.
    - 심사 메모: 초대 코드로 연결되는 최대 2인 텍스트 채팅이고, 신고·대화 종료·기존 초대 무효화가 있으며 콘텐츠 사전 필터와 서비스 전체

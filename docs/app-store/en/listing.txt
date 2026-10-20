@@ -1,0 +1,51 @@
+[Name] (30 characters)
+puny-chat
+
+[Subtitle] (30 characters)
+Chat for two, raise a Buddy
+
+[Promotional Text] (170 characters, can change without review)
+The more you two talk, the more your Buddy grows. Feed it, clean up after it, and raise it together in a one-on-one chat. Start right away, no account needed.
+
+[Keywords] (100 characters, no space after commas)
+couple,friend,bestie,messenger,private,virtual,pet,cute,pixel,egg,grow,long distance,cozy,tiny,duo
+
+[Description] (4000 characters)
+A private chat for two, with a tiny Buddy you raise together.
+
+puny-chat is a one-on-one chat app for you and one friend. Above your conversation is a little room, home to a Buddy you both look after. The more you talk, the sooner the egg hatches and the more your Buddy grows.
+
+■ Chat like you always do
+・Invite one friend with a 4-character code or a link
+・See when they're typing, online, or have read your message
+・Send photos, one at a time
+・Get a notification when a new message arrives
+
+■ Care for it as you chat
+・Feed your Buddy when it's hungry, and clean up when it poops 💩
+・Or just send "feed" or "clean" in the chat
+・Tap your Buddy and it smiles, dances or sings
+・When you both send a message on the same day, you get a together bonus
+・Your Buddy never dies. Miss a few days, and a little care is all it takes
+
+■ Watch your Buddy and its room grow
+・It grows from egg to baby, kid and adult, and starts talking as a kid
+・At Lv.12 it finds a job based on what you two do: chef, gardener, radio DJ, writer or barista
+・Every level brings new furniture and things to the room
+・The light changes from morning to evening to night, and seasonal touches drop by
+・Tap ♨ and your Buddy unwinds in the hot spring
+・Raise it to Lv.60 and it can go its own way. Its photo stays in your memory album, and a new egg arrives
+
+■ Easy to start
+・No account needed. Use it as a guest for 30 days, or link your Apple or Google account to keep going
+・No ads, no purchases, no quests. Just talk
+・Available in English, Japanese and Korean
+
+Support: https://puny-chat.com/support
+Privacy Policy: https://puny-chat.com/privacy
+
+[Support URL]
+https://puny-chat.com/support
+
+[Marketing URL] (optional)
+https://puny-chat.com

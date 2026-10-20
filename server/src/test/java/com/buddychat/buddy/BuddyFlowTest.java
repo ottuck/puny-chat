@@ -616,12 +616,12 @@ class BuddyFlowTest {
     }
 
     @Test
-    void nightMessagesLaughsAndLovesAreCountedAndOrdinaryOnesAreNot() {
+    void nightMessagesAndLovesAreCountedAndOrdinaryOnesAreNot() {
         String roomId = createRoom("henry").id();
         TestSocket henry = connect("henry").ignoring("buddy", "presence");
         clock.set(Instant.parse("2026-01-10T03:00:00Z")); // noon in Japan
-        say(henry, "c-1", "그거 진짜 웃겨 ㅋㅋ");
-        say(henry, "c-2", "사랑해 ㅋㅋ"); // both: counted as love only
+        say(henry, "c-1", "그거 진짜 웃겨 ㅋㅋ"); // a laugh counts for no job
+        say(henry, "c-2", "사랑해 ㅋㅋ");
         say(henry, "c-3", "오늘 뭐 먹을까");
         await(() -> room("henry").buddy().exp() == 3); // all three are counted before the night comes
         clock.set(Instant.parse("2026-01-10T15:30:00Z")); // half past midnight in Japan
@@ -631,7 +631,7 @@ class BuddyFlowTest {
             Document buddy = buddyDocument(roomId);
             return Integer.valueOf(1).equals(buddy.getInteger("nightCount"))
                     && Integer.valueOf(1).equals(buddy.getInteger("loveCount"))
-                    && Integer.valueOf(1).equals(buddy.getInteger("laughCount"));
+                    && !buddy.containsKey("laughCount");
         });
     }
 
@@ -673,7 +673,7 @@ class BuddyFlowTest {
 
         setBuddy(
                 roomId,
-                new Update().set("buddy.laughCount", 300).set("buddy.exp", BuddyRules.minExp(BuddyRules.GRADUATE_AT)));
+                new Update().set("buddy.loveCount", 300).set("buddy.exp", BuddyRules.minExp(BuddyRules.GRADUATE_AT)));
         buddyService.onMessageSent(roomId).block();
         assertThat(room("henry").buddy().job()).isEqualTo(BuddyJob.CHEF);
 
@@ -787,23 +787,22 @@ class BuddyFlowTest {
     @Test
     void eachHabitCountsAgainstItsUsualAmountAndOneThatStandsOutWins() {
         // Usual by the job's level: 5 meals, 4 poops, 6 night messages, 3 love messages.
-        assertThat(BuddyJob.decide(counts(7, 0, 0, 0, 0))).isEqualTo(BuddyJob.CHEF);
-        assertThat(BuddyJob.decide(counts(0, 5, 0, 0, 0))).isEqualTo(BuddyJob.GARDENER);
-        assertThat(BuddyJob.decide(counts(0, 0, 8, 0, 0))).isEqualTo(BuddyJob.DJ);
-        assertThat(BuddyJob.decide(counts(0, 0, 0, 0, 4))).isEqualTo(BuddyJob.WRITER);
+        assertThat(BuddyJob.decide(counts(7, 0, 0, 0))).isEqualTo(BuddyJob.CHEF);
+        assertThat(BuddyJob.decide(counts(0, 5, 0, 0))).isEqualTo(BuddyJob.GARDENER);
+        assertThat(BuddyJob.decide(counts(0, 0, 8, 0))).isEqualTo(BuddyJob.DJ);
+        assertThat(BuddyJob.decide(counts(0, 0, 0, 4))).isEqualTo(BuddyJob.WRITER);
         // Measured against the usual: six love messages (twice the usual) beat seven meals.
-        assertThat(BuddyJob.decide(counts(7, 4, 6, 0, 6))).isEqualTo(BuddyJob.WRITER);
-        // Nothing a quarter beyond the usual: the barista. Laughs are counted but make no job.
-        assertThat(BuddyJob.decide(counts(6, 4, 7, 0, 3))).isEqualTo(BuddyJob.BARISTA);
-        assertThat(BuddyJob.decide(counts(0, 0, 0, 30, 0))).isEqualTo(BuddyJob.BARISTA);
-        assertThat(BuddyJob.leaning(counts(0, 0, 0, 0, 0))).isNull();
-        assertThat(BuddyJob.leaning(counts(1, 0, 0, 0, 0))).isEqualTo(BuddyJob.BARISTA);
-        assertThat(BuddyJob.leaning(counts(0, 0, 0, 0, 20))).isEqualTo(BuddyJob.WRITER);
+        assertThat(BuddyJob.decide(counts(7, 4, 6, 6))).isEqualTo(BuddyJob.WRITER);
+        // Nothing a quarter beyond the usual: the barista.
+        assertThat(BuddyJob.decide(counts(6, 4, 7, 3))).isEqualTo(BuddyJob.BARISTA);
+        assertThat(BuddyJob.leaning(counts(0, 0, 0, 0))).isNull();
+        assertThat(BuddyJob.leaning(counts(1, 0, 0, 0))).isEqualTo(BuddyJob.BARISTA);
+        assertThat(BuddyJob.leaning(counts(0, 0, 0, 20))).isEqualTo(BuddyJob.WRITER);
     }
 
     @Test
     void equalHabitsGoByADrawThatStaysTheSameForTheBuddy() {
-        Buddy tied = counts(10, 8, 0, 0, 0); // both twice the usual
+        Buddy tied = counts(10, 8, 0, 0); // both twice the usual
         BuddyJob job = BuddyJob.decide(tied);
         assertThat(job).isIn(BuddyJob.CHEF, BuddyJob.GARDENER);
         assertThat(BuddyJob.decide(tied)).isEqualTo(job);
@@ -819,11 +818,11 @@ class BuddyFlowTest {
         return body -> assertThat(body.get("code").asString()).isEqualTo("JOB_CHANGE_LOCKED");
     }
 
-    private static Buddy counts(int fed, int cleaned, int nights, int laughs, int loves) {
+    private static Buddy counts(int fed, int cleaned, int nights, int loves) {
         Instant now = Instant.now();
         return new Buddy(
-                "Mugi", 0, now, now, now, null, 0, 0, null, null, null, fed, cleaned, nights, laughs, loves, null, null,
-                null, null);
+                "Mugi", 0, now, now, now, null, 0, 0, null, null, null, fed, cleaned, nights, loves, null, null, null,
+                null);
     }
 
     private void say(TestSocket socket, String clientMessageId, String text) {
