@@ -71,7 +71,7 @@ Buddy의 볼거리(대화 반응, 사건, 직업, 기간 한정 모습, 온천, 
 | 웃음 | ㅋㅋ, ㅎㅎ, 笑, www, lol, 😂 | 깔깔 뛰며 웃는다 |
 | 아침 | 굿모닝, おはよう, good morning | 자고 있었다면 깨서 인사한다 |
 
-여럿이 걸리면 표의 위쪽이 먼저다. 서버는 웃음·사랑만 직업 점수로 센다. 낱말 목록은 앱 `features/buddy/chat-words.ts`와 서버 `buddy/MoodWords`를 같이 고친다.
+여럿이 걸리면 표의 위쪽이 먼저다. 서버는 사랑만 직업 점수로 센다. 사랑 낱말 목록은 앱 `features/buddy/chat-words.ts`와 서버 `buddy/MoodWords`를 같이 고친다.
 
 ## 함께 있을 때
 

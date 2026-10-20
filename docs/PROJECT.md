@@ -292,7 +292,7 @@ users          { _id, firebaseUid (unique), displayName, roomId?, createdAt, gue
                  guideSeenVersion? }
 rooms          { _id, memberIds [1..2], memberCount, createdAt, closureId?, historyVersion?, album? [{ name, bornAt, graduatedAt, job? }],
                  buddy { name, exp, bornAt, lastFedAt?, lastCleanedAt?, poopsCleaned?, lastWorkedAt?, lastBathedAt?, expDay?, messageExpToday?,
-                         talkDay?, talkers?, togetherDay?, fedCount?, cleanedCount?, nightCount?, laughCount?, loveCount?,
+                         talkDay?, talkers?, togetherDay?, fedCount?, cleanedCount?, nightCount?, loveCount?,
                          job?, jobChangedLevel? } }
 messages       { _id, roomId, senderId?, type (TEXT | PHOTO | SYSTEM | BUDDY_EVENT), text?, photo? { id, width, height }, buddyEvent?,
                  systemEvent?, actorId?, clientMessageId, createdAt, reactions? { <userId>: LOVE | LIKE | CHECK | WOW | SAD } }
@@ -451,7 +451,7 @@ server → client
   `<사진 폴더>/<roomId>/<photoId>.webp`에 쓰고 `PHOTO` 메시지(`photo { id, width, height }`)를 넣는다. 메시지 저장이 실패하면 새 파일을 지우고, 동시 재시도로
   중복 키가 났으면 먼저 저장된 메시지를 준다. 인코딩은 CPU를 쓰는 blocking 작업이라 전용 스케줄러(동시 2개)에서 한다. WebP 인코더는 `webp-imageio`(libwebp 네이티브 포함).
 - **전달**: 텍스트처럼 방 전체에 `message`(보낸 사람의 기기 포함, 앱은 `clientMessageId`로 합친다), 3초 뒤 읽지 않은 상대에게 푸시("사진을 보냈어요"),
-  메시지 EXP +1과 둘이 함께. 돌보기 낱말·웃음·사랑은 세지 않는다. Buddy는 상대 메시지처럼 반응한다.
+  메시지 EXP +1과 둘이 함께. 돌보기 낱말·사랑 낱말은 세지 않는다. Buddy는 상대 메시지처럼 반응한다.
 - **보기**: 말풍선 안에 사진(폭 최대 220pt, 비율은 `width`·`height`), 누르면 전체 화면(아무 데나 누르면 닫히고 왼쪽 위에 뒤로 가기 화살표), 길게 누르면 반응. 주소는
   `<API 주소>/photos/<roomId>/<photoId>.webp`이고 앱이 메시지로 만든다. 웹의 `<img>`가 토큰을 붙일 수 없어 **토큰 없이** 주고, 대신 `photoId`를
   추측할 수 없는 128비트 난수로 둔다(주소를 아는 사람만 볼 수 있다). `Cache-Control: private, max-age=31536000, immutable`.
@@ -515,8 +515,7 @@ server → client
 - **판정.** 점수 = 횟수 × 60 ÷ 보통 양. 보통 양은 Lv.12까지 보통 하는 양(둘이 이틀, 혼자 사흘쯤)이라, 밥처럼 자주 생기는 일이 횟수만으로
   이기지 않고 다섯 직업이 고루 나온다. 가장 높은 점수의 직업이 되고, 그 점수가 보통의 1.25배(75)에 못 미치면 바리스타. 같은 점수는 버디의 `bornAt`으로
   정한 제비뽑기라 같은 버디는 늘 같다. 보통 양은 실제 분포를 보고 고친다.
-- **낱말.** 사랑·웃음 낱말은 `buddy/MoodWords`(앱 `chat-words.ts`와 같이 고친다). 둘 다 든 메시지는 사랑만 센다. 웃음(`laughCount`)도 세지만
-  지금 쓰는 직업은 없다.
+- **낱말.** 사랑 낱말은 `buddy/MoodWords`(앱 `chat-words.ts`와 같이 고친다).
 - **정하기.** Lv.12에 한 번 `job`을 정한다(`bornAt`이 같고 `job`이 없을 때만). 어른(Lv.10)이 된 모습을 먼저 즐기게 하려고 나눴다. 타임라인은
   `LEVELED_UP`(12) 다음에 `JOB`. 그 전(꼬마, Lv.10~11의 어른)에는 지금까지의 점수로 기울기(`leaning`)만 준다.
 - **바꾸기**(`POST …/buddy/job`): 두 멤버 누구든 Lv.20·30·40·50 구간(20~29, 30~39, 40~49, 50~59)마다 한 번, Lv.60부터는 언제든.

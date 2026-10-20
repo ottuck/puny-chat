@@ -17,12 +17,12 @@ import org.jspecify.annotations.Nullable;
  * @param talkDay the day (Asia/Tokyo) {@code talkers} counts for; null until the first message
  * @param talkers members who sent a message on {@code talkDay}
  * @param togetherDay the last day both members talked (and the buddy got the bonus for it)
- * @param fedCount meals given, and the next four: poops cleaned up, messages written at night, with a
- *     laugh, and with a "love you" in them. What the job is made of ({@link BuddyJob}), except the
- *     laughs: no job uses them since the comedian was dropped, but they are still counted. Null on
- *     buddies from before they were counted, which counts as none
+ * @param fedCount meals given, and the next three: poops cleaned up, messages written at night, and
+ *     with a "love you" in them. What the job is made of ({@link BuddyJob}). Null on buddies from
+ *     before they were counted, which counts as none
  * @param job settled at {@link BuddyRules#JOB_AT}; null before that, and on adults from before jobs
- *     existed (who may pick one). The members may change it once at 20 and at 30, freely from the top
+ *     existed (who may pick one). The members may change it once in each of 20–29, 30–39, 40–49 and
+ *     50–59, freely from the top
  * @param jobChangedLevel the level the members last changed the job at; null if never. The settled
  *     job, and a first pick, do not count
  * @param lastWorkedAt when a grown-up last earned EXP for work at its station; null if never
@@ -43,7 +43,6 @@ public record Buddy(
         @Nullable Integer fedCount,
         @Nullable Integer cleanedCount,
         @Nullable Integer nightCount,
-        @Nullable Integer laughCount,
         @Nullable Integer loveCount,
         @Nullable String job,
         @Nullable Integer jobChangedLevel,
@@ -53,7 +52,7 @@ public record Buddy(
     public static final int MAX_NAME_LENGTH = 12;
 
     public static Buddy hatch(String name, Instant now) {
-        return new Buddy(name, 0, now, now, now, null, 0, 0, null, null, null, 0, 0, 0, 0, 0, null, null, null, null);
+        return new Buddy(name, 0, now, now, now, null, 0, 0, null, null, null, 0, 0, 0, 0, null, null, null, null);
     }
 
     Instant fedAt() {
@@ -87,26 +86,7 @@ public record Buddy(
     /** The egg that takes this grown buddy's place. Today's talk carries over: one bonus a day. */
     Buddy next(String name, Instant now) {
         return new Buddy(
-                name,
-                0,
-                now,
-                now,
-                now,
-                null,
-                0,
-                0,
-                talkDay,
-                talkers,
-                togetherDay,
-                0,
-                0,
-                0,
-                0,
-                0,
-                null,
-                null,
-                null,
-                null);
+                name, 0, now, now, now, null, 0, 0, talkDay, talkers, togetherDay, 0, 0, 0, 0, null, null, null, null);
     }
 
     /** Members who sent a message on that day. */
