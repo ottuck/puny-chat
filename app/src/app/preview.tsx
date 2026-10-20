@@ -1,6 +1,7 @@
 import { randomUUID } from 'expo-crypto';
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,7 +10,8 @@ import type { Mood } from '@/features/buddy/chat-words';
 import { BuddyDream, DREAM_CUTS } from '@/features/buddy/components/buddy-dream';
 import { BuddyScene } from '@/features/buddy/components/buddy-scene';
 import { BuddySheet } from '@/features/buddy/components/buddy-sheet';
-import { REWARDS } from '@/features/buddy/components/stage-decor';
+import { rewardIcon } from '@/features/buddy/components/buddy-guide';
+import { type Reward, REWARDS, SEASONAL } from '@/features/buddy/components/stage-decor';
 import type { Cue } from '@/features/buddy/components/buddy-stage';
 import { JOB_ICON, JOB_ORDER } from '@/features/buddy/jobs';
 import { dressedFrame, type Season, SEASONS, seasonOn } from '@/features/buddy/pixel/looks';
@@ -260,6 +262,62 @@ function LevelGrid({ level, onChoose }: { level: number; onChoose: (level: numbe
       <Text style={[styles.legend, { color: colors.textMuted }]}>
         ring: stage · job · job change · top — dot: reward — tint: EGG / BABY / CHILD / ADULT
       </Text>
+    </View>
+  );
+}
+
+// Only in their season, or only at night (stage-decor.tsx, SEASONAL and decorFor).
+const NIGHT_ONLY: readonly Reward[] = ['firefly', 'owl'];
+const pad = (n: number) => String(n).padStart(2, '0');
+function whenShown(reward: Reward): string | null {
+  if (reward in SEASONAL) {
+    const [[fm, fd], [tm, td]] = SEASONAL[reward as keyof typeof SEASONAL];
+    return `🗓 ${pad(fm)}/${pad(fd)}–${pad(tm)}/${pad(td)}`;
+  }
+  return NIGHT_ONLY.includes(reward) ? '🌙 night' : null;
+}
+
+// The guide's list of the room's rewards, but for every level: what comes at each (with its picture,
+// as in the guide), which levels bring no thing (a new stage, the job and its chances, the top), and
+// which come only in their season or at night. The buddy's level is marked; a tap goes there.
+function RewardTable({ level, onChoose }: { level: number; onChoose: (level: number) => void }) {
+  const colors = useColors();
+  const { t } = useTranslation();
+  return (
+    <View style={styles.rewards}>
+      <Text style={[styles.legend, { color: colors.textMuted }]}>
+        {REWARDS.length} rewards · {MAX_LEVEL - REWARDS.length} levels without one · dimmed: not
+        reached yet
+      </Text>
+      {Array.from({ length: MAX_LEVEL }, (_, i) => i + 1).map((l) => {
+        const reward = REWARD_AT.get(l);
+        const when = reward ? whenShown(reward) : null;
+        const here = l === level;
+        return (
+          <Pressable
+            key={l}
+            onPress={() => onChoose(l)}
+            accessibilityRole="button"
+            style={[
+              styles.rewardRow,
+              {
+                backgroundColor: here ? colors.bubbleMine : 'transparent',
+                borderColor: here ? colors.accent : colors.border,
+                opacity: l > level ? 0.45 : 1,
+              },
+            ]}
+          >
+            <Text style={[styles.rewardLevel, { color: colors.text }]}>Lv.{l}</Text>
+            <View style={styles.rewardIcon}>{reward ? rewardIcon(reward, 24) : null}</View>
+            <Text style={[styles.rewardName, { color: reward ? colors.text : colors.textMuted }]}>
+              {reward ? t(`buddy.reward.${reward}`) : (MILESTONES[l] ?? '—')}
+            </Text>
+            {when ? (
+              <Text style={[styles.rewardWhen, { color: colors.accent }]}>{when}</Text>
+            ) : null}
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
@@ -577,6 +635,9 @@ function Preview() {
           <Group title={`level · Lv.${shownLevel} ${stage}`} startOpen>
             <LevelGrid level={shownLevel} onChoose={goTo} />
           </Group>
+          <Group title="room rewards (the guide's list, every level)">
+            <RewardTable level={shownLevel} onChoose={goTo} />
+          </Group>
           <Group title="job (ADULT)">
             <Chip
               label="none"
@@ -675,4 +736,18 @@ const styles = StyleSheet.create({
   levelNote: { flex: 1, fontSize: 13, textAlign: 'center' },
   levelName: { fontWeight: '700' },
   legend: { fontSize: 11 },
+  rewards: { flex: 1, gap: 2 },
+  rewardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  rewardLevel: { width: 40, fontSize: 12, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  rewardIcon: { width: 26, height: 26, alignItems: 'center', justifyContent: 'center' },
+  rewardName: { flex: 1, fontSize: 13 },
+  rewardWhen: { fontSize: 11, fontWeight: '600' },
 });
