@@ -784,8 +784,18 @@ export function BuddyStage({
   const station = buddy.stage === 'ADULT' && job ? JOB_STATIONS[job] : null;
   // A station that comes while the stage is open (the job settled at Lv.12, or changed) pops in.
   const [jobAtMount] = useState(job);
-  const stationX = station ? STATION_LEFT + station.standAt * scale : 0;
-  const stationRight = station ? STATION_LEFT + station.frames[0][0].length * scale : 0;
+  // The station's cell: the buddy's pixel, or finer.
+  const cell = scale * (station?.fine ?? 1);
+  const stationX = station ? STATION_LEFT + station.standAt * cell : 0;
+  // Its right end, past what stands behind the buddy too, so the buddy walks clear of it.
+  const stationRight = station
+    ? STATION_LEFT +
+      Math.max(
+        station.frames[0][0].length,
+        station.behind ? station.behind.col + station.behind.frame[0].length : 0,
+      ) *
+        cell
+    : 0;
   const eating = active?.kind === 'fed';
   const settled = sleeping || buddy.hungry || egg || eating || evolving || dream || leaving;
   const acting = act !== null;
@@ -1907,6 +1917,21 @@ export function BuddyStage({
         lit={lampLit}
         onLamp={setLampOn}
       />
+      {/* What of the station stands behind the buddy (the gardener's lamp). */}
+      {station?.behind ? (
+        <View
+          key={`behind${job}`}
+          style={[
+            styles.station,
+            styles.passThrough,
+            { left: STATION_LEFT + station.behind.col * cell, bottom: FLOOR - 2 },
+          ]}
+        >
+          <Arrive fresh={job !== jobAtMount} width={station.behind.frame[0].length * cell}>
+            <PixelSprite frame={station.behind.frame} palette={PROP_PALETTE} scale={cell} />
+          </Arrive>
+        </View>
+      ) : null}
       {corner ? (
         <View
           style={[
@@ -2240,14 +2265,14 @@ export function BuddyStage({
           style={[
             styles.station,
             styles.passThrough,
-            { left: STATION_LEFT, bottom: FLOOR - station.sink * scale },
+            { left: STATION_LEFT, bottom: FLOOR - station.sink * cell },
           ]}
         >
-          <Arrive fresh={job !== jobAtMount} width={station.frames[0][0].length * scale}>
+          <Arrive fresh={job !== jobAtMount} width={station.frames[0][0].length * cell}>
             <PixelSprite
               frame={station.frames[atWork ? tick % 2 : 0]}
               palette={PROP_PALETTE}
-              scale={scale}
+              scale={cell}
             />
           </Arrive>
         </View>
@@ -2359,9 +2384,9 @@ export function BuddyStage({
             styles.station,
             {
               left: STATION_LEFT,
-              bottom: FLOOR - station.sink * scale,
-              width: station.frames[0][0].length * scale,
-              height: station.frames[0].length * scale,
+              bottom: FLOOR - station.sink * cell,
+              width: station.frames[0][0].length * cell,
+              height: station.frames[0].length * cell,
             },
           ]}
         />
@@ -2419,14 +2444,23 @@ export function BuddyStage({
           lamp={decor.lamp && lampLit ? lampShadeAt(width, height, FLOOR, plantRoom) : null}
           station={
             station
-              ? {
-                  x: STATION_LEFT + station.light.col * scale,
-                  y:
-                    height -
-                    (FLOOR - station.sink * scale) -
-                    (station.frames[0].length - station.light.row) * scale,
-                  color: station.light.color,
-                }
+              ? station.light.onBehind && station.behind
+                ? {
+                    x: STATION_LEFT + (station.behind.col + station.light.col) * cell,
+                    y:
+                      height -
+                      (FLOOR - 2) -
+                      (station.behind.frame.length - station.light.row) * cell,
+                    color: station.light.color,
+                  }
+                : {
+                    x: STATION_LEFT + station.light.col * cell,
+                    y:
+                      height -
+                      (FLOOR - station.sink * cell) -
+                      (station.frames[0].length - station.light.row) * cell,
+                    color: station.light.color,
+                  }
               : null
           }
           dark={colorMode === 'dark'}

@@ -548,14 +548,20 @@ export type Station = {
   frames: [Frame, Frame];
   // Rows at the bottom drawn below the floor line, so the station stands in front of the buddy.
   sink: number;
-  // Where the buddy's grid stands while it works, in cells from the station's left edge.
+  // Its cells, as a part of the buddy's pixel size (1 if left out): a finer picture, like the
+  // room's own things.
+  fine?: number;
+  // Where the buddy's grid stands while it works, in the station's cells from its left edge.
   standAt: number;
+  // Something of the station's that stands behind the buddy, `col` station cells from its left,
+  // on the floor.
+  behind?: { frame: Frame; col: number };
   // A tool in its hand while it works, by the grid cell of the tool's top left.
   // Drawn at `size` of the buddy's pixel size, its right edge (the handle) kept at the hand.
   held?: { frames: [Frame, Frame]; row: number; col: number; size?: number };
-  // Its small light at night (room-light.tsx), by the cell it glows from and its color: so the left
-  // of the room is not all dark when the lamp lights the right.
-  light: { col: number; row: number; color: string };
+  // Its small light at night (room-light.tsx), by the cell it glows from (in `behind`'s frame if
+  // `onBehind`) and its color: so the left of the room is not all dark when the lamp lights the right.
+  light: { col: number; row: number; color: string; onBehind?: boolean };
 };
 
 // A kitchen counter: a pot on a lit burner (the flame flickers, the steam drifts), a cutting board
@@ -602,72 +608,129 @@ const KITCHEN: [Frame, Frame] = [[
 ]];
 
 // A plant taller than the buddy, in a clay pot: broad outlined leaves up a trunk. Its crown
-// sways while it is watered. Left of it a small standing lamp with a cream shade, the station's
-// light at night (the gardener's plant itself does not glow).
+// sways while it is watered. Drawn finer than the buddy (Station.fine), like the room's own plant.
 // prettier-ignore
 const BIG_PLANT: [Frame, Frame] = [[
-  '...........jj.....',
-  '..........jPgj....',
-  '.........jPggGj...',
-  '.........jgPGgj...',
-  '.........jggGgj...',
-  '..........jgGj....',
-  '...........jj.jjj.',
-  '...........DqjPPgj',
-  '...........DjGGGgj',
-  '.......jjj.Dqjggj.',
-  '......jgPPjDq.jj..',
-  '......jgGGGjq.....',
-  '.......jggjDq.jjj.',
-  '........jj.DqjPPgj',
-  '...........DjGGGgj',
-  '.......jjj.Dqjggj.',
-  '......jgPPjDq.jj..',
-  '......jgGGGjq.....',
-  '.......jggjDq.jjj.',
-  '........jj.DqjPPgj',
-  '...........DjGGGgj',
-  '.kkk.......Dqjggj.',
-  'knnnk......Dq.jj..',
-  'kyyyk......Dq.....',
-  '.kDk...kkkkkkkkkk.',
-  '..D....koooooooek.',
-  '..D.....kkkkkkkk..',
-  '..D.....kooooooek.',
-  '.kDk.....koooook..',
-  '.........kkkkkk...',
+  '...........jjj..........',
+  '..........jPiPj.........',
+  '.........jPPiPj.........',
+  '.........jPPiggj........',
+  '.........jgiigj...jj....',
+  '.........jgiigj..jPPjj..',
+  '........jggiGGjjjPPPij..',
+  '.jjjjj...jGiGGjPPPiigj..',
+  '.jPPPPj..jGiGjPggiiggj..',
+  '.jPiPPPj.jGGGjggiiggGj..',
+  '.jPPiPPgj.jjjggiiGGGj...',
+  '.jPPgigggj.jjgiGGGjj....',
+  '..jgggiggGjiPjGGGj......',
+  '...jggGiGjPiPPjjj.......',
+  '....jGGGijPiPgj.i.......',
+  '.....jGGGjgiigj.i.......',
+  '......jjjjgiigj.i.......',
+  '.......i.jggiGji....jj..',
+  '.......i.jGGiGjijjjjPPjj',
+  '.......i..jGiGjjPPPPggij',
+  '........i.jjjjjPPggiiiij',
+  '.jjjjjjji...ijgiiiiggGGj',
+  'jPPPPPggjj..ijgigggGGGj.',
+  'jiiiiiggggj.i.jjGGjjjj..',
+  'jgggiiiiiij.i.i.jji.....',
+  '.jgggGGGGGj.i.i..i......',
+  '..jjjjjjjj..i.i..i......',
+  '......i..i..jjjjjj......',
+  '......jjjjjjPiPPPPjj....',
+  '.....jPPPgijPiiiigggj...',
+  '....jPggiiigjgggiiiij...',
+  '...jgiiiggGjjjjgGGGijj..',
+  '...jiigGGGj.iiijjjjj....',
+  '....jjjjjji.ii..........',
+  '..........iiii..........',
+  '..........iii...........',
+  '...........ii...........',
+  '...kkkkkkkkkkkkkkkkkk...',
+  '...keeeeeeeeeeeeeeeek...',
+  '...kkkkkkkkkkkkkkkkkk...',
+  '....kollooooooooodddk...',
+  '....kolooooooooooddk....',
+  '.....kooooooooooodk.....',
+  '.....kooooooooooodk.....',
+  '......koooooooooddk.....',
+  '......kkkkkkkkkkkk......',
 ], [
-  '............jj....',
-  '...........jPgj...',
-  '..........jPggGj..',
-  '..........jgPGgj..',
-  '..........jggGgj..',
-  '...........jgGj...',
-  '............jj.jjj',
-  '...........DqjPPgj',
-  '...........DjGGGgj',
-  '.......jjj.Dqjggj.',
-  '......jgPPjDq.jj..',
-  '......jgGGGjq.....',
-  '.......jggjDq.jjj.',
-  '........jj.DqjPPgj',
-  '...........DjGGGgj',
-  '.......jjj.Dqjggj.',
-  '......jgPPjDq.jj..',
-  '......jgGGGjq.....',
-  '.......jggjDq.jjj.',
-  '........jj.DqjPPgj',
-  '...........DjGGGgj',
-  '.kkk.......Dqjggj.',
-  'knnnk......Dq.jj..',
-  'kyyyk......Dq.....',
-  '.kDk...kkkkkkkkkk.',
-  '..D....koooooooek.',
-  '..D.....kkkkkkkk..',
-  '..D.....kooooooek.',
-  '.kDk.....koooook..',
-  '.........kkkkkk...',
+  '............jjj.........',
+  '...........jPiPj........',
+  '..........jPPiPj........',
+  '..........jPPiggj.......',
+  '..........jgiigj...jj...',
+  '..........jgiigj..jPPjj.',
+  '.........jggiGGjjjPPPij.',
+  '..jjjjj...jGiGGjPPPiigj.',
+  '..jPPPPj..jGiGjPggiiggj.',
+  '..jPiPPPj.jGGGjggiiggGj.',
+  '..jPPiPPgj.jjjggiiGGGj..',
+  '..jPPgigggj.jjgiGGGjj...',
+  '...jgggiggGjiPjGGGj.....',
+  '....jggGiGjPiPPjjj......',
+  '.....jGGGijPiPgj.i......',
+  '......jGGGjgiigji.......',
+  '.......jjjjgiigji.......',
+  '........i.jggiGji...jj..',
+  '........i.jGGiGjjjjjPPjj',
+  '........i..jGiGjPPPPggij',
+  '........i..jjjjPPggiiiij',
+  '.jjjjjjji...ijgiiiiggGGj',
+  'jPPPPPggjj..ijgigggGGGj.',
+  'jiiiiiggggj.i.jjGGjjjj..',
+  'jgggiiiiiij.i..ijji.....',
+  '.jgggGGGGGj.i.i..i......',
+  '..jjjjjjjj..i.i..i......',
+  '......i...i.jjjjjj......',
+  '......jjjjjjPiPPPPjj....',
+  '.....jPPPgijPiiiigggj...',
+  '....jPggiiigjgggiiiij...',
+  '...jgiiiggGjjjjgGGGijj..',
+  '...jiigGGGj.iiijjjjj....',
+  '....jjjjjji.ii..........',
+  '..........iiii..........',
+  '..........iii...........',
+  '...........ii...........',
+  '...kkkkkkkkkkkkkkkkkk...',
+  '...keeeeeeeeeeeeeeeek...',
+  '...kkkkkkkkkkkkkkkkkk...',
+  '....kollooooooooodddk...',
+  '....kolooooooooooddk....',
+  '.....kooooooooooodk.....',
+  '.....kooooooooooodk.....',
+  '......koooooooooddk.....',
+  '......kkkkkkkkkkkk......',
 ]];
+
+// The gardener's small standing lamp, right of the plant and behind the buddy: a cream shade lit
+// along its rim, a slim wooden pole and a round base. Its light at night is the station's.
+// prettier-ignore
+const GARDEN_LAMP: Frame = [
+  '..kkkkk..',
+  '.knnnnnk.',
+  '.knnnnvk.',
+  'knnnnnvvk',
+  'knnnnvvvk',
+  'kyyyyyyyk',
+  'kkkkkkkkk',
+  '...kLk...',
+  '...kDk...',
+  '...kDk...',
+  '...kDk...',
+  '...kDk...',
+  '...kDk...',
+  '...kDk...',
+  '...kDk...',
+  '...kDk...',
+  '..kkDkk..',
+  '.kLLLLqk.',
+  '.kqqqqqk.',
+  '..kkkkk..',
+];
 
 // The late-night radio desk: a broadcast mic on a boom stand, headphones on the desk, faders, a
 // level meter that jumps with the music and the on-air lamp, which blinks.
@@ -831,13 +894,15 @@ export const HELD_CAN: [Frame, Frame] = [[
 export const JOB_STATIONS: Record<BuddyJob, Station> = {
   // The burner's flame under the pot.
   CHEF: { frames: KITCHEN, sink: 3, standAt: 3, light: { col: 3.5, row: 7, color: '#FF9A4A' } },
-  // The small lamp beside the plant.
+  // The small lamp right of the plant, behind the buddy.
   GARDENER: {
     frames: BIG_PLANT,
     sink: 1,
-    standAt: 21,
+    fine: 0.6,
+    standAt: 25,
     held: { frames: HELD_CAN, row: 12, col: -8, size: 0.6 },
-    light: { col: 2.5, row: 22.5, color: '#FFD27A' },
+    behind: { frame: GARDEN_LAMP, col: 25 },
+    light: { col: 4.5, row: 3.5, color: '#FFD27A', onBehind: true },
   },
   // The red on-air light on the desk.
   DJ: {
