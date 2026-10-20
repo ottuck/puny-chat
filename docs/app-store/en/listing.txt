@@ -22,7 +22,7 @@ puny-chat is a one-on-one chat app for you and one friend. Above your conversati
 ・Get a notification when a new message arrives
 
 ■ Care for it as you chat
-・Feed your Buddy when it's hungry, and clean up when it poops 💩
+・Feed your Buddy when it's hungry, and clean up when it poops
 ・Or just send "feed" or "clean" in the chat
 ・Tap your Buddy and it smiles, dances or sings
 ・When you both send a message on the same day, you get a together bonus
@@ -33,7 +33,7 @@ puny-chat is a one-on-one chat app for you and one friend. Above your conversati
 ・At Lv.12 it finds a job based on what you two do: chef, gardener, radio DJ, writer or barista
 ・Every level brings new furniture and things to the room
 ・The light changes from morning to evening to night, and seasonal touches drop by
-・Tap ♨ and your Buddy unwinds in the hot spring
+・Tap the hot spring button and your Buddy unwinds in the hot spring
 ・Raise it to Lv.60 and it can go its own way. Its photo stays in your memory album, and a new egg arrives
 
 ■ Easy to start
