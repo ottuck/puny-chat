@@ -6,7 +6,7 @@ import { isJob } from './jobs';
 // what that number is, so new kinds come with the app alone. Words are under buddy.gift.<job>.<kind>
 // in the translations: its name, the name in the chat line, and the buddy's note with it.
 export const GIFTS = {
-  BARISTA: ['latte', 'americano', 'cappuccino', 'pourOver', 'hojichaLatte'],
+  BARISTA: ['latte', 'icedAmericano', 'caramelMacchiato', 'matchaLatte', 'chipFrappe'],
   CHEF: ['omurice', 'soup', 'pancakes', 'riceBalls', 'curry'],
   GARDENER: ['basil', 'mint', 'tomatoes', 'rosemary', 'flowers'],
   DJ: ['record1', 'record2', 'record3', 'record4', 'record5'],

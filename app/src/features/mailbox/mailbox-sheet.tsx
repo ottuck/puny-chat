@@ -24,7 +24,7 @@ const ICONS: Record<ShownMail['kind'], string> = {
   letter: '💌',
   notice: '📮',
   guide: '📌',
-  gift: '🎁',
+  postcard: '🏞️',
 };
 const GIFT_SCALE = 5;
 
@@ -48,16 +48,16 @@ export function MailboxSheet({
   onTurnOnPush?: () => Promise<PushState>;
   // While the room's buddy may go its own way: opens its details, where that is done.
   onGraduate?: () => void;
-  // Who signs the gifts: they are from the room's buddy now.
+  // Who signs the postcards: they are from the room's buddy now.
   buddyName: string;
 }) {
   const colors = useColors();
   const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
   const [open, setOpen] = useState<MailKey | null>(null);
-  // A letter's words are its own; a gift's are the buddy's, by what it made.
+  // A letter's words are its own; a postcard's are the buddy's, by which it wrote.
   const words = (mail: ShownMail) =>
-    mail.kind === 'gift'
+    mail.kind === 'postcard'
       ? {
           title: t(giftKey(mail.gift, 'name')),
           body: t(giftKey(mail.gift, 'line')),
@@ -145,7 +145,7 @@ export function MailboxSheet({
               // A sheet of letter paper: ruled, the date in the corner, signed at the bottom.
               <View style={styles.paper}>
                 <Text style={styles.paperDate}>{date(opened.date)}</Text>
-                {opened.kind === 'gift' ? (
+                {opened.kind === 'postcard' ? (
                   <View style={styles.paperGift}>
                     <PixelSprite
                       frame={giftArt(opened.gift)}

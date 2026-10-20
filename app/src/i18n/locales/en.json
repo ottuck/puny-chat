@@ -97,8 +97,8 @@
       "DJ": "🎧 {{buddy}} picked out a record for {{to}}: {{gift}}",
       "WRITER": "✒️ {{buddy}} wrote {{to}} {{gift}}"
     },
-    "giftBody": "It's in your mailbox. You get one a day when your buddy works.",
-    "openGift": "See the gift"
+    "postcardBody": "It's in your mailbox.",
+    "readPostcard": "Read the postcard"
   },
   "invite": {
     "button": "Invite a friend",
@@ -417,25 +417,25 @@
           "inChat": "a café latte",
           "line": "I tried a heart in the foam and it leaned a little. The taste came out straight."
         },
-        "americano": {
-          "name": "Americano",
-          "inChat": "an Americano",
-          "line": "Brewed it strong. Today looks like a long one."
+        "icedAmericano": {
+          "name": "Iced Americano",
+          "inChat": "an iced Americano",
+          "line": "Plenty of ice. Days like today call for one."
         },
-        "cappuccino": {
-          "name": "Cappuccino",
-          "inChat": "a cappuccino",
-          "line": "The foam came out like a cloud. If it gets on your nose, I didn't see a thing."
+        "caramelMacchiato": {
+          "name": "Caramel macchiato",
+          "inChat": "a caramel macchiato",
+          "line": "I drew a grid in caramel. You could play tic-tac-toe on it."
         },
-        "pourOver": {
-          "name": "Pour-over coffee",
-          "inChat": "a pour-over",
-          "line": "I took it slow. The beans smelled lovely while I waited."
+        "matchaLatte": {
+          "name": "Matcha latte",
+          "inChat": "a matcha latte",
+          "line": "Whisked the matcha smooth. Not a single lump. Probably."
         },
-        "hojichaLatte": {
-          "name": "Hojicha latte",
-          "inChat": "a hojicha latte",
-          "line": "A day off from coffee. I made something toasty instead."
+        "chipFrappe": {
+          "name": "Chocolate chip frappé",
+          "inChat": "a chocolate chip frappé",
+          "line": "I went as high as I liked with the whipped cream."
         }
       },
       "CHEF": {
@@ -824,7 +824,7 @@
       "letter": "Letter",
       "notice": "News",
       "guide": "Heads-up",
-      "gift": "Gift"
+      "postcard": "Postcard"
     },
     "mail": {
       "topLevelLetter": {

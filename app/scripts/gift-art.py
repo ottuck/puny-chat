@@ -63,6 +63,13 @@ MAT = {
     'gold': (['#C89A2A', '#E4BC48', '#F4D878', '#FFF0B0'], '#8A6410'),
     'grass': (['#4E8A3A', '#6AA84C', '#8CC46A', '#B0DC8E'], '#30602A'),
     'hill': (['#3E7A44', '#56965A', '#78B278', '#78B278'], '#28542E'),
+    'iced': (['#8E6E58', '#AE907A', '#CCB4A2', '#EEE2D8'], '#3E2416'),
+    'stone': (['#5E5A56', '#7A7570', '#98938E', '#B8B4AE'], '#3A3632'),
+    'straw': (['#2A7446', '#3C945A', '#5EB47A', '#5EB47A'], '#1C5030'),
+    'caramel': (['#A8641C', '#C98430', '#E4A650', '#F2C884'], '#74400C'),
+    'matcha': (['#5E9036', '#7CAA48', '#9EC66A', '#C2DE98'], '#3E6420'),
+    'mocha': (['#7E5038', '#9C6A50', '#BA8A6E', '#D4AC94'], '#56341E'),
+    'milk': (['#E6D8C4', '#F2E8D8', '#FAF4EA', '#FFFFFF'], '#A08E76'),
     'stamp': (['#C8D8C0', '#E2EEDC', '#F4FAF0', '#F4FAF0'], '#7A9070'),
     'shade': (['#D8CFC4', '#D8CFC4', '#D8CFC4', '#D8CFC4'], None),
 }
@@ -270,63 +277,78 @@ def latte():
     return a
 
 
-def americano():
+def iced_cup(a, top=7, bottom=29, half_top=8.6, half_bottom=6.2, cx=15.5):
+    """A clear cup, wider at the top, as cold drinks come in; returns its inside."""
+    side = lambda y: half_top - (y - top) * (half_top - half_bottom) / (bottom - top)
+    a.fill(lambda x, y: top <= y <= bottom and abs(x - cx) <= side(y), 'glass', cyl(cx - half_top, cx + half_top))
+    return lambda x, y: top + 1 <= y <= bottom - 1 and abs(x - cx) <= side(y) - 1.2
+
+
+def iced_americano():
     a = Art()
-    steam(a, [11, 16, 21], 1, 8)
-    a.fill(ell(16, 28, 12, 2.6), 'shade', 1)
-    cup(a, 'enamel', top=11, bottom=27, half=8.6, taper=0.4, cx=15)
-    rim(a, 15, 11, 8.8, 2.8, 'porc', 'coffee', lambda x, y: 2 if (x < 12 and y < 11) else 1)
-    a.dot([(11, 10), (12, 10)], 'coffee', 3)
-    # The enamel's white rim at the bottom and a speckle.
-    a.fill(both(lambda x, y: 25.2 <= y <= 27.2, lambda x, y: abs(x - 15) <= 8.4), 'porc', cyl(6, 24), group='band')
-    a.dot([(10, 17), (19, 21), (13, 23), (20, 15)], 'enamel', 3)
+    line(a, 21.5, 0.5, 20, 8, 'straw', 0.9)
+    inside = iced_cup(a)
+    a.fill(both(inside, lambda x, y: y >= 10), 'coffee', cyl(8, 23), group='drink')
+    line(a, 20, 8, 18.6, 24, 'straw', 0.9, 0, group='straw-in')
+    # Ice in the coffee, catching the light.
+    for i, (cx, cy) in enumerate(((11.5, 12.5), (16, 13), (12.5, 18))):
+        a.fill(both(inside, rect(cx - 2.3, cy - 2.3, cx + 2.3, cy + 2.3)), 'iced',
+               lambda x, y, cx=cx, cy=cy: 3 if (x < cx - 1 and y < cy - 1) else 2 if y < cy else 1,
+               group=f'ice{i}')
+    a.fill(ell(15.5, 7.4, 8.6, 1.5), 'glass', 3, group='rim')
+    a.dot([(8, 14), (8, 15), (9, 22), (22, 20), (23, 12)], 'glass', 3)
     return a
 
 
-def cappuccino():
+def caramel_macchiato():
     a = Art()
-    steam(a, [13, 18], 1, 5)
-    saucer(a)
-    cup(a, 'pink', top=14)
-    a.fill(ell(15.5, 14, 9.6, 3.2), 'pink', 2)
-    # Foam piled above the rim, dusted with cocoa.
-    a.fill(anyof(ell(15.5, 12.2, 8.6, 4.6)), 'foam', sphere(14, 10, 8.6, 5))
-    a.dot([(13, 9), (16, 8), (18, 10), (12, 11), (15, 11), (19, 12), (14, 13), (17, 13)], 'cocoa', 1)
-    return a
-
-
-def pour_over():
-    a = Art()
-    # The glass server with coffee in it.
-    srv = lambda x, y: 18 <= y <= 29 and abs(x - 15.5) <= 8.6 - abs(y - 24) * 0.15
-    a.fill(srv, 'glass', cyl(7, 24))
-    a.fill(both(srv, lambda x, y: y >= 22.5, lambda x, y: abs(x - 15.5) <= 7.6), 'coffee', cyl(8, 23))
-    a.fill(minus(ell(25.2, 23.5, 3.4, 4), ell(25.2, 23.5, 1.6, 2.2)), 'glass', 1)
-    a.fill(ell(15.5, 18.4, 8.8, 1.6), 'glass', 2)
-    # The dripper: a cone with a rim, its paper filter.
-    a.fill(poly([(5, 6), (26, 6), (19.5, 16), (11.5, 16)]), 'porc', cyl(5, 26))
-    a.fill(ell(15.5, 6, 10.8, 2.4), 'porc', 3)
-    a.fill(ell(15.5, 6.2, 9, 1.6), 'crema', 1)
-    a.fill(rect(10, 15.5, 21, 17.5), 'porc', 0)
-    a.fill(rect(14.5, 17.5, 16.5, 19), 'coffee', 1)
-    a.dot([(15, 20), (15, 21)], 'coffee', 1)
-    return a
-
-
-def hojicha_latte():
-    a = Art()
-    steam(a, [12, 19], 1, 7)
     a.fill(ell(15.5, 28.6, 11, 2.4), 'wood', lambda x, y: 2 if y < 28.4 else 1)
-    glass = lambda x, y: 8 <= y <= 28 and abs(x - 15) <= 8
+    glass = lambda x, y: 7 <= y <= 28 and abs(x - 15) <= 8
     a.fill(glass, 'glass', cyl(7, 23))
     a.fill(minus(ell(23.8, 17.5, 4, 5), ell(23.8, 17.5, 1.8, 2.8)), 'glass', 1)
     inner = lambda x, y: abs(x - 15) <= 6.8 and y <= 27
-    a.fill(both(inner, lambda x, y: 16 <= y), 'hojicha', cyl(8, 22), group='drink')
-    a.fill(both(inner, lambda x, y: 11.5 <= y < 16), 'foam', cyl(8, 22), group='drink')
-    # Where the tea meets the milk: a soft wave.
-    a.dot([(x, 16 + (1 if x % 4 in (1, 2) else 0)) for x in range(9, 22)], 'crema', 1, group='drink')
-    a.fill(ell(15, 8.4, 8, 1.4), 'glass', 3)
-    a.dot([(9, 13), (9, 14), (9, 18), (9, 19), (9, 20)], 'glass', 3)
+    a.fill(both(inner, lambda x, y: 18 <= y), 'milk', cyl(8, 22), group='drink')
+    a.fill(both(inner, lambda x, y: 14 <= y < 18), 'crema', cyl(8, 22), group='drink')
+    a.dot([(x, 17 + (x % 3 == 0)) for x in range(9, 22)], 'crema', 0, group='drink')
+    a.fill(both(inner, lambda x, y: 10 <= y < 14), 'foam', cyl(8, 22), group='drink')
+    a.fill(ell(15, 9.8, 6.8, 1.6), 'foam', 2, group='drink')
+    # Caramel in a grid over the foam.
+    a.dot([(x, y) for x in range(9, 22) for y in (9, 11) if x % 2] + [(x, 10) for x in (10, 13, 16, 19)],
+          'caramel', 2, group='drink')
+    a.fill(ell(15, 7.4, 8, 1.4), 'glass', 3, group='rim')
+    a.dot([(9, 15), (9, 19), (9, 20), (9, 21)], 'glass', 3)
+    return a
+
+
+def matcha_latte():
+    a = Art()
+    steam(a, [12, 19], 1, 8)
+    a.fill(ell(16, 28.4, 11.5, 2.2), 'shade', 1)
+    cup(a, 'stone', top=12, bottom=27, half=8.6, taper=1.2, cx=15)
+    rim(a, 15, 12, 8.8, 2.8, 'stone', 'matcha')
+    # A heart drawn in the milk.
+    a.dot([(13, 11), (14, 11), (16, 11), (17, 11), (13, 12), (14, 12), (15, 12), (16, 12), (17, 12), (14, 13),
+           (15, 13), (16, 13)], 'foam', 2)
+    a.dot([(x, 18 + (x % 2)) for x in range(8, 22)], 'stone', 3)
+    return a
+
+
+def chip_frappe():
+    a = Art()
+    line(a, 18, 0.5, 15.5, 8, 'straw', 0.9, group='straw')
+    inside = iced_cup(a, top=13, bottom=30, half_top=8.2, half_bottom=6)
+    a.fill(both(inside, lambda x, y: y >= 14), 'mocha', cyl(8, 23), group='drink')
+    a.dot([(10, 17), (14, 19), (19, 16), (12, 23), (17, 22), (20, 25), (11, 27), (15, 26), (18, 19)], 'coffee', 0,
+          group='drink')
+    # Whipped cream in a swirl under a clear dome, chocolate over it.
+    a.fill(anyof(ell(15.5, 12, 7.6, 3.2), ell(15.5, 9.2, 5.6, 2.8), ell(15.5, 6.8, 3.4, 2.2)), 'foam',
+           sphere(13.5, 7, 7.6, 7), group='cream')
+    a.dot([(10, 11), (11, 11), (12, 12), (13, 12), (18, 11), (19, 11), (20, 12), (12, 9), (13, 8), (17, 8), (18, 9),
+           (14, 6), (16, 6), (15, 5)], 'cocoa', 1, group='cream')
+    a.fill(minus(both(ell(15.5, 13, 9.4, 9), lambda x, y: y <= 13.4), ell(15.5, 13, 8.2, 7.8)), 'glass', 2,
+           group='dome')
+    a.fill(ell(15.5, 13.4, 9.6, 1.4), 'glass', 1, group='lid')
+    line(a, 16.6, 4, 16, 8, 'straw', 0.9, group='straw')
     return a
 
 
@@ -350,17 +372,19 @@ def omurice():
 
 def soup():
     a = Art()
-    steam(a, [11, 16, 21], 1, 8)
-    a.fill(ell(16, 28.4, 11.5, 2.2), 'shade', 1)
-    bowl = both(ell(16, 15, 14, 13), lambda x, y: y >= 15)
-    a.fill(bowl, 'porc', cyl(2, 30))
-    a.fill(both(bowl, lambda x, y: 19.6 <= y <= 21.4), 'blue', cyl(2, 30), group='band')
-    a.fill(ell(16, 15, 14, 4.2), 'porc', 3)
-    a.fill(ell(16, 15.3, 12.3, 3.0), 'soup', lambda x, y: 2 if x < 10 else 1)
-    a.dot([(9, 15), (13, 14), (18, 16), (21, 14), (15, 16), (11, 16)], 'corn', 2)
-    a.dot([(16, 14), (17, 14), (12, 15)], 'leaf', 1)
-    # A spoon resting in it.
-    a.fill(poly([(21, 15), (27.5, 8), (29, 9.3), (22.6, 16)]), 'porc', 2)
+    steam(a, [11, 16, 21], 1, 7)
+    a.fill(ell(16, 29, 9, 1.8), 'shade', 1)
+    a.fill(rect(10.5, 25.5, 21.5, 28.5), 'porc', cyl(10, 22), group='foot')
+    a.fill(both(ell(16, 13, 14, 13.5), lambda x, y: y >= 13), 'porc', cyl(2, 30), group='bowl')
+    a.fill(both(ell(16, 13, 14, 13.5), lambda x, y: 16.5 <= y <= 18), 'blue', cyl(2, 30), group='band')
+    a.fill(ell(16, 13, 14, 4), 'porc', 3, group='rim')
+    a.fill(ell(16, 13.3, 12.2, 2.9), 'soup', lambda x, y: 3 if (x < 10 and y < 13) else 2 if x < 14 else 1)
+    a.dot([(9, 13), (12, 14), (17, 12), (20, 14), (14, 15), (22, 13)], 'corn', 3)
+    a.dot([(15, 13), (16, 13), (11, 12), (19, 15)], 'leaf', 1)
+    a.fill(anyof(rect(17.5, 13.5, 19.5, 15.3), rect(12.5, 11.2, 14.3, 12.8)), 'cake', 2)
+    # A spoon resting on the rim.
+    a.fill(ell(22.5, 13.2, 2.4, 1.4), 'plate', 1, group='spoon')
+    line(a, 24, 12.6, 30, 6.5, 'plate', 0.85, 2, group='spoon')
     return a
 
 
@@ -703,8 +727,8 @@ def autumn_scene(a, x0, y0, w, h):
     line(a, ox + 7.5, oy + 11, ox + 8.5, y0 + h - 0.6, 'wood', 0.6, group='stalk')
 
 ART = {
-    'BARISTA': {'latte': latte, 'americano': americano, 'cappuccino': cappuccino, 'pourOver': pour_over,
-                'hojichaLatte': hojicha_latte},
+    'BARISTA': {'latte': latte, 'icedAmericano': iced_americano, 'caramelMacchiato': caramel_macchiato,
+                'matchaLatte': matcha_latte, 'chipFrappe': chip_frappe},
     'CHEF': {'omurice': omurice, 'soup': soup, 'pancakes': pancakes, 'riceBalls': rice_balls, 'curry': curry},
     'GARDENER': {'basil': basil, 'mint': mint, 'tomatoes': tomatoes, 'rosemary': rosemary, 'flowers': flowers},
     'DJ': {'record1': lambda: record(moon_sleeve, 'gold'), 'record2': lambda: record(rain_sleeve, 'red'),
@@ -716,9 +740,10 @@ ART = {
 }
 
 DESCRIBE = {
-    'latte': 'a cup and saucer, a heart in the milk', 'americano': 'black coffee in a blue enamel mug',
-    'cappuccino': 'foam dusted with cocoa over a pink cup', 'pourOver': 'a dripper over a glass server',
-    'hojichaLatte': 'hojicha latte in a glass on a wooden coaster', 'omurice': 'omurice with a ketchup heart',
+    'latte': 'a cup and saucer, a heart in the milk', 'icedAmericano': 'iced coffee in a clear cup with a straw',
+    'caramelMacchiato': 'milk, espresso and foam in a glass, caramel over it',
+    'matchaLatte': 'a mug of matcha latte with a leaf in the milk',
+    'chipFrappe': 'a chocolate chip frappé under whipped cream and a dome lid', 'omurice': 'omurice with a ketchup heart',
     'soup': 'corn soup in a bowl with a spoon', 'pancakes': 'a stack with syrup and butter',
     'riceBalls': 'two rice balls on a leaf', 'curry': 'curry and rice', 'basil': 'a bunch of basil tied with twine',
     'mint': 'mint in a pot', 'tomatoes': 'cherry tomatoes on the vine', 'rosemary': 'rosemary tied with a ribbon',

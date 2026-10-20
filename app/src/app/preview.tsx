@@ -13,13 +13,14 @@ import { BuddySheet } from '@/features/buddy/components/buddy-sheet';
 import { rewardIcon } from '@/features/buddy/components/buddy-guide';
 import { type Reward, REWARDS, SEASONAL } from '@/features/buddy/components/stage-decor';
 import type { Cue } from '@/features/buddy/components/buddy-stage';
-import { GIFTS } from '@/features/buddy/gifts';
+import { GIFTS, giftKey, giftKind } from '@/features/buddy/gifts';
 import { JOB_ICON, JOB_ORDER } from '@/features/buddy/jobs';
 import { dressedFrame, type Season, SEASONS, seasonOn } from '@/features/buddy/pixel/looks';
 import { PixelSprite } from '@/features/buddy/pixel/pixel-sprite';
 import { BUDDY_PALETTE, POSES_IN_ORDER } from '@/features/buddy/pixel/sprites';
 import type { FishStyle } from '@/features/buddy/pixel/room-things';
 import type { Reaction, ReactionKind } from '@/features/buddy/reactions';
+import { GiftCard } from '@/features/chat/components/gift-card';
 import type { AlbumEntry } from '@/features/room/api';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
@@ -184,6 +185,32 @@ function Chip({
 const FoldAll = createContext({ open: false, run: 0 });
 
 // Folded until its title is tapped, so the stage above stays in view.
+// Every gift as it comes in the chat to the one it is for (docs/fun-improvements.md, 직업 선물).
+function GiftCards() {
+  const { t } = useTranslation();
+  return (
+    <View style={styles.giftCards}>
+      {JOB_ORDER.flatMap((job) =>
+        GIFTS[job].map((_, pick) => {
+          const gift = giftKind(job, pick);
+          return (
+            <GiftCard
+              key={`${job}-${pick}`}
+              gift={gift}
+              title={t(`chat.gift.${job}`, {
+                buddy: 'Preview',
+                to: t('chat.guestName'),
+                gift: t(giftKey(gift, 'inChat')),
+              })}
+              onReadPostcard={() => {}}
+            />
+          );
+        }),
+      )}
+    </View>
+  );
+}
+
 function Group({
   title,
   startOpen = false,
@@ -686,6 +713,9 @@ function Preview() {
               />
             ))}
           </Group>
+          <Group title="gifts (the chat card for mine; postcards also in the mailbox)">
+            <GiftCards />
+          </Group>
           <Group title="season">
             <Chip
               label="by date"
@@ -734,6 +764,10 @@ function Preview() {
 }
 
 const styles = StyleSheet.create({
+  giftCards: {
+    gap: 12,
+    width: '100%',
+  },
   screen: { flex: 1, alignItems: 'center' },
   column: { width: '100%', maxWidth: MAX_CONTENT_WIDTH },
   content: { gap: 12, paddingBottom: 32 },

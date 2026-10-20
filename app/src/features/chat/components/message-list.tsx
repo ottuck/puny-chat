@@ -18,6 +18,7 @@ import {
   type PhotoMessage,
 } from '../types';
 import { BuddyEventRow, EventCard } from './buddy-event-row';
+import { GiftCard } from './gift-card';
 import { type BubblePhoto, type BubbleRect, MessageBubble } from './message-bubble';
 import { PhotoViewer } from './photo-viewer';
 import { ReactionPicker } from './reaction-picker';
@@ -43,7 +44,7 @@ type Props = {
   // Lv.20's card offers changing the job while it may be changed (in the buddy's details).
   onChangeJob?: () => void;
   // The top level's card opens the mailbox, where its letter offers going its own way; so does a
-  // gift the buddy made me.
+  // postcard the buddy wrote me.
   onOpenMail?: () => void;
   // A buddy gone its own way: its card opens the memory album.
   onOpenAlbum?: () => void;
@@ -166,7 +167,7 @@ export function MessageList({
             );
           }
           // Something the buddy made one of us at work (docs/fun-improvements.md, 직업 선물). Mine is a
-          // card with the way to it in the mailbox; the partner's is a line.
+          // card with its picture (a postcard also goes to the mailbox); the partner's is a line.
           if (item.type === 'BUDDY_EVENT' && item.event === 'GIFT') {
             const gift = giftOfDetail(item.detail);
             const line = gift
@@ -178,13 +179,8 @@ export function MessageList({
               : t('buddyEvent.GIFT', { buddy: buddyName, actor: nameOf(item.actorId) });
             return (
               <View style={styles.spaced}>
-                {item.actorId === myId ? (
-                  <EventCard
-                    title={line}
-                    body={t('chat.giftBody')}
-                    action={onOpenMail ? `🎁 ${t('chat.openGift')}` : undefined}
-                    onAction={onOpenMail}
-                  />
+                {item.actorId === myId && gift ? (
+                  <GiftCard gift={gift} title={line} onReadPostcard={onOpenMail} />
                 ) : (
                   <BuddyEventRow label={line} />
                 )}

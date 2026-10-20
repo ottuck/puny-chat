@@ -80,7 +80,7 @@ type Props = ComponentProps<typeof BuddyStage> & {
   // The account and device now, for the mail that is only for that (docs/fun-improvements.md, 우편함).
   situation?: Situation;
   onTurnOnPush?: () => Promise<PushState>;
-  // Who I am: the gifts the buddy made me come to my mailbox (docs/fun-improvements.md, 직업 선물).
+  // Who I am: the postcards the buddy wrote me come to my mailbox (docs/fun-improvements.md, 직업 선물).
   myId?: string;
 };
 

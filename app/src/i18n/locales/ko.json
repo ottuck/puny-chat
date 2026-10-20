@@ -91,14 +91,14 @@
     "jobChangeRule": "직업은 Lv.20·30·40·50에 한 번씩, Lv.60부터는 언제든 바꿀 수 있어요.",
     "graduatedBody": "{{name}}의 사진이 무대 오른쪽 위 추억 앨범에 걸렸어요. 언제든 꺼내 볼 수 있어요.",
     "gift": {
-      "BARISTA": "☕ {{buddy, 이가}} {{to}}님에게 {{gift, 을를}} 내렸어요",
+      "BARISTA": "☕ {{buddy, 이가}} {{to}}님에게 {{gift, 을를}} 준비했어요",
       "CHEF": "🍳 {{buddy, 이가}} {{to}}님에게 {{gift, 을를}} 만들어 줬어요",
       "GARDENER": "🌱 {{buddy, 이가}} {{to}}님에게 {{gift, 을를}} 따 왔어요",
       "DJ": "🎧 {{buddy, 이가}} {{to}}님에게 레코드를 골라 줬어요: {{gift}}",
       "WRITER": "✒️ {{buddy, 이가}} {{to}}님에게 {{gift, 을를}} 썼어요"
     },
-    "giftBody": "우편함에 넣어 뒀어요. 버디가 일하면 하루 한 번 받아요.",
-    "openGift": "선물 보기"
+    "postcardBody": "우편함에 넣어 뒀어요.",
+    "readPostcard": "엽서 읽기"
   },
   "invite": {
     "button": "친구 초대",
@@ -417,25 +417,25 @@
           "inChat": "카페라테",
           "line": "우유 거품으로 하트를 올리려다 조금 기울었어요. 맛은 똑바로예요."
         },
-        "americano": {
-          "name": "아메리카노",
-          "inChat": "아메리카노",
-          "line": "진하게 내렸어요. 오늘 하루가 길 것 같아서요."
+        "icedAmericano": {
+          "name": "아이스 아메리카노",
+          "inChat": "아이스 아메리카노",
+          "line": "얼음 가득 넣었어요. 오늘 같은 날엔 이게 맞아요."
         },
-        "cappuccino": {
-          "name": "카푸치노",
-          "inChat": "카푸치노",
-          "line": "거품이 구름처럼 됐어요. 코끝에 묻어도 못 본 척할게요."
+        "caramelMacchiato": {
+          "name": "캐러멜 마키아토",
+          "inChat": "캐러멜 마키아토",
+          "line": "캐러멜로 격자를 그렸어요. 오목을 둬도 될 것 같아요."
         },
-        "pourOver": {
-          "name": "핸드드립 커피",
-          "inChat": "핸드드립 커피",
-          "line": "천천히 내렸어요. 기다리는 동안 원두가 좋은 냄새를 냈어요."
+        "matchaLatte": {
+          "name": "말차 라테",
+          "inChat": "말차 라테",
+          "line": "말차를 곱게 풀었어요. 덩어리는 하나도 없어요. 아마도요."
         },
-        "hojichaLatte": {
-          "name": "호지차 라테",
-          "inChat": "호지차 라테",
-          "line": "오늘은 커피가 쉬는 날. 구수한 걸로 준비했어요."
+        "chipFrappe": {
+          "name": "초코칩 프라페",
+          "inChat": "초코칩 프라페",
+          "line": "휘핑크림은 제 마음대로 높이 올렸어요."
         }
       },
       "CHEF": {
@@ -824,7 +824,7 @@
       "letter": "편지",
       "notice": "새로운 소식",
       "guide": "안내",
-      "gift": "선물"
+      "postcard": "엽서"
     },
     "mail": {
       "topLevelLetter": {

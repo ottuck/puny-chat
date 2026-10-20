@@ -9,7 +9,8 @@ import type { PushState } from '@/features/notifications/push';
 // The mailbox on the stage (docs/fun-improvements.md, 우편함): news and letters, written into the
 // app (their words are `mailbox.mail.<id>.*` in the translations) and sent with a web deploy or an
 // EAS Update; no server. What has been read, and when a letter came, is kept on this device.
-// Besides them, the gifts the buddy made me at work (직업 선물), which the server keeps.
+// Besides them, the postcards the buddy wrote me at work (직업 선물), which the server keeps; its
+// other gifts are handed over in the chat.
 
 export type MailId =
   | 'roomUpdate'
@@ -20,7 +21,7 @@ export type MailId =
   | 'guestDays1'
   | 'pushOff'
   | 'pushInstall';
-// A gift, by the id the server gave it.
+// A postcard, by the id the server gave the gift.
 export type GiftMailId = `gift:${string}`;
 export type MailKey = MailId | GiftMailId;
 // A button under the letter: to settings to link an account, turning notifications on, or to the
@@ -55,7 +56,7 @@ const daysLeftBetween = (most: number, least: number) => (now: Situation) =>
 const webPush = (state: PushState) => (now: Situation) =>
   Platform.OS === 'web' && now.push === state;
 
-export type GiftMail = { id: GiftMailId; kind: 'gift'; gift: GiftKind; action?: undefined };
+export type GiftMail = { id: GiftMailId; kind: 'postcard'; gift: GiftKind; action?: undefined };
 export type ShownMail = (Mail | GiftMail) & { date: string };
 
 // Newest at the top of the list (same day: in this order); add new ones here.
@@ -146,7 +147,7 @@ export function markRead(id: MailKey) {
 
 // The mail there is for this room's buddy at `level` and for `now`, newest first, and how much is
 // unread. `buddy`: how many of the room's buddies have gone their own way, so the next one is told
-// apart from this one. `gifts`: what the buddy made me, newest first.
+// apart from this one. `gifts`: what the buddy made me, newest first (only postcards come here).
 export function useMailbox(
   level: number,
   now: Situation = NOTHING,
@@ -178,11 +179,11 @@ export function useMailbox(
   const read = state.read.filter((id) => !missing.includes(id as MailId));
   const giftMails: ShownMail[] = gifts.flatMap((gift) => {
     const kind = giftOf(gift);
-    return kind
+    return kind?.job === 'WRITER'
       ? [
           {
             id: `gift:${gift.id}` as const,
-            kind: 'gift' as const,
+            kind: 'postcard' as const,
             gift: kind,
             date: dayOf(new Date(gift.at)),
           },
