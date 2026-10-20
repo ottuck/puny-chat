@@ -275,9 +275,15 @@ const GUEST_WEIGHT = 8;
 // A child or grown-up sits down on the rug now and then.
 const SIT_WEIGHT = 10;
 
-function pickIdleAct(job: BuddyJob | null, guests: readonly Guest[], sits: boolean): Act {
+// `dark`: from the evening on (room.ts, skyAt), when a shooting star can be seen.
+function pickIdleAct(
+  job: BuddyJob | null,
+  guests: readonly Guest[],
+  sits: boolean,
+  dark: boolean,
+): Act {
   const acts: readonly (readonly [Act, number])[] = [
-    ...IDLE_ACTS,
+    ...IDLE_ACTS.filter(([act]) => dark || act !== 'shootingStar'),
     ...(sits ? [['sit', SIT_WEIGHT] as const] : []),
     ...guests.map((guest) => [guest, GUEST_WEIGHT] as const),
     ...(job ? [['job', JOB_ACT_WEIGHT] as const] : []),
@@ -752,7 +758,9 @@ export function BuddyStage({
   const decor = decorFor(buddy.level, buddy.name, plantKind, now);
   // The lamp, lit in the evening and at night unless switched (until the stage opens again).
   const [lampOn, setLampOn] = useState<boolean | null>(null);
-  const lampLit = lampOn ?? skyAt(now.getHours()) !== 'day';
+  // Evening and night: the lamp is lit, and a shooting star may cross the sky.
+  const darkSky = skyAt(now.getHours()) !== 'day';
+  const lampLit = lampOn ?? darkSky;
   // The season's corner stands in for the plant that week.
   const corner = season ? SEASON_CORNER[season] : undefined;
   const plantRoom = corner
@@ -1157,11 +1165,25 @@ export function BuddyStage({
     // With the partner here too it is livelier: twice as often.
     const pace = partnerHere ? 0.5 : 1;
     const timer = setTimeout(
-      () => perform(pickIdleAct(job, guests ? (guests.split(',') as Guest[]) : [], atTable)),
+      () =>
+        perform(pickIdleAct(job, guests ? (guests.split(',') as Guest[]) : [], atTable, darkSky)),
       pace * (IDLE_ACT_MIN_MS + Math.random() * (IDLE_ACT_MAX_MS - IDLE_ACT_MIN_MS)),
     );
     return () => clearTimeout(timer);
-  }, [egg, settled, active, acting, petted, mood, partnerHere, job, guests, atTable, perform]);
+  }, [
+    egg,
+    settled,
+    active,
+    acting,
+    petted,
+    mood,
+    partnerHere,
+    job,
+    guests,
+    atTable,
+    darkSky,
+    perform,
+  ]);
 
   // Little hops while dancing, notes rising while singing.
   useEffect(() => {
