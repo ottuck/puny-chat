@@ -31,6 +31,7 @@ import {
 } from '../pixel/room-things';
 import {
   type BowlTier,
+  FALLEN_AT,
   FRUIT_AT,
   FRUIT_TREE,
   ORANGE,
@@ -317,9 +318,7 @@ function plantScale(tier: PlantTier | 0, level: number): number {
 export function plantRoom(decor: Decor): number {
   if (decor.plant === 0) return 0;
   const frame = PLANTS[decor.plant][decor.plantKind];
-  // The tree in fruit has an orange on the floor at its left.
-  const fallen = decor.plant === 5 ? (ORANGE_FALLEN[0].length - 1) * decor.plantScale : 0;
-  return Math.ceil(frame[0].length * decor.plantScale + fallen) + 8;
+  return Math.ceil(frame[0].length * decor.plantScale) + 8;
 }
 
 // The things on the floor are drawn at this size, like the bowl.
@@ -339,6 +338,9 @@ const TOY_WIDTH = TABLE[0].length * FLOOR_SCALE;
 const CLOCK_LEFT = 16;
 // The shelf, under the corner's buttons (CORNER_SIZE in buddy-stage.tsx, 4 from the top).
 const SHELF_RIGHT = 12;
+// The music box is drawn a little smaller than the shelf's other things: it is the tallest, and in
+// the corner under the buttons it looked heavy.
+const MUSIC_BOX_SIZE = 0.85;
 const SHELF_TOP = 48;
 // How long a rainbow stays after the rain.
 const RAINBOW_MS = 20_000;
@@ -643,10 +645,10 @@ export function WallDecor({
               <Arrive
                 key={decor.goldMusicBox ? 'gold' : 'wood'}
                 fresh={decor.goldMusicBox && fresh('goldMusicBox')}
-                width={MUSIC_BOX[0][0].length * shelfScale}
+                width={MUSIC_BOX[0][0].length * shelfScale * MUSIC_BOX_SIZE}
               >
                 <MusicBox
-                  scale={shelfScale}
+                  scale={shelfScale * MUSIC_BOX_SIZE}
                   playing={singing}
                   tick={tick}
                   gold={decor.goldMusicBox}
@@ -744,7 +746,7 @@ export function WallDecor({
   );
 }
 
-// The plant in the corner. The tree in fruit (Lv.45) has big oranges on its crown and one fallen by
+// The plant in the corner. The tree in fruit (Lv.45) has big oranges on its crown and one fallen on
 // the pot; `sprout`: it has just fruited, so they pop out one by one.
 export function Plant({
   tier,
@@ -773,7 +775,7 @@ export function Plant({
       ))}
       <Fruit
         frame={ORANGE_FALLEN}
-        place={{ left: -(ORANGE_FALLEN[0].length - 1) * scale, bottom: 0 }}
+        place={{ left: FALLEN_AT[1] * scale, top: FALLEN_AT[0] * scale }}
         scale={scale}
         delay={sprout ? FRUIT_FIRST_MS + FRUIT_AT.length * FRUIT_EVERY_MS + 400 : null}
       />
