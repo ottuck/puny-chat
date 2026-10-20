@@ -14,7 +14,7 @@ import { useColors } from '@/theme';
 // words; a DJ goes on air; a writer says a letter is in the mailbox, and for the one it is for that
 // bubble opens it.
 const FACE = 22;
-const PICTURE_SCALE = 2;
+const PICTURE_SCALE = 1.5;
 
 export function BuddyGiftMessage({
   gift,

@@ -9,6 +9,7 @@ import { WebFrame } from '@/components/web-frame';
 import type { PushState } from '@/features/notifications/push';
 import { useColors } from '@/theme';
 
+import { BuddyLetterPaper } from './buddy-letter';
 import { markRead, type MailAction, type MailKey, type ShownMail } from './mail';
 
 // The mailbox's list of letters and news, and one opened on a sheet of letter paper.
@@ -137,7 +138,9 @@ export function MailboxSheet({
               </Pressable>
             </View>
 
-            {opened ? (
+            {opened?.kind === 'buddyLetter' ? (
+              <BuddyLetterPaper date={date(opened.date)} {...words(opened)} />
+            ) : opened ? (
               // A sheet of letter paper: ruled, the date in the corner, signed at the bottom.
               <View style={styles.paper}>
                 <Text style={styles.paperDate}>{date(opened.date)}</Text>

@@ -81,6 +81,8 @@ MAT = {
     'agave': (['#5E9A8A', '#7CB6A4', '#A0CEBE', '#C8E6DA'], '#3A6A5C'),
     'dough': (['#D8C4A0', '#EBDCC0', '#F6EEDC', '#FFFAF0'], '#9A8460'),
     'crisp': (['#9A5A22', '#B87432', '#D29450', '#D29450'], '#6A3A10'),
+    'bamboo': (['#B0884A', '#C9A262', '#DDBC80', '#EED6A4'], '#7A5A26'),
+    'bambooIn': (['#8A6A3A', '#A2804C', '#B89660', '#B89660'], '#6A4C22'),
     'stamp': (['#C8D8C0', '#E2EEDC', '#F4FAF0', '#F4FAF0'], '#7A9070'),
     'shade': (['#D8CFC4', '#D8CFC4', '#D8CFC4', '#D8CFC4'], None),
 }
@@ -371,13 +373,13 @@ def plate(a, cy=25, rx=14.5, ry=5):
 
 def omurice():
     a = Art()
-    steam(a, [11, 17, 22], 2, 8)
-    plate(a)
-    a.fill(both(ell(16, 22, 11, 7.2), lambda x, y: y <= 25.5), 'egg', sphere(14, 19, 11, 7))
-    a.fill(heart(16.5, 19.5, 3.4), 'red', sphere(15.5, 18.5, 4, 4), group='ketchup')
-    a.dot([(14, 18), (15, 18)], 'red', 3)
+    steam(a, [12, 17, 21], 5, 10)
+    plate(a, cy=24.5, rx=12, ry=4.2)
+    a.fill(both(ell(16, 22.2, 8.8, 5.8), lambda x, y: y <= 24.8), 'egg', sphere(14.4, 19.8, 8.8, 5.6))
+    a.fill(heart(16.4, 20.2, 2.8), 'red', sphere(15.6, 19.4, 3.2, 3.2), group='ketchup')
+    a.dot([(15, 19)], 'red', 3)
     # Parsley on the side.
-    a.fill(anyof(ell(26, 24.5, 1.6, 1.3), ell(27.6, 23.4, 1.4, 1.2)), 'leaf', 1)
+    a.fill(anyof(ell(24.6, 23.8, 1.4, 1.1), ell(26, 22.9, 1.2, 1.0)), 'leaf', 1)
     return a
 
 
@@ -409,19 +411,18 @@ def ramen():
 
 def pancakes():
     a = Art()
-    plate(a, cy=26, rx=14.5, ry=4.4)
-    for i, cy in enumerate((22, 18.5, 15)):
-        a.fill(anyof(ell(16, cy + 1.6, 10.5, 2.6), both(rect(5.5, cy - 1, 26.5, cy + 1.6))), 'cake',
-               lambda x, y, cy=cy: 0 if y > cy + 1.5 else (1 if x > 20 else 2))
-        a.fill(ell(16, cy - 1, 10.5, 2.6), 'cake', 3 if i == 2 else 2)
-    # Syrup over the top and down the side, butter on top.
-    a.fill(ell(16, 13.8, 8.6, 2.0), 'syrup', lambda x, y: 3 if x < 12 else 2)
-    # Drips down the side, on the cakes themselves (no line around them).
-    drips = [(9, 16, 19), (10, 16, 17), (20, 16, 23), (21, 16, 21), (15, 16, 17)]
+    plate(a, cy=25.5, rx=12, ry=3.8)
+    for i, cy in enumerate((22.4, 19.6, 16.8)):
+        a.fill(anyof(ell(16, cy + 1.3, 8.4, 2.1), rect(7.6, cy - 0.8, 24.4, cy + 1.3)), 'cake',
+               lambda x, y, cy=cy: 0 if y > cy + 1.2 else (1 if x > 19.5 else 2))
+        a.fill(ell(16, cy - 0.8, 8.4, 2.1), 'cake', 3 if i == 2 else 2)
+    # Syrup over the top and down the side (on the cakes themselves: no line around it), butter on top.
+    a.fill(ell(16, 15.9, 6.8, 1.6), 'syrup', lambda x, y: 3 if x < 13 else 2)
+    drips = [(10, 17, 20), (11, 17, 18), (20, 17, 23), (21, 17, 21), (16, 17, 18)]
     a.dot([(x, y) for x, y0, y1 in drips for y in range(y0, y1)], 'syrup', 1)
     a.dot([(x, y1) for x, y0, y1 in drips], 'syrup', 0)
-    a.fill(poly([(12.5, 10.5), (18.5, 10.5), (19.5, 12.5), (13.5, 13.5)]), 'butter', lambda x, y: 2 if y < 11.8 else 1)
-    a.fill(poly([(12.5, 10.5), (18.5, 10.5), (17.5, 9), (13.5, 9)]), 'butter', 3, group='butter-top')
+    a.fill(poly([(13.4, 13.4), (18.2, 13.4), (19, 15), (14.2, 15.8)]), 'butter', lambda x, y: 2 if y < 14.4 else 1)
+    a.fill(poly([(13.4, 13.4), (18.2, 13.4), (17.4, 12.2), (14.2, 12.2)]), 'butter', 3, group='butter-top')
     return a
 
 
@@ -477,28 +478,21 @@ def rice_balls():
     return a
 
 
-def gyoza():
+def steamed_bun():
     a = Art()
-    steam(a, [11, 16, 21], 5, 11)
-    # A long plate with three pan-fried dumplings leaning on each other.
-    a.fill(ell(15.5, 23.5, 13.5, 4.4), 'plate', lambda x, y: 2 if y < 22.5 else 1 if y < 25.5 else 0, group='plate')
-    a.fill(ell(15.5, 23.3, 11.4, 3.2), 'plate', 1, group='well')
-    for i, cx in enumerate((22.6, 16, 9.4)):
-        base = 23.6 - i * 0.4
-        half, height = 5.0, 7.4
-        crest = lambda x, cx=cx, base=base: base - height * max(0.0, 1 - ((x - cx) / half) ** 2) ** 0.5
-        body = lambda x, y, cx=cx, base=base, crest=crest: abs(x - cx) <= half and crest(x) <= y <= base
-        # The frilled edge along the top: small bumps.
-        frill = anyof(*[ell(cx + k * 1.6, crest(cx + k * 1.6) + 0.2, 1.0, 0.9) for k in (-1.5, -0.5, 0.5, 1.5)])
-        shape = anyof(body, frill)
-        a.fill(shape, 'dough',
-               lambda x, y, cx=cx, base=base: 0 if y > base - 1.6 else 3 if (x < cx - 1.6 and y < base - 4.5) else
-               2 if x < cx + 0.8 else 1, group=f'gyoza{i}')
-        # Pleats running down from the frill, the crisp brown base.
-        for k in (-1, 0, 1):
-            x0 = cx + k * 1.6
-            a.dot([(x0, crest(x0) + 1.4), (x0 + 0.6 * k, crest(x0) + 2.4)], 'dough', 0, group=f'gyoza{i}')
-        a.fill(both(shape, lambda x, y, base=base: y > base - 1.6), 'crisp', cyl(cx - 5, cx + 5), group=f'gyoza{i}')
+    steam(a, [12, 16, 20], 1, 6)
+    # A bamboo steamer, its lid off, and one bun sitting in it.
+    a.fill(ell(16, 28, 9.6, 1.8), 'shade', 1)
+    a.fill(anyof(rect(6, 19, 26, 27.2), ell(16, 27.2, 10, 2.2)), 'bamboo', cyl(6, 26), group='steamer')
+    a.dot([(x, y) for y in (21, 24) for x in range(7, 26) if (x + y) % 3 != 0], 'bamboo', 0, group='steamer')
+    a.fill(ell(16, 19, 10, 3.2), 'bamboo', 3, group='rim')
+    a.fill(ell(16, 19.3, 8.6, 2.2), 'bambooIn', 1, group='inside')
+    # The bun: a soft dome, its pleats gathered into a twist on top.
+    bun = both(ell(16, 18.4, 6.6, 6.6), lambda x, y: y <= 20)
+    a.fill(bun, 'dough', sphere(14.4, 15, 6.6, 6.6), group='bun')
+    for k in (-3, -2, -1, 1, 2, 3):
+        line(a, 16 + k * 0.4, 12.6, 16 + k * 1.9, 15.2 - abs(k) * 0.35 + 1.2, 'dough', 0.35, 0, group='bun')
+    a.fill(ell(16, 12.4, 1.5, 1.1), 'dough', 3, group='bun')
     return a
 
 
@@ -636,7 +630,7 @@ def flowers():
 ART = {
     'BARISTA': {'latte': latte, 'icedAmericano': iced_americano, 'caramelMacchiato': caramel_macchiato,
                 'matchaLatte': matcha_latte, 'chipFrappe': chip_frappe},
-    'CHEF': {'omurice': omurice, 'ramen': ramen, 'pancakes': pancakes, 'riceBalls': rice_balls, 'gyoza': gyoza},
+    'CHEF': {'omurice': omurice, 'ramen': ramen, 'pancakes': pancakes, 'riceBalls': rice_balls, 'steamedBun': steamed_bun},
     'GARDENER': {'rose': rose, 'tulips': tulips, 'sunflower': sunflower, 'succulent': succulent, 'flowers': flowers},
 }
 
@@ -646,7 +640,7 @@ DESCRIBE = {
     'matchaLatte': 'a stone mug of matcha latte with a heart in the milk',
     'chipFrappe': 'a chocolate chip frappé under whipped cream and a dome lid', 'omurice': 'omurice with a ketchup heart',
     'ramen': 'a small bowl of ramen with its toppings', 'pancakes': 'a stack with syrup and butter',
-    'riceBalls': 'two rice balls in nori on a wooden board', 'gyoza': 'three pan-fried gyoza on a plate', 'rose': 'a single rose lying across',
+    'riceBalls': 'two rice balls in nori on a wooden board', 'steamedBun': 'a steamed bun in a bamboo steamer', 'rose': 'a single rose lying across',
     'tulips': 'three tulips wrapped in paper', 'sunflower': 'a sunflower', 'succulent': 'a succulent in a little pot',
     'flowers': 'wildflowers in paper',
 }

@@ -451,9 +451,9 @@
           "name": "Rice balls",
           "offer": "Rice balls, one for whenever you get peckish."
         },
-        "gyoza": {
-          "name": "Gyoza",
-          "offer": "Gyoza, crispy on the bottom."
+        "steamedBun": {
+          "name": "Steamed bun",
+          "offer": "A steamed bun, fresh out. It’s hot, so blow on it first."
         }
       },
       "GARDENER": {

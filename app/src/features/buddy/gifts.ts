@@ -11,7 +11,7 @@ import { isJob } from './jobs';
 // writes a letter that comes to the mailbox (buddy.letter.<letter>).
 export const ITEMS = {
   BARISTA: ['latte', 'icedAmericano', 'caramelMacchiato', 'matchaLatte', 'chipFrappe'],
-  CHEF: ['omurice', 'ramen', 'pancakes', 'riceBalls', 'gyoza'],
+  CHEF: ['omurice', 'ramen', 'pancakes', 'riceBalls', 'steamedBun'],
   GARDENER: ['rose', 'tulips', 'sunflower', 'succulent', 'flowers'],
 } as const;
 export type ItemJob = keyof typeof ITEMS;
