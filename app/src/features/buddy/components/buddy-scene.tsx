@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { type ComponentProps, useCallback, useEffect, useRef, useState } from 'react';
+import { type ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Animated,
@@ -80,6 +80,10 @@ type Props = ComponentProps<typeof BuddyStage> & {
   // The account and device now, for the mail that is only for that (docs/fun-improvements.md, 우편함).
   situation?: Situation;
   onTurnOnPush?: () => Promise<PushState>;
+  // Who I am: the letters a writer buddy wrote me come to my mailbox (docs/fun-improvements.md, 직업 이벤트).
+  myId?: string;
+  // And my name, for "To." on its letters.
+  myName?: string;
 };
 
 const NATIVE_DRIVER = Platform.OS !== 'web';
@@ -255,6 +259,8 @@ export function BuddyScene({
   mailRequest = null,
   situation,
   onTurnOnPush,
+  myId,
+  myName,
   ...props
 }: Props) {
   const { t } = useTranslation();
@@ -312,7 +318,11 @@ export function BuddyScene({
     landed: () => void;
   } | null>(null);
   const [mailOpen, setMailOpen] = useState(false);
-  const mailbox = useMailbox(buddy.level, situation, album.length);
+  const myGifts = useMemo(
+    () => (buddy.gifts ?? []).filter((gift) => gift.to === myId),
+    [buddy.gifts, myId],
+  );
+  const mailbox = useMailbox(buddy.level, situation, album.length, myGifts);
   useEffect(() => {
     if (!mailRequest) return;
     const timer = setTimeout(() => setMailOpen(true), 0);
@@ -553,6 +563,8 @@ export function BuddyScene({
         guest={situation?.guestDaysLeft != null}
         onTurnOnPush={onTurnOnPush}
         onGraduate={buddy.grown ? props.onOpenDetail : undefined}
+        buddyName={buddy.name}
+        myName={myName}
       />
     </View>
   );

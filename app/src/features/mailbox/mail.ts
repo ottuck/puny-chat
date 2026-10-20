@@ -2,11 +2,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useSyncExternalStore } from 'react';
 import { Platform } from 'react-native';
 
+import type { BuddyGift } from '@/features/buddy/api';
+import { type Gift, giftOf } from '@/features/buddy/gifts';
 import type { PushState } from '@/features/notifications/push';
 
 // The mailbox on the stage (docs/fun-improvements.md, 우편함): news and letters, written into the
 // app (their words are `mailbox.mail.<id>.*` in the translations) and sent with a web deploy or an
 // EAS Update; no server. What has been read, and when a letter came, is kept on this device.
+// Besides them, the letters a writer buddy wrote me at work (직업 이벤트), which the server keeps; the
+// other jobs do theirs in the chat.
 
 export type MailId =
   | 'roomUpdate'
@@ -17,6 +21,9 @@ export type MailId =
   | 'guestDays1'
   | 'pushOff'
   | 'pushInstall';
+// A buddy's letter, by the id the server gave the gift.
+export type GiftMailId = `gift:${string}`;
+export type MailKey = MailId | GiftMailId;
 // A button under the letter: to settings to link an account, turning notifications on, or to the
 // buddy's details to let it go its own way.
 export type MailAction = 'linkAccount' | 'turnOnPush' | 'graduate';
@@ -48,6 +55,14 @@ const daysLeftBetween = (most: number, least: number) => (now: Situation) =>
 // gets none until the site is on the home screen. The app asks by itself.
 const webPush = (state: PushState) => (now: Situation) =>
   Platform.OS === 'web' && now.push === state;
+
+export type GiftMail = {
+  id: GiftMailId;
+  kind: 'buddyLetter';
+  gift: Extract<Gift, { kind: 'letter' }>;
+  action?: undefined;
+};
+export type ShownMail = (Mail | GiftMail) & { date: string };
 
 // Newest at the top of the list (same day: in this order); add new ones here.
 export const MAIL: readonly Mail[] = [
@@ -85,7 +100,7 @@ const KEY = 'mailbox';
 // `buddy`: for a letter that comes with a level, which of the room's buddies it came to (how many had
 // gone their own way by then).
 type Saved = {
-  read: MailId[];
+  read: MailKey[];
   came: Partial<Record<MailId, string>>;
   buddy?: Partial<Record<MailId, number>>;
 };
@@ -117,21 +132,33 @@ function save(next: Saved) {
   AsyncStorage.setItem(KEY, JSON.stringify(next)).catch(() => {});
 }
 
-function today(): string {
-  const now = new Date();
+function dayOf(time: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  return `${time.getFullYear()}-${pad(time.getMonth() + 1)}-${pad(time.getDate())}`;
 }
 
-export function markRead(id: MailId) {
+const today = () => dayOf(new Date());
+
+// Gifts read are kept only as far back as the server keeps gifts (server: BuddyRules.GIFTS_KEPT).
+const GIFTS_READ_KEPT = 30;
+
+export function markRead(id: MailKey) {
   if (saved.read.includes(id)) return;
-  save({ ...saved, read: [...saved.read, id] });
+  const isGift = (key: MailKey) => key.startsWith('gift:');
+  const gifts = [...saved.read.filter(isGift), id].filter(isGift).slice(-GIFTS_READ_KEPT);
+  const rest = saved.read.filter((key) => !isGift(key));
+  save({ ...saved, read: [...rest, ...(isGift(id) ? [] : [id]), ...gifts] });
 }
 
 // The mail there is for this room's buddy at `level` and for `now`, newest first, and how much is
 // unread. `buddy`: how many of the room's buddies have gone their own way, so the next one is told
-// apart from this one.
-export function useMailbox(level: number, now: Situation = NOTHING, buddy = 0) {
+// apart from this one. `gifts`: what the buddy made me, newest first (only letters come here).
+export function useMailbox(
+  level: number,
+  now: Situation = NOTHING,
+  buddy = 0,
+  gifts: readonly BuddyGift[] = [],
+) {
   const state = useSyncExternalStore(subscribe, get, get);
   // A level's letter that came to an earlier buddy comes again, as new.
   const earlier = (mail: Mail) =>
@@ -150,23 +177,36 @@ export function useMailbox(level: number, now: Situation = NOTHING, buddy = 0) {
       came[id] = today();
       of[id] = buddy;
     }
-    save({ read: saved.read.filter((id) => !missing.includes(id)), came, buddy: of });
+    save({ read: saved.read.filter((id) => !missing.includes(id as MailId)), came, buddy: of });
     // Only when something new is due; `missing` is a fresh array each time.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [missing.join(',')]);
-  const read = state.read.filter((id) => !missing.includes(id));
-  const mails = MAIL.filter((mail) => {
+  const read = state.read.filter((id) => !missing.includes(id as MailId));
+  const giftMails: ShownMail[] = gifts.flatMap((gift) => {
+    const kind = giftOf(gift);
+    return kind?.kind === 'letter'
+      ? [
+          {
+            id: `gift:${gift.id}` as const,
+            kind: 'buddyLetter' as const,
+            gift: kind,
+            date: dayOf(new Date(gift.at)),
+          },
+        ]
+      : [];
+  });
+  const letters: ShownMail[] = MAIL.filter((mail) => {
     if (mail.comes) {
       const stays = mail.stays ?? mail.comes;
       return stays(now) && (!!state.came[mail.id] || mail.comes(now));
     }
     return mail.fromLevel === undefined || level >= mail.fromLevel;
-  })
-    .map((mail) => ({
-      ...mail,
-      date: mail.date ?? (missing.includes(mail.id) ? undefined : state.came[mail.id]) ?? today(),
-    }))
-    .sort((a, b) => b.date.localeCompare(a.date));
+  }).map((mail) => ({
+    ...mail,
+    date: mail.date ?? (missing.includes(mail.id) ? undefined : state.came[mail.id]) ?? today(),
+  }));
+  // A day's gifts above its letters.
+  const mails = [...giftMails, ...letters].sort((a, b) => b.date.localeCompare(a.date));
   const unread = mails.filter((mail) => !read.includes(mail.id)).length;
   return { mails, unread, read };
 }

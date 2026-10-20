@@ -9,7 +9,8 @@ import { WebFrame } from '@/components/web-frame';
 import type { PushState } from '@/features/notifications/push';
 import { useColors } from '@/theme';
 
-import { markRead, type Mail, type MailAction, type MailId } from './mail';
+import { BuddyLetterPaper } from './buddy-letter';
+import { markRead, type MailAction, type MailKey, type ShownMail } from './mail';
 
 // The mailbox's list of letters and news, and one opened on a sheet of letter paper.
 
@@ -17,7 +18,12 @@ const PAPER = '#FFFBF2';
 const INK = '#4A3B33';
 const INK_LIGHT = '#8A7F78';
 const RULE = '#EFE3CF';
-const ICONS: Record<Mail['kind'], string> = { letter: '💌', notice: '📮', guide: '📌' };
+const ICONS: Record<ShownMail['kind'], string> = {
+  letter: '💌',
+  notice: '📮',
+  guide: '📌',
+  buddyLetter: '✉️',
+};
 
 export function MailboxSheet({
   visible,
@@ -27,10 +33,12 @@ export function MailboxSheet({
   guest = false,
   onTurnOnPush,
   onGraduate,
+  buddyName,
+  myName,
 }: {
   visible: boolean;
-  mails: (Mail & { date: string })[];
-  read: MailId[];
+  mails: ShownMail[];
+  read: MailKey[];
   onClose: () => void;
   // Whether the account button still has something to do.
   guest?: boolean;
@@ -38,11 +46,27 @@ export function MailboxSheet({
   onTurnOnPush?: () => Promise<PushState>;
   // While the room's buddy may go its own way: opens its details, where that is done.
   onGraduate?: () => void;
+  // Who signs the buddy's letters (they are from the room's buddy now), and whom they are to.
+  buddyName: string;
+  myName?: string;
 }) {
   const colors = useColors();
   const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
-  const [open, setOpen] = useState<MailId | null>(null);
+  const [open, setOpen] = useState<MailKey | null>(null);
+  // Our letters' words are their own; the buddy's are under buddy.letter, by which it wrote.
+  const words = (mail: ShownMail) =>
+    mail.kind === 'buddyLetter'
+      ? {
+          title: t(`buddy.letter.${mail.gift.letter}.title`),
+          body: t(`buddy.letter.${mail.gift.letter}.body`),
+          from: t('mailbox.giftFrom', { buddy: buddyName }),
+        }
+      : {
+          title: t(`mailbox.mail.${mail.id}.title`),
+          body: t(`mailbox.mail.${mail.id}.body`),
+          from: t(`mailbox.mail.${mail.id}.from`),
+        };
   const opened = mails.find((mail) => mail.id === open);
   const date = (day: string) =>
     new Intl.DateTimeFormat(i18n.language, {
@@ -116,14 +140,21 @@ export function MailboxSheet({
               </Pressable>
             </View>
 
-            {opened ? (
+            {opened?.kind === 'buddyLetter' ? (
+              <BuddyLetterPaper
+                date={date(opened.date)}
+                to={t('mailbox.letterTo', { name: myName || t('chat.guestName') })}
+                body={words(opened).body}
+                from={words(opened).from}
+              />
+            ) : opened ? (
               // A sheet of letter paper: ruled, the date in the corner, signed at the bottom.
               <View style={styles.paper}>
                 <Text style={styles.paperDate}>{date(opened.date)}</Text>
-                <Text style={styles.paperTitle}>{t(`mailbox.mail.${opened.id}.title`)}</Text>
+                <Text style={styles.paperTitle}>{words(opened).title}</Text>
                 <View style={styles.rule} />
-                <Text style={styles.paperBody}>{t(`mailbox.mail.${opened.id}.body`)}</Text>
-                <Text style={styles.paperSign}>{t(`mailbox.mail.${opened.id}.from`)}</Text>
+                <Text style={styles.paperBody}>{words(opened).body}</Text>
+                <Text style={styles.paperSign}>{words(opened).from}</Text>
                 {denied ? (
                   <Text style={styles.paperNote}>{t('settings.notificationsDeniedWeb')}</Text>
                 ) : null}
@@ -161,7 +192,7 @@ export function MailboxSheet({
                             style={[styles.itemTitle, { color: colors.text }]}
                             numberOfLines={1}
                           >
-                            {t(`mailbox.mail.${mail.id}.title`)}
+                            {words(mail).title}
                           </Text>
                           <Text style={[styles.itemDate, { color: colors.textMuted }]}>
                             {date(mail.date)}

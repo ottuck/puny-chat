@@ -96,6 +96,14 @@ export type Line =
   | 'dj2'
   | 'dj3'
   | 'dj4'
+  | 'dj5'
+  | 'dj6'
+  | 'dj7'
+  | 'dj8'
+  | 'dj9'
+  | 'dj10'
+  | 'dj11'
+  | 'dj12'
   | 'writer1'
   | 'writer2'
   | 'writer3'
@@ -139,7 +147,7 @@ const ASKS: Line[] = [
 export const JOB_LINES: Record<BuddyJob, Line[]> = {
   CHEF: ['chef1', 'chef2', 'chef3', 'chef4'],
   GARDENER: ['gardener1', 'gardener2', 'gardener3', 'gardener4'],
-  DJ: ['dj1', 'dj2', 'dj3', 'dj4'],
+  DJ: ['dj1', 'dj2', 'dj3', 'dj4', 'dj5', 'dj6', 'dj7', 'dj8', 'dj9', 'dj10', 'dj11', 'dj12'],
   WRITER: ['writer1', 'writer2', 'writer3', 'writer4'],
   BARISTA: ['barista1', 'barista2', 'barista3', 'barista4'],
 };
@@ -153,8 +161,11 @@ export const NEW_JOB_LINE: Record<BuddyJob, Line> = {
 };
 // A barista talks this much more often, and also while the two are chatting.
 const BARISTA_PACE = 0.6;
-// How often an adult with a job says one of its own lines instead of a question.
+// How often an adult with a job says one of its own lines instead of a question; a DJ, on air, more.
 const OWN_LINE_CHANCE = 0.35;
+const DJ_OWN_LINE_CHANCE = 0.7;
+// A DJ also talks a little more often than the others (a barista still the most).
+const DJ_PACE = 0.8;
 
 // A question stays a little longer than a thank-you, so it can be read and answered.
 const ASK_MS = 4500;
@@ -265,7 +276,7 @@ export function useBuddyTalk({
   // of its job's. While they are chatting it keeps out of the way (a barista does not).
   useEffect(() => {
     if (!canTalk || quiet || line) return;
-    const pace = job === 'BARISTA' ? BARISTA_PACE : 1;
+    const pace = job === 'BARISTA' ? BARISTA_PACE : job === 'DJ' ? DJ_PACE : 1;
     const timer = setTimeout(
       () => {
         const lively = Date.now() - lastTalkRef.current < QUIET_CHAT_MS;
@@ -274,7 +285,8 @@ export function useBuddyTalk({
           return;
         }
         const own = job ? JOB_LINES[job] : [];
-        const useOwn = own.length > 0 && (lively || Math.random() < OWN_LINE_CHANCE);
+        const chance = job === 'DJ' ? DJ_OWN_LINE_CHANCE : OWN_LINE_CHANCE;
+        const useOwn = own.length > 0 && (lively || Math.random() < chance);
         const next = pick((useOwn ? own : ASKS).filter((ask) => ask !== lastAsk));
         lastAsk = next;
         say(next, useOwn ? SAY_MS + 1000 : ASK_MS);

@@ -19,7 +19,9 @@ export type BuddyEvent =
   | 'GRADUATED'
   | 'TOGETHER'
   | 'JOB'
-  | 'JOB_CHANGED';
+  | 'JOB_CHANGED'
+  // Something it made for one member at work (actorId), "<job>:<pick>" in detail (gifts.ts).
+  | 'GIFT';
 
 // What it grows up to be, from how the two raised it (server: buddy/BuddyJob).
 export type BuddyJob = 'CHEF' | 'GARDENER' | 'DJ' | 'WRITER' | 'BARISTA';
@@ -61,7 +63,13 @@ export type BuddyView = {
   canChangeJob: boolean;
   // While it cannot: the level the next change opens at.
   jobChangeAt: number | null;
+  // What it made us at work, newest first (gifts.ts). Missing from a server from before.
+  gifts?: BuddyGift[];
 };
+
+// One gift for one member (`to`), kept for the mailbox; `pick` says which of the job's (gifts.ts).
+// `job` may be one this app version does not know.
+export type BuddyGift = { id: string; to: string; job: string; pick: number; at: string };
 
 // changed: false when it was not needed, or the other member just did it.
 type CareResult = { buddy: BuddyView; changed: boolean };

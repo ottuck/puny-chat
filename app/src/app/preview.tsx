@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type { BuddyJob, BuddyStage, BuddyView } from '@/features/buddy/api';
+import type { BuddyGift, BuddyJob, BuddyStage, BuddyView } from '@/features/buddy/api';
 import type { Mood } from '@/features/buddy/chat-words';
 import { BuddyDream, DREAM_CUTS } from '@/features/buddy/components/buddy-dream';
 import { BuddyScene } from '@/features/buddy/components/buddy-scene';
@@ -13,12 +13,14 @@ import { BuddySheet } from '@/features/buddy/components/buddy-sheet';
 import { rewardIcon } from '@/features/buddy/components/buddy-guide';
 import { type Reward, REWARDS, SEASONAL } from '@/features/buddy/components/stage-decor';
 import type { Cue } from '@/features/buddy/components/buddy-stage';
+import { giftFor, ITEMS, LETTERS, RADIO } from '@/features/buddy/gifts';
 import { JOB_ICON, JOB_ORDER } from '@/features/buddy/jobs';
 import { dressedFrame, type Season, SEASONS, seasonOn } from '@/features/buddy/pixel/looks';
 import { PixelSprite } from '@/features/buddy/pixel/pixel-sprite';
 import { BUDDY_PALETTE, POSES_IN_ORDER } from '@/features/buddy/pixel/sprites';
 import type { FishStyle } from '@/features/buddy/pixel/room-things';
 import type { Reaction, ReactionKind } from '@/features/buddy/reactions';
+import { BuddyGiftMessage } from '@/features/chat/components/buddy-gift-message';
 import type { AlbumEntry } from '@/features/room/api';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
@@ -181,6 +183,34 @@ function Chip({
 
 // "open all" / "fold all" under the stage: every group follows the latest press (a new `run`).
 const FoldAll = createContext({ open: false, run: 0 });
+
+// What the buddy says and hands over in the chat at work (docs/fun-improvements.md, 직업 이벤트): every
+// thing a barista, a cook or a gardener makes (each with another opening word), every DJ show, and
+// a writer's word about its letter (the letters themselves are in the mailbox with &gifts=all).
+const GIFT_SAMPLES = [
+  ...(['BARISTA', 'CHEF', 'GARDENER'] as const).flatMap((job) =>
+    ITEMS[job].map((_, i) => giftFor(job, i * (ITEMS[job].length + 1))),
+  ),
+  ...RADIO.map((_, i) => giftFor('DJ', i)),
+  giftFor('WRITER', 0),
+];
+
+function GiftMessages() {
+  const { t } = useTranslation();
+  return (
+    <View style={styles.giftMessages}>
+      {GIFT_SAMPLES.map((gift, i) => (
+        <BuddyGiftMessage
+          key={i}
+          gift={gift}
+          buddyName="Preview"
+          toName={t('chat.guestName')}
+          onOpenMail={() => {}}
+        />
+      ))}
+    </View>
+  );
+}
 
 // Folded until its title is tapped, so the stage above stays in view.
 function Group({
@@ -365,6 +395,16 @@ const PAST_BUDDIES: AlbumEntry[] = (
   job,
 }));
 
+// Whose gifts the preview's are: mine.
+const PREVIEW_ME = 'preview-me';
+const EVERY_LETTER: BuddyGift[] = LETTERS.map((_, pick) => ({
+  id: `letter-${pick}`,
+  to: PREVIEW_ME,
+  job: 'WRITER',
+  pick,
+  at: new Date().toISOString(),
+}));
+
 // A link can open it on a scene, for taking pictures of it (README):
 // /preview?scene=bath, ?scene=bath&season=CHRISTMAS (snowing), ?scene=cut2 (a cut of the dream),
 // ?stage=CHILD&level=8 (the room at that level), &hour=22 (the room at night), &job=none (a grown-up
@@ -372,7 +412,8 @@ const PAST_BUDDIES: AlbumEntry[] = (
 // their own way, in the memory album by the hot spring's button), &date=01-01 (the seasonal things
 // of that day), &cue=owl (a happening or a guest, two seconds in), &leave=1 (it goes its own way,
 // two seconds in), &guest=7 (a guest with that many days left: the mailbox's letters for it),
-// &push=off or needsInstall (web: notifications not on, a letter about it).
+// &push=off or needsInstall (web: notifications not on, a letter about it), &gifts=all (every letter a
+// writer writes, in the mailbox; otherwise a writer's station brings one, as in the room).
 function Preview() {
   const colors = useColors();
   const params = useLocalSearchParams<{
@@ -389,6 +430,7 @@ function Preview() {
     date?: string;
     cue?: string;
     leave?: string;
+    gifts?: string;
   }>();
   const linkedCut = params.scene?.startsWith('cut') ? Number(params.scene.slice(3)) - 1 : null;
   const linkedSeason = SEASONS.find((s) => s === params.season);
@@ -468,6 +510,9 @@ function Preview() {
 
   // The day of the room's seasonal things (undefined: today).
   const [date, setDate] = useState<string | undefined>(params.date);
+  const [gifts, setGifts] = useState<BuddyGift[]>(() =>
+    params.gifts === 'all' ? EVERY_LETTER : [],
+  );
 
   // A job changed in the details plays on the stage once they close, as in the app.
   const [jobCheer, setJobCheer] = useState<Reaction | null>(null);
@@ -505,7 +550,8 @@ function Preview() {
               startInBath={params.scene === 'bath' || bathRun > 0}
               bathSnow={bathSnow}
               fishStyle={fishStyle}
-              buddy={buddyOf(stage, job, hungry, poops, level, jobChangedAt)}
+              buddy={{ ...buddyOf(stage, job, hungry, poops, level, jobChangedAt), gifts }}
+              myId={PREVIEW_ME}
               busy={false}
               height={stageHeight}
               // As in the room: the change at once, and the buddy's reaction with it (use-buddy.ts).
@@ -517,7 +563,17 @@ function Preview() {
                 setPoops((n) => Math.max(0, n - 1));
                 setReaction({ id: randomUUID(), kind: 'cleaned' });
               }}
-              onWork={() => {}}
+              onWork={() => {
+                if (!job) return;
+                const gift = {
+                  id: randomUUID(),
+                  to: PREVIEW_ME,
+                  job,
+                  pick: Math.floor(Math.random() * 1000),
+                  at: new Date().toISOString(),
+                };
+                setGifts((all) => [gift, ...all]);
+              }}
               onOpenDetail={() => setDetail(true)}
               reaction={reaction}
               cue={cue}
@@ -659,6 +715,9 @@ function Preview() {
               />
             ))}
           </Group>
+          <Group title="gifts (what it says in the chat at work)">
+            <GiftMessages />
+          </Group>
           <Group title="season">
             <Chip
               label="by date"
@@ -707,6 +766,10 @@ function Preview() {
 }
 
 const styles = StyleSheet.create({
+  giftMessages: {
+    gap: 12,
+    width: '100%',
+  },
   screen: { flex: 1, alignItems: 'center' },
   column: { width: '100%', maxWidth: MAX_CONTENT_WIDTH },
   content: { gap: 12, paddingBottom: 32 },

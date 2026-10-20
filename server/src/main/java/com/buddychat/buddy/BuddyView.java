@@ -29,7 +29,9 @@ public record BuddyView(
         // and 50–59, freely from the top level.
         boolean canChangeJob,
         // While it cannot be changed: the level the next change opens at.
-        @Nullable Integer jobChangeAt) {
+        @Nullable Integer jobChangeAt,
+        // What it made the members at work, newest first (docs/fun-improvements.md, 직업 이벤트).
+        List<Gift> gifts) {
 
     public static BuddyView of(Buddy buddy, Instant now) {
         int level = BuddyRules.level(buddy.exp());
@@ -51,7 +53,8 @@ public record BuddyView(
                 BuddyJob.of(buddy.job()),
                 leaning(buddy, level),
                 BuddyRules.canChangeJob(level, buddy.job(), buddy.jobChangedLevel()),
-                BuddyRules.jobChangeAt(level, buddy.job(), buddy.jobChangedLevel()));
+                BuddyRules.jobChangeAt(level, buddy.job(), buddy.jobChangedLevel()),
+                buddy.made().reversed());
     }
 
     private static @Nullable BuddyJob leaning(Buddy buddy, int level) {

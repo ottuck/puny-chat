@@ -89,7 +89,9 @@
     "jobChangeOpen": "🔄 the job can be changed once",
     "togetherBody": "{{buddy}} is thrilled. When you both send a message on the same day, you get it once a day.",
     "jobChangeRule": "The job can be changed once each at Lv.20, 30, 40 and 50, and any time from Lv.60.",
-    "graduatedBody": "A photo of {{name}} now hangs in the memory album at the top right of the stage. Look back any time."
+    "graduatedBody": "A photo of {{name}} now hangs in the memory album at the top right of the stage. Look back any time.",
+    "buddyTo": "{{buddy}} → {{to}}",
+    "letterSent": "I wrote you a letter and left it in the mailbox.\nRead it when you have a moment."
   },
   "invite": {
     "button": "Invite a friend",
@@ -186,6 +188,14 @@
       "dj2": "What should play next?",
       "dj3": "For those who cannot sleep",
       "dj4": "The night is still long",
+      "dj5": "Good song, right?",
+      "dj6": "Taking requests",
+      "dj7": "Turn it up a little",
+      "dj8": "Next song coming up",
+      "dj9": "Tonight’s message…",
+      "dj10": "Stay tuned!",
+      "dj11": "More after this",
+      "dj12": "This one’s for you",
       "writer1": "Got a line for today",
       "writer2": "Writing about you two",
       "writer3": "A good day",
@@ -355,7 +365,7 @@
     "jobPerk": {
       "CHEF": "Gets extra excited at mealtime. Stirs a pot when alone.",
       "GARDENER": "Says \"All tidy\" when the work is done. Tends the big plant when alone.",
-      "DJ": "Upside-down days: on air in the small hours, asleep by day.",
+      "DJ": "Up all night, asleep by day. Talks a lot on its own, like a radio host.",
       "WRITER": "Shows a big heart at loving words. Writes when alone.",
       "BARISTA": "Talks a lot, chiming in even while you chat."
     },
@@ -400,6 +410,128 @@
     "top": {
       "reached": "You reached the top level!",
       "letter": "A thank-you letter has arrived 💌"
+    },
+    "gift": {
+      "BARISTA": {
+        "latte": {
+          "name": "Café latte",
+          "offer": "I made you a café latte. Want to try it?"
+        },
+        "icedAmericano": {
+          "name": "Iced Americano",
+          "offer": "An iced Americano, plenty of ice."
+        },
+        "caramelMacchiato": {
+          "name": "Caramel macchiato",
+          "offer": "A caramel macchiato. You looked like you needed something sweet."
+        },
+        "matchaLatte": {
+          "name": "Matcha latte",
+          "offer": "Not coffee today. How about a matcha latte?"
+        },
+        "chipFrappe": {
+          "name": "Chocolate chip frappé",
+          "offer": "A chocolate chip frappé, extra whipped cream."
+        }
+      },
+      "CHEF": {
+        "omurice": {
+          "name": "Omurice",
+          "offer": "I made omurice. There’s a ketchup heart on it."
+        },
+        "ramen": {
+          "name": "Ramen",
+          "offer": "Ramen’s ready. Eat it before the noodles go soft."
+        },
+        "pancakes": {
+          "name": "Pancakes",
+          "offer": "Pancakes, with butter on top."
+        },
+        "riceBalls": {
+          "name": "Rice balls",
+          "offer": "Rice balls, one for whenever you get peckish."
+        },
+        "steamedBun": {
+          "name": "Steamed bun",
+          "offer": "A steamed bun, fresh out. It’s hot, so blow on it first."
+        }
+      },
+      "GARDENER": {
+        "rose": {
+          "name": "A single rose",
+          "offer": "A single rose. I took the thorns off."
+        },
+        "tulips": {
+          "name": "Three tulips",
+          "offer": "Three tulips. In water, they’ll open more by tomorrow."
+        },
+        "sunflower": {
+          "name": "Sunflower",
+          "offer": "A sunflower. Keep it where the sun comes in."
+        },
+        "succulent": {
+          "name": "Little succulent",
+          "offer": "A little succulent. Water it once a week."
+        },
+        "flowers": {
+          "name": "Wildflowers",
+          "offer": "A bunch of wildflowers. They popped up beside the pot."
+        }
+      }
+    },
+    "giftOpen": {
+      "BARISTA": {
+        "o1": "Tired? You did well today.",
+        "o2": "Take a little break.",
+        "o3": "How was your day?",
+        "o4": "Busy day? Catch your breath."
+      },
+      "CHEF": {
+        "o1": "Hungry?",
+        "o2": "Have you eaten?",
+        "o3": "Eat well and keep going.",
+        "o4": "You worked hard today."
+      },
+      "GARDENER": {
+        "o1": "I thought of you on the way.",
+        "o2": "The flowers came out nicely today.",
+        "o3": "It’ll brighten up your room a little.",
+        "o4": "You looked like you could use a lift."
+      }
+    },
+    "radio": {
+      "show1": "📻 This is {{buddy}} Radio. Thanks for tuning in.\nFirst message tonight is from {{to}}. You did well today.\nFirst song coming up: some quiet piano.",
+      "show2": "📻 Exactly two people listening right now.\nStill the best ratings I’ve ever had.\n{{to}}, send your requests in the chat.",
+      "show3": "📻 Here’s the weather. Clear skies in this room today.\nScattered chatter later on.\nBring earphones, not an umbrella.",
+      "show4": "📻 This one’s for {{to}}.\nNo title. I just hummed it.\n…Next time I’ll play a real record.",
+      "show5": "📻 This show never has ads.\nInstead, a round of applause for {{to}}.\nClap clap. You made it through today.",
+      "show6": "📻 That’s all for today’s show.\n{{to}}, get some rest. Same time tomorrow.\nI’ll close with the sound of rain."
+    },
+    "letter": {
+      "letter1": {
+        "title": "Today’s first line",
+        "body": "Hi.\n\nToday I sat at my desk and rewrote the first line ten times. Then I realized the thing I most want to say is always short.\n\nThank you. For coming by again today."
+      },
+      "letter2": {
+        "title": "Outside the window",
+        "body": "Hi.\n\nA bird landed on the windowsill earlier and flew off again. I wrote it down so I wouldn’t forget to tell you.\n\nHaving someone to tell small things to is a pretty good thing."
+      },
+      "letter3": {
+        "title": "A letter with an ink blot",
+        "body": "Hi.\n\nI spilled a little ink while writing this. I almost started over, but I’m sending it as it is. The blot is part of today too.\n\nIf your day was a bit of a mess, that’s all right as well."
+      },
+      "letter4": {
+        "title": "A story about two",
+        "body": "Hi.\n\nI’ve been writing a story. There are two main characters, and every day they talk a little. Nothing big happens, but somehow you keep wanting to read on.\n\nSound like anyone you know?"
+      },
+      "letter5": {
+        "title": "A letter written at night",
+        "body": "Hi.\n\nWords get more honest at night, so I wrote this one after dark.\n\nYou did well today. I’m cheering for tomorrow’s you too."
+      },
+      "letter6": {
+        "title": "No need to write back",
+        "body": "Hi.\n\nThis letter doesn’t need a reply. Instead, leave a line in the chat today, about anything. That’s plenty.\n\nI’ll read that line quietly, and keep it."
+      }
     }
   },
   "buddyEvent": {
@@ -417,7 +549,8 @@
     "GRADUATED": "🎓 {{name}} went its own way and is in the album now. A new egg arrived!",
     "TOGETHER": "🤝 You both showed up today! Together bonus +{{exp}} EXP",
     "JOB": "{{icon}} {{buddy}}'s job: {{job}}!",
-    "JOB_CHANGED": "{{icon}} {{actor}} changed {{buddy}}'s job: {{job}}"
+    "JOB_CHANGED": "{{icon}} {{actor}} changed {{buddy}}'s job: {{job}}",
+    "GIFT": "🎁 {{buddy}} gave {{actor}} a gift"
   },
   "settings": {
     "title": "Settings",
@@ -676,7 +809,8 @@
     "kind": {
       "letter": "Letter",
       "notice": "News",
-      "guide": "Heads-up"
+      "guide": "Heads-up",
+      "buddyLetter": "Letter"
     },
     "mail": {
       "topLevelLetter": {
@@ -724,7 +858,9 @@
       "linkAccount": "Link an account",
       "turnOnPush": "Turn on notifications",
       "graduate": "🎓 Let it go its own way"
-    }
+    },
+    "giftFrom": "From {{buddy}}",
+    "letterTo": "Dear {{name}},"
   },
   "room": {
     "seatTakenTitle": "Continued somewhere else",

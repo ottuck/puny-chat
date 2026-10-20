@@ -13,7 +13,7 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 | Sign in with Apple 키, Services ID, Firebase Apple 제공업체 | 운영자 | 완료 |
 | 아이폰 Google 로그인: `@react-native-google-signin/google-signin`이 든 빌드(Firebase iOS 앱의 OAuth client 사용). production 빌드 4에서 확인 | 운영자 | 완료 |
 | 아이폰 사진 보내기: `expo-image-picker`·`expo-image-manipulator`가 든 빌드. production 빌드 4에서 확인(그 모듈이 없는 예전 빌드는 사진 버튼만 숨기고 받은 사진은 보인다) | 운영자 | 완료 |
-| App Store Connect 앱 개인정보: "사진 또는 비디오"(사용자 콘텐츠, 앱 기능, 사용자와 연결됨) 추가 | 운영자 | 예정 |
+| App Store Connect 앱 개인정보(아래 4의 항목) 게시 | CLI | 완료 |
 | 웹 Apple 로그인: Services ID에 웹 도메인(`buddy-chat-67e35.firebaseapp.com`)과 return URL(`https://buddy-chat-67e35.firebaseapp.com/__/auth/handler`) | 운영자 | 예정 |
 | Firebase iOS 앱(번들 ID `com.ottuck.buddychat`) 등록. 앱의 Apple 토큰은 수신자가 번들 ID라 이 등록이 없으면 `auth/invalid-credential` | CLI | 완료 |
 | App Store Connect 앱 등록 | 운영자 | 완료 |
@@ -22,7 +22,8 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 | iPhone 실기기 검증 | 운영자 조작, 결과에 따른 코드 수정 | 완료 |
 | production 빌드·TestFlight 업로드(1.0.0 빌드 4). 배포 인증서·App Store 프로필·App Store Connect API 키는 EAS에 있다 | 운영자 인증, CLI는 지원 | 완료 |
 | TestFlight로 실기기 확인(빌드 4) | 운영자 | 완료 |
-| 스토어 정보 입력·심사 제출 | 문안은 지원, 최종 확인·제출은 운영자 | 예정 |
+| 스토어 정보 입력·심사 제출(1.0 빌드 4, 승인 후 자동 출시). 제출하는 동안 자동 앱 업데이트를 끄고 승인 뒤 다시 켠다 | 문안은 지원, 최종 확인·제출은 운영자 | 심사 대기 중 |
+| 직업 이벤트 켜기(`docs/PROJECT.md`의 직업 이벤트): 승인 뒤 `pnpm app-update:on`, 심사 중에 쌓인 앱 변경을 `pnpm app-update`로 한 번 보낸 다음, 서버 `BuddyProperties`의 `gifts` 기본값을 `true`로 바꿔 배포한다. 빌드 4가 업데이트를 받기 전에 켜면 채팅에 `buddyEvent.GIFT`가 글자 그대로 보인다 | 운영자(업데이트), 코드(스위치) | 승인 대기 |
 | 일본 전기통신사업 届出: 1:1 채팅은 "다른 사람의 통신 중개"지만, 총무성 참입 매뉴얼(追補版, 2023-01 개정)은 "営む"를 요금·광고 등으로 그 서비스 자체에서 이익을 얻으려는 것으로 보고 "無償・原価ベース"는 빼며, 개인이 운영하는 무료·무광고 메일을 "営む에 해당하지 않음(규율 대상 외)" 사례로 든다. 그래서 광고·결제·수익이 없는 지금은 届出 없이 일본에도 판매한다. **광고·결제·후원 등 수익을 붙이기 전에 届出(e-Gov)를 먼저 낸다** | 운영자 | 해당 없음(수익 없음) |
 
 ## 코드 쪽 준비 (완료)
