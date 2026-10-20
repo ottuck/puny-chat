@@ -75,7 +75,7 @@ export const FURIN: [Frame, Frame] = [[
 export const HANGING_PLANT_FINE = 9 / 16;
 // It hangs with its middle over the frame's right edge, the vines falling mostly past the glass.
 // Where it hangs, in the window's cells: its left column and how far above the window's top.
-export const HANGING_PLANT_AT = { col: 22, above: 2 };
+export const HANGING_PLANT_AT = { col: 33, above: 2 };
 
 // A small leaf, light at its top, and its mirror.
 const LEAF = ['12.', '223', '.3.'];
