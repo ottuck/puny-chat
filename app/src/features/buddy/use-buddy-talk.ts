@@ -68,6 +68,8 @@ export type Line =
   // Sitting down on the rug.
   | 'sit'
   | 'farewell'
+  // The tree in the corner has just fruited (Lv.45).
+  | 'oranges'
   // A tap on a thing in the room (buddy-stage.tsx, touchProp).
   | 'plant'
   | 'clock'
