@@ -12,7 +12,7 @@
 - `app/` — Expo(React Native) + TypeScript + Expo Router. iOS / Web / Android 공용 코드.
 - `server/` — Java 25, Spring Boot 4.1 + WebFlux + Reactive MongoDB. 패키지는 기능 모듈(`auth`, `user`, `account`, `room`, `chat`, `buddy`, `realtime`, `notification`, `support`, `stats`).
 - `infra/` — Terraform: MongoDB Atlas(DB, 시드니), Cloudflare(DNS, state는 R2). 서버는 AWS Lightsail 인스턴스(`quant-lab-02`, 시드니)에서 `server/deploy`의 Docker Compose로 돈다.
-- `docs/` — 명세와 운영(`PROJECT.md`), Buddy 콘텐츠와 그림 작업(`fun-improvements.md`, 확인용 화면은 개발 빌드의 `/preview`), App Store 출시(`release.md`), README 그림(`images/`)
+- `docs/` — 명세와 운영(`PROJECT.md`), Buddy 콘텐츠와 그림 작업(`fun-improvements.md`, 확인용 화면은 개발 빌드의 `/preview`), App Store 출시(`release.md`, 스토어 스크린샷 `app-store/`), README 그림(`images/`)
 - `.github/workflows/ci.yml` — app(lint / typecheck / test / format), server(spotless / test). Actions 무료 분(월 2,000분)을 아끼려고 같은 코드를
   두 번만 돌린다: `dev`로 가는 PR과 `main` push(배포 관문). `dev` push와 `dev` → `main` PR에서는 돌지 않고, 문서·`infra/`만 바뀐 변경도 건너뛴다.
   `changes` 잡이 바뀐 파일을 보고 `app/`이 바뀌었을 때만 app 잡을, `server/`가 바뀌었을 때만 server 잡을 돌린다(그 밖의 파일이 바뀌면 둘 다).
