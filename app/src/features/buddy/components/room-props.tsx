@@ -23,9 +23,10 @@ import {
   SPARROW,
   TABLE_TOYS,
   TRAIN,
-  WINDOW,
   WINDOW_GLASS,
   WINDOW_SILL_ROW,
+  windowOf,
+  type WindowShape,
 } from '../pixel/room';
 import {
   BUBBLE,
@@ -60,10 +61,6 @@ import {
   Squirrel,
   Swallow,
 } from './window-things';
-
-// The window's glazing bars, in the glass's cells (room.ts, WINDOW): two cells wide down the
-// middle, one across.
-const GLASS_BARS = { col: 9, row: 6 };
 
 // The room's things that come with levels (docs/fun-improvements.md, 방 소품), drawn on the stage:
 // what stands and hangs in the room (stage-decor.tsx places them), the guests that drop by, and
@@ -288,6 +285,7 @@ export type WindowThings = {
 // snow or a shooting star outside.
 export function RoomWindow({
   scale,
+  shape = 'now',
   now,
   guest,
   weather,
@@ -297,6 +295,7 @@ export function RoomWindow({
   things,
 }: {
   scale: number;
+  shape?: WindowShape;
   now: Date;
   guest: Guest | null;
   weather: WindowWeather | null;
@@ -307,18 +306,19 @@ export function RoomWindow({
   tick: number;
   things: WindowThings;
 }) {
+  const { frame, glass: cells, bars } = windowOf(shape);
   const glass = {
-    left: WINDOW_GLASS.col * scale,
-    top: WINDOW_GLASS.row * scale,
-    width: WINDOW_GLASS.cols * scale,
-    height: WINDOW_GLASS.rows * scale,
+    left: cells.col * scale,
+    top: cells.row * scale,
+    width: cells.cols * scale,
+    height: cells.rows * scale,
   };
   // The guests are drawn a little finer than the window.
   const small = Math.max(2, scale - 1);
   const visit = { glass, scale: small, tick, ms: guest ? GUEST_MS[guest] : 0 };
   return (
     <View>
-      <PixelSprite frame={WINDOW} palette={SKY_PALETTES[skyAt(now.getHours())]} scale={scale} />
+      <PixelSprite frame={frame} palette={SKY_PALETTES[skyAt(now.getHours())]} scale={scale} />
       <View style={[styles.glass, glass]}>
         {weather ? (
           <>
@@ -331,17 +331,14 @@ export function RoomWindow({
               ms={weatherMs}
             />
             {/* The glazing bars stay in front of the weather outside. */}
+            {bars.cols.map((col) => (
+              <View
+                key={col}
+                style={[styles.bar, { left: col * scale, width: 2 * scale, height: glass.height }]}
+              />
+            ))}
             <View
-              style={[
-                styles.bar,
-                { left: GLASS_BARS.col * scale, width: 2 * scale, height: glass.height },
-              ]}
-            />
-            <View
-              style={[
-                styles.bar,
-                { top: GLASS_BARS.row * scale, height: scale, width: glass.width },
-              ]}
+              style={[styles.bar, { top: bars.row * scale, height: scale, width: glass.width }]}
             />
           </>
         ) : null}

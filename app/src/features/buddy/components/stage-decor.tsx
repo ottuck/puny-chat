@@ -12,8 +12,9 @@ import {
   ROOM_PALETTE,
   skyAt,
   WINDOW,
-  WINDOW_GLASS,
   WINDOW_SILL_ROW,
+  windowOf,
+  type WindowShape,
 } from '../pixel/room';
 import {
   BEAR,
@@ -358,6 +359,8 @@ type WallProps = {
   // Rain, snow or a shooting star outside the window, and for how long.
   weather: WindowWeather | null;
   weatherMs: number;
+  // The window's size being compared (the preview).
+  windowShape?: WindowShape;
   onToy: () => void;
   onMusic: () => void;
   // A tap on a thing the buddy has something to say about.
@@ -377,10 +380,17 @@ function middleOf(decor: Decor, width: number, stationRight: number, plantSpace:
 
 // Where the window goes (and the sizes around it): smaller on a short stage, so it stays above a
 // grown-up's head; in the middle, but clear of the shelf and the clock.
-export function windowPlace(decor: Decor, width: number, height: number) {
+// `win`: the points a cell of the window takes (one more for the larger window being compared).
+export function windowPlace(
+  decor: Decor,
+  width: number,
+  height: number,
+  shape: WindowShape = 'now',
+) {
   const wall = height >= 250 ? 4 : height >= 220 ? 3 : 2;
+  const win = shape === 'big' ? wall + 1 : wall;
   const clockScale = Math.min(3, wall);
-  const windowWidth = WINDOW[0].length * wall;
+  const windowWidth = windowOf(shape).frame[0].length * win;
   const shelfScale = wall >= 4 ? 2.5 : 2;
   const shelfWidth = SHELF[0].length * shelfScale;
   const shelfLeft = decor.musicBox ? width - SHELF_RIGHT - shelfWidth : width;
@@ -389,18 +399,25 @@ export function windowPlace(decor: Decor, width: number, height: number) {
     clockRight + 12,
     Math.min((width - windowWidth) / 2, shelfLeft - 10 - windowWidth),
   );
-  return { wall, clockScale, windowWidth, windowLeft, shelfScale, shelfWidth };
+  return { wall, win, clockScale, windowWidth, windowLeft, shelfScale, shelfWidth };
 }
 
 // The window's glass on the stage (for the light it lets in, room-light.tsx); `top` as WallDecor's.
-export function glassOf(decor: Decor, width: number, height: number, top: number) {
+export function glassOf(
+  decor: Decor,
+  width: number,
+  height: number,
+  top: number,
+  shape: WindowShape = 'now',
+) {
   if (!decor.window) return null;
-  const { wall, windowLeft } = windowPlace(decor, width, height);
+  const { win, windowLeft } = windowPlace(decor, width, height, shape);
+  const glass = windowOf(shape).glass;
   return {
-    left: windowLeft + WINDOW_GLASS.col * wall,
-    top: top + 4 + WINDOW_GLASS.row * wall,
-    width: WINDOW_GLASS.cols * wall,
-    height: WINDOW_GLASS.rows * wall,
+    left: windowLeft + glass.col * win,
+    top: top + 4 + glass.row * win,
+    width: glass.cols * win,
+    height: glass.rows * win,
   };
 }
 
@@ -431,6 +448,7 @@ export function WallDecor({
   rainEnded,
   weather,
   weatherMs,
+  windowShape = 'now',
   onToy,
   onMusic,
   onProp,
@@ -443,20 +461,21 @@ export function WallDecor({
   const [openedAt] = useState(decor.level);
   const fresh = (reward: Reward) => rewardLevel(reward) > openedAt;
   const sky = skyAt(now.getHours());
-  const { wall, clockScale, windowWidth, windowLeft, shelfScale, shelfWidth } = windowPlace(
+  const { wall, win, clockScale, windowWidth, windowLeft, shelfScale, shelfWidth } = windowPlace(
     decor,
     width,
     height,
+    windowShape,
   );
   const radioWidth = (decor.radio === 2 ? GRAMOPHONE : RADIO)[0][0].length * shelfScale;
   const toyShown = stationRight === 0 && decor.toy > 0;
   // On the sill: the plush friends side by side at its left end, the little pot at the right end.
   const sillScale = wall >= 4 ? 2 : wall === 3 ? 1.5 : 1;
-  const sillTop = top + 4 + (WINDOW_SILL_ROW + 1) * wall;
-  const bearLeft = windowLeft + wall;
+  const sillTop = top + 4 + (WINDOW_SILL_ROW + 1) * win;
+  const bearLeft = windowLeft + win;
   const bunnyLeft = bearLeft + (BEAR[0].length - 1) * sillScale;
   const potWidth = SILL_POT[0][0].length * sillScale;
-  const potLeft = windowLeft + windowWidth - wall - potWidth;
+  const potLeft = windowLeft + windowWidth - win - potWidth;
   const rug = RUGS[decor.rug];
   const rugWidth = rug[0].length * 3;
   const tableWidth = TABLE_CELLS * FLOOR_SCALE;
@@ -491,7 +510,8 @@ export function WallDecor({
           <Arrive fresh={fresh('window')} width={windowWidth}>
             <Tappable shine label={t('buddy.room.window')} onTap={() => onProp('window')}>
               <RoomWindow
-                scale={wall}
+                scale={win}
+                shape={windowShape}
                 now={now}
                 guest={guestHere}
                 weather={weather}
@@ -510,14 +530,15 @@ export function WallDecor({
           style={[
             styles.at,
             {
-              left: windowLeft + HANGING_PLANT_AT.col * wall,
-              top: top + 4 - HANGING_PLANT_AT.above * wall,
+              // From the window's right end, whatever its width.
+              left: windowLeft + windowWidth - (WINDOW[0].length - HANGING_PLANT_AT.col) * win,
+              top: top + 4 - HANGING_PLANT_AT.above * win,
             },
           ]}
         >
           <Arrive
             fresh={fresh('hangingPlant')}
-            width={HANGING_PLANT[0].length * wall * HANGING_PLANT_FINE}
+            width={HANGING_PLANT[0].length * win * HANGING_PLANT_FINE}
           >
             <Tappable
               kind="swing"
@@ -527,7 +548,7 @@ export function WallDecor({
               <PixelSprite
                 frame={HANGING_PLANT}
                 palette={THINGS_PALETTE}
-                scale={wall * HANGING_PLANT_FINE}
+                scale={win * HANGING_PLANT_FINE}
               />
             </Tappable>
           </Arrive>

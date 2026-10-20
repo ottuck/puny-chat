@@ -193,7 +193,8 @@ Buddy의 볼거리(대화 반응, 사건, 직업, 기간 한정 모습, 온천, 
 
 **확인**: `pnpm web` 후 `http://localhost:8083/preview`(개발 빌드에서만). 단계, 직업, 기간(날짜대로/없음/각 기간), 사건, 낱말 반응, 방의 사건, 상태를
 버튼으로 바로 일으키고, 맨 아래 poses에서 모든 자세를 나란히 본다. 레벨은 1~60 칸(한 줄에 10칸, 단계마다 색이 다르고 진화·직업·직업 바꾸기·최고 레벨은 테두리, 보상은 점)을 눌러 고르고, 아래 ‹ ›로 한 레벨씩 옮긴다(단계도 레벨을 따라간다). Buddy 상세의 직업 바꾸기는 서버 규칙(20·30·40·50에 한 번씩, 60부터 언제든)대로 잠기고 풀리고, 바꾸고 상세를 닫으면 무대에서 전직 연출이 나온다(room events의 jobChanged로도).
-독립하면(moving out의 go its own way, 상세의 독립) 그 버디가 추억 앨범에 더해져 액자 아이콘과 사진 날아가기를 볼 수 있다. 메뉴는 접혀 있고(제목을 누르거나 무대 아래 open all·fold all, level은 펼쳐져 있다) 무대는 위에 고정된다. 주소로 장면을 바로 열 수 있다(README 그림용): `?stage=ADULT&level=60&hour=22&job=none`(단계·레벨·시각·직업 없음), `&date=01-01`(철), `&cue=owl`(사건·손님), `?scene=bath`, `?scene=bath&season=CHRISTMAS`(눈), `?scene=cut1`~`cut6`(꿈 한 컷). 밤(23~7시)에는 버디가 자고 있을 수 있다. 반영이 안 되면 `pnpm start --clear`.
+독립하면(moving out의 go its own way, 상세의 독립) 그 버디가 추억 앨범에 더해져 액자 아이콘과 사진 날아가기를 볼 수 있다.
+창문 크기는 아직 정하는 중이라 window size(now / bigger all round / wider)로 지금 창문, 한 칸을 1pt 크게 그린 창문, 가운데 창 한 칸을 더한 가로로 긴 창문(`room.ts`의 `windowOf`)을 바꿔 본다. 앱은 지금 창문 그대로다. 메뉴는 접혀 있고(제목을 누르거나 무대 아래 open all·fold all, level은 펼쳐져 있다) 무대는 위에 고정된다. 주소로 장면을 바로 열 수 있다(README 그림용): `?stage=ADULT&level=60&hour=22&job=none`(단계·레벨·시각·직업 없음), `&date=01-01`(철), `&cue=owl`(사건·손님), `?scene=bath`, `?scene=bath&season=CHRISTMAS`(눈), `?scene=cut1`~`cut6`(꿈 한 컷). 밤(23~7시)에는 버디가 자고 있을 수 있다. 반영이 안 되면 `pnpm start --clear`.
 
 ## 장면 전환
 

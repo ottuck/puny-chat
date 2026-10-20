@@ -33,7 +33,7 @@ import {
   umbrellaFor,
 } from '../pixel/looks';
 import { type Palette, PixelSprite } from '../pixel/pixel-sprite';
-import { BUNDLE, ROOM_PALETTE, skyAt } from '../pixel/room';
+import { BUNDLE, ROOM_PALETTE, skyAt, type WindowShape } from '../pixel/room';
 import {
   bowl,
   BUDDY_PALETTE,
@@ -414,6 +414,8 @@ type Props = {
   date?: string;
   // Opens the mailbox (the top level's note about the developer's letter).
   onOpenMail?: () => void;
+  // The window's size being compared (the preview).
+  windowShape?: WindowShape;
 };
 
 // The room's time: the device's, or the hour and day the art preview picks.
@@ -677,6 +679,7 @@ export function BuddyStage({
   hour,
   date,
   onOpenMail,
+  windowShape,
 }: Props) {
   const colors = useColors();
   const colorMode = useColorMode();
@@ -1241,7 +1244,7 @@ export function BuddyStage({
   // Rain, snow or a shooting star outside: it goes over beside the window and turns to watch, under
   // its umbrella in the rain (the weather itself is drawn in the glass, weather.tsx). Beside, not in
   // front: a grown-up's head and umbrella would hide the glass.
-  const glass = glassOf(decor, width, height, WALL_TOP);
+  const glass = glassOf(decor, width, height, WALL_TOP, windowShape);
   const watching = act !== null && WEATHER.includes(act);
   useEffect(() => {
     if (!watching || !glass) return;
@@ -1885,6 +1888,7 @@ export function BuddyStage({
         rainEnded={rainEnded}
         weather={watching ? (act as 'rain' | 'snow' | 'shootingStar') : null}
         weatherMs={act ? ACT_MS[act] : 0}
+        windowShape={windowShape}
         onToy={() => play('dance')}
         onMusic={() => play('sing')}
         onProp={touchProp}

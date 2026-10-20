@@ -15,6 +15,7 @@ import { JOB_ICON, JOB_ORDER } from '@/features/buddy/jobs';
 import { dressedFrame, type Season, SEASONS, seasonOn } from '@/features/buddy/pixel/looks';
 import { PixelSprite } from '@/features/buddy/pixel/pixel-sprite';
 import { BUDDY_PALETTE, POSES_IN_ORDER } from '@/features/buddy/pixel/sprites';
+import type { WindowShape } from '@/features/buddy/pixel/room';
 import type { Reaction, ReactionKind } from '@/features/buddy/reactions';
 import type { AlbumEntry } from '@/features/room/api';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
@@ -413,6 +414,8 @@ function Preview() {
   // The hot spring: each press opens the stage there again; snow on it by the season, or on or off.
   const [bathRun, setBathRun] = useState(0);
   const [bathSnow, setBathSnow] = useState<boolean | undefined>(undefined);
+  // The window's size, to compare before deciding (from Lv.9).
+  const [windowShape, setWindowShape] = useState<WindowShape>('now');
 
   return (
     <FoldAll.Provider value={foldAll}>
@@ -440,6 +443,7 @@ function Preview() {
               dreams={dreamRun > 0 ? 'always' : false}
               startInBath={params.scene === 'bath' || bathRun > 0}
               bathSnow={bathSnow}
+              windowShape={windowShape}
               buddy={buddyOf(stage, job, hungry, poops, level, jobChangedAt)}
               busy={false}
               height={stageHeight}
@@ -508,6 +512,16 @@ function Preview() {
                 label={`cut ${i + 1}`}
                 onPress={() => setDreamCut(dreamCut === i ? null : i)}
                 active={dreamCut === i}
+              />
+            ))}
+          </Group>
+          <Group title="window size (compare, from Lv.9)" startOpen>
+            {(['now', 'big', 'wide'] as const).map((shape) => (
+              <Chip
+                key={shape}
+                label={{ now: 'now', big: 'bigger all round', wide: 'wider' }[shape]}
+                onPress={() => setWindowShape(shape)}
+                active={windowShape === shape}
               />
             ))}
           </Group>
