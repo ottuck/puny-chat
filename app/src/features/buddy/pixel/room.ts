@@ -132,21 +132,6 @@ export const WINDOW_GLASS = { col: 4, row: 3, cols: 20, rows: 11 };
 // The sill's top row, where a sparrow perches.
 export const WINDOW_SILL_ROW = 16;
 
-// The window's size, being decided (the preview compares them): as it is, larger all round (a cell
-// drawn one point bigger), or wider (a third pane in the middle, a copy of the left one with its bar).
-export type WindowShape = 'now' | 'big' | 'wide';
-const WINDOW_WIDE: Frame = WINDOW.map((row) => row.slice(0, 15) + row.slice(4, 15) + row.slice(15));
-export function windowOf(shape: WindowShape) {
-  return shape === 'wide'
-    ? {
-        frame: WINDOW_WIDE,
-        glass: { ...WINDOW_GLASS, cols: WINDOW_GLASS.cols + 11 },
-        // The glazing bars' columns in the glass (two cells wide each), and the row of the one across.
-        bars: { cols: [9, 20], row: 6 },
-      }
-    : { frame: WINDOW, glass: WINDOW_GLASS, bars: { cols: [9], row: 6 } };
-}
-
 // --- The wall clock (Lv.11) ---
 
 // A round clock in a slim wooden rim lit from the top left, a dark inner ring, a white face with long
