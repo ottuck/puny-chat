@@ -30,6 +30,7 @@ import {
   THINGS_PALETTE,
 } from '../pixel/room-things';
 import { type BowlTier, PLANTS, type PlantTier, PROP_PALETTE } from '../pixel/sprites';
+import type { WindowWeather } from './weather';
 import {
   Arrive,
   CUCKOO_CELLS,
@@ -354,6 +355,9 @@ type WallProps = {
   dancing: boolean;
   // It just stopped raining (a new value each time): a rainbow shows for a while.
   rainEnded: number;
+  // Rain, snow or a shooting star outside the window, and for how long.
+  weather: WindowWeather | null;
+  weatherMs: number;
   onToy: () => void;
   onMusic: () => void;
   // A tap on a thing the buddy has something to say about.
@@ -425,6 +429,8 @@ export function WallDecor({
   singing,
   dancing,
   rainEnded,
+  weather,
+  weatherMs,
   onToy,
   onMusic,
   onProp,
@@ -488,6 +494,8 @@ export function WallDecor({
                 scale={wall}
                 now={now}
                 guest={guestHere}
+                weather={weather}
+                weatherMs={weatherMs}
                 run={run}
                 tick={tick}
                 things={things}

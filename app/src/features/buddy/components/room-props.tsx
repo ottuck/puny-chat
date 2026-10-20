@@ -48,6 +48,7 @@ import {
   THINGS_PALETTE,
 } from '../pixel/room-things';
 import { BUDDY_PALETTE, NOTE, PROP_PALETTE, SPARKLE } from '../pixel/sprites';
+import { type WindowWeather, WindowWeatherView } from './weather';
 import {
   CatFace,
   Dragonfly,
@@ -59,6 +60,10 @@ import {
   Squirrel,
   Swallow,
 } from './window-things';
+
+// The window's glazing bars, in the glass's cells (room.ts, WINDOW): two cells wide down the
+// middle, one across.
+const GLASS_BARS = { col: 9, row: 6 };
 
 // The room's things that come with levels (docs/fun-improvements.md, 방 소품), drawn on the stage:
 // what stands and hangs in the room (stage-decor.tsx places them), the guests that drop by, and
@@ -279,11 +284,14 @@ export type WindowThings = {
   catFace: boolean;
 };
 
-// The window (Lv.9): the sky by the device's clock, and the guests at the glass.
+// The window (Lv.9): the sky by the device's clock, the guests at the glass, and now and then rain,
+// snow or a shooting star outside.
 export function RoomWindow({
   scale,
   now,
   guest,
+  weather,
+  weatherMs,
   run,
   tick,
   things,
@@ -291,6 +299,9 @@ export function RoomWindow({
   scale: number;
   now: Date;
   guest: Guest | null;
+  weather: WindowWeather | null;
+  // How long the weather lasts (the shooting star clears up in time).
+  weatherMs: number;
   // A new visit each time (the stage's count of its acts).
   run: number;
   tick: number;
@@ -309,6 +320,31 @@ export function RoomWindow({
     <View>
       <PixelSprite frame={WINDOW} palette={SKY_PALETTES[skyAt(now.getHours())]} scale={scale} />
       <View style={[styles.glass, glass]}>
+        {weather ? (
+          <>
+            <WindowWeatherView
+              key={run}
+              kind={weather}
+              width={glass.width}
+              height={glass.height}
+              scale={scale}
+              ms={weatherMs}
+            />
+            {/* The glazing bars stay in front of the weather outside. */}
+            <View
+              style={[
+                styles.bar,
+                { left: GLASS_BARS.col * scale, width: 2 * scale, height: glass.height },
+              ]}
+            />
+            <View
+              style={[
+                styles.bar,
+                { top: GLASS_BARS.row * scale, height: scale, width: glass.width },
+              ]}
+            />
+          </>
+        ) : null}
         {things.rainbow ? <Rainbow glass={glass} scale={Math.max(1, scale - 2)} /> : null}
         {things.petals ? <Petals glass={glass} scale={small} /> : null}
         {guest === 'snail' ? (
@@ -1158,6 +1194,10 @@ const styles = StyleSheet.create({
   glass: {
     position: 'absolute',
     overflow: 'hidden',
+  },
+  bar: {
+    position: 'absolute',
+    backgroundColor: ROOM_PALETTE.f,
   },
   column: {
     alignItems: 'center',
