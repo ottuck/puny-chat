@@ -89,7 +89,16 @@
     "jobChangeOpen": "🔄 the job can be changed once",
     "togetherBody": "{{buddy}} is thrilled. When you both send a message on the same day, you get it once a day.",
     "jobChangeRule": "The job can be changed once each at Lv.20, 30, 40 and 50, and any time from Lv.60.",
-    "graduatedBody": "A photo of {{name}} now hangs in the memory album at the top right of the stage. Look back any time."
+    "graduatedBody": "A photo of {{name}} now hangs in the memory album at the top right of the stage. Look back any time.",
+    "gift": {
+      "BARISTA": "☕ {{buddy}} made {{to}} {{gift}}",
+      "CHEF": "🍳 {{buddy}} cooked {{to}} {{gift}}",
+      "GARDENER": "🌱 {{buddy}} picked {{to}} {{gift}}",
+      "DJ": "🎧 {{buddy}} picked out a record for {{to}}: {{gift}}",
+      "WRITER": "✒️ {{buddy}} wrote {{to}} {{gift}}"
+    },
+    "giftBody": "It's in your mailbox. You get one a day when your buddy works.",
+    "openGift": "See the gift"
   },
   "invite": {
     "button": "Invite a friend",
@@ -400,6 +409,143 @@
     "top": {
       "reached": "You reached the top level!",
       "letter": "A thank-you letter has arrived 💌"
+    },
+    "gift": {
+      "BARISTA": {
+        "latte": {
+          "name": "Café latte",
+          "inChat": "a café latte",
+          "line": "I tried a heart in the foam and it leaned a little. The taste came out straight."
+        },
+        "americano": {
+          "name": "Americano",
+          "inChat": "an Americano",
+          "line": "Brewed it strong. Today looks like a long one."
+        },
+        "cappuccino": {
+          "name": "Cappuccino",
+          "inChat": "a cappuccino",
+          "line": "The foam came out like a cloud. If it gets on your nose, I didn't see a thing."
+        },
+        "pourOver": {
+          "name": "Pour-over coffee",
+          "inChat": "a pour-over",
+          "line": "I took it slow. The beans smelled lovely while I waited."
+        },
+        "hojichaLatte": {
+          "name": "Hojicha latte",
+          "inChat": "a hojicha latte",
+          "line": "A day off from coffee. I made something toasty instead."
+        }
+      },
+      "CHEF": {
+        "omurice": {
+          "name": "Omurice",
+          "inChat": "omurice",
+          "line": "I tried to write your name in ketchup and ran out of egg. The feeling's all there."
+        },
+        "soup": {
+          "name": "Corn soup",
+          "inChat": "a bowl of corn soup",
+          "line": "Have it while it's warm. If it cools, I'll warm it up again."
+        },
+        "pancakes": {
+          "name": "Pancakes",
+          "inChat": "pancakes",
+          "line": "A stack of three. The fourth disappeared during taste-testing."
+        },
+        "riceBalls": {
+          "name": "Rice balls",
+          "inChat": "rice balls",
+          "line": "A little salt, a lot of care."
+        },
+        "curry": {
+          "name": "Curry",
+          "inChat": "curry",
+          "line": "Tastes like it sat overnight. It was an hour, really."
+        }
+      },
+      "GARDENER": {
+        "basil": {
+          "name": "Basil",
+          "inChat": "some basil",
+          "line": "Picked this morning. Rub a leaf and smell."
+        },
+        "mint": {
+          "name": "Mint",
+          "inChat": "some mint",
+          "line": "Float it in water and it cools right down. It grows so well it's a bit of a problem."
+        },
+        "tomatoes": {
+          "name": "Cherry tomatoes",
+          "inChat": "cherry tomatoes",
+          "line": "Only the reddest ones made it."
+        },
+        "rosemary": {
+          "name": "Rosemary",
+          "inChat": "a sprig of rosemary",
+          "line": "Roast it with potatoes, I hear. A chef friend told me."
+        },
+        "flowers": {
+          "name": "Wildflowers",
+          "inChat": "a bunch of wildflowers",
+          "line": "These popped up beside the pot on their own. I watered them every day anyway."
+        }
+      },
+      "DJ": {
+        "record1": {
+          "name": "“Frequency at 2 a.m.”",
+          "inChat": "“Frequency at 2 a.m.”",
+          "line": "What I play on nights I can't sleep. The B-side is better."
+        },
+        "record2": {
+          "name": "“Waltz for a Rainy Day”",
+          "inChat": "“Waltz for a Rainy Day”",
+          "line": "I take this one out when it rains. It was sunny today, though."
+        },
+        "record3": {
+          "name": "“Songs for Two”",
+          "inChat": "“Songs for Two”",
+          "line": "Alone, you only hear half of it. Listen together."
+        },
+        "record4": {
+          "name": "“Summer Night Radio”",
+          "inChat": "“Summer Night Radio”",
+          "line": "There are cicadas on the recording. On purpose."
+        },
+        "record5": {
+          "name": "“Slow Morning”",
+          "inChat": "“Slow Morning”",
+          "line": "Try it instead of an alarm. You may not want to get up."
+        }
+      },
+      "WRITER": {
+        "sea": {
+          "name": "Postcard: the sea",
+          "inChat": "a postcard of the sea",
+          "line": "I tried to write down the waves and got three lines of “shhh.” Can you hear it?"
+        },
+        "forest": {
+          "name": "Postcard: the forest",
+          "inChat": "a postcard of the forest",
+          "line": "The forest was quiet, so I found a lot to say."
+        },
+        "stars": {
+          "name": "Postcard: the stars",
+          "inChat": "a postcard of the stars",
+          "line": "Last night I counted stars and stopped at two. Two is my favorite."
+        },
+        "cat": {
+          "name": "Postcard: a cat",
+          "inChat": "a postcard of a cat",
+          "line": "I drew our visitor at the window. The tail came out a little long."
+        },
+        "autumn": {
+          "name": "Postcard: autumn leaves",
+          "inChat": "a postcard of autumn leaves",
+          "line": "I stuck a red leaf on it. If it falls off, that's autumn too."
+        }
+      }
     }
   },
   "buddyEvent": {
@@ -417,7 +563,8 @@
     "GRADUATED": "🎓 {{name}} went its own way and is in the album now. A new egg arrived!",
     "TOGETHER": "🤝 You both showed up today! Together bonus +{{exp}} EXP",
     "JOB": "{{icon}} {{buddy}}'s job: {{job}}!",
-    "JOB_CHANGED": "{{icon}} {{actor}} changed {{buddy}}'s job: {{job}}"
+    "JOB_CHANGED": "{{icon}} {{actor}} changed {{buddy}}'s job: {{job}}",
+    "GIFT": "🎁 {{buddy}} gave {{actor}} a gift"
   },
   "settings": {
     "title": "Settings",
@@ -676,7 +823,8 @@
     "kind": {
       "letter": "Letter",
       "notice": "News",
-      "guide": "Heads-up"
+      "guide": "Heads-up",
+      "gift": "Gift"
     },
     "mail": {
       "topLevelLetter": {
@@ -724,7 +872,8 @@
       "linkAccount": "Link an account",
       "turnOnPush": "Turn on notifications",
       "graduate": "🎓 Let it go its own way"
-    }
+    },
+    "giftFrom": "From {{buddy}}"
   },
   "room": {
     "seatTakenTitle": "Continued somewhere else",

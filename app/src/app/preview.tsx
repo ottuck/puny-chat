@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type { BuddyJob, BuddyStage, BuddyView } from '@/features/buddy/api';
+import type { BuddyGift, BuddyJob, BuddyStage, BuddyView } from '@/features/buddy/api';
 import type { Mood } from '@/features/buddy/chat-words';
 import { BuddyDream, DREAM_CUTS } from '@/features/buddy/components/buddy-dream';
 import { BuddyScene } from '@/features/buddy/components/buddy-scene';
@@ -13,6 +13,7 @@ import { BuddySheet } from '@/features/buddy/components/buddy-sheet';
 import { rewardIcon } from '@/features/buddy/components/buddy-guide';
 import { type Reward, REWARDS, SEASONAL } from '@/features/buddy/components/stage-decor';
 import type { Cue } from '@/features/buddy/components/buddy-stage';
+import { GIFTS } from '@/features/buddy/gifts';
 import { JOB_ICON, JOB_ORDER } from '@/features/buddy/jobs';
 import { dressedFrame, type Season, SEASONS, seasonOn } from '@/features/buddy/pixel/looks';
 import { PixelSprite } from '@/features/buddy/pixel/pixel-sprite';
@@ -365,6 +366,18 @@ const PAST_BUDDIES: AlbumEntry[] = (
   job,
 }));
 
+// Whose gifts the preview's are: mine.
+const PREVIEW_ME = 'preview-me';
+const EVERY_GIFT: BuddyGift[] = JOB_ORDER.flatMap((job) =>
+  GIFTS[job].map((_, pick) => ({
+    id: `${job}-${pick}`,
+    to: PREVIEW_ME,
+    job,
+    pick,
+    at: new Date().toISOString(),
+  })),
+);
+
 // A link can open it on a scene, for taking pictures of it (README):
 // /preview?scene=bath, ?scene=bath&season=CHRISTMAS (snowing), ?scene=cut2 (a cut of the dream),
 // ?stage=CHILD&level=8 (the room at that level), &hour=22 (the room at night), &job=none (a grown-up
@@ -372,7 +385,8 @@ const PAST_BUDDIES: AlbumEntry[] = (
 // their own way, in the memory album by the hot spring's button), &date=01-01 (the seasonal things
 // of that day), &cue=owl (a happening or a guest, two seconds in), &leave=1 (it goes its own way,
 // two seconds in), &guest=7 (a guest with that many days left: the mailbox's letters for it),
-// &push=off or needsInstall (web: notifications not on, a letter about it).
+// &push=off or needsInstall (web: notifications not on, a letter about it), &gifts=all (every gift of
+// every job in the mailbox; otherwise the station's work brings one of the job's, as in the room).
 function Preview() {
   const colors = useColors();
   const params = useLocalSearchParams<{
@@ -389,6 +403,7 @@ function Preview() {
     date?: string;
     cue?: string;
     leave?: string;
+    gifts?: string;
   }>();
   const linkedCut = params.scene?.startsWith('cut') ? Number(params.scene.slice(3)) - 1 : null;
   const linkedSeason = SEASONS.find((s) => s === params.season);
@@ -468,6 +483,7 @@ function Preview() {
 
   // The day of the room's seasonal things (undefined: today).
   const [date, setDate] = useState<string | undefined>(params.date);
+  const [gifts, setGifts] = useState<BuddyGift[]>(() => (params.gifts === 'all' ? EVERY_GIFT : []));
 
   // A job changed in the details plays on the stage once they close, as in the app.
   const [jobCheer, setJobCheer] = useState<Reaction | null>(null);
@@ -505,7 +521,8 @@ function Preview() {
               startInBath={params.scene === 'bath' || bathRun > 0}
               bathSnow={bathSnow}
               fishStyle={fishStyle}
-              buddy={buddyOf(stage, job, hungry, poops, level, jobChangedAt)}
+              buddy={{ ...buddyOf(stage, job, hungry, poops, level, jobChangedAt), gifts }}
+              myId={PREVIEW_ME}
               busy={false}
               height={stageHeight}
               // As in the room: the change at once, and the buddy's reaction with it (use-buddy.ts).
@@ -517,7 +534,17 @@ function Preview() {
                 setPoops((n) => Math.max(0, n - 1));
                 setReaction({ id: randomUUID(), kind: 'cleaned' });
               }}
-              onWork={() => {}}
+              onWork={() => {
+                if (!job) return;
+                const gift = {
+                  id: randomUUID(),
+                  to: PREVIEW_ME,
+                  job,
+                  pick: Math.floor(Math.random() * 1000),
+                  at: new Date().toISOString(),
+                };
+                setGifts((all) => [gift, ...all]);
+              }}
               onOpenDetail={() => setDetail(true)}
               reaction={reaction}
               cue={cue}

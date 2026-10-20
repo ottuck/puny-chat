@@ -173,6 +173,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged, onGuideSeen }: ChatSc
           dreams
           albumRequest={albumRequest}
           mailRequest={mailRequest}
+          myId={me.id}
           // Being a guest and notifications off come as letters in the stage's mailbox.
           situation={{ guestDaysLeft, push }}
           onTurnOnPush={() =>

@@ -83,6 +83,7 @@ function afterEvent(buddy: BuddyView, event: BuddyEvent): BuddyView | null {
     case 'GRADUATED':
     case 'JOB':
     case 'JOB_CHANGED':
+    case 'GIFT':
       return null; // not in the script
     case 'LEVELED_UP':
       return { ...buddy, level: buddy.level + 1, levelProgress: 0.1 };
