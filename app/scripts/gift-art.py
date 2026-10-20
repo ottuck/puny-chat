@@ -70,6 +70,14 @@ MAT = {
     'matcha': (['#5E9036', '#7CAA48', '#9EC66A', '#C2DE98'], '#3E6420'),
     'mocha': (['#7E5038', '#9C6A50', '#BA8A6E', '#D4AC94'], '#56341E'),
     'milk': (['#E6D8C4', '#F2E8D8', '#FAF4EA', '#FFFFFF'], '#A08E76'),
+    'broth': (['#C2924E', '#D8AC6C', '#E8C48C', '#F4DEB2'], '#86602C'),
+    'noodle': (['#E2C060', '#F0D684', '#F8E8B0', '#F8E8B0'], '#A08430'),
+    'chashu': (['#A85E4A', '#C47C64', '#DCA08A', '#F0C8B6'], '#6E3626'),
+    'yolk': (['#E0841E', '#F4A230', '#FAC060', '#FAC060'], '#9A5210'),
+    'cello': (['#C8DDEA', '#DDEBF4', '#EEF6FB', '#FFFFFF'], '#86A6BC'),
+    'seed': (['#4A2C18', '#643C22', '#7E5030', '#A07048'], '#33200F'),
+    'pebble': (['#A8A29A', '#BFB9B0', '#D4CFC8', '#E8E4DE'], '#76706A'),
+    'agave': (['#5E9A8A', '#7CB6A4', '#A0CEBE', '#C8E6DA'], '#3A6A5C'),
     'stamp': (['#C8D8C0', '#E2EEDC', '#F4FAF0', '#F4FAF0'], '#7A9070'),
     'shade': (['#D8CFC4', '#D8CFC4', '#D8CFC4', '#D8CFC4'], None),
 }
@@ -370,21 +378,30 @@ def omurice():
     return a
 
 
-def soup():
+def ramen():
     a = Art()
-    steam(a, [11, 16, 21], 1, 7)
-    a.fill(ell(16, 29, 9, 1.8), 'shade', 1)
-    a.fill(rect(10.5, 25.5, 21.5, 28.5), 'porc', cyl(10, 22), group='foot')
-    a.fill(both(ell(16, 13, 14, 13.5), lambda x, y: y >= 13), 'porc', cyl(2, 30), group='bowl')
-    a.fill(both(ell(16, 13, 14, 13.5), lambda x, y: 16.5 <= y <= 18), 'blue', cyl(2, 30), group='band')
-    a.fill(ell(16, 13, 14, 4), 'porc', 3, group='rim')
-    a.fill(ell(16, 13.3, 12.2, 2.9), 'soup', lambda x, y: 3 if (x < 10 and y < 13) else 2 if x < 14 else 1)
-    a.dot([(9, 13), (12, 14), (17, 12), (20, 14), (14, 15), (22, 13)], 'corn', 3)
-    a.dot([(15, 13), (16, 13), (11, 12), (19, 15)], 'leaf', 1)
-    a.fill(anyof(rect(17.5, 13.5, 19.5, 15.3), rect(12.5, 11.2, 14.3, 12.8)), 'cake', 2)
-    # A spoon resting on the rim.
-    a.fill(ell(22.5, 13.2, 2.4, 1.4), 'plate', 1, group='spoon')
-    line(a, 24, 12.6, 30, 6.5, 'plate', 0.85, 2, group='spoon')
+    steam(a, [11, 16, 21], 0, 5)
+    a.fill(ell(16, 29, 7.5, 1.6), 'shade', 1)
+    a.fill(rect(11.5, 26, 20.5, 28.6), 'porc', cyl(11, 21), group='foot')
+    bowl = both(ell(16, 14, 12.5, 13), lambda x, y: y >= 14)
+    a.fill(bowl, 'porc', cyl(3.5, 28.5), group='bowl')
+    a.fill(both(bowl, lambda x, y: 19 <= y <= 20.6), 'red', cyl(3.5, 28.5), group='band')
+    # The nori sheet standing at the back, then the rim and the broth.
+    a.fill(poly([(19, 4.5), (24.5, 5.5), (24, 13), (19.2, 12.5)]), 'nori', lambda x, y: 2 if x < 20.5 else 1,
+           group='nori')
+    a.fill(ell(16, 14, 12.5, 5.4), 'porc', 3, group='rim')
+    a.fill(ell(16, 14.4, 11, 4.3), 'broth', lambda x, y: 3 if (x < 9 and y < 13.5) else 2 if x < 14 else 1,
+           group='broth')
+    # Noodles in waves at the front, the toppings around them.
+    a.dot([(x, y) for y in (15, 16, 17) for x in range(8, 24) if (x + y * 2) % 4 in (0, 1)], 'noodle', 2,
+          group='broth')
+    a.fill(ell(10.5, 12.8, 3.4, 2.4), 'chashu', sphere(10, 12, 3.4, 2.4), group='chashu')
+    a.fill(minus(ell(10.5, 12.8, 3.4, 2.4), ell(10.5, 12.8, 2.4, 1.5)), 'rice', 2, group='chashu')
+    a.fill(ell(21, 15.4, 2.9, 2.1), 'white', 2, group='egg')
+    a.fill(ell(21.3, 15.5, 1.5, 1.1), 'yolk', 2, group='egg')
+    a.fill(ell(15.6, 11.6, 2.2, 1.4), 'white', 2, group='naruto')
+    a.dot([(15, 11), (16, 12), (14, 12), (16, 11)], 'pink', 1, group='naruto')
+    a.dot([(13, 15), (14, 17), (17, 15), (18, 17), (12, 17), (19, 13)], 'leaf', 2, group='broth')
     return a
 
 
@@ -461,79 +478,91 @@ def leaf_shade(cx, cy, angle):
     return s
 
 
-def basil():
+def rose():
     a = Art()
-    # Stems gathered at the bottom.
-    for x0, x1 in ((15, 10), (16, 16), (17, 22)):
-        a.fill(lambda x, y, x0=x0, x1=x1: 14 <= y <= 29 and abs(x - (x0 + (x1 - x0) * (29 - y) / 15)) <= 0.7,
-               'stem', 1)
-    leaves = [(10, 15, 9, 3.6, -2.0), (10, 15, 8, 3.4, -2.7), (16, 13, 10, 3.8, -1.57), (22, 15, 9, 3.6, -1.15),
-              (22, 15, 8, 3.4, -0.45), (13, 20, 7, 3.0, -2.5), (19, 20, 7, 3.0, -0.65), (16, 9, 6, 2.8, -1.57)]
-    for cx, cy, ln, wd, ang in leaves:
-        a.fill(leaf_shape(cx, cy, ln, wd, ang), 'basil', leaf_shade(cx, cy, ang))
-    # Twine.
-    a.fill(rect(13, 23, 19, 24.6), 'twine', lambda x, y: 2 if y < 23.8 else 1)
-    a.fill(anyof(ell(12, 25.6, 1.4, 1.6), ell(20, 25.6, 1.4, 1.6)), 'twine', 1, group='bow')
+    # One rose lying across, its stem tied with a ribbon.
+    line(a, 5, 30, 18, 13, 'stem', 0.8, group='stem')
+    a.fill(leaf_shape(11.5, 22, 6.5, 2.6, -2.45), 'leaf', leaf_shade(11.5, 22, -2.45), group='leaf1')
+    a.fill(leaf_shape(14, 18.6, 6.5, 2.5, -0.15), 'leaf', leaf_shade(14, 18.6, -0.15), group='leaf2')
+    a.dot([(8, 25), (10, 24), (7, 28)], 'stem', 0, group='stem')
+    cx, cy = 21, 9.5
+    a.fill(anyof(ell(cx - 3.6, cy + 1.8, 3.4, 3.0), ell(cx + 3.4, cy + 2, 3.4, 3.0), ell(cx, cy + 3.4, 3.6, 2.6)), 'red',
+           sphere(cx - 2, cy, 7, 6), group='outer')
+    a.fill(ell(cx, cy, 4.6, 4.4), 'red', sphere(cx - 1.4, cy - 1.4, 4.6, 4.4), group='cup')
+    a.fill(both(ell(cx, cy - 0.8, 2.8, 2.3), lambda x, y: y < cy + 0.4), 'red', 1, group='curl')
+    a.dot([(cx - 1, cy - 2), (cx, cy - 3), (cx + 1, cy - 2), (cx - 2, cy - 1)], 'red', 0, group='curl')
+    a.fill(anyof(ell(cx - 3.2, cy + 5, 1.8, 0.9), ell(cx - 0.6, cy + 6, 1.8, 0.9)), 'leaf', 1, group='sepal')
     return a
 
 
-def mint():
+def tulip_head(a, cx, cy, mat, group):
+    cup = poly([(cx - 3, cy - 2.2), (cx - 1.4, cy - 0.6), (cx, cy - 3.2), (cx + 1.4, cy - 0.6), (cx + 3, cy - 2.2),
+                (cx + 3.1, cy + 1.2), (cx + 1.7, cy + 3.2), (cx - 1.7, cy + 3.2), (cx - 3.1, cy + 1.2)])
+    a.fill(cup, mat, sphere(cx - 1, cy, 3.4, 3.6), group=group)
+    a.dot([(cx, cy - 1), (cx, cy), (cx, cy + 1)], mat, 0, group=group)
+
+
+def tulips():
     a = Art()
-    a.fill(poly([(7, 20), (25, 20), (22.5, 30), (9.5, 30)]), 'pot', cyl(7, 25))
-    a.fill(rect(5.5, 18, 26.5, 21.4), 'pot', cyl(5, 27), group='pot-rim')
-    a.fill(ell(16, 18.4, 9.6, 1.6), 'soil', 1)
-    sprigs = ((16, 18.5, 9, 7), (16, 18.5, 16, 4), (16, 18.5, 23, 7))
-    for x0, y0, x1, y1 in sprigs:
-        line(a, x0, y0, x1, y1, 'stem', 0.6, group='stems')
-    # Round leaves in pairs along each sprig, the back ones first.
-    n = 0
-    for x0, y0, x1, y1 in sprigs:
-        ang = math.atan2(y1 - y0, x1 - x0)
-        for t, ln, wd in ((0.45, 5.2, 2.6), (0.75, 4.6, 2.4)):
-            x, y = x0 + (x1 - x0) * t, y0 + (y1 - y0) * t
-            for side in (-1, 1):
-                n += 1
-                la = ang + side * 1.25
-                a.fill(leaf_shape(x, y, ln, wd, la), 'mint', leaf_shade(x, y, la), group=f'leaf{n}')
-        n += 1
-        a.fill(leaf_shape(x1, y1, 3.8, 2.2, ang), 'mint', leaf_shade(x1, y1, ang), group=f'leaf{n}')
+    for x0, y0 in ((10, 9), (16, 5), (22, 9)):
+        line(a, x0, y0 + 3, 16, 24, 'stem', 0.6, group='stems')
+    a.fill(leaf_shape(16, 22, 11, 2.0, -2.2), 'leaf', leaf_shade(16, 22, -2.2), group='lf1')
+    a.fill(leaf_shape(16, 22, 11, 2.0, -0.95), 'leaf', leaf_shade(16, 22, -0.95), group='lf2')
+    tulip_head(a, 10, 9, 'pink', 't1')
+    tulip_head(a, 22, 9, 'yellow', 't3')
+    tulip_head(a, 16, 5.5, 'red', 't2')
+    # Wrapped in white paper with a blue ribbon.
+    edge = [(6.5, 14.5), (8.5, 17), (10.5, 14), (12.5, 16.6), (14.5, 13.8), (16.5, 16.4), (18.5, 13.8), (20.5, 16.6),
+            (22.5, 14), (24.5, 16.8), (25.5, 14.6)]
+    a.fill(poly(edge + [(19.5, 30), (12.5, 30)]), 'white', cyl(6, 26), group='paper')
+    a.dot([(9, 18), (10, 19), (22, 18), (21, 19)], 'white', 0, group='paper')
+    a.fill(rect(12.5, 22.5, 19.5, 24.4), 'blue', lambda x, y: 2 if y < 23.4 else 1, group='ribbon')
+    a.fill(anyof(heart(12, 23.4, 1.9), heart(20, 23.4, 1.9)), 'blue', 1, group='bow')
     return a
 
 
-def tomatoes():
+def sunflower():
     a = Art()
-    line(a, 16, 2.5, 16, 8.5, 'stem', 0.8, group='vine')
-    line(a, 16, 8, 11, 10.5, 'stem', 0.7, group='vine')
-    line(a, 16, 8, 21, 11.5, 'stem', 0.7, group='vine')
-    a.fill(leaf_shape(16, 4, 6.5, 2.4, -0.5), 'leaf', leaf_shade(16, 4, -0.5))
-    a.fill(leaf_shape(16, 6, 5.5, 2.0, -2.7), 'leaf', leaf_shade(16, 6, -2.7))
-    for cx, cy, r in ((10.5, 15, 5.4), (21.5, 16, 5.4), (16, 23.5, 6.0)):
-        a.fill(ell(cx, cy, r, r * 0.95), 'tomato', sphere(cx, cy, r, r))
-        hx, hy = round(cx - r * 0.45), round(cy - r * 0.42)
-        a.dot([(hx, hy), (hx + 1, hy), (hx, hy + 1)], 'tomato', 3)
-        top = cy - r * 0.95
-        a.fill(anyof(ell(cx - 1.8, top + 0.9, 2.0, 0.8), ell(cx + 1.8, top + 0.9, 2.0, 0.8), ell(cx, top + 0.4, 0.9, 1.4)),
-               'leaf', 2)
-    line(a, 16, 8, 16, 17.6, 'stem', 0.7, group='vine')
+    line(a, 15, 14, 17, 30, 'stem', 0.9, group='stem')
+    a.fill(leaf_shape(16, 22, 8, 3.4, -2.75), 'leaf', leaf_shade(16, 22, -2.75), group='lf1')
+    a.fill(leaf_shape(16.5, 19, 8, 3.2, -0.3), 'leaf', leaf_shade(16.5, 19, -0.3), group='lf2')
+    cx, cy = 15, 10.5
+    for k in range(14):
+        ang = k * 2 * math.pi / 14
+        px, py = cx + math.cos(ang) * 6.2, cy + math.sin(ang) * 6.0
+        a.fill(leaf_shape(cx + math.cos(ang) * 3.4, cy + math.sin(ang) * 3.3, 5.2, 1.7, ang), 'yellow',
+               lambda x, y, ang=ang: 3 if math.cos(ang) + math.sin(ang) < -0.9 else 2 if math.sin(ang) < 0.3 else 1,
+               group=f'petal{k % 2}')
+    a.fill(ell(cx, cy, 4.2, 4.0), 'seed', sphere(cx, cy, 4.2, 4.0, hi=False), group='center')
+    a.dot([(x, y) for x in range(10, 20) for y in range(6, 15)
+           if (x + y) % 2 == 0 and ((x + 0.5 - cx) / 4.2) ** 2 + ((y + 0.5 - cy) / 4.0) ** 2 <= 0.75], 'seed', 0,
+          group='center')
+    a.dot([(13, 8), (14, 8)], 'seed', 3, group='center')
     return a
 
 
-def rosemary():
+def succulent():
     a = Art()
-    for n, (x0, y0, x1, y1) in enumerate(((8, 4, 16, 29), (24, 4, 16, 29), (16, 2, 16, 29))):
-        sprig = f'sprig{n}'
-        line(a, x0, y0, x1, y1, 'stem', 0.6, group=sprig)
-        ang = math.atan2(y1 - y0, x1 - x0)
-        for i in range(1, 9):
-            t = i / 14
-            x, y = x0 + (x1 - x0) * t, y0 + (y1 - y0) * t
-            for side in (-1, 1):
-                a.fill(leaf_shape(x, y, 3.8, 0.5, ang + side * 2.2), 'rosemary', 2 if side < 0 else 1, group=sprig)
-        a.fill(leaf_shape(x0, y0, 2.6, 0.7, ang + math.pi), 'rosemary', 3, group=sprig)
-    a.fill(rect(12, 21, 20, 23), 'red', lambda x, y: 2 if y < 22 else 1)
-    a.fill(anyof(heart(11, 21.8, 2.2), heart(21, 21.8, 2.2)), 'red', 1, group='bow')
-    a.fill(anyof(poly([(13, 23), (15, 23), (12, 28), (10.5, 27)]), poly([(17, 23), (19, 23), (21.5, 27), (20, 28)])),
-           'red', 0, group='tails')
+    # A little white pot with pebbles, the rosette sitting in it.
+    a.fill(ell(16, 29.2, 8.5, 1.6), 'shade', 1)
+    pot = poly([(10, 21), (22, 21), (20.8, 29), (11.2, 29)])
+    a.fill(pot, 'porc', cyl(10, 22), group='pot')
+    a.fill(both(pot, lambda x, y: 25 <= y <= 26.2), 'blue', cyl(10, 22), group='band')
+    a.fill(ell(16, 21, 6.6, 1.8), 'porc', 3, group='rim')
+    rings = (
+        (8.4, 2.8, 0, (math.pi + 0.25, math.pi + 0.9, 1.5 * math.pi, 2 * math.pi - 0.9, 2 * math.pi - 0.25)),
+        (6.2, 2.5, 1, (math.pi + 0.62, 1.5 * math.pi - 0.26, 1.5 * math.pi + 0.26, 2 * math.pi - 0.62)),
+        (3.8, 2.0, 2, (1.5 * math.pi,)),
+    )
+    for ring, (length, width, lift, angles) in enumerate(rings):
+        for k, ang in enumerate(angles):
+            g = f'ring{ring}-{k}'
+            base = leaf_shade(16, 21, ang)
+            a.fill(leaf_shape(16, 21, length, width, ang), 'agave',
+                   lambda x, y, base=base, lift=lift: min(3, base(x, y) + lift), group=g)
+            if ring == 0:
+                tx, ty = 16 + math.cos(ang) * (length - 0.6), 21 + math.sin(ang) * (length - 0.6)
+                a.dot([(tx, ty)], 'pink', 1, group=g)
     return a
 
 
@@ -729,8 +758,8 @@ def autumn_scene(a, x0, y0, w, h):
 ART = {
     'BARISTA': {'latte': latte, 'icedAmericano': iced_americano, 'caramelMacchiato': caramel_macchiato,
                 'matchaLatte': matcha_latte, 'chipFrappe': chip_frappe},
-    'CHEF': {'omurice': omurice, 'soup': soup, 'pancakes': pancakes, 'riceBalls': rice_balls, 'curry': curry},
-    'GARDENER': {'basil': basil, 'mint': mint, 'tomatoes': tomatoes, 'rosemary': rosemary, 'flowers': flowers},
+    'CHEF': {'omurice': omurice, 'ramen': ramen, 'pancakes': pancakes, 'riceBalls': rice_balls, 'curry': curry},
+    'GARDENER': {'rose': rose, 'tulips': tulips, 'sunflower': sunflower, 'succulent': succulent, 'flowers': flowers},
     'DJ': {'record1': lambda: record(moon_sleeve, 'gold'), 'record2': lambda: record(rain_sleeve, 'red'),
            'record3': lambda: record(heart_sleeve, 'pink'), 'record4': lambda: record(sun_sleeve, 'blue'),
            'record5': lambda: record(sunrise_sleeve, 'grass')},
@@ -742,11 +771,11 @@ ART = {
 DESCRIBE = {
     'latte': 'a cup and saucer, a heart in the milk', 'icedAmericano': 'iced coffee in a clear cup with a straw',
     'caramelMacchiato': 'milk, espresso and foam in a glass, caramel over it',
-    'matchaLatte': 'a mug of matcha latte with a leaf in the milk',
+    'matchaLatte': 'a stone mug of matcha latte with a heart in the milk',
     'chipFrappe': 'a chocolate chip frappé under whipped cream and a dome lid', 'omurice': 'omurice with a ketchup heart',
-    'soup': 'corn soup in a bowl with a spoon', 'pancakes': 'a stack with syrup and butter',
-    'riceBalls': 'two rice balls on a leaf', 'curry': 'curry and rice', 'basil': 'a bunch of basil tied with twine',
-    'mint': 'mint in a pot', 'tomatoes': 'cherry tomatoes on the vine', 'rosemary': 'rosemary tied with a ribbon',
+    'ramen': 'a bowl of ramen with its toppings and chopsticks', 'pancakes': 'a stack with syrup and butter',
+    'riceBalls': 'two rice balls on a leaf', 'curry': 'curry and rice', 'rose': 'a single rose in a clear sleeve',
+    'tulips': 'three tulips wrapped in paper', 'sunflower': 'a sunflower', 'succulent': 'a succulent in a little pot',
     'flowers': 'wildflowers in paper', 'record1': 'a record from a sleeve with the moon',
     'record2': 'a record from a sleeve with rain', 'record3': 'a record from a sleeve with hearts',
     'record4': 'a record from a sleeve with the sun', 'record5': 'a record from a sleeve with a sunrise',

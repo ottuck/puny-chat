@@ -93,7 +93,7 @@
     "gift": {
       "BARISTA": "☕ {{buddy}} made {{to}} {{gift}}",
       "CHEF": "🍳 {{buddy}} cooked {{to}} {{gift}}",
-      "GARDENER": "🌱 {{buddy}} picked {{to}} {{gift}}",
+      "GARDENER": "🌱 {{buddy}} gave {{to}} {{gift}}",
       "DJ": "🎧 {{buddy}} picked out a record for {{to}}: {{gift}}",
       "WRITER": "✒️ {{buddy}} wrote {{to}} {{gift}}"
     },
@@ -444,10 +444,10 @@
           "inChat": "omurice",
           "line": "I tried to write your name in ketchup and ran out of egg. The feeling's all there."
         },
-        "soup": {
-          "name": "Corn soup",
-          "inChat": "a bowl of corn soup",
-          "line": "Have it while it's warm. If it cools, I'll warm it up again."
+        "ramen": {
+          "name": "Ramen",
+          "inChat": "a bowl of ramen",
+          "line": "Noodles on the firm side. Drink the broth too."
         },
         "pancakes": {
           "name": "Pancakes",
@@ -466,25 +466,25 @@
         }
       },
       "GARDENER": {
-        "basil": {
-          "name": "Basil",
-          "inChat": "some basil",
-          "line": "Picked this morning. Rub a leaf and smell."
+        "rose": {
+          "name": "A single rose",
+          "inChat": "a single rose",
+          "line": "I took off all the thorns first. No need to be careful."
         },
-        "mint": {
-          "name": "Mint",
-          "inChat": "some mint",
-          "line": "Float it in water and it cools right down. It grows so well it's a bit of a problem."
+        "tulips": {
+          "name": "Three tulips",
+          "inChat": "three tulips",
+          "line": "Put them in water and they'll open a little more by morning."
         },
-        "tomatoes": {
-          "name": "Cherry tomatoes",
-          "inChat": "cherry tomatoes",
-          "line": "Only the reddest ones made it."
+        "sunflower": {
+          "name": "Sunflower",
+          "inChat": "a sunflower",
+          "line": "Keep it facing the sun. That's the side it likes."
         },
-        "rosemary": {
-          "name": "Rosemary",
-          "inChat": "a sprig of rosemary",
-          "line": "Roast it with potatoes, I hear. A chef friend told me."
+        "succulent": {
+          "name": "Little succulent",
+          "inChat": "a little succulent",
+          "line": "Water it once a week. It copes pretty well if you forget."
         },
         "flowers": {
           "name": "Wildflowers",
