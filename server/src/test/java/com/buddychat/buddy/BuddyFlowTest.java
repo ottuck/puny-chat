@@ -201,6 +201,68 @@ class BuddyFlowTest {
     }
 
     @Test
+    void atWorkAGrownUpWithAJobMakesEachMemberAGiftOnceADay() {
+        String roomId = duoRoom("henry", "yuki");
+        setExp(roomId, BuddyRules.minExp(BuddyRules.JOB_AT));
+        setBuddy(roomId, new Update().set("buddy.job", "BARISTA"));
+        String henry = room("henry").members().get(0).id();
+        String yuki = room("henry").members().get(1).id();
+
+        Care first = care("henry", "work");
+        care("henry", "work"); // the same day: nothing more
+        clock.advance(BuddyRules.WORK_EVERY);
+        care("henry", "work");
+
+        assertThat(first.buddy().gifts()).singleElement().satisfies(gift -> {
+            assertThat(gift.to()).isEqualTo(henry);
+            assertThat(gift.job()).isEqualTo("BARISTA");
+            assertThat(gift.pick()).isBetween(0, BuddyRules.GIFT_PICKS - 1);
+        });
+        assertThat(timeline("henry")).containsOnlyOnce("GIFT");
+
+        // Yuki gets one too, even though the work just now earned no EXP.
+        Care yukiWork = care("yuki", "work");
+        assertThat(yukiWork.changed()).isFalse();
+        assertThat(yukiWork.buddy().gifts()).hasSize(2);
+        assertThat(yukiWork.buddy().gifts().getFirst().to()).isEqualTo(yuki); // newest first
+
+        clock.advance(Duration.ofDays(1));
+        assertThat(care("henry", "work").buddy().gifts()).hasSize(3);
+        assertThat(timeline("yuki").stream().filter("GIFT"::equals)).hasSize(3);
+    }
+
+    @Test
+    void aGrownUpWithoutAJobMakesNoGiftAndTapsAtOnceGiveOne() {
+        String roomId = duoRoom("henry", "yuki");
+        setExp(roomId, BuddyRules.minExp(BuddyRules.ADULT_AT));
+        assertThat(care("henry", "work").buddy().gifts()).isEmpty(); // Lv.10: no job yet
+
+        setBuddy(roomId, new Update().set("buddy.job", "DJ"));
+        race(4, i -> care("yuki", "work"));
+
+        String yuki = room("henry").members().get(1).id();
+        assertThat(room("henry").buddy().gifts())
+                .singleElement()
+                .satisfies(gift -> assertThat(gift.to()).isEqualTo(yuki));
+        assertThat(timeline("henry")).containsOnlyOnce("GIFT");
+    }
+
+    @Test
+    void theGiftsKeptAreTheLastOnes() {
+        String roomId = duoRoom("henry", "yuki");
+        setExp(roomId, BuddyRules.minExp(BuddyRules.JOB_AT));
+        setBuddy(roomId, new Update().set("buddy.job", "CHEF"));
+        for (int day = 0; day <= BuddyRules.GIFTS_KEPT; day++) {
+            care("henry", "work");
+            clock.advance(Duration.ofDays(1));
+        }
+
+        List<Gift> kept = room("henry").buddy().gifts();
+        assertThat(kept).hasSize(BuddyRules.GIFTS_KEPT);
+        assertThat(kept.getFirst().at()).isAfter(kept.getLast().at());
+    }
+
+    @Test
     void aTripToTheHotSpringAfterAWhileGivesExpOnce() {
         String roomId = duoRoom("henry", "yuki");
         assertThat(care("henry", "bath").changed()).isFalse(); // an egg does not go
@@ -822,7 +884,7 @@ class BuddyFlowTest {
         Instant now = Instant.now();
         return new Buddy(
                 "Mugi", 0, now, now, now, null, 0, 0, null, null, null, fed, cleaned, nights, loves, null, null, null,
-                null);
+                null, null, null);
     }
 
     private void say(TestSocket socket, String clientMessageId, String text) {

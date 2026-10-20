@@ -34,7 +34,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
             "buddychat.support.email=operator@example.com",
             "buddychat.support.from=sender@example.com",
             "buddychat.photos.dir=build/test-photos",
-            "buddychat.photos.min-free-space=0B"
+            "buddychat.photos.min-free-space=0B",
+            // Off in production until the app that shows them is out (BuddyProperties).
+            "buddychat.buddy.gifts=true"
         })
 @Import({
     TestcontainersConfiguration.class,

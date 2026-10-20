@@ -2,6 +2,7 @@ package com.buddychat.buddy;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -27,6 +28,8 @@ import org.jspecify.annotations.Nullable;
  *     job, and a first pick, do not count
  * @param lastWorkedAt when a grown-up last earned EXP for work at its station; null if never
  * @param lastBathedAt when it last earned EXP for a trip to the hot spring; null if never
+ * @param giftDays member id → the day (Asia/Tokyo) the buddy last made that member a gift at its station
+ * @param gifts what it made, oldest first, the last {@link BuddyRules#GIFTS_KEPT}; null if none yet
  */
 public record Buddy(
         String name,
@@ -47,12 +50,15 @@ public record Buddy(
         @Nullable String job,
         @Nullable Integer jobChangedLevel,
         @Nullable Instant lastWorkedAt,
-        @Nullable Instant lastBathedAt) {
+        @Nullable Instant lastBathedAt,
+        @Nullable Map<String, String> giftDays,
+        @Nullable List<Gift> gifts) {
 
     public static final int MAX_NAME_LENGTH = 12;
 
     public static Buddy hatch(String name, Instant now) {
-        return new Buddy(name, 0, now, now, now, null, 0, 0, null, null, null, 0, 0, 0, 0, null, null, null, null);
+        return new Buddy(
+                name, 0, now, now, now, null, 0, 0, null, null, null, 0, 0, 0, 0, null, null, null, null, null, null);
     }
 
     Instant fedAt() {
@@ -86,7 +92,31 @@ public record Buddy(
     /** The egg that takes this grown buddy's place. Today's talk carries over: one bonus a day. */
     Buddy next(String name, Instant now) {
         return new Buddy(
-                name, 0, now, now, now, null, 0, 0, talkDay, talkers, togetherDay, 0, 0, 0, 0, null, null, null, null);
+                name,
+                0,
+                now,
+                now,
+                now,
+                null,
+                0,
+                0,
+                talkDay,
+                talkers,
+                togetherDay,
+                0,
+                0,
+                0,
+                0,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
+    }
+
+    List<Gift> made() {
+        return gifts != null ? gifts : List.of();
     }
 
     /** Members who sent a message on that day. */

@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -49,6 +50,7 @@ public class BuddyService {
     private final ChatService chatService;
     private final RoomHub hub;
     private final Clock clock;
+    private final boolean gifts;
 
     BuddyService(
             ReactiveMongoTemplate mongo,
@@ -62,6 +64,7 @@ public class BuddyService {
         this.chatService = chatService;
         this.hub = hub;
         this.clock = clock;
+        this.gifts = properties.gifts();
     }
 
     /**
@@ -134,13 +137,68 @@ public class BuddyService {
                 return Mono.just(new CareResult(BuddyView.of(buddy, now), false));
             }
             return care(
-                    roomId,
-                    actorId,
-                    orMissing("buddy.lastWorkedAt", where("buddy.lastWorkedAt").lte(now.minus(BuddyRules.WORK_EVERY))),
-                    new Update().set("buddy.lastWorkedAt", now).inc("buddy.exp", BuddyRules.WORK_EXP),
-                    "WORKED",
-                    BuddyRules.WORK_EXP,
+                            roomId,
+                            actorId,
+                            orMissing(
+                                    "buddy.lastWorkedAt",
+                                    where("buddy.lastWorkedAt").lte(now.minus(BuddyRules.WORK_EVERY))),
+                            new Update().set("buddy.lastWorkedAt", now).inc("buddy.exp", BuddyRules.WORK_EXP),
+                            "WORKED",
+                            BuddyRules.WORK_EXP,
+                            now)
+                    .flatMap(worked -> gift(roomId, actorId, now)
+                            .map(view -> new CareResult(view, worked.changed()))
+                            .defaultIfEmpty(worked));
+        });
+    }
+
+    /**
+     * The day's gift for the member at work (docs/fun-improvements.md, 직업 선물): once a day per member,
+     * whether or not this work earned EXP, from a buddy with a job. One conditional update on the
+     * member's day, so two taps at once give one; the gift is kept for the mailbox and announced in
+     * the timeline. Empty when there is none to give.
+     */
+    private Mono<BuddyView> gift(String roomId, String memberId, Instant now) {
+        if (!gifts) return Mono.empty();
+        String today = BuddyRules.day(now);
+        return load(roomId).flatMap(buddy -> {
+            if (BuddyJob.of(buddy.job()) == null) return Mono.empty();
+            Gift gift = new Gift(
+                    UUID.randomUUID().toString(),
+                    memberId,
+                    buddy.job(),
+                    ThreadLocalRandom.current().nextInt(BuddyRules.GIFT_PICKS),
                     now);
+            String day = "buddy.giftDays." + memberId;
+            Query notYet = query(where("_id")
+                    .is(roomId)
+                    .and("memberIds")
+                    .is(memberId)
+                    .and("buddy.bornAt")
+                    .is(buddy.bornAt())
+                    .and("buddy.job")
+                    .is(buddy.job())
+                    .and(day)
+                    .ne(today));
+            Update give = new Update()
+                    .set(day, today)
+                    .push("buddy.gifts")
+                    .slice(-BuddyRules.GIFTS_KEPT)
+                    .each(gift);
+            return mongo.findAndModify(notYet, give, RETURN_NEW, RoomBuddy.class, ROOMS)
+                    .flatMap(updated -> chatService
+                            .recordBuddyEvent(
+                                    roomId,
+                                    "GIFT",
+                                    gift.job() + ":" + gift.pick(),
+                                    memberId,
+                                    eventKey(updated.buddy(), "gift:" + memberId + ":" + today))
+                            .doOnNext(message -> hub.publish(roomId, new ServerEvent.NewMessage(message), null))
+                            .then(Mono.fromSupplier(() -> {
+                                BuddyView view = BuddyView.of(updated.buddy(), now);
+                                hub.publish(roomId, new ServerEvent.BuddyUpdated(view), null);
+                                return view;
+                            })));
         });
     }
 
