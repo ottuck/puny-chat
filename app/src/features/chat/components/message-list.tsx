@@ -166,7 +166,7 @@ export function MessageList({
               </View>
             );
           }
-          // What the buddy did for one of us at work (docs/fun-improvements.md, 직업 선물): it says so
+          // What the buddy did for one of us at work (docs/fun-improvements.md, 직업 이벤트): it says so
           // itself, in small bubbles both of us see. A letter is in the mailbox of the one it is for.
           if (item.type === 'BUDDY_EVENT' && item.event === 'GIFT') {
             const gift = giftOfDetail(item.detail);

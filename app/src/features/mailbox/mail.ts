@@ -9,7 +9,7 @@ import type { PushState } from '@/features/notifications/push';
 // The mailbox on the stage (docs/fun-improvements.md, 우편함): news and letters, written into the
 // app (their words are `mailbox.mail.<id>.*` in the translations) and sent with a web deploy or an
 // EAS Update; no server. What has been read, and when a letter came, is kept on this device.
-// Besides them, the letters a writer buddy wrote me at work (직업 선물), which the server keeps; the
+// Besides them, the letters a writer buddy wrote me at work (직업 이벤트), which the server keeps; the
 // other jobs do theirs in the chat.
 
 export type MailId =

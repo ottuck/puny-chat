@@ -5,7 +5,7 @@ import { dressedFrame } from '@/features/buddy/pixel/looks';
 import { type Frame, PixelSprite } from '@/features/buddy/pixel/pixel-sprite';
 import { BUDDY_PALETTE } from '@/features/buddy/pixel/sprites';
 
-// A letter the buddy wrote at work (docs/fun-improvements.md, 직업 선물), on stationery like a letter
+// A letter the buddy wrote at work (docs/fun-improvements.md, 직업 이벤트), on stationery like a letter
 // one would buy: cream paper inside a soft dotted frame, a little sprig of flowers in two corners, faint
 // rules with every line of text on one, "To." at the top and "From." with its face at the bottom.
 

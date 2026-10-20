@@ -184,7 +184,7 @@ function Chip({
 // "open all" / "fold all" under the stage: every group follows the latest press (a new `run`).
 const FoldAll = createContext({ open: false, run: 0 });
 
-// What the buddy says and hands over in the chat at work (docs/fun-improvements.md, 직업 선물): every
+// What the buddy says and hands over in the chat at work (docs/fun-improvements.md, 직업 이벤트): every
 // thing a barista, a cook or a gardener makes (each with another opening word), every DJ show, and
 // a writer's word about its letter (the letters themselves are in the mailbox with &gifts=all).
 const GIFT_SAMPLES = [

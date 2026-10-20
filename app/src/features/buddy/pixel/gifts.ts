@@ -1,7 +1,7 @@
 import type { ITEMS, ItemGift, ItemJob } from '../gifts';
 import type { Frame, Palette } from './pixel-sprite';
 
-// What a barista, a cook or a gardener makes at work for one of us (docs/fun-improvements.md, 직업 선물),
+// What a barista, a cook or a gardener makes at work for one of us (docs/fun-improvements.md, 직업 이벤트),
 // shown in the chat as it is handed over: a 32 × 32 picture for each item in gifts.ts, lit from the
 // top left, outlined in a darker shade of each thing. Made by scripts/gift-art.py: change it there,
 // not here.

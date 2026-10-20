@@ -264,7 +264,7 @@ Buddy 상태(레벨, 배고픔, 💩, 돌볼 수 있는지)는 서버가 계산�
   내밀지 않는다). Buddy 상세(무대 이름 옆 🎓, 감사 편지의 버튼으로도 연다)에서 두 사람 중 누구든 확인 후 독립시킨다. 새 알의 이름을 지으면
   버디는 추억 앨범(이름, 함께한 기간, 직업)에 남고 무대에는 새 알이 온다. 앨범은 관계의 기록이지 수집 게임이 아니다.
 - **우편함.** 무대 모서리 버튼(늘 보임)으로 여는 공지·편지함. 내용은 앱에 넣어 배포로 보내고, 읽음은 기기에 둔다(`docs/fun-improvements.md`의 우편함).
-  작가 버디가 일하며 쓴 편지(직업 선물)도 여기로 온다. 이것만 서버가 남긴다. 다른 직업은 버디가 채팅에서 직접 말한다.
+  작가 버디가 일하며 쓴 편지(직업 이벤트)도 여기로 온다. 이것만 서버가 남긴다. 다른 직업은 버디가 채팅에서 직접 말한다.
 
 ## 도움말과 안내 카드
 
@@ -551,7 +551,7 @@ server → client
 테스트는 숫자 대신 `BuddyRules.hungryAfter()`, `poopEvery()`로 시간을 보낸다. "하루"는 모두 일본 날짜다.
 
 앱은 `BuddyView`를 그대로 보여준다: `name`, `exp`, `level`, `stage`, `levelProgress`, `fullness`, `poops`, `hungry`, `canFeed`, `canClean`,
-`grown`(독립할 수 있음), `talkedToday`, `togetherToday`, `job`, `leaning`, `canChangeJob`, `jobChangeAt`, `gifts`(직업 선물, 최근 것부터).
+`grown`(독립할 수 있음), `talkedToday`, `togetherToday`, `job`, `leaning`, `canChangeJob`, `jobChangeAt`, `gifts`(직업 이벤트, 최근 것부터).
 
 ### 돌봄
 
@@ -563,13 +563,14 @@ server → client
 | 온천 | 알이 아니면. 앱이 온천에 들어설 때 보낸다. EXP와 `BATHED`는 `lastBathedAt`에서 12시간이 지났을 때만(방에 하나). 온천에 있는지는 저장하지 않는다 | +3 |
 | 메시지 | 텍스트·사진 하나 | +1(방마다 하루 50까지) |
 
-- **직업 선물**(`docs/fun-improvements.md`). 직업이 있는 버디가 일하면, 일을 시킨 사람이 그날(일본 날짜) 처음일 때 그 사람에게 선물을
-  하나 만든다. EXP의 1시간 주기와 따로, 사람마다 하루 한 번이다. `buddy.giftDays.<userId>`를 보는 조건부 update 하나라 동시에 눌러도 하나.
+- **직업 이벤트**(`docs/fun-improvements.md`). 직업이 있는 버디가 일하면, 일을 시킨 사람의 지난 이벤트가 사흘(`GIFT_EVERY_DAYS`, 일본 날짜)
+  전보다 오래됐을 때 그 사람에게 이벤트를 하나 연다. EXP의 1시간 주기와 따로, 사람마다 센다. `buddy.giftDays.<userId>`(마지막 날)가
+  최근 사흘에 없을 때만 바꾸는 조건부 update 하나라 동시에 눌러도 하나.
   선물 `{ id, to, job, pick, at }`(`pick`은 0–999, 무엇인지는 앱이 고른다)은 `buddy.gifts`에 마지막 30개(`GIFTS_KEPT`)만 두고, 타임라인에
   `GIFT`(`actorId` = 받는 사람, `text` = `<job>:<pick>`)를 남긴다. 앱은 이 줄을 버디가 채팅에서 하는 말로 보여 주고(물건은
   그림과 함께, DJ는 방송), 작가의 편지만 `gifts`에서 우편함에 둔다. 독립하면 새 알과 함께 비워진다.
-  서버 설정 `buddychat.buddy.gifts`(기본 `false`)가 켜져 있을 때만 준다. 선물을 모르는 앱(1.0 빌드 4)은 `GIFT` 줄을 번역 키 그대로
-  보여 주므로, 선물을 아는 앱이 EAS Update로 나간 뒤 기본값을 `true`로 바꾼다(`docs/release.md`).
+  서버 설정 `buddychat.buddy.gifts`(기본 `false`)가 켜져 있을 때만 연다. 직업 이벤트를 모르는 앱(1.0 빌드 4)은 `GIFT` 줄을 번역 키 그대로
+  보여 주므로, 그것을 아는 앱이 EAS Update로 나간 뒤 기본값을 `true`로 바꾼다(`docs/release.md`).
 
 - **채팅으로 돌보기**(`CareCommand`, 앱 `chat-words.ts`와 같은 목록): 메시지 전체가 아래 낱말이면 그 돌봄을 한다. 끝의 "!", `~`, "."는 괜찮고
   문장 안의 낱말은 아니다. 보낸 사람이 한 것으로 처리하고, 메시지는 그대로 남고 메시지 EXP도 받는다.

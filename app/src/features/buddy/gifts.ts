@@ -2,7 +2,7 @@ import type { BuddyGift, BuddyJob } from './api';
 import { isJob } from './jobs';
 
 // What a grown-up does for one of us at its station, once a day each when it works there
-// (docs/fun-improvements.md, 직업 선물). The server picks a number and keeps the gift; these lists say
+// (docs/fun-improvements.md, 직업 이벤트). The server picks a number and keeps the gift; these lists say
 // what that number is, so new kinds come with the app alone.
 //
 // A barista, a cook and a gardener make something and hand it over in the chat: a word to start

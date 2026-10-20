@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { type Gift, itemKey, openerKey } from '@/features/buddy/gifts';
+import { type Gift, type ItemJob, itemKey, openerKey } from '@/features/buddy/gifts';
 import { GIFT_PALETTE, giftArt } from '@/features/buddy/pixel/gifts';
 import { dressedFrame } from '@/features/buddy/pixel/looks';
 import { PixelSprite } from '@/features/buddy/pixel/pixel-sprite';
@@ -9,12 +9,14 @@ import { BUDDY_PALETTE } from '@/features/buddy/pixel/sprites';
 import { useColors } from '@/theme';
 
 // The buddy talking in the chat when it does something for one of us at work (docs/fun-improvements.md,
-// 직업 선물), the way a member's messages look but smaller: its face, its name and who it is for, then
+// 직업 이벤트), the way a member's messages look but smaller: its face, its name and who it is for, then
 // a few short bubbles. A barista, a cook or a gardener hands over what it made, its picture under the
 // words; a DJ goes on air; a writer says a letter is in the mailbox, and for the one it is for that
 // bubble opens it.
 const FACE = 22;
-const PICTURE_SCALE = 1.5;
+// Drinks and flowers fill their picture top to bottom, food sits low on a plate: about the same size
+// in the chat this way.
+const PICTURE_SCALE: Record<ItemJob, number> = { BARISTA: 1.15, CHEF: 1.5, GARDENER: 1.15 };
 
 export function BuddyGiftMessage({
   gift,
@@ -72,7 +74,11 @@ export function BuddyGiftMessage({
         )}
         {gift.kind === 'item' ? (
           <View accessible accessibilityLabel={t(itemKey(gift, 'name'))} style={styles.picture}>
-            <PixelSprite frame={giftArt(gift)} palette={GIFT_PALETTE} scale={PICTURE_SCALE} />
+            <PixelSprite
+              frame={giftArt(gift)}
+              palette={GIFT_PALETTE}
+              scale={PICTURE_SCALE[gift.job]}
+            />
           </View>
         ) : null}
       </View>

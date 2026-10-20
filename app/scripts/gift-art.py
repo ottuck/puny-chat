@@ -1,4 +1,4 @@
-"""Draws the pictures of what a barista, a cook or a gardener makes (docs/fun-improvements.md, 직업 선물)
+"""Draws the pictures of what a barista, a cook or a gardener makes (docs/fun-improvements.md, 직업 이벤트)
 into src/features/buddy/pixel/gifts.ts.
 
 Each is 32 x 32, made of shapes lit from the top left (three or four shades of each material), outlined
@@ -657,7 +657,7 @@ frames = {job: {kind: [''.join(key[c] if c else '.' for c in row) for row in gri
 out = ["""import type { ITEMS, ItemGift, ItemJob } from '../gifts';
 import type { Frame, Palette } from './pixel-sprite';
 
-// What a barista, a cook or a gardener makes at work for one of us (docs/fun-improvements.md, 직업 선물),
+// What a barista, a cook or a gardener makes at work for one of us (docs/fun-improvements.md, 직업 이벤트),
 // shown in the chat as it is handed over: a 32 × 32 picture for each item in gifts.ts, lit from the
 // top left, outlined in a darker shade of each thing. Made by scripts/gift-art.py: change it there,
 // not here.
