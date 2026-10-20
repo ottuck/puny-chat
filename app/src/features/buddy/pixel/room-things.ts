@@ -40,7 +40,7 @@ export const GOLD_PALETTE: Palette = {
 
 // --- At the window ---
 
-// A glass wind chime (Lv.31, in summer) at the top of the glass: a red pattern on the bell, the
+// A glass wind chime (Lv.30, in summer) at the top of the glass: a red pattern on the bell, the
 // clapper, and its paper strip swinging in the breeze.
 // prettier-ignore
 export const FURIN: [Frame, Frame] = [[
@@ -136,7 +136,7 @@ export const HANGING_PLANT: Frame = (() => {
   return rows.map((line) => line.join(''));
 })();
 
-// A cherry petal drifting past the glass (Lv.41, in spring).
+// A cherry petal drifting past the glass (Lv.40, in spring).
 // prettier-ignore
 export const PETAL: Frame = [
   'pp',
@@ -450,6 +450,88 @@ export function fishBowl(turn: number, plants: boolean): Frame {
   return [...cells.map((line) => line.join('')), ...SIDE_TABLE];
 }
 
+// Where the goldfish lives, being decided (the preview compares them): the bowl on its side table,
+// a tank built into the wall, or a tall planted tank standing on the floor.
+export type FishStyle = 'table' | 'wall' | 'floor';
+
+// prettier-ignore
+const WALL_TANK = [
+  'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkk',
+  'kFFFFFFFFFFFFFFFFFFFFFFFFFFFFk',
+  'kFkkkkkkkkkkkkkkkkkkkkkkkkkkFk',
+  'kFkIIIIIIIIIIIIIIIIIIIIIIIIkFk',
+  'kFkcgcccccccccccccccccccccdkFk',
+  'kFkcgGcGccccccccccccccccccdkFk',
+  'kFkccgcgccccccccnnccccpcpcdkFk',
+  'kFkcgGcGcccccccnNNncccpppcdkFk',
+  'kFkeeeeeeeeeeeeeeeeeeeeeeeekFk',
+  'kFkEeeEeeEeeEeeEeeEeeEeeEeekFk',
+  'kFkkkkkkkkkkkkkkkkkkkkkkkkkkFk',
+  'kffffffffffffffffffffffffffffk',
+  'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkk',
+];
+// prettier-ignore
+const FLOOR_TANK = [
+  'kkkkkkkkkkkkkkk',
+  'kIIIIIIIIIIIIIk',
+  'kccccccccccccdk',
+  'kccgcccccccccdk',
+  'kcgGcgcccccccdk',
+  'kcgGgGcccgcgcdk',
+  'kccgGgcccGgGcdk',
+  'kcgGgGgccgGgcdk',
+  'kccGgGcccGgGcdk',
+  'kccgGgccccgccdk',
+  'kcccGcnnccGccdk',
+  'kNNNNNNNNNNNNNk',
+  'kqqqqqqqqqqqqqk',
+  'kLLLLLLLLLLLLLk',
+  'kDDDDDDDDDDDDDk',
+  'kqqqqqqqqqqqqqk',
+  'kkkkkkkkkkkkkkk',
+];
+
+// Where the fish swim in the tanks, by turns: [row, col, facing right].
+const TANK_SWIMS: Record<
+  Exclude<FishStyle, 'table'>,
+  readonly (readonly [number, number, boolean])[]
+> = {
+  wall: [
+    [4, 6, true],
+    [4, 10, true],
+    [5, 14, true],
+    [4, 19, true],
+    [5, 20, false],
+    [4, 15, false],
+    [5, 11, false],
+    [4, 7, false],
+  ],
+  floor: [
+    [3, 4, true],
+    [4, 7, true],
+    [6, 9, false],
+    [7, 6, false],
+    [5, 3, false],
+    [4, 5, true],
+  ],
+};
+
+// The goldfish's home in `style`, with its fish where `turn` puts them (two from Lv.56).
+export function fishHome(style: FishStyle, turn: number, plants: boolean): Frame {
+  if (style === 'table') return fishBowl(turn, plants);
+  const cells = (style === 'wall' ? WALL_TANK : FLOOR_TANK).map((row) => row.split(''));
+  const swims = TANK_SWIMS[style];
+  const put = ([row, col, right]: readonly [number, number, boolean]) =>
+    (right ? FISH_RIGHT : FISH_LEFT).forEach((line, dy) =>
+      [...line].forEach((cell, dx) => {
+        if (cell !== '.') cells[row + dy][col + dx] = cell;
+      }),
+    );
+  put(swims[turn % swims.length]);
+  if (plants) put(swims[(turn + Math.floor(swims.length / 2)) % swims.length]);
+  return cells.map((line) => line.join(''));
+}
+
 // A bubble, rising when the bowl is tapped.
 // prettier-ignore
 export const BUBBLE: Frame = [
@@ -494,7 +576,7 @@ export const TEA: Frame = [
   '.kkkk...kkk',
 ];
 
-// Kagami mochi on its little stand, an orange on top (Lv.49, at the New Year).
+// Kagami mochi on its little stand, an orange on top (Lv.50, at the New Year).
 // prettier-ignore
 export const MOCHI: Frame = [
   '....kk....',

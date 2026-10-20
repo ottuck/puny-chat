@@ -466,7 +466,7 @@ export const TRAIN: [Frame, Frame] = [[
   '..k...k....k...k...k..',
 ]];
 
-// A wind-up tin robot (Lv.30): an antenna, square eyes and a red mouth, a blue body with a gold
+// A wind-up tin robot (Lv.31): an antenna, square eyes and a red mouth, a blue body with a gold
 // panel; it toddles along on stiff legs while the key on its back turns.
 // prettier-ignore
 export const TIN_ROBOT: [Frame, Frame] = [[
@@ -501,7 +501,7 @@ export const TIN_ROBOT: [Frame, Frame] = [[
   '....kk.kkk...',
 ]];
 
-// A kitten (Lv.40), ginger with stripes and a white muzzle, chasing a pink ball of yarn that rolls
+// A kitten (Lv.41), ginger with stripes and a white muzzle, chasing a pink ball of yarn that rolls
 // ahead of it.
 // prettier-ignore
 export const KITTEN: [Frame, Frame] = [[
@@ -526,7 +526,7 @@ export const KITTEN: [Frame, Frame] = [[
   '.....kk..kkkk.......kkk..',
 ]];
 
-// A robot vacuum (Lv.50): a low grey disc with a shine on its lid and a blinking light; the floor
+// A robot vacuum (Lv.49): a low grey disc with a shine on its lid and a blinking light; the floor
 // sparkles where it has been.
 // prettier-ignore
 export const VACUUM: [Frame, Frame] = [[

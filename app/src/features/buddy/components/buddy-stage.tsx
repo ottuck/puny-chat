@@ -34,6 +34,7 @@ import {
 } from '../pixel/looks';
 import { type Palette, PixelSprite } from '../pixel/pixel-sprite';
 import { BUNDLE, ROOM_PALETTE, skyAt } from '../pixel/room';
+import type { FishStyle } from '../pixel/room-things';
 import {
   bowl,
   BUDDY_PALETTE,
@@ -429,6 +430,8 @@ type Props = {
   date?: string;
   // Opens the mailbox (the top level's note about the developer's letter).
   onOpenMail?: () => void;
+  // Where the goldfish lives, being compared (the preview); the bowl on its table otherwise.
+  fishStyle?: FishStyle;
 };
 
 // The room's time: the device's, or the hour and day the art preview picks.
@@ -692,6 +695,7 @@ export function BuddyStage({
   hour,
   date,
   onOpenMail,
+  fishStyle,
 }: Props) {
   const colors = useColors();
   const colorMode = useColorMode();
@@ -756,7 +760,8 @@ export function BuddyStage({
   const atTable = buddy.stage === 'CHILD' || buddy.stage === 'ADULT';
   const clock = useNow();
   const now = roomTime(clock, hour, date);
-  const decor = decorFor(buddy.level, buddy.name, plantKind, now);
+  const roomDecor = decorFor(buddy.level, buddy.name, plantKind, now);
+  const decor = fishStyle ? { ...roomDecor, fishStyle } : roomDecor;
   // The lamp, lit in the evening and at night unless switched (until the stage opens again).
   const [lampOn, setLampOn] = useState<boolean | null>(null);
   // The tree fruits while the stage is open (Lv.45): its oranges pop out one by one, and the buddy
