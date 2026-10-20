@@ -1250,15 +1250,15 @@ const PLANT_4: Frame = [
   '...kkkkkkkkkk..',
 ];
 
-// The oranges of the tree in fruit, big enough to read in pixels: round, lit at the top left with a
-// shine, a leaf on the stem. Drawn over the tree's crown at FRUIT_AT (the stage pops them out one by
+// The oranges of the tree in fruit: small, but the shine at the top left makes them stand out,
+// and a leaf on the stem. Drawn over the tree's crown at FRUIT_AT (the stage pops them out one by
 // one as the tree fruits, stage-decor.tsx), and one fallen onto the soil of the pot (FALLEN_AT).
 // prettier-ignore
 export const ORANGE: Frame = [
-  '.jP.',
-  'lwOd',
-  'OOOd',
-  '.dd.',
+  '.P.',
+  'wOO',
+  'OOd',
+  '.d.',
 ];
 // Fallen: no leaf.
 export const ORANGE_FALLEN: Frame = ORANGE.slice(1);
@@ -1266,9 +1266,9 @@ export const ORANGE_FALLEN: Frame = ORANGE.slice(1);
 export const FRUIT_AT: readonly (readonly [row: number, col: number])[] = [
   [2, 3],
   [1, 9],
-  [6, 6],
+  [6, 7],
   [8, 2],
-  [9, 10],
+  [9, 11],
 ];
 // Where one lies, fallen onto the pot's rim beside the trunk.
 export const FALLEN_AT: readonly [row: number, col: number] = [21, 10];
