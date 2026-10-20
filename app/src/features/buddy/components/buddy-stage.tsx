@@ -67,9 +67,10 @@ import {
   GUEST_MS,
   type Guest,
   GUESTS,
+  isFloorPasser,
   RoomSparkle,
   Tappable,
-  Train,
+  Passer,
   useNow,
 } from './room-props';
 import {
@@ -141,6 +142,9 @@ const HAPPENINGS = [
   'sparrow',
   'catTail',
   'train',
+  'robot',
+  'kitten',
+  'vacuum',
   'ladybug',
   'dragonfly',
   'swallow',
@@ -232,6 +236,9 @@ const ACT_LINE: Partial<Record<Act, Line>> = {
   sparrow: 'sparrow',
   catTail: 'catTail',
   train: 'train',
+  robot: 'robot',
+  kitten: 'kitten',
+  vacuum: 'vacuum',
   ladybug: 'ladybug',
   dragonfly: 'dragonfly',
   swallow: 'swallow',
@@ -257,6 +264,9 @@ const IDLE_ACTS: readonly (readonly [Act, number])[] = [
 const JOB_ACT_WEIGHT = 30;
 // The room's guests, once it has them, as often as a butterfly.
 const GUEST_WEIGHT = 8;
+// The floor's passers (the train, the tin robot, the kitten, the vacuum) together, a little more
+// often: one about every 8 to 10 minutes while the stage is open and the buddy left alone.
+const PASSER_WEIGHT = 12;
 // A child or grown-up sits down on the rug now and then.
 const SIT_WEIGHT = 10;
 
@@ -269,12 +279,17 @@ function pickIdleAct(
   dark: boolean,
   hasWindow: boolean,
 ): Act {
+  const passers = guests.filter(isFloorPasser);
   const acts: readonly (readonly [Act, number])[] = [
     ...IDLE_ACTS.filter(
       ([act]) => (hasWindow || !WEATHER.includes(act)) && (dark || act !== 'shootingStar'),
     ),
     ...(sits ? [['sit', SIT_WEIGHT] as const] : []),
-    ...guests.map((guest) => [guest, GUEST_WEIGHT] as const),
+    ...guests
+      .filter((guest) => !isFloorPasser(guest))
+      .map((guest) => [guest, GUEST_WEIGHT] as const),
+    // Those passing along the floor take turns, as one happening: one of them, now and then.
+    ...(passers.length > 0 ? [[pick(passers), PASSER_WEIGHT] as const] : []),
     ...(job ? [['job', JOB_ACT_WEIGHT] as const] : []),
   ];
   let roll = Math.random() * acts.reduce((sum, [, weight]) => sum + weight, 0);
@@ -1824,7 +1839,7 @@ export function BuddyStage({
     if (egg || leaving || active || dream) return;
     if (prop === 'window') {
       if (isGuest(act)) return say(act);
-      const atWindow = decor.guests.filter((guest) => guest !== 'train');
+      const atWindow = decor.guests.filter((guest) => !isFloorPasser(guest));
       if (atWindow.length > 0) return perform(pick(atWindow), true);
       return perform('lookAround', true, WINDOW_LINE[skyAt(now.getHours())]);
     }
@@ -2393,8 +2408,8 @@ export function BuddyStage({
         />
       ) : null}
 
-      {act === 'train' && width > 0 ? (
-        <Train key={actRun} width={width} scale={3} tick={tick} />
+      {isGuest(act) && isFloorPasser(act) && width > 0 ? (
+        <Passer key={actRun} kind={act} width={width} scale={3} tick={tick} />
       ) : null}
       {active?.kind === 'maxLevel' && width > 0 ? (
         <RoomSparkle width={width} height={height - FLOOR} tick={tick} />

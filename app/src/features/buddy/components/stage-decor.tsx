@@ -51,6 +51,7 @@ import {
   FloorToy,
   type Guest,
   GUESTS,
+  isFloorPasser,
   LowTable,
   MusicBox,
   Radio,
@@ -89,6 +90,9 @@ export type Reward =
   | 'rug3'
   | 'plant4'
   | 'train'
+  | 'robot'
+  | 'kitten'
+  | 'vacuum'
   | 'sparrow'
   | 'tatami'
   | 'lamp'
@@ -123,8 +127,9 @@ export type Reward =
   | 'sillFlower';
 
 // Shown in the guide and the buddy sheet ("next: Lv.9 window") as well. One for every level that
-// brings nothing of its own: a new stage (3, 5, 10), the job (12) and the job's changes (20, 30, 40,
-// 50) bring no thing for the room, nor does the top one, 60, where the whole room sparkles.
+// brings nothing of its own: a new stage (3, 5, 10), the job (12) and the first chance to change it
+// (20) bring no thing for the room, nor does the top one, 60, where the whole room sparkles. The later
+// chances (30, 40, 50) each bring a friend that passes along the floor, taking turns with the train.
 export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 2, reward: 'plant1' },
   { level: 4, reward: 'crate' },
@@ -149,6 +154,8 @@ export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 27, reward: 'bowl2' },
   { level: 28, reward: 'lamp' },
   { level: 29, reward: 'rug3' },
+  // The job's chances bring a friend passing along the floor too, taking turns with the train.
+  { level: 30, reward: 'robot' },
   { level: 31, reward: 'furin' },
   { level: 32, reward: 'plant4' },
   { level: 33, reward: 'dragonfly' },
@@ -158,6 +165,7 @@ export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 37, reward: 'tatami' },
   { level: 38, reward: 'kotatsu' },
   { level: 39, reward: 'swallow' },
+  { level: 40, reward: 'kitten' },
   { level: 41, reward: 'sakura' },
   { level: 42, reward: 'fishbowl' },
   { level: 43, reward: 'goldMusicBox' },
@@ -167,6 +175,7 @@ export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 47, reward: 'lampShade' },
   { level: 48, reward: 'bowl3' },
   { level: 49, reward: 'mochi' },
+  { level: 50, reward: 'vacuum' },
   { level: 51, reward: 'rug4' },
   { level: 52, reward: 'books' },
   { level: 53, reward: 'rainbow' },
@@ -341,6 +350,7 @@ const SHELF_RIGHT = 12;
 // The music box is drawn a little smaller than the shelf's other things: it is the tallest, and in
 // the corner under the buttons it looked heavy.
 const MUSIC_BOX_SIZE = 0.85;
+const SILL_POT_SIZE = 1.35;
 const SHELF_TOP = 48;
 // How long a rainbow stays after the rain.
 const RAINBOW_MS = 20_000;
@@ -469,13 +479,15 @@ export function WallDecor({
   const sillTop = top + 4 + (WINDOW_SILL_ROW + 1) * wall;
   const bearLeft = windowLeft + wall;
   const bunnyLeft = bearLeft + (BEAR[0].length - 1) * sillScale;
-  const potWidth = SILL_POT[0][0].length * sillScale;
+  // The little pot is drawn a size up from the plush friends, or it is hard to see.
+  const potScale = sillScale * SILL_POT_SIZE;
+  const potWidth = SILL_POT[0][0].length * potScale;
   const potLeft = windowLeft + windowWidth - wall - potWidth;
   const rug = RUGS[decor.rug];
   const rugWidth = rug[0].length * 3;
   const tableWidth = TABLE_CELLS * FLOOR_SCALE;
   const tableLeft = middleOf(decor, width, stationRight, plantSpace) - tableWidth / 2;
-  const guestHere = guest && guest !== 'train' ? guest : null;
+  const guestHere = guest && !isFloorPasser(guest) ? guest : null;
   // The cuckoo comes out when the clock is tapped.
   const [cuckooRun, setCuckooRun] = useState(0);
   // A rainbow after the rain, by day.
@@ -559,7 +571,7 @@ export function WallDecor({
       {decor.window && decor.sillPot ? (
         <View
           key={`pot${decor.sillPot}`}
-          style={[styles.at, { left: potLeft, top: sillTop - SILL_POT[0].length * sillScale }]}
+          style={[styles.at, { left: potLeft, top: sillTop - SILL_POT[0].length * potScale }]}
         >
           <Arrive fresh={fresh(decor.sillPot === 2 ? 'sillFlower' : 'sillPot')} width={potWidth}>
             <Tappable
@@ -568,7 +580,7 @@ export function WallDecor({
               label={t('buddy.room.sillPot')}
               onTap={() => onProp('plant')}
             >
-              <SillPot flowers={decor.sillPot === 2} scale={sillScale} />
+              <SillPot flowers={decor.sillPot === 2} scale={potScale} />
             </Tappable>
           </Arrive>
         </View>

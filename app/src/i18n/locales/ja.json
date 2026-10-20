@@ -228,7 +228,10 @@
       "nowDj": "ラジオDJ、始めるよ！",
       "nowWriter": "作家になったよ！",
       "nowBarista": "バリスタデビュー！",
-      "oranges": "みかんがなったよ!ぴかぴか"
+      "oranges": "みかんがなったよ!ぴかぴか",
+      "robot": "ピピッ、ロボットだ!こんにちは?",
+      "kitten": "子猫だ!毛糸が好きなんだね",
+      "vacuum": "お掃除ロボットが通るよ~ぴかぴか"
     },
     "graduate": {
       "title": "独り立ち",
@@ -298,7 +301,10 @@
       "waterPlants": "水草の金魚鉢",
       "catFace": "野良猫のお客さん",
       "bunny": "うさぎのぬいぐるみ",
-      "sillFlower": "花が咲いた多肉植物"
+      "sillFlower": "花が咲いた多肉植物",
+      "robot": "ぜんまいロボット",
+      "kitten": "毛糸玉と子猫",
+      "vacuum": "ロボット掃除機"
     },
     "nextReward_one": "次のごほうび：Lv.{{level}} {{reward}} · あと{{count}}レベル",
     "nextReward_other": "次のごほうび：Lv.{{level}} {{reward}} · あと{{count}}レベル",

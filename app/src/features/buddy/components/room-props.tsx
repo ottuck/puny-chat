@@ -6,7 +6,7 @@ import Svg, { Path } from 'react-native-svg';
 import { useColors } from '@/theme';
 
 import { type Box, boxPaths } from '../pixel/boxes';
-import { PixelSprite } from '../pixel/pixel-sprite';
+import { type Frame, PixelSprite } from '../pixel/pixel-sprite';
 import {
   BALL,
   CAT_TAIL,
@@ -22,7 +22,10 @@ import {
   SNAIL,
   SPARROW,
   TABLE_TOYS,
+  KITTEN,
+  TIN_ROBOT,
   TRAIN,
+  VACUUM,
   WINDOW,
   WINDOW_BARS,
   WINDOW_GLASS,
@@ -71,13 +74,16 @@ const barThickness = (scale: number) => Math.max(2, Math.round(scale * 0.6));
 
 const NATIVE_DRIVER = Platform.OS !== 'web';
 
-// The guests that come now and then, like the small happenings (buddy-stage.tsx picks them). All
-// but the train come to the window.
+// The guests that come now and then, like the small happenings (buddy-stage.tsx picks them). Most
+// come to the window; the ones in FLOOR_PASSERS go along the front of the floor instead.
 export const GUESTS = [
   'snail',
   'sparrow',
   'catTail',
   'train',
+  'robot',
+  'kitten',
+  'vacuum',
   'ladybug',
   'dragonfly',
   'swallow',
@@ -85,11 +91,18 @@ export const GUESTS = [
   'squirrel',
 ] as const;
 export type Guest = (typeof GUESTS)[number];
+// Those that pass along the front of the floor (Passer): the toy train, then the tin robot, the
+// kitten after its yarn and the robot vacuum. They take turns, as one kind of happening.
+export const FLOOR_PASSERS: readonly Guest[] = ['train', 'robot', 'kitten', 'vacuum'];
+export const isFloorPasser = (guest: Guest) => FLOOR_PASSERS.includes(guest);
 export const GUEST_MS: Record<Guest, number> = {
   snail: 7000,
   sparrow: 4200,
   catTail: 4200,
   train: 4200,
+  robot: 6500,
+  kitten: 3600,
+  vacuum: 5600,
   ladybug: 6000,
   dragonfly: 5000,
   swallow: 2600,
@@ -1050,20 +1063,32 @@ export function FloorPattern({
 
 // --- In front of the buddy ---
 
-// A toy train comes along the front of the floor and goes off the other side.
-export function Train({ width, scale, tick }: { width: number; scale: number; tick: number }) {
+// Something that passes along the front of the floor and goes off the other side: the toy train
+// (puffing), the tin robot, the kitten after its yarn, the robot vacuum (leaving sparkles).
+export function Passer({
+  kind,
+  width,
+  scale,
+  tick,
+}: {
+  kind: Guest;
+  width: number;
+  scale: number;
+  tick: number;
+}) {
   const [ride] = useState(() => new Animated.Value(0));
-  const length = TRAIN[0][0].length * scale;
+  const frames = PASSER_FRAMES[kind] ?? TRAIN;
+  const length = frames[0][0].length * scale;
   useEffect(() => {
     const move = Animated.timing(ride, {
       toValue: 1,
-      duration: GUEST_MS.train,
+      duration: GUEST_MS[kind],
       easing: Easing.linear,
       useNativeDriver: NATIVE_DRIVER,
     });
     move.start();
     return () => move.stop();
-  }, [ride]);
+  }, [ride, kind]);
   return (
     <Animated.View
       style={[
@@ -1080,22 +1105,49 @@ export function Train({ width, scale, tick }: { width: number; scale: number; ti
         },
       ]}
     >
-      {/* Puffs from the chimney, one then the other. */}
-      <View
-        style={[
-          styles.puff,
-          {
-            width: 2 * scale,
-            height: 2 * scale,
-            left: (tick % 2 === 0 ? 17 : 15) * scale,
-            top: (tick % 2 === 0 ? -3 : -5) * scale,
-          },
-        ]}
-      />
-      <PixelSprite frame={TRAIN[tick % 2]} palette={ROOM_PALETTE} scale={scale} />
+      {kind === 'train' ? (
+        // Puffs from the chimney, one then the other.
+        <View
+          style={[
+            styles.puff,
+            {
+              width: 2 * scale,
+              height: 2 * scale,
+              left: (tick % 2 === 0 ? 17 : 15) * scale,
+              top: (tick % 2 === 0 ? -3 : -5) * scale,
+            },
+          ]}
+        />
+      ) : null}
+      {kind === 'vacuum'
+        ? // The floor it has just cleaned sparkles behind it.
+          [0, 1, 2].map((i) => (
+            <View
+              key={i}
+              style={[
+                styles.at,
+                {
+                  left: -(6 + i * 9) * scale,
+                  bottom: ((i + tick) % 2) * scale,
+                  opacity: 1 - i * 0.3,
+                },
+              ]}
+            >
+              <PixelSprite frame={SPARKLE} palette={PROP_PALETTE} scale={Math.max(1, scale - 1)} />
+            </View>
+          ))
+        : null}
+      <PixelSprite frame={frames[tick % 2]} palette={ROOM_PALETTE} scale={scale} />
     </Animated.View>
   );
 }
+
+const PASSER_FRAMES: Partial<Record<Guest, [Frame, Frame]>> = {
+  train: TRAIN,
+  robot: TIN_ROBOT,
+  kitten: KITTEN,
+  vacuum: VACUUM,
+};
 
 // Fireflies at night (Lv.22): three small glows drifting about the room, blinking.
 const FIREFLIES = [

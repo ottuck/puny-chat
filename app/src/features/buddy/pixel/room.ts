@@ -466,6 +466,85 @@ export const TRAIN: [Frame, Frame] = [[
   '..k...k....k...k...k..',
 ]];
 
+// A wind-up tin robot (Lv.30): an antenna, square eyes and a red mouth, a blue body with a gold
+// panel; it toddles along on stiff legs while the key on its back turns.
+// prettier-ignore
+export const TIN_ROBOT: [Frame, Frame] = [[
+  '.....kyk.....',
+  '......k......',
+  '...kkkkkkk...',
+  '...knnnnnk...',
+  '...knkwkwk...',
+  '...knnuunk...',
+  '...kkkkkkk...',
+  '..kaaaaaaak.Y',
+  '.kkayyyyyakkY',
+  'kNkaaaaaaakYY',
+  '..kAAAAAAAk..',
+  '..kkkkkkkkk..',
+  '...kNk.kNk...',
+  '...kkk..kk...',
+], [
+  '.....kyk.....',
+  '......k......',
+  '...kkkkkkk...',
+  '...knnnnnk...',
+  '...knkwkwk...',
+  '...knnuunk...',
+  '...kkkkkkk...',
+  '..kaaaaaaakYY',
+  '.kkayyyyyakkY',
+  '..kaaaaaaakNY',
+  '..kAAAAAAAk..',
+  '..kkkkkkkkk..',
+  '...kNk.kNk...',
+  '....kk.kkk...',
+]];
+
+// A kitten (Lv.40), ginger with stripes and a white muzzle, chasing a pink ball of yarn that rolls
+// ahead of it.
+// prettier-ignore
+export const KITTEN: [Frame, Frame] = [[
+  '..........k...k..........',
+  '.k.......kxk.kxk.........',
+  'kXk......kxxxxxk.........',
+  '.kXk...kkkxkxkxk....kkk..',
+  '..kxkkkxxxxxwwxk...kpPpk.',
+  '...kxXxxXxxXxkk...kPpPpPk',
+  '...kxxxxxxxxxk....kpPpPpk',
+  '...kwk.kwk.kwk.....kPpPk.',
+  '...kk...kk..kk......kkk..',
+], [
+  '..........k...k..........',
+  '.k.......kxk.kxk.........',
+  'kXk......kxxxxxk.........',
+  '.kXk...kkkxkxkxk....kkk..',
+  '..kxkkkxxxxxwwxk...kPpPk.',
+  '...kxXxxXxxXxkk...kpPpPpk',
+  '...kxxxxxxxxxk....kPpPpPk',
+  '....kwk.kwkkwk.....kpPpk.',
+  '.....kk..kkkk.......kkk..',
+]];
+
+// A robot vacuum (Lv.50): a low grey disc with a shine on its lid and a blinking light; the floor
+// sparkles where it has been.
+// prettier-ignore
+export const VACUUM: [Frame, Frame] = [[
+  '....kkkkkkkk....',
+  '..kknnnnnnnnkk..',
+  '.knnwwnnnnnnnuk.',
+  'kNNNNNNNNNNNNNNk',
+  'kNnNNNNNNNNNNnNk',
+  '.kkkkkkkkkkkkkk.',
+], [
+  '....kkkkkkkk....',
+  '..kknnnnnnnnkk..',
+  '.knnwwnnnnnnnyk.',
+  'kNNNNNNNNNNNNNNk',
+  'kNNnNNNNNNNNnNNk',
+  '.kkkkkkkkkkkkkk.',
+]];
+
 // A firefly, for the guide: in the room they are only their glow.
 // prettier-ignore
 export const FIREFLY: Frame = [
