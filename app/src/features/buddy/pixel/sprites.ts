@@ -1252,25 +1252,26 @@ const PLANT_4: Frame = [
 
 // The oranges of the tree in fruit, big enough to read in pixels: round, lit at the top left with a
 // shine, a leaf on the stem. Drawn over the tree's crown at FRUIT_AT (the stage pops them out one by
-// one as the tree fruits, stage-decor.tsx), and one fallen on the floor by the pot.
+// one as the tree fruits, stage-decor.tsx), and one fallen onto the soil of the pot (FALLEN_AT).
 // prettier-ignore
 export const ORANGE: Frame = [
-  '..jP.',
-  '.lOO.',
-  'lwOOd',
-  'OOOOd',
-  '.dOd.',
+  '.jP.',
+  'lwOd',
+  'OOOd',
+  '.dd.',
 ];
-// Lying on the floor: no leaf.
+// Fallen: no leaf.
 export const ORANGE_FALLEN: Frame = ORANGE.slice(1);
 // Where the oranges hang on the crown (PLANT_4), by the cell of each one's top left.
 export const FRUIT_AT: readonly (readonly [row: number, col: number])[] = [
-  [2, 2],
-  [1, 8],
+  [2, 3],
+  [1, 9],
   [6, 6],
-  [8, 1],
+  [8, 2],
   [9, 10],
 ];
+// Where one lies, fallen onto the pot's rim beside the trunk.
+export const FALLEN_AT: readonly [row: number, col: number] = [21, 10];
 
 // The tree with its oranges on, for still pictures (the guide).
 function stamp(frame: Frame, part: Frame, at: readonly (readonly [number, number])[]): Frame {
@@ -1285,7 +1286,7 @@ function stamp(frame: Frame, part: Frame, at: readonly (readonly [number, number
   }
   return rows.map((row) => row.join(''));
 }
-const PLANT_5: Frame = stamp(PLANT_4, ORANGE, FRUIT_AT);
+const PLANT_5: Frame = stamp(stamp(PLANT_4, ORANGE, FRUIT_AT), ORANGE_FALLEN, [FALLEN_AT]);
 
 export type PlantTier = 1 | 2 | 3 | 4 | 5;
 // The tree in fruit without its oranges, for drawing them over it.
