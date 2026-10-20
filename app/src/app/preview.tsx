@@ -410,6 +410,9 @@ function Preview() {
   // A job changed in the details plays on the stage once they close, as in the app.
   const [jobCheer, setJobCheer] = useState<Reaction | null>(null);
   const [foldAll, setFoldAll] = useState({ open: false, run: 0 });
+  // The hot spring: each press opens the stage there again; snow on it by the season, or on or off.
+  const [bathRun, setBathRun] = useState(0);
+  const [bathSnow, setBathSnow] = useState<boolean | undefined>(undefined);
 
   return (
     <FoldAll.Provider value={foldAll}>
@@ -433,9 +436,10 @@ function Preview() {
             ) : null}
             {/* The bath is the button in the corner, as in the app. */}
             <BuddyScene
-              key={dreamRun}
+              key={`${dreamRun}-${bathRun}`}
               dreams={dreamRun > 0 ? 'always' : false}
-              startInBath={params.scene === 'bath'}
+              startInBath={params.scene === 'bath' || bathRun > 0}
+              bathSnow={bathSnow}
               buddy={buddyOf(stage, job, hungry, poops, level, jobChangedAt)}
               busy={false}
               height={stageHeight}
@@ -506,6 +510,16 @@ function Preview() {
                 active={dreamCut === i}
               />
             ))}
+          </Group>
+          <Group title="hot spring (snow lies on the fence and floor)">
+            <Chip label="go to the bath" onPress={() => setBathRun((n) => n + 1)} />
+            <Chip
+              label="snow by season"
+              onPress={() => setBathSnow(undefined)}
+              active={bathSnow === undefined}
+            />
+            <Chip label="snow on" onPress={() => setBathSnow(true)} active={bathSnow === true} />
+            <Chip label="snow off" onPress={() => setBathSnow(false)} active={bathSnow === false} />
           </Group>
           <Group title="moving out (from a hatched buddy)">
             <Chip label="go its own way" onPress={leave} />

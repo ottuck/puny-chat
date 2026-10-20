@@ -9,7 +9,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import Svg, { Rect } from 'react-native-svg';
+import Svg, { Path, Rect } from 'react-native-svg';
 
 import { useColors } from '@/theme';
 
@@ -30,7 +30,8 @@ import { type Frame, PixelSprite } from '../pixel/pixel-sprite';
 import { BUDDY_PALETTE, buddyFrame, NOTE, type Pose } from '../pixel/sprites';
 import { CORNER_SIZE, FLOOR, gridScale } from './buddy-stage';
 import { SpeechBubble } from './speech-bubble';
-import { Snowfall } from './weather';
+import { boxPaths } from '../pixel/boxes';
+import { Snowfall, SNOW, SNOW_SHADE } from './weather';
 
 // The hot spring (docs/fun-improvements.md, 목욕): the buddy soaks in a wooden tub in the middle of
 // the stage, steam rising, a towel on its head. Nothing happens to it here: it shows the buddy as it
@@ -58,6 +59,19 @@ const TAP_LINES = ['bathTap1', 'bathTap2', 'bathTap3'] as const;
 type Line = (typeof LINES)[number] | (typeof TAP_LINES)[number];
 // Tile seams on the stone floor, in points.
 const TILE = 28;
+
+// Snow lying on the fence in winter: a cell of it on every part of a pole or rail with nothing
+// above, so the tops of the poles and the rails between them are capped white. In cells, from a
+// row above the fence.
+function fenceSnow(frame: Frame): [number, number][] {
+  const caps: [number, number][] = [];
+  frame.forEach((line, row) =>
+    [...line].forEach((cell, col) => {
+      if (cell !== '.' && (row === 0 || frame[row - 1][col] === '.')) caps.push([col, row]);
+    }),
+  );
+  return caps;
+}
 
 function useTick(ms: number): number {
   const [tick, setTick] = useState(0);
@@ -327,7 +341,8 @@ export function BathStage({
   const grid = buddyFrame(stage, 'idle');
   const scale = gridScale(height, grid.length);
   const tub = tubFor(stage);
-  const fenceHeight = fence(1).length * scale;
+  const fenceFrame = fence(Math.max(1, Math.ceil(width / scale)));
+  const fenceHeight = fenceFrame.length * scale;
   const tubWidth = tub.front[0].length * scale;
   const tubLeft = Math.round((width - tubWidth) / 2);
   const tubBottom = FLOOR - 4;
@@ -374,12 +389,29 @@ export function BathStage({
             />
           ))}
           <View style={[styles.absolute, { left: 0, bottom: 0 }]}>
-            <PixelSprite
-              frame={fence(Math.ceil(width / scale))}
-              palette={BATH_PALETTE}
-              scale={scale}
-            />
+            <PixelSprite frame={fenceFrame} palette={BATH_PALETTE} scale={scale} />
           </View>
+          {snowing ? (
+            // Snow lying on the fence, a cell deep with a bluish underside.
+            <View style={[styles.absolute, { left: 0, bottom: 0 }]}>
+              <Svg width={width} height={fenceHeight + scale}>
+                {boxPaths(
+                  fenceSnow(fenceFrame).flatMap(([col, row]) => [
+                    { x: col * scale, y: row * scale, w: scale, h: scale, fill: SNOW },
+                    {
+                      x: col * scale,
+                      y: row * scale + scale * 0.7,
+                      w: scale,
+                      h: scale * 0.3,
+                      fill: SNOW_SHADE,
+                    },
+                  ]),
+                ).map(({ fill, d }) => (
+                  <Path key={fill} d={d} fill={fill} />
+                ))}
+              </Svg>
+            </View>
+          ) : null}
           <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.bathDim }]} />
         </View>
       ) : null}
@@ -410,6 +442,22 @@ export function BathStage({
                 fill={colors.bathLine}
               />,
             ])}
+            {snowing ? (
+              // Snow along the stone floor's edge, in drifts, and a little in the joints.
+              <Path
+                d={boxPaths([
+                  { x: 0, y: 0, w: width, h: 4, fill: SNOW },
+                  ...[...Array(Math.ceil(width / TILE) + 1)].flatMap((_, i) => [
+                    { x: i * TILE + 5, y: 0, w: 14, h: 7, fill: SNOW },
+                    { x: i * TILE + 8, y: 7, w: 7, h: 2, fill: SNOW },
+                    { x: i * TILE + TILE / 2 - 2, y: FLOOR / 2, w: 6, h: 3, fill: SNOW },
+                  ]),
+                ])
+                  .map(({ d }) => d)
+                  .join('')}
+                fill={SNOW}
+              />
+            ) : null}
           </Svg>
         ) : null}
       </View>
