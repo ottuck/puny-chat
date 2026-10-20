@@ -60,7 +60,7 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
    ```
    빌드 번호는 EAS가 올린다(`appVersionSource: remote`). 첫 빌드 때 Apple 로그인으로 만든 배포 인증서·App Store 프로필·
    App Store Connect API 키가 EAS에 있고 `eas.json`에 `ascAppId`가 있어서, 다음부터는 `--non-interactive`로도 빌드·업로드된다.
-   Apple 처리(5~10분)가 끝나면 메일이 오고 TestFlight 탭에 보인다. 내부 테스터("Team (Expo)" 그룹)는 심사 없이 설치한다.
+   Apple 처리(5–10분)가 끝나면 메일이 오고 TestFlight 탭에 보인다. 내부 테스터("Team (Expo)" 그룹)는 심사 없이 설치한다.
 4. **App Store Connect 정보.**
    - 개인정보처리방침 `https://puny-chat.com/privacy`, 지원 URL `https://puny-chat.com/support`
    - 판매 지역: 중국 본토와 EU를 뺀 전 세계. 중국 본토는 ICP 등록이 필요하고, EU는 DSA 판매자 신고를 하지 않는다.

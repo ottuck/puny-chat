@@ -1,6 +1,6 @@
 # puny-chat (코드·폴더 이름: buddy-chat)
 
-1~2명이 작은 가상 생명체(Buddy)를 함께 키우며 쓰는 초경량 1:1 실시간 채팅 앱.
+1–2명이 작은 가상 생명체(Buddy)를 함께 키우며 쓰는 초경량 1:1 실시간 채팅 앱.
 **Chat first. Buddy makes it fun.** iOS가 기준 플랫폼이고 Web은 보조, Android는 나중.
 
 - 명세(제품 원칙·범위, Buddy, 컬렉션, API, WebSocket 프로토콜, 규칙, 인프라, 문의·신고 운영): `docs/PROJECT.md` — 기능·범위·서버를 바꾸기 전에 읽는다.
@@ -157,7 +157,7 @@
 - Chat이 항상 핵심이다. Buddy 때문에 채팅 UX를 희생하지 않는다. Buddy는 가벼운 virtual pet이지 게임이 아니다.
 - MVP에 없는 기능(게임 요소, AI Chat, 파일·동영상 첨부 등)을 임의로 추가하지 않는다. 사진은 한 장씩 보내는 것만 있다(`docs/PROJECT.md`의 사진). Pokémon/Tamagotchi IP를 쓰지 않는다.
 - iOS UX가 기준이다(Safe Area, 키보드, 스크롤). Web은 같은 모바일 레이아웃을 가운데 정렬하고 최대 폭만 제한한다.
-  넓은 창(768px~)에서는 폰 크기 틀에 담는다: CSS 미디어 쿼리(`app/+html.tsx`)가 `WebFrame`의 id를 꾸민다. 창 폭을 JS로 재서
+  넓은 창(768px 이상)에서는 폰 크기 틀에 담는다: CSS 미디어 쿼리(`app/+html.tsx`)가 `WebFrame`의 id를 꾸민다. 창 폭을 JS로 재서
   구조를 바꾸면 경계를 넘을 때 앱 전체가 다시 마운트되므로 그렇게 하지 않는다. 모달 시트도 `WebFrame`으로 감싼다.
 - 초대 링크 `join?code=`: 로그인 전이면 `features/room/pending-invite`가 코드를 기억했다가 이름을 정한 뒤 참가 화면을 연다.
   복사는 `lib/clipboard`(`expo-clipboard`, 앱·웹 공용).
@@ -192,4 +192,4 @@
   `refactor` / `test` / `documentation`)와 바뀐 영역(`area: app` / `area: server` / `area: infra` / `area: auth` /
   `area: i18n` / `area: docs`). 예: `gh pr create --assignee ottuck --label enhancement --label "area: app"`
 - PR 본문은 사람이 쓴 것처럼 짧고 담백하게. 무엇을 왜 바꿨는지, 어떻게 확인했는지 위주로 쓰고 과한 제목·굵은 글씨·
-  번역투("~를 진행합니다", "~하였습니다")는 피한다.
+  번역투("\~를 진행합니다", "\~하였습니다")는 피한다.
