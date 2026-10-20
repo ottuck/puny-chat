@@ -596,35 +596,13 @@ export function WallDecor({
         </View>
       ) : null}
 
-      {/* The shelf in the top right, under the corner's buttons, comes with the music box: the music
-          box at its left end, the radio at the right, the books between them. Up there the buddy
-          never hides them. */}
+      {/* The shelf in the top right, under the corner's buttons, comes with the music box: the radio
+          at its left end, the books in the middle, and the music box, the tallest, at the right
+          against the corner, where it looks steadier. Up there the buddy never hides them. */}
       {decor.musicBox ? (
         <View style={[styles.at, styles.box, { right: SHELF_RIGHT, top: SHELF_TOP }]}>
           <Arrive fresh={fresh('musicBox')} width={shelfWidth}>
             <View style={[styles.shelfRow, { paddingHorizontal: 2 * shelfScale }]}>
-              <Arrive
-                key={decor.goldMusicBox ? 'gold' : 'wood'}
-                fresh={decor.goldMusicBox && fresh('goldMusicBox')}
-                width={MUSIC_BOX[0][0].length * shelfScale}
-              >
-                <MusicBox
-                  scale={shelfScale}
-                  playing={singing}
-                  tick={tick}
-                  gold={decor.goldMusicBox}
-                  onPlay={onMusic}
-                />
-              </Arrive>
-              {decor.books ? (
-                <Arrive fresh={fresh('books')} width={BOOKS[0].length * shelfScale}>
-                  <Tappable kind="rattle" label={t('buddy.room.books')}>
-                    <PixelSprite frame={BOOKS} palette={THINGS_PALETTE} scale={shelfScale} />
-                  </Tappable>
-                </Arrive>
-              ) : (
-                <View style={{ width: BOOKS[0].length * shelfScale }} />
-              )}
               {decor.radio ? (
                 <Arrive
                   key={`radio${decor.radio}`}
@@ -642,6 +620,28 @@ export function WallDecor({
               ) : (
                 <View style={{ width: radioWidth }} />
               )}
+              {decor.books ? (
+                <Arrive fresh={fresh('books')} width={BOOKS[0].length * shelfScale}>
+                  <Tappable kind="rattle" label={t('buddy.room.books')}>
+                    <PixelSprite frame={BOOKS} palette={THINGS_PALETTE} scale={shelfScale} />
+                  </Tappable>
+                </Arrive>
+              ) : (
+                <View style={{ width: BOOKS[0].length * shelfScale }} />
+              )}
+              <Arrive
+                key={decor.goldMusicBox ? 'gold' : 'wood'}
+                fresh={decor.goldMusicBox && fresh('goldMusicBox')}
+                width={MUSIC_BOX[0][0].length * shelfScale}
+              >
+                <MusicBox
+                  scale={shelfScale}
+                  playing={singing}
+                  tick={tick}
+                  gold={decor.goldMusicBox}
+                  onPlay={onMusic}
+                />
+              </Arrive>
             </View>
             <View style={{ marginTop: -shelfScale }}>
               <PixelSprite frame={SHELF} palette={THINGS_PALETTE} scale={shelfScale} />

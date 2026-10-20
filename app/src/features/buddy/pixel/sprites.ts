@@ -553,6 +553,9 @@ export type Station = {
   // A tool in its hand while it works, by the grid cell of the tool's top left.
   // Drawn at `size` of the buddy's pixel size, its right edge (the handle) kept at the hand.
   held?: { frames: [Frame, Frame]; row: number; col: number; size?: number };
+  // Its small light at night (room-light.tsx), by the cell it glows from and its color: so the left
+  // of the room is not all dark when the lamp lights the right.
+  light: { col: number; row: number; color: string };
 };
 
 // A kitchen counter: a pot on a lit burner (the flame flickers, the steam drifts), a cutting board
@@ -825,16 +828,37 @@ export const HELD_CAN: [Frame, Frame] = [[
 ]];
 
 export const JOB_STATIONS: Record<BuddyJob, Station> = {
-  CHEF: { frames: KITCHEN, sink: 3, standAt: 3 },
+  // The burner's flame under the pot.
+  CHEF: { frames: KITCHEN, sink: 3, standAt: 3, light: { col: 3.5, row: 7, color: '#FF9A4A' } },
+  // A soft green glow in the leaves, like fireflies resting there.
   GARDENER: {
     frames: BIG_PLANT,
     sink: 1,
     standAt: 15,
     held: { frames: HELD_CAN, row: 12, col: -8, size: 0.6 },
+    light: { col: 6, row: 9, color: '#C8F59A' },
   },
-  DJ: { frames: RADIO_DESK, sink: 3, standAt: 3 },
-  WRITER: { frames: WRITING_DESK, sink: 3, standAt: 3 },
-  BARISTA: { frames: CAFE_COUNTER, sink: 3, standAt: 3 },
+  // The red on-air light on the desk.
+  DJ: {
+    frames: RADIO_DESK,
+    sink: 3,
+    standAt: 3,
+    light: { col: 20.5, row: 15.5, color: '#FF6A7E' },
+  },
+  // The candle on the desk.
+  WRITER: {
+    frames: WRITING_DESK,
+    sink: 3,
+    standAt: 3,
+    light: { col: 1.5, row: 2.5, color: '#FFD27A' },
+  },
+  // The espresso machine's warm light.
+  BARISTA: {
+    frames: CAFE_COUNTER,
+    sink: 3,
+    standAt: 3,
+    light: { col: 4, row: 4, color: '#FFC07A' },
+  },
 };
 
 // --- Decorations (docs/PROJECT.md, 무대 꾸미기) ---

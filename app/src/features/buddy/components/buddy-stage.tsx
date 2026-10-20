@@ -2396,6 +2396,18 @@ export function BuddyStage({
           floorTop={height - FLOOR}
           glass={glass}
           lamp={decor.lamp && lampLit ? lampShadeAt(width, height, FLOOR, plantRoom) : null}
+          station={
+            station
+              ? {
+                  x: STATION_LEFT + station.light.col * scale,
+                  y:
+                    height -
+                    (FLOOR - station.sink * scale) -
+                    (station.frames[0].length - station.light.row) * scale,
+                  color: station.light.color,
+                }
+              : null
+          }
           dark={colorMode === 'dark'}
         />
       ) : null}
