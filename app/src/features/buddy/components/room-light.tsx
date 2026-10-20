@@ -2,6 +2,8 @@ import { useEffect, useId, useState } from 'react';
 import { Animated, Easing, Platform, StyleSheet, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 
+import { WINDOW_BARS, WINDOW_GLASS } from '../pixel/room';
+
 // The light in the room by the hour (docs/fun-improvements.md, 방의 빛): one room, colored by the
 // time instead of drawn again. Morning is fresh and a little blue, the sun slanting in through the
 // window with motes of dust glinting in it; the day is as it is; at dusk the room
@@ -10,11 +12,13 @@ import Svg, { Defs, LinearGradient, Polygon, RadialGradient, Rect, Stop } from '
 // softly, around itself. Over the room and the buddy; under the name, the buttons and the notes.
 
 const NATIVE_DRIVER = Platform.OS !== 'web';
-// The window's panes, in the glass's cells (room.ts, WINDOW_GLASS): left of the mullion, and right.
-const GLASS_CELLS = 20;
+// The window's panes, in the glass's cells (room.ts, WINDOW_GLASS and WINDOW_BARS): three, either
+// side of the two thin bars down the glass.
+const GLASS_CELLS = WINDOW_GLASS.cols;
 const PANES = [
-  [0, 9],
-  [11, 20],
+  [0, WINDOW_BARS.cols[0] - 0.3],
+  [WINDOW_BARS.cols[0] + 0.3, WINDOW_BARS.cols[1] - 0.3],
+  [WINDOW_BARS.cols[1] + 0.3, WINDOW_GLASS.cols],
 ] as const;
 
 export type RoomHour = 'morning' | 'day' | 'dusk' | 'night';
