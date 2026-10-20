@@ -25,8 +25,8 @@ public record BuddyView(
         @Nullable BuddyJob job,
         // Until the job is settled (a child, or a new grown-up), the job it is heading for so far.
         @Nullable BuddyJob leaning,
-        // The members may change the job now (BuddyRules.canChangeJob): once at 20 and at 30, freely from
-        // the top level.
+        // The members may change the job now (BuddyRules.canChangeJob): once in each of 20–29, 30–39, 40–49
+        // and 50–59, freely from the top level.
         boolean canChangeJob,
         // While it cannot be changed: the level the next change opens at.
         @Nullable Integer jobChangeAt) {
