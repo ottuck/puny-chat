@@ -30,7 +30,7 @@ public record BuddyView(
         boolean canChangeJob,
         // While it cannot be changed: the level the next change opens at.
         @Nullable Integer jobChangeAt,
-        // What it made the members at work, newest first (docs/fun-improvements.md, 직업 선물).
+        // What it made the members at work, newest first (docs/fun-improvements.md, 직업 이벤트).
         List<Gift> gifts) {
 
     public static BuddyView of(Buddy buddy, Instant now) {

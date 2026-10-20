@@ -28,7 +28,7 @@ import org.jspecify.annotations.Nullable;
  *     job, and a first pick, do not count
  * @param lastWorkedAt when a grown-up last earned EXP for work at its station; null if never
  * @param lastBathedAt when it last earned EXP for a trip to the hot spring; null if never
- * @param giftDays member id → the day (Asia/Tokyo) the buddy last made that member a gift at its station
+ * @param giftDays member id → the day (Asia/Tokyo) of the buddy's last job event for that member
  * @param gifts what it made, oldest first, the last {@link BuddyRules#GIFTS_KEPT}; null if none yet
  */
 public record Buddy(

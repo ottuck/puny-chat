@@ -201,7 +201,7 @@ class BuddyFlowTest {
     }
 
     @Test
-    void atWorkAGrownUpWithAJobMakesEachMemberAGiftOnceADay() {
+    void atWorkAGrownUpWithAJobHasAnEventForEachMemberOnceInAFewDays() {
         String roomId = duoRoom("henry", "yuki");
         setExp(roomId, BuddyRules.minExp(BuddyRules.JOB_AT));
         setBuddy(roomId, new Update().set("buddy.job", "BARISTA"));
@@ -226,6 +226,9 @@ class BuddyFlowTest {
         assertThat(yukiWork.buddy().gifts()).hasSize(2);
         assertThat(yukiWork.buddy().gifts().getFirst().to()).isEqualTo(yuki); // newest first
 
+        // Not again until GIFT_EVERY_DAYS days have gone by.
+        clock.advance(Duration.ofDays(BuddyRules.GIFT_EVERY_DAYS - 1));
+        assertThat(care("henry", "work").buddy().gifts()).hasSize(2);
         clock.advance(Duration.ofDays(1));
         assertThat(care("henry", "work").buddy().gifts()).hasSize(3);
         assertThat(timeline("yuki").stream().filter("GIFT"::equals)).hasSize(3);
@@ -252,9 +255,9 @@ class BuddyFlowTest {
         String roomId = duoRoom("henry", "yuki");
         setExp(roomId, BuddyRules.minExp(BuddyRules.JOB_AT));
         setBuddy(roomId, new Update().set("buddy.job", "CHEF"));
-        for (int day = 0; day <= BuddyRules.GIFTS_KEPT; day++) {
+        for (int time = 0; time <= BuddyRules.GIFTS_KEPT; time++) {
             care("henry", "work");
-            clock.advance(Duration.ofDays(1));
+            clock.advance(Duration.ofDays(BuddyRules.GIFT_EVERY_DAYS));
         }
 
         List<Gift> kept = room("henry").buddy().gifts();

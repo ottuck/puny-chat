@@ -4,6 +4,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
+import java.util.stream.IntStream;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -20,8 +22,9 @@ public final class BuddyRules {
     // A grown-up's work at its station: EXP for it once in this long (docs/PROJECT.md, 직업 무대 장치).
     public static final int WORK_EXP = 2;
     public static final Duration WORK_EVERY = Duration.ofHours(1);
-    // What it makes at work for each member, once a day per member (docs/fun-improvements.md, 직업 선물),
-    // and how many it keeps for the mailbox.
+    // What it does at work for each member, once in this many days per member (docs/fun-improvements.md,
+    // 직업 이벤트), and how many it keeps for the mailbox.
+    public static final int GIFT_EVERY_DAYS = 3;
     public static final int GIFTS_KEPT = 30;
     static final int GIFT_PICKS = 1000;
     // A trip to the hot spring after a while away from it: EXP once in this long (docs/fun-improvements.md, 목욕).
@@ -194,5 +197,13 @@ public final class BuddyRules {
 
     static String day(Instant now) {
         return LocalDate.ofInstant(now, DAY_ZONE).toString();
+    }
+
+    /** Today and the days before it, {@code count} in all, as {@link #day} writes them. */
+    static List<String> lastDays(Instant now, int count) {
+        LocalDate today = LocalDate.ofInstant(now, DAY_ZONE);
+        return IntStream.range(0, count)
+                .mapToObj(i -> today.minusDays(i).toString())
+                .toList();
     }
 }

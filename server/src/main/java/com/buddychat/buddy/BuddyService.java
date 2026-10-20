@@ -153,10 +153,11 @@ public class BuddyService {
     }
 
     /**
-     * The day's gift for the member at work (docs/fun-improvements.md, 직업 선물): once a day per member,
-     * whether or not this work earned EXP, from a buddy with a job. One conditional update on the
-     * member's day, so two taps at once give one; the gift is kept for the mailbox and announced in
-     * the timeline. Empty when there is none to give.
+     * The job event for the member at work (docs/fun-improvements.md, 직업 이벤트): once in
+     * {@link BuddyRules#GIFT_EVERY_DAYS} days per member, whether or not this work earned EXP, from a
+     * buddy with a job. One conditional update on the member's last day, so two taps at once give one;
+     * it is kept (a writer's letter is read from there) and announced in the timeline. Empty when it
+     * is not due.
      */
     private Mono<BuddyView> gift(String roomId, String memberId, Instant now) {
         if (!gifts) return Mono.empty();
@@ -179,7 +180,7 @@ public class BuddyService {
                     .and("buddy.job")
                     .is(buddy.job())
                     .and(day)
-                    .ne(today));
+                    .nin(BuddyRules.lastDays(now, BuddyRules.GIFT_EVERY_DAYS)));
             Update give = new Update()
                     .set(day, today)
                     .push("buddy.gifts")
