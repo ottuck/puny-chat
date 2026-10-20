@@ -131,7 +131,8 @@ export type Reward =
 // Shown in the guide and the buddy sheet ("next: Lv.9 window") as well. One for every level that
 // brings nothing of its own: a new stage (3, 5, 10), the job (12) and the first chance to change it
 // (20) bring no thing for the room, nor does the top one, 60, where the whole room sparkles. The later
-// chances (30, 40, 50) each bring a friend that passes along the floor, taking turns with the train.
+// chances (30, 40, 50) each bring a thing that comes only in its season (the wind chime, the cherry
+// petals, the New Year's mochi).
 export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 2, reward: 'plant1' },
   { level: 4, reward: 'crate' },
@@ -156,9 +157,10 @@ export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 27, reward: 'bowl2' },
   { level: 28, reward: 'lamp' },
   { level: 29, reward: 'rug3' },
-  // The job's chances bring a friend passing along the floor too, taking turns with the train.
-  { level: 30, reward: 'robot' },
-  { level: 31, reward: 'furin' },
+  // The job's later chances bring a thing of the season (seen only in its season, so the level's own
+  // news is the job; the levels between keep the things there all year).
+  { level: 30, reward: 'furin' },
+  { level: 31, reward: 'robot' },
   { level: 32, reward: 'plant4' },
   { level: 33, reward: 'dragonfly' },
   { level: 34, reward: 'bear' },
@@ -167,8 +169,8 @@ export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 37, reward: 'tatami' },
   { level: 38, reward: 'kotatsu' },
   { level: 39, reward: 'swallow' },
-  { level: 40, reward: 'kitten' },
-  { level: 41, reward: 'sakura' },
+  { level: 40, reward: 'sakura' },
+  { level: 41, reward: 'kitten' },
   { level: 42, reward: 'fishbowl' },
   { level: 43, reward: 'goldMusicBox' },
   { level: 44, reward: 'tea' },
@@ -176,8 +178,8 @@ export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 46, reward: 'owl' },
   { level: 47, reward: 'lampShade' },
   { level: 48, reward: 'bowl3' },
-  { level: 49, reward: 'mochi' },
-  { level: 50, reward: 'vacuum' },
+  { level: 49, reward: 'vacuum' },
+  { level: 50, reward: 'mochi' },
   { level: 51, reward: 'rug4' },
   { level: 52, reward: 'books' },
   { level: 53, reward: 'rainbow' },

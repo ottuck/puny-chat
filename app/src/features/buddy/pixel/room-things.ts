@@ -40,7 +40,7 @@ export const GOLD_PALETTE: Palette = {
 
 // --- At the window ---
 
-// A glass wind chime (Lv.31, in summer) at the top of the glass: a red pattern on the bell, the
+// A glass wind chime (Lv.30, in summer) at the top of the glass: a red pattern on the bell, the
 // clapper, and its paper strip swinging in the breeze.
 // prettier-ignore
 export const FURIN: [Frame, Frame] = [[
@@ -136,7 +136,7 @@ export const HANGING_PLANT: Frame = (() => {
   return rows.map((line) => line.join(''));
 })();
 
-// A cherry petal drifting past the glass (Lv.41, in spring).
+// A cherry petal drifting past the glass (Lv.40, in spring).
 // prettier-ignore
 export const PETAL: Frame = [
   'pp',
@@ -576,7 +576,7 @@ export const TEA: Frame = [
   '.kkkk...kkk',
 ];
 
-// Kagami mochi on its little stand, an orange on top (Lv.49, at the New Year).
+// Kagami mochi on its little stand, an orange on top (Lv.50, at the New Year).
 // prettier-ignore
 export const MOCHI: Frame = [
   '....kk....',

@@ -932,7 +932,7 @@ function Bubble({ scale, col, delay }: { scale: number; col: number; delay: numb
 }
 
 // The low table on the rug (Lv.38), a kotatsu in winter, with tea (Lv.44) and, at the New Year,
-// kagami mochi (Lv.49). The tea steams.
+// kagami mochi (Lv.50). The tea steams.
 export const TABLE_CELLS = LOW_TABLE[0].length;
 
 export function LowTable({
