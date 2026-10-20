@@ -1,6 +1,15 @@
 import { useEffect, useId, useState } from 'react';
 import { Animated, Easing, Platform, StyleSheet, View } from 'react-native';
-import Svg, { Defs, LinearGradient, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, {
+  Circle,
+  Defs,
+  LinearGradient,
+  Mask,
+  Polygon,
+  RadialGradient,
+  Rect,
+  Stop,
+} from 'react-native-svg';
 
 import { WINDOW_BARS, WINDOW_GLASS } from '../pixel/room';
 
@@ -8,10 +17,14 @@ import { WINDOW_BARS, WINDOW_GLASS } from '../pixel/room';
 // time instead of drawn again. Morning is fresh and a little blue, the sun slanting in through the
 // window with motes of dust glinting in it; the day is as it is; at dusk the room
 // keeps its colors while the window glows orange and throws shafts of light, bright where they land;
-// at night it goes dark blue, and only the standing lamp (or the moon at the window) lights it,
-// softly, around itself. Over the room and the buddy; under the name, the buttons and the notes.
+// at night it goes dark blue, and the standing lamp (or the moon at the window) lights it, softly,
+// around itself. With the lamp on the moon still shines faintly at the window, and a grown-up's job
+// station has a small light of its own on the left (sprites.ts, JOB_STATIONS). Over the room and the buddy; under the name, the buttons and the notes.
 
 const NATIVE_DRIVER = Platform.OS !== 'web';
+// A job station's small light at night: how far it clears the dark, and its round glow.
+const STATION_REACH = 110;
+const STATION_HALO = 30;
 // The window's panes, in the glass's cells (room.ts, WINDOW_GLASS and WINDOW_BARS): three, either
 // side of the two thin bars down the glass.
 const GLASS_CELLS = WINDOW_GLASS.cols;
@@ -39,6 +52,7 @@ export function RoomLight({
   floorTop,
   glass,
   lamp,
+  station = null,
   dark,
 }: {
   hour: RoomHour;
@@ -50,6 +64,8 @@ export function RoomLight({
   glass: Box | null;
   // The lit lamp's shade, if it is on.
   lamp: { x: number; y: number } | null;
+  // The job station's small light at night, if there is a station.
+  station?: { x: number; y: number; color: string } | null;
   // Dark mode: the stage is dark already, the light goes easier on it.
   dark: boolean;
 }) {
@@ -116,6 +132,48 @@ export function RoomLight({
               <Stop offset="1" stopColor="#FFC27A" stopOpacity={0} />
             </RadialGradient>
           ) : null}
+          {/* The moon at the window, faint beside the lamp's light. */}
+          {lamp && glass ? (
+            <RadialGradient
+              id={`moon${id}`}
+              cx={glass.left + glass.width / 2}
+              cy={glass.top + glass.height / 2}
+              r={glass.width * 0.9}
+              gradientUnits="userSpaceOnUse"
+            >
+              <Stop offset="0" stopColor="#C4D6FF" stopOpacity={0.24 * soften} />
+              <Stop offset="0.5" stopColor="#9FB8FF" stopOpacity={0.09 * soften} />
+              <Stop offset="1" stopColor="#9FB8FF" stopOpacity={0} />
+            </RadialGradient>
+          ) : null}
+          {/* The station's light clears the night around it, as the lamp's does: the dark is
+              masked away there, so the things nearby show in their own colors. */}
+          {station ? (
+            <>
+              <RadialGradient
+                id={`hole${id}`}
+                cx={station.x}
+                cy={station.y}
+                r={STATION_REACH}
+                gradientUnits="userSpaceOnUse"
+              >
+                <Stop offset="0" stopColor="#000000" stopOpacity={1} />
+                <Stop offset="0.35" stopColor="#000000" stopOpacity={0.85} />
+                <Stop offset="1" stopColor="#000000" stopOpacity={0} />
+              </RadialGradient>
+              <Mask
+                id={`lit${id}`}
+                x={0}
+                y={0}
+                width={width}
+                height={height}
+                maskUnits="userSpaceOnUse"
+              >
+                <Rect x={0} y={0} width={width} height={height} fill="#FFFFFF" />
+                <Rect x={0} y={0} width={width} height={height} fill={`url(#hole${id})`} />
+              </Mask>
+            </>
+          ) : null}
           {glow ? (
             <RadialGradient
               id={`night${id}`}
@@ -145,11 +203,50 @@ export function RoomLight({
           ) : null}
         </Defs>
         {hour === 'night' ? (
-          glow ? (
-            <Rect x={0} y={0} width={width} height={height} fill={`url(#night${id})`} />
-          ) : (
-            <Rect x={0} y={0} width={width} height={height} fill="#2C40A0" opacity={0.3 * soften} />
-          )
+          <>
+            {glow ? (
+              <Rect
+                x={0}
+                y={0}
+                width={width}
+                height={height}
+                fill={`url(#night${id})`}
+                mask={station ? `url(#lit${id})` : undefined}
+              />
+            ) : (
+              <Rect
+                x={0}
+                y={0}
+                width={width}
+                height={height}
+                fill="#2C40A0"
+                opacity={0.3 * soften}
+                mask={station ? `url(#lit${id})` : undefined}
+              />
+            )}
+            {lamp && glass ? (
+              <Rect x={0} y={0} width={width} height={height} fill={`url(#moon${id})`} />
+            ) : null}
+            {station ? (
+              // A clear round glow in the light's color, like the lamp's, and its bright middle.
+              <>
+                <Circle
+                  cx={station.x}
+                  cy={station.y}
+                  r={STATION_HALO}
+                  fill={station.color}
+                  opacity={0.3}
+                />
+                <Circle
+                  cx={station.x}
+                  cy={station.y}
+                  r={STATION_HALO * 0.45}
+                  fill={station.color}
+                  opacity={0.35}
+                />
+              </>
+            ) : null}
+          </>
         ) : hour === 'dusk' ? (
           // At dusk the room keeps its own colors, only a breath warmer; the glow around the window
           // and the light it throws stand out against them.
