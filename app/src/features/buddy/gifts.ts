@@ -7,7 +7,7 @@ import { isJob } from './jobs';
 // in the translations: its name, the name in the chat line, and the buddy's note with it.
 export const GIFTS = {
   BARISTA: ['latte', 'icedAmericano', 'caramelMacchiato', 'matchaLatte', 'chipFrappe'],
-  CHEF: ['omurice', 'ramen', 'pancakes', 'riceBalls', 'curry'],
+  CHEF: ['omurice', 'ramen', 'pancakes', 'riceBalls', 'gyoza'],
   GARDENER: ['rose', 'tulips', 'sunflower', 'succulent', 'flowers'],
   DJ: ['record1', 'record2', 'record3', 'record4', 'record5'],
   WRITER: ['sea', 'forest', 'stars', 'cat', 'autumn'],

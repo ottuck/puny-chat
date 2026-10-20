@@ -459,10 +459,10 @@
           "inChat": "rice balls",
           "line": "A little salt, a lot of care."
         },
-        "curry": {
-          "name": "Curry",
-          "inChat": "curry",
-          "line": "Tastes like it sat overnight. It was an hour, really."
+        "gyoza": {
+          "name": "Gyoza",
+          "inChat": "some gyoza",
+          "line": "Crispy on the bottom. Go easy on the soy sauce."
         }
       },
       "GARDENER": {

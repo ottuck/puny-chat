@@ -78,6 +78,8 @@ MAT = {
     'seed': (['#4A2C18', '#643C22', '#7E5030', '#A07048'], '#33200F'),
     'pebble': (['#A8A29A', '#BFB9B0', '#D4CFC8', '#E8E4DE'], '#76706A'),
     'agave': (['#5E9A8A', '#7CB6A4', '#A0CEBE', '#C8E6DA'], '#3A6A5C'),
+    'dough': (['#D8C4A0', '#EBDCC0', '#F6EEDC', '#FFFAF0'], '#9A8460'),
+    'crisp': (['#9A5A22', '#B87432', '#D29450', '#D29450'], '#6A3A10'),
     'stamp': (['#C8D8C0', '#E2EEDC', '#F4FAF0', '#F4FAF0'], '#7A9070'),
     'shade': (['#D8CFC4', '#D8CFC4', '#D8CFC4', '#D8CFC4'], None),
 }
@@ -380,28 +382,27 @@ def omurice():
 
 def ramen():
     a = Art()
-    steam(a, [11, 16, 21], 0, 5)
-    a.fill(ell(16, 29, 7.5, 1.6), 'shade', 1)
-    a.fill(rect(11.5, 26, 20.5, 28.6), 'porc', cyl(11, 21), group='foot')
-    bowl = both(ell(16, 14, 12.5, 13), lambda x, y: y >= 14)
-    a.fill(bowl, 'porc', cyl(3.5, 28.5), group='bowl')
-    a.fill(both(bowl, lambda x, y: 19 <= y <= 20.6), 'red', cyl(3.5, 28.5), group='band')
+    steam(a, [12, 16, 20], 3, 8)
+    a.fill(ell(16, 28, 6.4, 1.4), 'shade', 1)
+    a.fill(rect(12, 25.4, 20, 27.6), 'porc', cyl(11.5, 20.5), group='foot')
+    bowl = both(ell(16, 16, 10.5, 10.6), lambda x, y: y >= 16)
+    a.fill(bowl, 'porc', cyl(5.5, 26.5), group='bowl')
+    a.fill(both(bowl, lambda x, y: 20.5 <= y <= 21.9), 'red', cyl(5.5, 26.5), group='band')
     # The nori sheet standing at the back, then the rim and the broth.
-    a.fill(poly([(19, 4.5), (24.5, 5.5), (24, 13), (19.2, 12.5)]), 'nori', lambda x, y: 2 if x < 20.5 else 1,
+    a.fill(poly([(18.5, 8), (23, 8.8), (22.6, 15), (18.6, 14.6)]), 'nori', lambda x, y: 2 if x < 19.8 else 1,
            group='nori')
-    a.fill(ell(16, 14, 12.5, 5.4), 'porc', 3, group='rim')
-    a.fill(ell(16, 14.4, 11, 4.3), 'broth', lambda x, y: 3 if (x < 9 and y < 13.5) else 2 if x < 14 else 1,
+    a.fill(ell(16, 16, 10.5, 4.6), 'porc', 3, group='rim')
+    a.fill(ell(16, 16.3, 9.2, 3.6), 'broth', lambda x, y: 3 if (x < 10 and y < 15.5) else 2 if x < 14 else 1,
            group='broth')
-    # Noodles in waves at the front, the toppings around them.
-    a.dot([(x, y) for y in (15, 16, 17) for x in range(8, 24) if (x + y * 2) % 4 in (0, 1)], 'noodle', 2,
+    a.dot([(x, y) for y in (17, 18) for x in range(10, 22) if (x + y * 2) % 4 in (0, 1)], 'noodle', 2,
           group='broth')
-    a.fill(ell(10.5, 12.8, 3.4, 2.4), 'chashu', sphere(10, 12, 3.4, 2.4), group='chashu')
-    a.fill(minus(ell(10.5, 12.8, 3.4, 2.4), ell(10.5, 12.8, 2.4, 1.5)), 'rice', 2, group='chashu')
-    a.fill(ell(21, 15.4, 2.9, 2.1), 'white', 2, group='egg')
-    a.fill(ell(21.3, 15.5, 1.5, 1.1), 'yolk', 2, group='egg')
-    a.fill(ell(15.6, 11.6, 2.2, 1.4), 'white', 2, group='naruto')
-    a.dot([(15, 11), (16, 12), (14, 12), (16, 11)], 'pink', 1, group='naruto')
-    a.dot([(13, 15), (14, 17), (17, 15), (18, 17), (12, 17), (19, 13)], 'leaf', 2, group='broth')
+    a.fill(ell(11.5, 15, 2.8, 2.0), 'chashu', sphere(11, 14.4, 2.8, 2.0), group='chashu')
+    a.fill(minus(ell(11.5, 15, 2.8, 2.0), ell(11.5, 15, 1.9, 1.2)), 'rice', 2, group='chashu')
+    a.fill(ell(20, 17.2, 2.4, 1.7), 'white', 2, group='egg')
+    a.fill(ell(20.2, 17.3, 1.2, 0.9), 'yolk', 2, group='egg')
+    a.fill(ell(15.6, 14, 1.8, 1.2), 'white', 2, group='naruto')
+    a.dot([(15, 14), (16, 14)], 'pink', 1, group='naruto')
+    a.dot([(13, 17), (14, 18), (17, 17), (18, 18), (18, 15)], 'leaf', 2, group='broth')
     return a
 
 
@@ -423,35 +424,80 @@ def pancakes():
     return a
 
 
+def rounded(pts, r):
+    """A triangle with its corners rounded by r, the same size as the triangle."""
+    # Shrink toward the incenter so the rounded outline keeps the polygon's size.
+    sides = [math.hypot(pts[(i + 1) % 3][0] - pts[(i + 2) % 3][0], pts[(i + 1) % 3][1] - pts[(i + 2) % 3][1])
+             for i in range(3)]
+    per = sum(sides)
+    cx = sum(sides[i] * pts[i][0] for i in range(3)) / per
+    cy = sum(sides[i] * pts[i][1] for i in range(3)) / per
+    area = abs((pts[1][0] - pts[0][0]) * (pts[2][1] - pts[0][1]) - (pts[2][0] - pts[0][0]) * (pts[1][1] - pts[0][1])) / 2
+    f = 1 - r / (2 * area / per)
+    inner = [(cx + (x - cx) * f, cy + (y - cy) * f) for x, y in pts]
+    inside = poly(inner)
+
+    def seg(px, py, ax, ay, bx, by):
+        vx, vy = bx - ax, by - ay
+        t = max(0.0, min(1.0, ((px - ax) * vx + (py - ay) * vy) / (vx * vx + vy * vy)))
+        return math.hypot(px - (ax + t * vx), py - (ay + t * vy))
+
+    def test(x, y):
+        if inside(x, y):
+            return True
+        return min(seg(x, y, *inner[i], *inner[(i + 1) % len(inner)]) for i in range(len(inner))) <= r
+    return test
+
+
+def onigiri(a, cx, top, w, h, name):
+    """A rice ball: a soft triangle of rice with a grain here and there, nori wrapped round the bottom."""
+    shape = rounded([(cx, top), (cx + w / 2, top + h), (cx - w / 2, top + h)], w * 0.11)
+
+    def rice(x, y):
+        nx, ny = (x - cx) / (w / 2), (y - top - h * 0.55) / h
+        d = -0.55 * nx - 0.8 * ny
+        base = 3 if d > 0.45 else 2 if d > 0.0 else 1 if d > -0.4 else 0
+        grain = (int(x) * 5 + int(y) * 3) % 7
+        return min(3, base + 1) if grain == 0 and base < 3 else base
+    a.fill(shape, 'rice', rice, group=f'{name}-rice')
+    nw = w * 0.18
+    band = both(shape, rect(cx - nw, top + h * 0.6, cx + nw, top + h + 1))
+    a.fill(band, 'nori', lambda x, y: 3 if abs(x - (cx - nw * 0.45)) < 0.55 else 2 if x < cx else 1,
+           group=f'{name}-nori')
+
+
 def rice_balls():
     a = Art()
-    a.fill(ell(16, 26.5, 14.5, 3.6), 'leaf', lambda x, y: 2 if y < 26 else 1)
-    a.dot([(x, 26) for x in range(5, 28)], 'leaf', 0)
-
-    def onigiri(cx, top, w, h):
-        tri = lambda x, y: top <= y <= top + h and abs(x - cx) <= (y - top) / h * w + 1.2
-        shape = anyof(both(tri, lambda x, y: y > top + 2), ell(cx, top + 2.6, 2.6, 2.6),
-                      ell(cx - w + 2.4, top + h - 2.2, 2.6, 2.6), ell(cx + w - 2.4, top + h - 2.2, 2.6, 2.6),
-                      rect(cx - w + 2.4, top + h - 4, cx + w - 2.4, top + h + 0.4))
-        a.fill(shape, 'rice', sphere(cx - 2, top + h * 0.45, w, h * 0.7))
-        a.fill(both(shape, rect(cx - w * 0.42, top + h - 6, cx + w * 0.42, top + h + 1)), 'nori',
-               cyl(cx - w * 0.42, cx + w * 0.42))
-        a.dot([(round(cx - 3), top + 5), (round(cx + 2), top + 8), (round(cx - 1), top + 3)], 'rice', 0)
-
-    onigiri(11, 9, 8, 15)
-    onigiri(21.5, 11.5, 7, 13)
+    # A small wooden board under two rice balls, a slice of pickled radish beside them.
+    a.fill(rect(4.5, 23.5, 27.5, 27.5), 'wood', lambda x, y: 2 if y < 24.6 else 1 if y < 26.6 else 0, group='board')
+    onigiri(a, 20, 12, 12, 11.6, 'back')
+    onigiri(a, 12.5, 10.5, 13.6, 13.2, 'front')
+    a.fill(ell(25, 22.4, 2.4, 1.2), 'yellow', 2, group='pickle')
     return a
 
 
-def curry():
+def gyoza():
     a = Art()
-    steam(a, [12, 18, 23], 2, 9)
-    plate(a, cy=23, rx=15, ry=7)
-    a.fill(ell(11.5, 21.5, 7.2, 4.6), 'rice', sphere(10, 19.5, 7, 4.6))
-    a.fill(minus(ell(19.5, 23, 9, 5.2), ell(11.5, 21.5, 7.4, 4.8)), 'curry', sphere(18, 21.5, 9, 5.2))
-    a.fill(anyof(ell(18, 22.5, 1.8, 1.3), ell(23.5, 24.5, 1.7, 1.2)), 'carrot', 1)
-    a.fill(anyof(ell(21.5, 20.6, 1.9, 1.5), ell(16.2, 25.4, 1.8, 1.3)), 'potato', 2)
-    a.dot([(20, 23), (25, 22), (17, 20)], 'curry', 3)
+    steam(a, [11, 16, 21], 5, 11)
+    # A long plate with three pan-fried dumplings leaning on each other.
+    a.fill(ell(15.5, 23.5, 13.5, 4.4), 'plate', lambda x, y: 2 if y < 22.5 else 1 if y < 25.5 else 0, group='plate')
+    a.fill(ell(15.5, 23.3, 11.4, 3.2), 'plate', 1, group='well')
+    for i, cx in enumerate((22.6, 16, 9.4)):
+        base = 23.6 - i * 0.4
+        half, height = 5.0, 7.4
+        crest = lambda x, cx=cx, base=base: base - height * max(0.0, 1 - ((x - cx) / half) ** 2) ** 0.5
+        body = lambda x, y, cx=cx, base=base, crest=crest: abs(x - cx) <= half and crest(x) <= y <= base
+        # The frilled edge along the top: small bumps.
+        frill = anyof(*[ell(cx + k * 1.6, crest(cx + k * 1.6) + 0.2, 1.0, 0.9) for k in (-1.5, -0.5, 0.5, 1.5)])
+        shape = anyof(body, frill)
+        a.fill(shape, 'dough',
+               lambda x, y, cx=cx, base=base: 0 if y > base - 1.6 else 3 if (x < cx - 1.6 and y < base - 4.5) else
+               2 if x < cx + 0.8 else 1, group=f'gyoza{i}')
+        # Pleats running down from the frill, the crisp brown base.
+        for k in (-1, 0, 1):
+            x0 = cx + k * 1.6
+            a.dot([(x0, crest(x0) + 1.4), (x0 + 0.6 * k, crest(x0) + 2.4)], 'dough', 0, group=f'gyoza{i}')
+        a.fill(both(shape, lambda x, y, base=base: y > base - 1.6), 'crisp', cyl(cx - 5, cx + 5), group=f'gyoza{i}')
     return a
 
 
@@ -758,7 +804,7 @@ def autumn_scene(a, x0, y0, w, h):
 ART = {
     'BARISTA': {'latte': latte, 'icedAmericano': iced_americano, 'caramelMacchiato': caramel_macchiato,
                 'matchaLatte': matcha_latte, 'chipFrappe': chip_frappe},
-    'CHEF': {'omurice': omurice, 'ramen': ramen, 'pancakes': pancakes, 'riceBalls': rice_balls, 'curry': curry},
+    'CHEF': {'omurice': omurice, 'ramen': ramen, 'pancakes': pancakes, 'riceBalls': rice_balls, 'gyoza': gyoza},
     'GARDENER': {'rose': rose, 'tulips': tulips, 'sunflower': sunflower, 'succulent': succulent, 'flowers': flowers},
     'DJ': {'record1': lambda: record(moon_sleeve, 'gold'), 'record2': lambda: record(rain_sleeve, 'red'),
            'record3': lambda: record(heart_sleeve, 'pink'), 'record4': lambda: record(sun_sleeve, 'blue'),
@@ -774,7 +820,7 @@ DESCRIBE = {
     'matchaLatte': 'a stone mug of matcha latte with a heart in the milk',
     'chipFrappe': 'a chocolate chip frappé under whipped cream and a dome lid', 'omurice': 'omurice with a ketchup heart',
     'ramen': 'a bowl of ramen with its toppings and chopsticks', 'pancakes': 'a stack with syrup and butter',
-    'riceBalls': 'two rice balls on a leaf', 'curry': 'curry and rice', 'rose': 'a single rose in a clear sleeve',
+    'riceBalls': 'two rice balls in nori on a wooden board', 'gyoza': 'three pan-fried gyoza on a plate', 'rose': 'a single rose in a clear sleeve',
     'tulips': 'three tulips wrapped in paper', 'sunflower': 'a sunflower', 'succulent': 'a succulent in a little pot',
     'flowers': 'wildflowers in paper', 'record1': 'a record from a sleeve with the moon',
     'record2': 'a record from a sleeve with rain', 'record3': 'a record from a sleeve with hearts',
