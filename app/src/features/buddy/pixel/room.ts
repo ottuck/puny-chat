@@ -101,34 +101,38 @@ export const SKY_PALETTES: Record<SkyTime, Palette> = {
   night: { ...ROOM_PALETTE, ...SKIES.night },
 };
 
-// A cream frame with a cross of glazing bars and a sill, wide so the sky shows past what stands on
-// the sill; through it clouds, the sun (or the moon and stars) and green hills.
+// A long cream frame of three panes with a sill, wide so the sky shows past what stands on the
+// sill; through it clouds, the sun (or the moon and stars) and green hills. The glazing bars are not
+// in the grid: they are drawn thinner than a cell over the glass (WINDOW_BARS), so more of the
+// outside shows.
 // prettier-ignore
 export const WINDOW: Frame = [
-  '.kkkkkkkkkkkkkkkkkkkkkkkkkk.',
-  '.kffffffffffffffffffffffffk.',
-  '.kfkkkkkkkkkkkkkkkkkkkkkkFk.',
-  '.kfkssssssstsffsssssstsskFk.',
-  '.kfksccssssssffsssssbbsskFk.',
-  '.kfkcccccsstsffssssbbbBskFk.',
-  '.kfksssssssssfftsssbbBBskFk.',
-  '.kfkssstsssssffsssssbBsskFk.',
-  '.kfksssssssssffsstsssssskFk.',
-  '.kfkffffffffffffffffffffkFk.',
-  '.kfkSSSSSSSSSffSSSSSSSSSkFk.',
-  '.kfkSSSSSSgggffggSSSSSSSkFk.',
-  '.kfkSSSggggggffgggSSSSggkFk.',
-  '.kfkggggggGggffgGgggggGgkFk.',
-  '.kfkkkkkkkkkkkkkkkkkkkkkkFk.',
-  '.kFFFFFFFFFFFFFFFFFFFFFFFFk.',
-  'kkkkkkkkkkkkkkkkkkkkkkkkkkkk',
-  'kffffffffffffffffffffffffffk',
-  'kFFFFFFFFFFFFFFFFFFFFFFFFFFk',
-  'kkkkkkkkkkkkkkkkkkkkkkkkkkkk',
+  '.kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.',
+  '.kfffffffffffffffffffffffffffffffffffk.',
+  '.kfkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkFk.',
+  '.kfkssssssstsssssssssstssssssssstsskFk.',
+  '.kfksccssssssssssssssssssssssssbbsskFk.',
+  '.kfkcccccsstsssssssssstsssssssbbbBskFk.',
+  '.kfksssssssssssssssssssssstsssbbBBskFk.',
+  '.kfkssstsssssssssstssssssssssssbBsskFk.',
+  '.kfksssssssssssssssssssssssstsssssskFk.',
+  '.kfksssssssssssssssssssssssssssssssskFk.',
+  '.kfkSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSkFk.',
+  '.kfkSSSSSSgggggSSSSSSgggggggSSSSSSSkFk.',
+  '.kfkSSSggggggggSSSgggggggggggSSSSggkFk.',
+  '.kfkggggggGggggggggggGgggggGgggggGgkFk.',
+  '.kfkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkFk.',
+  '.kFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFk.',
+  'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk',
+  'kfffffffffffffffffffffffffffffffffffffk',
+  'kFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFk',
+  'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk',
 ];
 
 // The glass, in the window's cells: where the guests at the window show.
-export const WINDOW_GLASS = { col: 4, row: 3, cols: 20, rows: 11 };
+export const WINDOW_GLASS = { col: 4, row: 3, cols: 31, rows: 11 };
+// The glazing bars' middles in the glass, in cells: two down between the panes, one across.
+export const WINDOW_BARS = { cols: [10, 21], row: 6.5 };
 // The sill's top row, where a sparrow perches.
 export const WINDOW_SILL_ROW = 16;
 

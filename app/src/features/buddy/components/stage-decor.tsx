@@ -137,7 +137,7 @@ export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 25, reward: 'radio' },
   { level: 26, reward: 'sillPot' },
   { level: 27, reward: 'bowl2' },
-  { level: 28, reward: 'fishbowl' },
+  { level: 28, reward: 'lamp' },
   { level: 29, reward: 'rug3' },
   { level: 31, reward: 'furin' },
   { level: 32, reward: 'plant4' },
@@ -149,7 +149,7 @@ export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 38, reward: 'kotatsu' },
   { level: 39, reward: 'swallow' },
   { level: 41, reward: 'sakura' },
-  { level: 42, reward: 'lamp' },
+  { level: 42, reward: 'fishbowl' },
   { level: 43, reward: 'goldMusicBox' },
   { level: 44, reward: 'tea' },
   { level: 45, reward: 'plant5' },
@@ -290,11 +290,12 @@ export function nextReward(level: number) {
 }
 
 // Each plant grows a little with every level until the next one replaces it: smallest when it
-// arrives, full size by the next reward (or the top level).
+// arrives, full size by the next reward (or the top level). The small tree (32) and the tree in
+// fruit (45) are one tree: it keeps growing through both, and fruits without shrinking back.
 const PLANT_SMALLEST = 2.2;
 const PLANT_LARGEST = 3.2;
-const PLANT_FROM: Record<PlantTier, number> = { 1: 2, 2: 13, 3: 19, 4: 32, 5: 45 };
-const PLANT_FULL_AT: Record<PlantTier, number> = { 1: 12, 2: 18, 3: 31, 4: 44, 5: 60 };
+const PLANT_FROM: Record<PlantTier, number> = { 1: 2, 2: 13, 3: 19, 4: 32, 5: 32 };
+const PLANT_FULL_AT: Record<PlantTier, number> = { 1: 12, 2: 18, 3: 31, 4: 60, 5: 60 };
 
 function plantScale(tier: PlantTier | 0, level: number): number {
   if (tier === 0) return 0;

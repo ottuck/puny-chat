@@ -24,6 +24,7 @@ import {
   TABLE_TOYS,
   TRAIN,
   WINDOW,
+  WINDOW_BARS,
   WINDOW_GLASS,
   WINDOW_SILL_ROW,
 } from '../pixel/room';
@@ -61,9 +62,8 @@ import {
   Swallow,
 } from './window-things';
 
-// The window's glazing bars, in the glass's cells (room.ts, WINDOW): two cells wide down the
-// middle, one across.
-const GLASS_BARS = { col: 9, row: 6 };
+// The glazing bars are drawn this many points thick, thinner than the window's cells.
+const barThickness = (scale: number) => Math.max(2, Math.round(scale * 0.6));
 
 // The room's things that come with levels (docs/fun-improvements.md, 방 소품), drawn on the stage:
 // what stands and hangs in the room (stage-decor.tsx places them), the guests that drop by, and
@@ -322,6 +322,7 @@ export function RoomWindow({
       <View style={[styles.glass, glass]}>
         {weather ? (
           <>
+            {/* Under the glazing bars, like everything outside. */}
             <WindowWeatherView
               key={run}
               kind={weather}
@@ -329,19 +330,6 @@ export function RoomWindow({
               height={glass.height}
               scale={scale}
               ms={weatherMs}
-            />
-            {/* The glazing bars stay in front of the weather outside. */}
-            <View
-              style={[
-                styles.bar,
-                { left: GLASS_BARS.col * scale, width: 2 * scale, height: glass.height },
-              ]}
-            />
-            <View
-              style={[
-                styles.bar,
-                { top: GLASS_BARS.row * scale, height: scale, width: glass.width },
-              ]}
             />
           </>
         ) : null}
@@ -364,6 +352,30 @@ export function RoomWindow({
         ) : guest === 'squirrel' ? (
           <Squirrel key={run} {...visit} />
         ) : null}
+        {/* The glazing bars, thin, in front of what is outside. */}
+        {WINDOW_BARS.cols.map((col) => (
+          <View
+            key={col}
+            style={[
+              styles.bar,
+              {
+                left: col * scale - barThickness(scale) / 2,
+                width: barThickness(scale),
+                height: glass.height,
+              },
+            ]}
+          />
+        ))}
+        <View
+          style={[
+            styles.bar,
+            {
+              top: WINDOW_BARS.row * scale - barThickness(scale) / 2,
+              height: barThickness(scale),
+              width: glass.width,
+            },
+          ]}
+        />
       </View>
       {/* The wind chime hangs in the glass's top left; its strip swings now and then. */}
       {things.furin ? (
