@@ -67,6 +67,8 @@ type Props = ComponentProps<typeof BuddyStage> & {
   onDreaming?: (dreaming: boolean) => void;
   // Opens in the bath (the art preview's link, for pictures of it).
   startInBath?: boolean;
+  // Whether it snows on the hot spring, instead of by the season (the preview).
+  bathSnow?: boolean;
   // On the way to the bath, once it is there: EXP if it has been a while.
   onBathe?: () => void;
   // Buddies gone their own way: the album's button sits beside the bath's once there are any.
@@ -246,6 +248,7 @@ export function BuddyScene({
   dreams = false,
   onDreaming,
   startInBath = false,
+  bathSnow,
   onBathe,
   album = [],
   albumRequest = null,
@@ -477,7 +480,10 @@ export function BuddyScene({
         buddy={kept}
         height={height}
         // In winter it snows on the bath; the preview's Christmas stands for winter.
-        snowing={props.season !== undefined ? props.season === 'CHRISTMAS' : isWinter(new Date())}
+        snowing={
+          bathSnow ??
+          (props.season !== undefined ? props.season === 'CHRISTMAS' : isWinter(new Date()))
+        }
         corner={<CornerButton icon={HOME_ICON} label={t('buddy.bath.home')} onPress={goHome} />}
       />
     );
