@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { Animated, Platform, StyleSheet, View } from 'react-native';
 
-import { PixelSprite } from '../pixel/pixel-sprite';
+import { type Frame, PixelSprite } from '../pixel/pixel-sprite';
 import {
   TABLE,
   LAMP,
@@ -29,7 +29,16 @@ import {
   SILL_POT,
   THINGS_PALETTE,
 } from '../pixel/room-things';
-import { type BowlTier, PLANTS, type PlantTier, PROP_PALETTE } from '../pixel/sprites';
+import {
+  type BowlTier,
+  FRUIT_AT,
+  FRUIT_TREE,
+  ORANGE,
+  ORANGE_FALLEN,
+  PLANTS,
+  type PlantTier,
+  PROP_PALETTE,
+} from '../pixel/sprites';
 import type { WindowWeather } from './weather';
 import {
   Arrive,
@@ -308,7 +317,9 @@ function plantScale(tier: PlantTier | 0, level: number): number {
 export function plantRoom(decor: Decor): number {
   if (decor.plant === 0) return 0;
   const frame = PLANTS[decor.plant][decor.plantKind];
-  return Math.ceil(frame[0].length * decor.plantScale) + 8;
+  // The tree in fruit has an orange on the floor at its left.
+  const fallen = decor.plant === 5 ? (ORANGE_FALLEN[0].length - 1) * decor.plantScale : 0;
+  return Math.ceil(frame[0].length * decor.plantScale + fallen) + 8;
 }
 
 // The things on the floor are drawn at this size, like the bowl.
@@ -733,8 +744,80 @@ export function WallDecor({
   );
 }
 
-export function Plant({ tier, kind, scale }: { tier: PlantTier; kind: number; scale: number }) {
-  return <PixelSprite frame={PLANTS[tier][kind]} palette={PROP_PALETTE} scale={scale} />;
+// The plant in the corner. The tree in fruit (Lv.45) has big oranges on its crown and one fallen by
+// the pot; `sprout`: it has just fruited, so they pop out one by one.
+export function Plant({
+  tier,
+  kind,
+  scale,
+  sprout = false,
+}: {
+  tier: PlantTier;
+  kind: number;
+  scale: number;
+  sprout?: boolean;
+}) {
+  if (tier !== 5)
+    return <PixelSprite frame={PLANTS[tier][kind]} palette={PROP_PALETTE} scale={scale} />;
+  return (
+    <View>
+      <PixelSprite frame={FRUIT_TREE} palette={PROP_PALETTE} scale={scale} />
+      {FRUIT_AT.map(([row, col], i) => (
+        <Fruit
+          key={i}
+          frame={ORANGE}
+          place={{ left: col * scale, top: row * scale }}
+          scale={scale}
+          delay={sprout ? FRUIT_FIRST_MS + i * FRUIT_EVERY_MS : null}
+        />
+      ))}
+      <Fruit
+        frame={ORANGE_FALLEN}
+        place={{ left: -(ORANGE_FALLEN[0].length - 1) * scale, bottom: 0 }}
+        scale={scale}
+        delay={sprout ? FRUIT_FIRST_MS + FRUIT_AT.length * FRUIT_EVERY_MS + 400 : null}
+      />
+    </View>
+  );
+}
+
+const NATIVE_DRIVER = Platform.OS !== 'web';
+// As the tree fruits: the first orange after this long, then one every so often.
+const FRUIT_FIRST_MS = 500;
+const FRUIT_EVERY_MS = 320;
+
+// An orange, there already (`delay` null) or popping out from nothing after `delay` ms.
+function Fruit({
+  frame,
+  place,
+  scale,
+  delay,
+}: {
+  frame: Frame;
+  place: { left: number; top?: number; bottom?: number };
+  scale: number;
+  delay: number | null;
+}) {
+  const [grow] = useState(() => new Animated.Value(delay === null ? 1 : 0));
+  useEffect(() => {
+    if (delay === null) return;
+    const pop = Animated.sequence([
+      Animated.delay(delay),
+      Animated.spring(grow, {
+        toValue: 1,
+        friction: 4,
+        tension: 160,
+        useNativeDriver: NATIVE_DRIVER,
+      }),
+    ]);
+    pop.start();
+    return () => pop.stop();
+  }, [grow, delay]);
+  return (
+    <Animated.View style={[styles.at, place, { transform: [{ scale: grow }] }]}>
+      <PixelSprite frame={frame} palette={PROP_PALETTE} scale={scale} />
+    </Animated.View>
+  );
 }
 
 const styles = StyleSheet.create({

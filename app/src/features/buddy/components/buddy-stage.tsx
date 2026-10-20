@@ -744,6 +744,14 @@ export function BuddyStage({
   const decor = decorFor(buddy.level, buddy.name, plantKind, now);
   // The lamp, lit in the evening and at night unless switched (until the stage opens again).
   const [lampOn, setLampOn] = useState<boolean | null>(null);
+  // The tree fruits while the stage is open (Lv.45): its oranges pop out one by one, and the buddy
+  // says so. Counted, so the tree is drawn again for each time (the preview goes back and forth).
+  const [plantNow, setPlantNow] = useState(decor.plant);
+  const [fruiting, setFruiting] = useState(0);
+  if (decor.plant !== plantNow) {
+    if (decor.plant === 5 && plantNow === 4) setFruiting(fruiting + 1);
+    setPlantNow(decor.plant);
+  }
   // Evening and night: the lamp is lit, and a shooting star may cross the sky.
   const darkSky = skyAt(now.getHours()) !== 'day';
   const lampLit = lampOn ?? darkSky;
@@ -1331,6 +1339,13 @@ export function BuddyStage({
     return () => clearTimeout(timer);
   }, [active, job, say]);
 
+  // Its oranges out, a word about them.
+  useEffect(() => {
+    if (fruiting === 0) return;
+    const timer = setTimeout(() => say('oranges'), 1400);
+    return () => clearTimeout(timer);
+  }, [fruiting, say]);
+
   useEffect(() => {
     if (!buddy.hungry || sleeping) return;
     const timer = setTimeout(() => say('hungry'), 600);
@@ -1915,7 +1930,13 @@ export function BuddyStage({
             label={t('buddy.room.plant')}
             onTap={() => touchProp('plant')}
           >
-            <Plant tier={decor.plant} kind={decor.plantKind} scale={decor.plantScale} />
+            <Plant
+              key={fruiting}
+              tier={decor.plant}
+              kind={decor.plantKind}
+              scale={decor.plantScale}
+              sprout={fruiting > 0}
+            />
           </Tappable>
         </View>
       ) : null}

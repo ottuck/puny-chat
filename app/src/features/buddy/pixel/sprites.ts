@@ -602,70 +602,71 @@ const KITCHEN: [Frame, Frame] = [[
 ]];
 
 // A plant taller than the buddy, in a clay pot: broad outlined leaves up a trunk. Its crown
-// sways while it is watered.
+// sways while it is watered. Left of it a small standing lamp with a cream shade, the station's
+// light at night (the gardener's plant itself does not glow).
 // prettier-ignore
 const BIG_PLANT: [Frame, Frame] = [[
-  '.....jj.....',
-  '....jPgj....',
-  '...jPggGj...',
-  '...jgPGgj...',
-  '...jggGgj...',
-  '....jgGj....',
-  '.....jj.jjj.',
-  '.....DqjPPgj',
-  '.....DjGGGgj',
-  '.jjj.Dqjggj.',
-  'jgPPjDq.jj..',
-  'jgGGGjq.....',
-  '.jggjDq.jjj.',
-  '..jj.DqjPPgj',
-  '.....DjGGGgj',
-  '.jjj.Dqjggj.',
-  'jgPPjDq.jj..',
-  'jgGGGjq.....',
-  '.jggjDq.jjj.',
-  '..jj.DqjPPgj',
-  '.....DjGGGgj',
-  '.....Dqjggj.',
-  '.....Dq.jj..',
-  '.....Dq.....',
-  '.kkkkkkkkkk.',
-  '.koooooooek.',
-  '..kkkkkkkk..',
-  '..kooooooek.',
-  '...koooook..',
-  '...kkkkkk...',
+  '...........jj.....',
+  '..........jPgj....',
+  '.........jPggGj...',
+  '.........jgPGgj...',
+  '.........jggGgj...',
+  '..........jgGj....',
+  '...........jj.jjj.',
+  '...........DqjPPgj',
+  '...........DjGGGgj',
+  '.......jjj.Dqjggj.',
+  '......jgPPjDq.jj..',
+  '......jgGGGjq.....',
+  '.......jggjDq.jjj.',
+  '........jj.DqjPPgj',
+  '...........DjGGGgj',
+  '.......jjj.Dqjggj.',
+  '......jgPPjDq.jj..',
+  '......jgGGGjq.....',
+  '.......jggjDq.jjj.',
+  '........jj.DqjPPgj',
+  '...........DjGGGgj',
+  '.kkk.......Dqjggj.',
+  'knnnk......Dq.jj..',
+  'kyyyk......Dq.....',
+  '.kDk...kkkkkkkkkk.',
+  '..D....koooooooek.',
+  '..D.....kkkkkkkk..',
+  '..D.....kooooooek.',
+  '.kDk.....koooook..',
+  '.........kkkkkk...',
 ], [
-  '......jj....',
-  '.....jPgj...',
-  '....jPggGj..',
-  '....jgPGgj..',
-  '....jggGgj..',
-  '.....jgGj...',
-  '......jj.jjj',
-  '.....DqjPPgj',
-  '.....DjGGGgj',
-  '.jjj.Dqjggj.',
-  'jgPPjDq.jj..',
-  'jgGGGjq.....',
-  '.jggjDq.jjj.',
-  '..jj.DqjPPgj',
-  '.....DjGGGgj',
-  '.jjj.Dqjggj.',
-  'jgPPjDq.jj..',
-  'jgGGGjq.....',
-  '.jggjDq.jjj.',
-  '..jj.DqjPPgj',
-  '.....DjGGGgj',
-  '.....Dqjggj.',
-  '.....Dq.jj..',
-  '.....Dq.....',
-  '.kkkkkkkkkk.',
-  '.koooooooek.',
-  '..kkkkkkkk..',
-  '..kooooooek.',
-  '...koooook..',
-  '...kkkkkk...',
+  '............jj....',
+  '...........jPgj...',
+  '..........jPggGj..',
+  '..........jgPGgj..',
+  '..........jggGgj..',
+  '...........jgGj...',
+  '............jj.jjj',
+  '...........DqjPPgj',
+  '...........DjGGGgj',
+  '.......jjj.Dqjggj.',
+  '......jgPPjDq.jj..',
+  '......jgGGGjq.....',
+  '.......jggjDq.jjj.',
+  '........jj.DqjPPgj',
+  '...........DjGGGgj',
+  '.......jjj.Dqjggj.',
+  '......jgPPjDq.jj..',
+  '......jgGGGjq.....',
+  '.......jggjDq.jjj.',
+  '........jj.DqjPPgj',
+  '...........DjGGGgj',
+  '.kkk.......Dqjggj.',
+  'knnnk......Dq.jj..',
+  'kyyyk......Dq.....',
+  '.kDk...kkkkkkkkkk.',
+  '..D....koooooooek.',
+  '..D.....kkkkkkkk..',
+  '..D.....kooooooek.',
+  '.kDk.....koooook..',
+  '.........kkkkkk...',
 ]];
 
 // The late-night radio desk: a broadcast mic on a boom stand, headphones on the desk, faders, a
@@ -830,13 +831,13 @@ export const HELD_CAN: [Frame, Frame] = [[
 export const JOB_STATIONS: Record<BuddyJob, Station> = {
   // The burner's flame under the pot.
   CHEF: { frames: KITCHEN, sink: 3, standAt: 3, light: { col: 3.5, row: 7, color: '#FF9A4A' } },
-  // A soft green glow in the leaves, like fireflies resting there.
+  // The small lamp beside the plant.
   GARDENER: {
     frames: BIG_PLANT,
     sink: 1,
-    standAt: 15,
+    standAt: 21,
     held: { frames: HELD_CAN, row: 12, col: -8, size: 0.6 },
-    light: { col: 6, row: 9, color: '#C8F59A' },
+    light: { col: 2.5, row: 22.5, color: '#FFD27A' },
   },
   // The red on-air light on the desk.
   DJ: {
@@ -1035,48 +1036,52 @@ const PLANT_4: Frame = [
   '...kkkkkkkkkk..',
 ];
 
+// The oranges of the tree in fruit, big enough to read in pixels: round, lit at the top left with a
+// shine, a leaf on the stem. Drawn over the tree's crown at FRUIT_AT (the stage pops them out one by
+// one as the tree fruits, stage-decor.tsx), and one fallen on the floor by the pot.
 // prettier-ignore
-const PLANT_5: Frame = [
-  '.....kkkkk.....',
-  '...kkPPggGkk...',
-  '..kPPgggggGGk..',
-  '.kPPgglOGgggGk.',
-  '.kPggOOGgggggk.',
-  'kPggggggggOlgGk',
-  'kPglOgggggOOGGk',
-  'kPgggGggggggGGk',
-  'kggggggGgggGGGk',
-  'kPggggGgggggGGk',
-  'kggGgggggGggGGk',
-  'kggOOGggGgggGGk',
-  '.kgggggOlggGGk.',
-  '.kGgggGOOgGGGk.',
-  '..kkGGGGGGGkk..',
-  '......kDqk.....',
-  '......kDqk.....',
-  '......kDqk.....',
-  '......kDqk.....',
-  '......kDqk.....',
-  '......kDqk.....',
-  '......kDqk.....',
-  '......kDqk.....',
-  '.....kDDqqk....',
-  'kkkkkkkkkkkkkkk',
-  'kwaaaaaaaaaaaak',
-  'kkkkkkkkkkkkkkk',
-  '.kaBBBBBBBBBNk.',
-  '.kaBBBBBBBBBNk.',
-  '..kaBBBBBBBNNk.',
-  '..kBBBBBBBBNNk.',
-  '...kkkkkkkkkk..',
+export const ORANGE: Frame = [
+  '..jP.',
+  '.lOO.',
+  'lwOOd',
+  'OOOOd',
+  '.dOd.',
+];
+// Lying on the floor: no leaf.
+export const ORANGE_FALLEN: Frame = ORANGE.slice(1);
+// Where the oranges hang on the crown (PLANT_4), by the cell of each one's top left.
+export const FRUIT_AT: readonly (readonly [row: number, col: number])[] = [
+  [2, 2],
+  [1, 8],
+  [6, 6],
+  [8, 1],
+  [9, 10],
 ];
 
+// The tree with its oranges on, for still pictures (the guide).
+function stamp(frame: Frame, part: Frame, at: readonly (readonly [number, number])[]): Frame {
+  const rows = frame.map((row) => [...row]);
+  for (const [row, col] of at) {
+    part.forEach((line, dy) =>
+      [...line].forEach((cell, dx) => {
+        if (cell !== '.' && rows[row + dy]?.[col + dx] !== undefined)
+          rows[row + dy][col + dx] = cell;
+      }),
+    );
+  }
+  return rows.map((row) => row.join(''));
+}
+const PLANT_5: Frame = stamp(PLANT_4, ORANGE, FRUIT_AT);
+
 export type PlantTier = 1 | 2 | 3 | 4 | 5;
+// The tree in fruit without its oranges, for drawing them over it.
+export const FRUIT_TREE: Frame = PLANT_4;
 // The kinds a pot may grow into at each tier.
 export const PLANTS: Record<PlantTier, readonly Frame[]> = {
   1: [PLANT_1],
   2: [PLANT_2, PLANT_2_RUBBER, PLANT_2_SNAKE, PLANT_2_ROUND],
   3: [PLANT_3],
   4: [PLANT_4],
+  // The same tree: the stage draws its oranges on it one by one (stage-decor.tsx, Plant).
   5: [PLANT_5],
 };
