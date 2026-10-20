@@ -1924,7 +1924,8 @@ export function BuddyStage({
           style={[
             styles.station,
             styles.passThrough,
-            { left: STATION_LEFT + station.behind.col * cell, bottom: FLOOR - 2 },
+            // Its last row below the floor line, like the station's own.
+            { left: STATION_LEFT + station.behind.col * cell, bottom: FLOOR - cell },
           ]}
         >
           <Arrive fresh={job !== jobAtMount} width={station.behind.frame[0].length * cell}>
@@ -2449,9 +2450,18 @@ export function BuddyStage({
                     x: STATION_LEFT + (station.behind.col + station.light.col) * cell,
                     y:
                       height -
-                      (FLOOR - 2) -
+                      (FLOOR - cell) -
                       (station.behind.frame.length - station.light.row) * cell,
                     color: station.light.color,
+                    aim: station.light.aim
+                      ? {
+                          x: STATION_LEFT + station.light.aim.col * cell,
+                          y:
+                            height -
+                            (FLOOR - station.sink * cell) -
+                            (station.frames[0].length - station.light.aim.row) * cell,
+                        }
+                      : undefined,
                   }
                 : {
                     x: STATION_LEFT + station.light.col * cell,
