@@ -228,7 +228,10 @@
       "nowDj": "Radio DJ, on air!",
       "nowWriter": "I'm a writer now!",
       "nowBarista": "Barista debut!",
-      "oranges": "Oranges! The tree is in fruit!"
+      "oranges": "Oranges! The tree is in fruit!",
+      "robot": "Beep boop, a robot! Hi!",
+      "kitten": "A kitten! It loves the yarn",
+      "vacuum": "Here comes the vacuum~ all sparkly"
     },
     "graduate": {
       "title": "Its own way",
@@ -298,7 +301,10 @@
       "waterPlants": "Water plants for the goldfish",
       "catFace": "A stray cat drops by",
       "bunny": "A bunny plush",
-      "sillFlower": "The succulent in flower"
+      "sillFlower": "The succulent in flower",
+      "robot": "Wind-up robot",
+      "kitten": "Kitten and a ball of yarn",
+      "vacuum": "Robot vacuum"
     },
     "nextReward_one": "Next reward: Lv.{{level}} {{reward}} · {{count}} level to go",
     "nextReward_other": "Next reward: Lv.{{level}} {{reward}} · {{count}} levels to go",

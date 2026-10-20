@@ -228,7 +228,10 @@
       "nowDj": "라디오 DJ, 시작해 볼게!",
       "nowWriter": "작가가 됐어!",
       "nowBarista": "바리스타 데뷔!",
-      "oranges": "귤이 열렸어! 반짝반짝 해"
+      "oranges": "귤이 열렸어! 반짝반짝 해",
+      "robot": "삐빅, 로봇이다! 안녕?",
+      "kitten": "아기 고양이다! 털실 좋아하나 봐",
+      "vacuum": "청소기가 지나간다~ 반짝반짝"
     },
     "graduate": {
       "title": "독립시키기",
@@ -298,7 +301,10 @@
       "waterPlants": "수초 어항",
       "catFace": "길고양이 손님",
       "bunny": "토끼 인형",
-      "sillFlower": "꽃 핀 다육이"
+      "sillFlower": "꽃 핀 다육이",
+      "robot": "태엽 로봇",
+      "kitten": "털실 공과 아기 고양이",
+      "vacuum": "로봇 청소기"
     },
     "nextReward_one": "다음 보상: Lv.{{level}} {{reward}} · {{count}}레벨 남았어요",
     "nextReward_other": "다음 보상: Lv.{{level}} {{reward}} · {{count}}레벨 남았어요",
