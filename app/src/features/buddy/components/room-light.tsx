@@ -22,9 +22,28 @@ import { WINDOW_BARS, WINDOW_GLASS } from '../pixel/room';
 // station has a small light of its own on the left (sprites.ts, JOB_STATIONS). Over the room and the buddy; under the name, the buttons and the notes.
 
 const NATIVE_DRIVER = Platform.OS !== 'web';
-// A job station's small light at night: how far it clears the dark, and its round glow.
+// A job station's small light at night: how far it clears the dark, and its round glow; and how far
+// around what an aimed one shines on.
 const STATION_REACH = 110;
 const STATION_HALO = 30;
+const AIMED_REACH = 70;
+
+// A beam from `from` to `to`: narrow at the lamp, wide where it lands.
+function beam(from: { x: number; y: number }, to: { x: number; y: number }): string {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = Math.hypot(dx, dy) || 1;
+  const nx = -dy / length;
+  const ny = dx / length;
+  const near = 4;
+  const far = Math.min(40, length * 0.55);
+  return [
+    `${from.x + nx * near},${from.y + ny * near}`,
+    `${to.x + nx * far},${to.y + ny * far}`,
+    `${to.x - nx * far},${to.y - ny * far}`,
+    `${from.x - nx * near},${from.y - ny * near}`,
+  ].join(' ');
+}
 // The window's panes, in the glass's cells (room.ts, WINDOW_GLASS and WINDOW_BARS): three, either
 // side of the two thin bars down the glass.
 const GLASS_CELLS = WINDOW_GLASS.cols;
@@ -64,8 +83,9 @@ export function RoomLight({
   glass: Box | null;
   // The lit lamp's shade, if it is on.
   lamp: { x: number; y: number } | null;
-  // The job station's small light at night, if there is a station.
-  station?: { x: number; y: number; color: string } | null;
+  // The job station's small light at night, if there is a station; `aim`: where it is turned to,
+  // a beam falls there and lights it (the gardener's lamp on the plant).
+  station?: { x: number; y: number; color: string; aim?: { x: number; y: number } } | null;
   // Dark mode: the stage is dark already, the light goes easier on it.
   dark: boolean;
 }) {
@@ -161,6 +181,19 @@ export function RoomLight({
                 <Stop offset="0.35" stopColor="#000000" stopOpacity={0.85} />
                 <Stop offset="1" stopColor="#000000" stopOpacity={0} />
               </RadialGradient>
+              {station.aim ? (
+                <RadialGradient
+                  id={`aimed${id}`}
+                  cx={station.aim.x}
+                  cy={station.aim.y}
+                  r={AIMED_REACH}
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <Stop offset="0" stopColor="#000000" stopOpacity={0.9} />
+                  <Stop offset="0.5" stopColor="#000000" stopOpacity={0.6} />
+                  <Stop offset="1" stopColor="#000000" stopOpacity={0} />
+                </RadialGradient>
+              ) : null}
               <Mask
                 id={`lit${id}`}
                 x={0}
@@ -171,6 +204,9 @@ export function RoomLight({
               >
                 <Rect x={0} y={0} width={width} height={height} fill="#FFFFFF" />
                 <Rect x={0} y={0} width={width} height={height} fill={`url(#hole${id})`} />
+                {station.aim ? (
+                  <Rect x={0} y={0} width={width} height={height} fill={`url(#aimed${id})`} />
+                ) : null}
               </Mask>
             </>
           ) : null}
@@ -226,6 +262,10 @@ export function RoomLight({
             )}
             {lamp && glass ? (
               <Rect x={0} y={0} width={width} height={height} fill={`url(#moon${id})`} />
+            ) : null}
+            {station?.aim ? (
+              // The beam from the lamp to what it lights, widening as it goes.
+              <Polygon points={beam(station, station.aim)} fill={station.color} opacity={0.22} />
             ) : null}
             {station ? (
               // A clear round glow in the light's color, like the lamp's, and its bright middle.
