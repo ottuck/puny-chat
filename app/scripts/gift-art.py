@@ -480,19 +480,19 @@ def rice_balls():
 
 def steamed_bun():
     a = Art()
-    steam(a, [12, 16, 20], 1, 6)
-    # A bamboo steamer, its lid off, and one bun sitting in it.
-    a.fill(ell(16, 28, 9.6, 1.8), 'shade', 1)
-    a.fill(anyof(rect(6, 19, 26, 27.2), ell(16, 27.2, 10, 2.2)), 'bamboo', cyl(6, 26), group='steamer')
-    a.dot([(x, y) for y in (21, 24) for x in range(7, 26) if (x + y) % 3 != 0], 'bamboo', 0, group='steamer')
-    a.fill(ell(16, 19, 10, 3.2), 'bamboo', 3, group='rim')
-    a.fill(ell(16, 19.3, 8.6, 2.2), 'bambooIn', 1, group='inside')
+    steam(a, [13, 16, 19], 5, 10)
+    # A small bamboo steamer, its lid off, and one bun sitting in it.
+    a.fill(ell(16, 28, 7.4, 1.5), 'shade', 1)
+    a.fill(anyof(rect(8.5, 21.5, 23.5, 27.4), ell(16, 27.4, 7.5, 1.7)), 'bamboo', cyl(8.5, 23.5), group='steamer')
+    a.dot([(x, 24) for x in range(9, 24) if x % 3 != 0], 'bamboo', 0, group='steamer')
+    a.fill(ell(16, 21.5, 7.5, 2.4), 'bamboo', 3, group='rim')
+    a.fill(ell(16, 21.7, 6.4, 1.6), 'bambooIn', 1, group='inside')
     # The bun: a soft dome, its pleats gathered into a twist on top.
-    bun = both(ell(16, 18.4, 6.6, 6.6), lambda x, y: y <= 20)
-    a.fill(bun, 'dough', sphere(14.4, 15, 6.6, 6.6), group='bun')
-    for k in (-3, -2, -1, 1, 2, 3):
-        line(a, 16 + k * 0.4, 12.6, 16 + k * 1.9, 15.2 - abs(k) * 0.35 + 1.2, 'dough', 0.35, 0, group='bun')
-    a.fill(ell(16, 12.4, 1.5, 1.1), 'dough', 3, group='bun')
+    bun = both(ell(16, 21.2, 5, 5), lambda x, y: y <= 22.2)
+    a.fill(bun, 'dough', sphere(14.8, 18.4, 5, 5), group='bun')
+    for k in (-2, -1, 1, 2):
+        line(a, 16 + k * 0.4, 16.6, 16 + k * 1.8, 19.4 - abs(k) * 0.3, 'dough', 0.35, 0, group='bun')
+    a.fill(ell(16, 16.4, 1.2, 0.9), 'dough', 3, group='bun')
     return a
 
 
