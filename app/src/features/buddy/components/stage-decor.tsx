@@ -20,6 +20,8 @@ import {
   BOOKS,
   BUNNY,
   fishBowl,
+  fishHome,
+  type FishStyle,
   GRAMOPHONE,
   HANGING_PLANT,
   HANGING_PLANT_AT,
@@ -292,6 +294,7 @@ export function decorFor(level: number, seed = '', kind?: number, now = new Date
     lamp: has('lamp'),
     lampShade: has('lampShade'),
     fireflies: has('firefly'),
+    fishStyle: 'table' as FishStyle,
     guests: GUESTS.filter(
       (guest) =>
         has(guest) &&
@@ -335,11 +338,14 @@ const FLOOR_SCALE = 3;
 // Floor the standing lamp and the side table take beside the plant.
 const LAMP_ROOM = LAMP[0].length * FLOOR_SCALE + 6;
 const FISH_ROOM = fishBowl(0, false)[0].length * FLOOR_SCALE + 6;
+// Floor the goldfish takes, by where it lives (none when its tank is in the wall).
+const fishRoom = (decor: Decor) =>
+  decor.fishStyle === 'wall' ? 0 : fishHome(decor.fishStyle, 0, false)[0].length * FLOOR_SCALE + 6;
 
 // Floor kept on the right, besides the plant's, for the lamp and the goldfish's side table: the bowl
 // and the poops stand left of it.
 export function sideRoom(decor: Decor): number {
-  return (decor.lamp ? LAMP_ROOM : 0) + (decor.fish ? FISH_ROOM : 0);
+  return (decor.lamp ? LAMP_ROOM : 0) + (decor.fish ? fishRoom(decor) : 0);
 }
 
 const TOY_LEFT = 14;
@@ -350,6 +356,8 @@ const SHELF_RIGHT = 12;
 // The music box is drawn a little smaller than the shelf's other things: it is the tallest, and in
 // the corner under the buttons it looked heavy.
 const MUSIC_BOX_SIZE = 0.85;
+// How high over the floor a tank built into the wall sits.
+const WALL_TANK_ABOVE = 40;
 const SILL_POT_SIZE = 1.35;
 const SHELF_TOP = 48;
 // How long a rainbow stays after the rain.
@@ -737,12 +745,17 @@ export function WallDecor({
           style={[
             styles.at,
             styles.box,
-            { right: 8 + plantSpace + (decor.lamp ? LAMP_ROOM : 0), bottom: floor - 2 },
+            {
+              right: 8 + plantSpace + (decor.lamp ? LAMP_ROOM : 0),
+              // In the wall: at about a counter's height over the floor.
+              bottom: decor.fishStyle === 'wall' ? floor + WALL_TANK_ABOVE : floor - 2,
+            },
           ]}
         >
           <Arrive fresh={fresh(decor.fish === 2 ? 'waterPlants' : 'fishbowl')} width={FISH_ROOM}>
             <FishBowl
               plants={decor.fish === 2}
+              style={decor.fishStyle}
               scale={FLOOR_SCALE}
               tick={tick}
               onTap={() => onProp('fish')}

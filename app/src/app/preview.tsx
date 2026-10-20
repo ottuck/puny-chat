@@ -15,6 +15,7 @@ import { JOB_ICON, JOB_ORDER } from '@/features/buddy/jobs';
 import { dressedFrame, type Season, SEASONS, seasonOn } from '@/features/buddy/pixel/looks';
 import { PixelSprite } from '@/features/buddy/pixel/pixel-sprite';
 import { BUDDY_PALETTE, POSES_IN_ORDER } from '@/features/buddy/pixel/sprites';
+import type { FishStyle } from '@/features/buddy/pixel/room-things';
 import type { Reaction, ReactionKind } from '@/features/buddy/reactions';
 import type { AlbumEntry } from '@/features/room/api';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
@@ -416,6 +417,8 @@ function Preview() {
   // The hot spring: each press opens the stage there again; snow on it by the season, or on or off.
   const [bathRun, setBathRun] = useState(0);
   const [bathSnow, setBathSnow] = useState<boolean | undefined>(undefined);
+  // Where the goldfish lives, to compare before deciding (from Lv.42).
+  const [fishStyle, setFishStyle] = useState<FishStyle>('table');
 
   return (
     <FoldAll.Provider value={foldAll}>
@@ -443,6 +446,7 @@ function Preview() {
               dreams={dreamRun > 0 ? 'always' : false}
               startInBath={params.scene === 'bath' || bathRun > 0}
               bathSnow={bathSnow}
+              fishStyle={fishStyle}
               buddy={buddyOf(stage, job, hungry, poops, level, jobChangedAt)}
               busy={false}
               height={stageHeight}
@@ -511,6 +515,22 @@ function Preview() {
                 label={`cut ${i + 1}`}
                 onPress={() => setDreamCut(dreamCut === i ? null : i)}
                 active={dreamCut === i}
+              />
+            ))}
+          </Group>
+          <Group title="goldfish (compare, from Lv.42)" startOpen>
+            {(['table', 'wall', 'floor'] as const).map((style) => (
+              <Chip
+                key={style}
+                label={
+                  {
+                    table: 'bowl on a table',
+                    wall: 'built into the wall',
+                    floor: 'tank on the floor',
+                  }[style]
+                }
+                onPress={() => setFishStyle(style)}
+                active={fishStyle === style}
               />
             ))}
           </Group>

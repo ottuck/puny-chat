@@ -38,7 +38,8 @@ import {
   CUCKOO_FINE,
   CUCKOO_CELLS,
   cuckooAt,
-  fishBowl,
+  fishHome,
+  type FishStyle,
   FURIN,
   GOLD_PALETTE,
   GRAMOPHONE,
@@ -850,17 +851,19 @@ export function SillPot({ flowers, scale }: { flowers: boolean; scale: number })
 // about with the tick; a tap sends up bubbles.
 export function FishBowl({
   plants,
+  style = 'table',
   scale,
   tick,
   onTap,
 }: {
   plants: boolean;
+  style?: FishStyle;
   scale: number;
   tick: number;
   onTap: () => void;
 }) {
   const { t } = useTranslation();
-  const frame = useMemo(() => fishBowl(Math.floor(tick / 3), plants), [tick, plants]);
+  const frame = useMemo(() => fishHome(style, Math.floor(tick / 3), plants), [style, tick, plants]);
   const [run, setRun] = useState(0);
   return (
     <Pressable
