@@ -82,6 +82,8 @@ type Props = ComponentProps<typeof BuddyStage> & {
   onTurnOnPush?: () => Promise<PushState>;
   // Who I am: the letters a writer buddy wrote me come to my mailbox (docs/fun-improvements.md, 직업 선물).
   myId?: string;
+  // And my name, for "To." on its letters.
+  myName?: string;
 };
 
 const NATIVE_DRIVER = Platform.OS !== 'web';
@@ -258,6 +260,7 @@ export function BuddyScene({
   situation,
   onTurnOnPush,
   myId,
+  myName,
   ...props
 }: Props) {
   const { t } = useTranslation();
@@ -561,6 +564,7 @@ export function BuddyScene({
         onTurnOnPush={onTurnOnPush}
         onGraduate={buddy.grown ? props.onOpenDetail : undefined}
         buddyName={buddy.name}
+        myName={myName}
       />
     </View>
   );

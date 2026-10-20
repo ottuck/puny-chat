@@ -859,7 +859,8 @@
       "turnOnPush": "通知をオンにする",
       "graduate": "🎓 独り立ちさせる"
     },
-    "giftFrom": "{{buddy}}より"
+    "giftFrom": "{{buddy}}より",
+    "letterTo": "{{name}}へ"
   },
   "room": {
     "seatTakenTitle": "別の場所で続きを使っています",

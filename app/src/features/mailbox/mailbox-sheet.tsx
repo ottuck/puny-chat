@@ -34,6 +34,7 @@ export function MailboxSheet({
   onTurnOnPush,
   onGraduate,
   buddyName,
+  myName,
 }: {
   visible: boolean;
   mails: ShownMail[];
@@ -45,8 +46,9 @@ export function MailboxSheet({
   onTurnOnPush?: () => Promise<PushState>;
   // While the room's buddy may go its own way: opens its details, where that is done.
   onGraduate?: () => void;
-  // Who signs the buddy's letters: they are from the room's buddy now.
+  // Who signs the buddy's letters (they are from the room's buddy now), and whom they are to.
   buddyName: string;
+  myName?: string;
 }) {
   const colors = useColors();
   const { t, i18n } = useTranslation();
@@ -139,7 +141,12 @@ export function MailboxSheet({
             </View>
 
             {opened?.kind === 'buddyLetter' ? (
-              <BuddyLetterPaper date={date(opened.date)} {...words(opened)} />
+              <BuddyLetterPaper
+                date={date(opened.date)}
+                to={t('mailbox.letterTo', { name: myName || t('chat.guestName') })}
+                body={words(opened).body}
+                from={words(opened).from}
+              />
             ) : opened ? (
               // A sheet of letter paper: ruled, the date in the corner, signed at the bottom.
               <View style={styles.paper}>

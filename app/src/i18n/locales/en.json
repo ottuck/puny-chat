@@ -859,7 +859,8 @@
       "turnOnPush": "Turn on notifications",
       "graduate": "🎓 Let it go its own way"
     },
-    "giftFrom": "From {{buddy}}"
+    "giftFrom": "From {{buddy}}",
+    "letterTo": "Dear {{name}},"
   },
   "room": {
     "seatTakenTitle": "Continued somewhere else",

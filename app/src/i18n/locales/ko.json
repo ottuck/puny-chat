@@ -859,7 +859,8 @@
       "turnOnPush": "알림 켜기",
       "graduate": "🎓 독립시키러 가기"
     },
-    "giftFrom": "— {{buddy}}"
+    "giftFrom": "From. {{buddy}}",
+    "letterTo": "To. {{name}}"
   },
   "room": {
     "seatTakenTitle": "다른 곳에서 이어서 쓰고 있어요",
