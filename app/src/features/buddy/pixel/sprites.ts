@@ -750,31 +750,18 @@ const BIG_PLANT: [Frame, Frame] = [[
   '......kkkkkkkkkkkk......',
 ]];
 
-// The gardener's lamp, right of the plant and behind the buddy: a spotlight on a stand, its can
-// turned toward the plant with the lens lit, on a wide, heavy base (its last row below the floor
-// line, like the plant's pot). Its light at night is the station's, falling on the plant.
+// The gardener's light, right of the pot and behind the buddy: a small uplight on the floor, no
+// stand, its lens turned up toward the plant (its last row below the floor line). Smaller than the
+// goldfish bowl: it is only there for its light, which at night falls on the plant.
 // prettier-ignore
 const GARDEN_LAMP: Frame = [
-  '..kkkkkkk........',
-  '.kwSSSSSxk.......',
-  'kyySSSSSSxk......',
-  'kyySSSSSSxkkk....',
-  'kyySSSSSSxkLk....',
-  'kyyxxxxxxxk.k....',
-  '.kkkkkkkkkkDk....',
-  '..........kDk....',
-  '..........kDk....',
-  '..........kDk....',
-  '..........kDk....',
-  '..........kDk....',
-  '..........kDk....',
-  '..........kDk....',
-  '..........kDk....',
-  '..........kDk....',
-  '.......kkkkDkkkk.',
-  '......kLLLLLLLLqk',
-  '......kDDDDDDDqqk',
-  '.......kkkkkkkkk.',
+  '.kkk.....',
+  'kyyykk...',
+  'kyySSxk..',
+  '.kSSSSxk.',
+  '..kSSSxk.',
+  '.kkkkkkkk',
+  '.kqqqqqqk',
 ];
 
 // The late-night radio desk: a broadcast mic on a boom stand, headphones on the desk, faders, a
@@ -1053,15 +1040,15 @@ export const JOB_STATIONS: Record<BuddyJob, Station> = {
     standAt: 6,
     light: { col: 8, row: 18, color: '#FF9A4A' },
   },
-  // The small lamp right of the plant, behind the buddy.
+  // The small uplight right of the pot, behind the buddy.
   GARDENER: {
     frames: BIG_PLANT,
     sink: 1,
     fine: 0.6,
     standAt: 25,
     held: { frames: HELD_CAN, row: 12, col: -8, size: 0.6 },
-    behind: { frame: GARDEN_LAMP, col: 25 },
-    light: { col: 1.5, row: 3.5, color: '#FFE3A0', onBehind: true, aim: { col: 13, row: 16 } },
+    behind: { frame: GARDEN_LAMP, col: 21 },
+    light: { col: 1.5, row: 1.5, color: '#FFE3A0', onBehind: true, aim: { col: 12, row: 14 } },
   },
   // The red on-air light on the desk.
   DJ: {
