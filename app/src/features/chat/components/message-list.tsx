@@ -4,7 +4,7 @@ import { FlatList, StyleSheet, View } from 'react-native';
 
 import { GROWN_LEVEL, JOB_CHANGE_LEVELS } from '@/features/buddy/api';
 import { rewardAt } from '@/features/buddy/components/stage-decor';
-import { giftKey, giftOfDetail } from '@/features/buddy/gifts';
+import { giftOfDetail } from '@/features/buddy/gifts';
 import { isJob, JOB_ICON } from '@/features/buddy/jobs';
 
 import { photoUrl } from '../photo';
@@ -18,7 +18,7 @@ import {
   type PhotoMessage,
 } from '../types';
 import { BuddyEventRow, EventCard } from './buddy-event-row';
-import { GiftCard } from './gift-card';
+import { BuddyGiftMessage } from './buddy-gift-message';
 import { type BubblePhoto, type BubbleRect, MessageBubble } from './message-bubble';
 import { PhotoViewer } from './photo-viewer';
 import { ReactionPicker } from './reaction-picker';
@@ -44,7 +44,7 @@ type Props = {
   // Lv.20's card offers changing the job while it may be changed (in the buddy's details).
   onChangeJob?: () => void;
   // The top level's card opens the mailbox, where its letter offers going its own way; so does a
-  // postcard the buddy wrote me.
+  // letter the buddy wrote me.
   onOpenMail?: () => void;
   // A buddy gone its own way: its card opens the memory album.
   onOpenAlbum?: () => void;
@@ -166,23 +166,23 @@ export function MessageList({
               </View>
             );
           }
-          // Something the buddy made one of us at work (docs/fun-improvements.md, 직업 선물). Mine is a
-          // card with its picture (a postcard also goes to the mailbox); the partner's is a line.
+          // What the buddy did for one of us at work (docs/fun-improvements.md, 직업 선물): it says so
+          // itself, in small bubbles both of us see. A letter is in the mailbox of the one it is for.
           if (item.type === 'BUDDY_EVENT' && item.event === 'GIFT') {
             const gift = giftOfDetail(item.detail);
-            const line = gift
-              ? t(`chat.gift.${gift.job}`, {
-                  buddy: buddyName,
-                  to: nameOf(item.actorId),
-                  gift: t(giftKey(gift, 'inChat')),
-                })
-              : t('buddyEvent.GIFT', { buddy: buddyName, actor: nameOf(item.actorId) });
             return (
               <View style={styles.spaced}>
-                {item.actorId === myId && gift ? (
-                  <GiftCard gift={gift} title={line} onReadPostcard={onOpenMail} />
+                {gift ? (
+                  <BuddyGiftMessage
+                    gift={gift}
+                    buddyName={buddyName}
+                    toName={nameOf(item.actorId)}
+                    onOpenMail={item.actorId === myId ? onOpenMail : undefined}
+                  />
                 ) : (
-                  <BuddyEventRow label={line} />
+                  <BuddyEventRow
+                    label={t('buddyEvent.GIFT', { buddy: buddyName, actor: nameOf(item.actorId) })}
+                  />
                 )}
               </View>
             );

@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useColors } from '@/theme';
@@ -17,15 +16,13 @@ export function BuddyEventRow({ label }: { label: string }) {
 }
 
 // A timeline entry worth noticing, as a card: the top level reached (a thank-you from us, and what
-// comes next), the day's together bonus (docs/PROJECT.md), or a gift with its picture on top.
+// comes next) or the day's together bonus (docs/PROJECT.md).
 export function EventCard({
-  picture,
   title,
   body,
   action,
   onAction,
 }: {
-  picture?: ReactNode;
   title: string;
   body: string;
   action?: string;
@@ -36,7 +33,6 @@ export function EventCard({
   return (
     <View style={styles.row}>
       <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.accent }]}>
-        {picture ? <View style={styles.picture}>{picture}</View> : null}
         <Text style={[styles.cardTitle, { color: colors.text }]}>{title}</Text>
         <Text
           lineBreakStrategyIOS="hangul-word"
@@ -69,9 +65,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 6,
-  },
-  picture: {
-    alignItems: 'center',
   },
   action: {
     alignSelf: 'center',

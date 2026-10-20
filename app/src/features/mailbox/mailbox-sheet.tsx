@@ -6,9 +6,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { WebFrame } from '@/components/web-frame';
-import { giftKey } from '@/features/buddy/gifts';
-import { GIFT_PALETTE, giftArt } from '@/features/buddy/pixel/gifts';
-import { PixelSprite } from '@/features/buddy/pixel/pixel-sprite';
 import type { PushState } from '@/features/notifications/push';
 import { useColors } from '@/theme';
 
@@ -24,9 +21,8 @@ const ICONS: Record<ShownMail['kind'], string> = {
   letter: '💌',
   notice: '📮',
   guide: '📌',
-  postcard: '🏞️',
+  buddyLetter: '✉️',
 };
-const GIFT_SCALE = 5;
 
 export function MailboxSheet({
   visible,
@@ -48,19 +44,19 @@ export function MailboxSheet({
   onTurnOnPush?: () => Promise<PushState>;
   // While the room's buddy may go its own way: opens its details, where that is done.
   onGraduate?: () => void;
-  // Who signs the postcards: they are from the room's buddy now.
+  // Who signs the buddy's letters: they are from the room's buddy now.
   buddyName: string;
 }) {
   const colors = useColors();
   const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
   const [open, setOpen] = useState<MailKey | null>(null);
-  // A letter's words are its own; a postcard's are the buddy's, by which it wrote.
+  // Our letters' words are their own; the buddy's are under buddy.letter, by which it wrote.
   const words = (mail: ShownMail) =>
-    mail.kind === 'postcard'
+    mail.kind === 'buddyLetter'
       ? {
-          title: t(giftKey(mail.gift, 'name')),
-          body: t(giftKey(mail.gift, 'line')),
+          title: t(`buddy.letter.${mail.gift.letter}.title`),
+          body: t(`buddy.letter.${mail.gift.letter}.body`),
           from: t('mailbox.giftFrom', { buddy: buddyName }),
         }
       : {
@@ -145,15 +141,6 @@ export function MailboxSheet({
               // A sheet of letter paper: ruled, the date in the corner, signed at the bottom.
               <View style={styles.paper}>
                 <Text style={styles.paperDate}>{date(opened.date)}</Text>
-                {opened.kind === 'postcard' ? (
-                  <View style={styles.paperGift}>
-                    <PixelSprite
-                      frame={giftArt(opened.gift)}
-                      palette={GIFT_PALETTE}
-                      scale={GIFT_SCALE}
-                    />
-                  </View>
-                ) : null}
                 <Text style={styles.paperTitle}>{words(opened).title}</Text>
                 <View style={styles.rule} />
                 <Text style={styles.paperBody}>{words(opened).body}</Text>
@@ -299,11 +286,6 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     fontSize: 12,
     color: INK_LIGHT,
-  },
-  paperGift: {
-    alignItems: 'center',
-    marginTop: 4,
-    marginBottom: 6,
   },
   paperTitle: {
     fontSize: 18,

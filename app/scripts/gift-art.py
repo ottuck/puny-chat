@@ -1,4 +1,5 @@
-"""Draws the gift pictures (docs/fun-improvements.md, 직업 선물) into src/features/buddy/pixel/gifts.ts.
+"""Draws the pictures of what a barista, a cook or a gardener makes (docs/fun-improvements.md, 직업 선물)
+into src/features/buddy/pixel/gifts.ts.
 
 Each is 32 x 32, made of shapes lit from the top left (three or four shades of each material), outlined
 in a darker shade of the thing it surrounds, with a line where one thing lies on another. A new gift in
@@ -632,186 +633,11 @@ def flowers():
     return a
 
 
-# ---------------- DJ ----------------
-def record(sleeve_art, label='red'):
-    a = Art()
-    # The record, half out of its sleeve.
-    cx, cy, r = 21, 15.5, 9.8
-    a.fill(ell(cx, cy, r, r), 'vinyl',
-           lambda x, y: (2 if int(math.hypot(x - cx, y - cy) * 1.3) % 3 == 0 else 1))
-    a.dot([(x, y) for x in range(32) for y in range(32)
-           if 5.5 < math.hypot(x + 0.5 - cx, y + 0.5 - cy) < 9 and abs(math.atan2(y + 0.5 - cy, x + 0.5 - cx) + 0.75) < 0.2],
-          'vinyl', 3)
-    a.fill(ell(cx, cy, 3.4, 3.4), label, sphere(cx, cy, 3.4, 3.4), group='label')
-    a.fill(ell(cx, cy, 0.8, 0.8), 'vinyl', 0, group='label')
-    # The sleeve and its picture.
-    a.fill(rect(1.5, 5.5, 18.5, 25.5), 'cream', 1)
-    sleeve_art(a, 2.5, 6.5, 15, 18)
-    return a
-
-
-def moon_sleeve(a, x0, y0, w, h):
-    a.fill(rect(x0, y0, x0 + w, y0 + h), 'navy', vert(y0, y0 + h), group='pic')
-    a.fill(minus(ell(x0 + 7, y0 + 8, 4.6, 4.6), ell(x0 + 9.4, y0 + 6.6, 4, 4)), 'gold', 2, group='moon')
-    for sx, sy in ((14, 4), (16, 11), (4, 16), (12, 17), (16, 2)):
-        a.dot([(int(x0 + sx), int(y0 + sy))], 'gold', 3, group='pic')
-    a.dot([(int(x0 + 13), int(y0 + 9)), (int(x0 + 14), int(y0 + 9)), (int(x0 + 13), int(y0 + 8)),
-           (int(x0 + 13), int(y0 + 10)), (int(x0 + 12), int(y0 + 9))], 'gold', 2, group='pic')
-
-
-def rain_sleeve(a, x0, y0, w, h):
-    a.fill(rect(x0, y0, x0 + w, y0 + h), 'sky', vert(y0, y0 + h), group='pic')
-    a.fill(anyof(ell(x0 + 7, y0 + 5, 5, 2.6), ell(x0 + 11, y0 + 4, 4, 3), ell(x0 + 14, y0 + 5.4, 3.6, 2.2)), 'white',
-           lambda x, y: 2 if y < y0 + 4.5 else 1)
-    drops = [(5, 10), (9, 12), (13, 10), (7, 15), (11, 16), (15, 14), (4, 18), (16, 18)]
-    for dx, dy in drops:
-        a.dot([(int(x0 + dx), int(y0 + dy)), (int(x0 + dx), int(y0 + dy) + 1)], 'blue', 1, group='pic')
-
-
-def heart_sleeve(a, x0, y0, w, h):
-    a.fill(rect(x0, y0, x0 + w, y0 + h), 'pink', vert(y0, y0 + h), group='pic')
-    a.fill(heart(x0 + 6.5, y0 + 7.5, 3.8), 'red', sphere(x0 + 5.5, y0 + 6.5, 4, 4), group='h1')
-    a.fill(heart(x0 + 12.5, y0 + 12.5, 3.8), 'white', sphere(x0 + 11.5, y0 + 11.5, 4, 4), group='h2')
-
-
-def sun_sleeve(a, x0, y0, w, h):
-    a.fill(rect(x0, y0, x0 + w, y0 + h), 'orange', vert(y0, y0 + h), group='pic')
-    cx, cy = x0 + w / 2, y0 + h / 2
-    for k in range(8):
-        ang = k * math.pi / 4
-        a.dot([(int(cx + math.cos(ang) * rr), int(cy + math.sin(ang) * rr)) for rr in (6.5, 7.5)], 'yellow', 3, group='pic')
-    a.fill(ell(cx, cy, 4.6, 4.6), 'yellow', sphere(cx, cy, 4.6, 4.6), group='sun')
-
-
-def sunrise_sleeve(a, x0, y0, w, h):
-    a.fill(rect(x0, y0, x0 + w, y0 + h), 'dusk',
-           lambda x, y: 3 if y < y0 + 4 else (3 if (int(x) + int(y)) % 2 else 2) if y < y0 + 6 else 2 if y < y0 + 9 else 1,
-           group='pic')
-    sx, sy = x0 + w / 2, y0 + 12
-    for k in range(7):
-        ang = math.pi + k * math.pi / 6
-        a.dot([(sx + math.cos(ang) * rr, sy + math.sin(ang) * rr) for rr in (6.6, 7.6)], 'yellow', 3, group='pic')
-    a.fill(both(ell(sx, sy, 5, 5), lambda x, y: y < sy + 1), 'yellow', sphere(sx, sy - 2, 5, 5), group='sun')
-    a.fill(both(rect(x0, y0, x0 + w, y0 + h), anyof(ell(x0 + 2, y0 + h + 4, 9, 7.5), ell(x0 + 14, y0 + h + 4.5, 9, 7))),
-           'grass', vert(y0 + 11, y0 + h), group='hills')
-    a.fill(both(rect(x0, y0, x0 + w, y0 + h), ell(x0 + 14, y0 + h + 4.5, 9, 7)), 'grass', vert(y0 + 12, y0 + h),
-           group='hill2')
-
-
-# ---------------- Writer ----------------
-def postcard(scene, stamp_mat):
-    a = Art()
-    a.fill(rect(2.5, 7.5, 30.5, 27.5), 'shade', 1)
-    a.fill(rect(1.5, 6.5, 29.5, 26.5), 'cream', 2)
-    scene(a, 3.5, 8.5, 25, 16)
-    # The stamp at the top right corner.
-    a.fill(rect(23.5, 3.5, 29.5, 10.5), 'stamp', 1, group='stamp')
-    a.fill(rect(24.5, 4.5, 28.5, 9.5), stamp_mat, 2, group='stamp-pic')
-    a.dot([(x, 3) for x in range(24, 30, 2)] + [(30, y) for y in range(4, 11, 2)], 'stamp', 1, group='stamp')
-    return a
-
-
-def sea_scene(a, x0, y0, w, h):
-    a.fill(rect(x0, y0, x0 + w, y0 + 7), 'sky', lambda x, y: 3 if y < y0 + 2 else 2 if y < y0 + 4.5 else 1, group='pic')
-    a.fill(ell(x0 + 18, y0 + 6.5, 2.6, 2.6), 'yellow', 2, group='pic')
-    a.fill(rect(x0, y0 + 7, x0 + w, y0 + 13), 'sea', lambda x, y: 2 if y < y0 + 8.5 else 1 if y < y0 + 11 else 0, group='pic')
-    a.fill(rect(x0, y0 + 13, x0 + w, y0 + h), 'sand', 2, group='pic')
-    for wx, wy in ((3, 9), (10, 11), (17, 9), (21, 12), (6, 12)):
-        a.dot([(int(x0 + wx), int(y0 + wy)), (int(x0 + wx) + 1, int(y0 + wy))], 'sea', 3, group='pic')
-    # A sailboat.
-    a.fill(poly([(x0 + 8, y0 + 2), (x0 + 8, y0 + 8), (x0 + 4, y0 + 8)]), 'white', 2, group='boat')
-    a.fill(rect(x0 + 3, y0 + 8, x0 + 10, y0 + 9.2), 'red', 1, group='boat')
-
-
-def forest_scene(a, x0, y0, w, h):
-    a.fill(rect(x0, y0, x0 + w, y0 + h), 'sky', lambda x, y: 3 if y < y0 + 3 else 2 if y < y0 + 6 else 1, group='pic')
-    for i, (tx, th, mat) in enumerate(((3, 11, 'hill'), (9, 13, 'leaf'), (15, 10, 'hill'), (20, 12, 'leaf'), (25, 9, 'hill'))):
-        top = y0 + h - th
-        a.fill(both(rect(x0, y0, x0 + w, y0 + h),
-                    poly([(x0 + tx, top), (x0 + tx + 4.2, y0 + h - 2), (x0 + tx - 4.2, y0 + h - 2)])),
-               mat, lambda x, y, tx=tx: 2 if x < x0 + tx else 1, group=f'tree{i}')
-    a.fill(rect(x0, y0 + h - 2.5, x0 + w, y0 + h), 'grass', 1, group='ground')
-
-
-def stars_scene(a, x0, y0, w, h):
-    def night(x, y):
-        t = (y - y0) / h
-        if t < 0.35:
-            return 0
-        if t < 0.5:
-            return 1 if (int(x) + int(y)) % 2 else 0
-        if t < 0.7:
-            return 1
-        return 2 if (int(x) + int(y)) % 2 else 1
-    a.fill(rect(x0, y0, x0 + w, y0 + h), 'navy', night, group='pic')
-    for sx, sy, big in ((3, 3, 0), (8, 6, 1), (14, 2, 0), (19, 5, 0), (23, 9, 0), (5, 10, 0), (12, 9, 0)):
-        x, y = int(x0 + sx), int(y0 + sy)
-        pts = [(x, y)] + ([(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)] if big else [])
-        a.dot(pts, 'gold', 3, group='pic')
-    a.fill(minus(ell(x0 + 20, y0 + 4, 2.6, 2.6), ell(x0 + 21.4, y0 + 3.2, 2.2, 2.2)), 'gold', 2, group='moon')
-    a.fill(both(rect(x0, y0, x0 + w, y0 + h), anyof(ell(x0 + 5, y0 + h + 4, 12, 6.5), ell(x0 + 21, y0 + h + 3, 10, 5))),
-           'ink', 1, group='hills')
-
-
-def cat_scene(a, x0, y0, w, h):
-    a.fill(rect(x0, y0, x0 + w, y0 + h), 'dusk', lambda x, y: 3 if y < y0 + 4 else 2 if y < y0 + 9 else 1, group='pic')
-    a.fill(ell(x0 + 18, y0 + 10, 3.6, 3.6), 'yellow', 2, group='pic')
-    a.fill(rect(x0, y0 + h - 3, x0 + w, y0 + h), 'wood', vert(y0 + h - 3, y0 + h), group='sill')
-    cx, base = x0 + 9, y0 + h - 3
-    body = anyof(ell(cx, base - 3, 4.6, 3.6), ell(cx - 1, base - 8, 3.2, 2.9),
-                 poly([(cx - 4, base - 9.5), (cx - 3.4, base - 13), (cx - 1.6, base - 10)]),
-                 poly([(cx - 0.4, base - 10), (cx + 1.4, base - 13), (cx + 2, base - 9.5)]))
-    a.fill(body, 'ink', 1, group='cat')
-    a.fill(lambda x, y: base - 6 <= y <= base - 0.5 and abs(x - (cx + 5.5 + math.sin((y - base) * 0.7) * 1.2)) <= 0.7,
-           'ink', 1, group='cat')
-    a.dot([(int(cx - 2), int(base - 8)), (int(cx), int(base - 8))], 'gold', 3, group='cat')
-
-
-MAPLE = [
-    '.......#.......',
-    '......###......',
-    '..#...###...#..',
-    '..##.#####.##..',
-    '...#########...',
-    '#...#######...#',
-    '###.#######.###',
-    '.#############.',
-    '..###########..',
-    '...#########...',
-    '.#####.#.#####.',
-    '..###..#..###..',
-]
-
-
-def autumn_scene(a, x0, y0, w, h):
-    a.fill(rect(x0, y0, x0 + w, y0 + h), 'cream', lambda x, y: 3 if (int(x) * 3 + int(y)) % 9 == 0 else 2, group='pic')
-    ox, oy = int(x0 + 5), int(y0 + 1)
-
-    def mask(x, y):
-        c, r = int(x) - ox, int(y) - oy
-        return 0 <= r < len(MAPLE) and 0 <= c < 15 and MAPLE[r][c] == '#'
-
-    def shade(x, y):
-        c, r = int(x) - ox, int(y) - oy
-        if c == 7 and 2 <= r <= 10:
-            return 0
-        if r == 7 and c in (3, 4, 10, 11) or r == 6 and c in (5, 9) or r == 8 and c in (2, 12):
-            return 0
-        return 2 if c < 7 and r < 8 else 1 if c < 10 else 0 if r > 8 else 1
-    a.fill(mask, 'maple', shade, group='leaf')
-    line(a, ox + 7.5, oy + 11, ox + 8.5, y0 + h - 0.6, 'wood', 0.6, group='stalk')
-
 ART = {
     'BARISTA': {'latte': latte, 'icedAmericano': iced_americano, 'caramelMacchiato': caramel_macchiato,
                 'matchaLatte': matcha_latte, 'chipFrappe': chip_frappe},
     'CHEF': {'omurice': omurice, 'ramen': ramen, 'pancakes': pancakes, 'riceBalls': rice_balls, 'gyoza': gyoza},
     'GARDENER': {'rose': rose, 'tulips': tulips, 'sunflower': sunflower, 'succulent': succulent, 'flowers': flowers},
-    'DJ': {'record1': lambda: record(moon_sleeve, 'gold'), 'record2': lambda: record(rain_sleeve, 'red'),
-           'record3': lambda: record(heart_sleeve, 'pink'), 'record4': lambda: record(sun_sleeve, 'blue'),
-           'record5': lambda: record(sunrise_sleeve, 'grass')},
-    'WRITER': {'sea': lambda: postcard(sea_scene, 'red'), 'forest': lambda: postcard(forest_scene, 'orange'),
-               'stars': lambda: postcard(stars_scene, 'pink'), 'cat': lambda: postcard(cat_scene, 'blue'),
-               'autumn': lambda: postcard(autumn_scene, 'grass')},
 }
 
 DESCRIBE = {
@@ -819,14 +645,10 @@ DESCRIBE = {
     'caramelMacchiato': 'milk, espresso and foam in a glass, caramel over it',
     'matchaLatte': 'a stone mug of matcha latte with a heart in the milk',
     'chipFrappe': 'a chocolate chip frappé under whipped cream and a dome lid', 'omurice': 'omurice with a ketchup heart',
-    'ramen': 'a bowl of ramen with its toppings and chopsticks', 'pancakes': 'a stack with syrup and butter',
-    'riceBalls': 'two rice balls in nori on a wooden board', 'gyoza': 'three pan-fried gyoza on a plate', 'rose': 'a single rose in a clear sleeve',
+    'ramen': 'a small bowl of ramen with its toppings', 'pancakes': 'a stack with syrup and butter',
+    'riceBalls': 'two rice balls in nori on a wooden board', 'gyoza': 'three pan-fried gyoza on a plate', 'rose': 'a single rose lying across',
     'tulips': 'three tulips wrapped in paper', 'sunflower': 'a sunflower', 'succulent': 'a succulent in a little pot',
-    'flowers': 'wildflowers in paper', 'record1': 'a record from a sleeve with the moon',
-    'record2': 'a record from a sleeve with rain', 'record3': 'a record from a sleeve with hearts',
-    'record4': 'a record from a sleeve with the sun', 'record5': 'a record from a sleeve with a sunrise',
-    'sea': 'a postcard of the sea', 'forest': 'a postcard of the forest', 'stars': 'a postcard of the stars',
-    'cat': 'a postcard of a cat at the window', 'autumn': 'a postcard of a maple leaf',
+    'flowers': 'wildflowers in paper',
 }
 
 CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' + ''.join(chr(c) for c in range(0xC0, 0x250) if c not in (0xD7, 0xF7))
@@ -838,19 +660,19 @@ key = {c: CHARS[i] for i, c in enumerate(colors)}
 frames = {job: {kind: [''.join(key[c] if c else '.' for c in row) for row in grid] for kind, grid in kinds.items()}
           for job, kinds in rendered.items()}
 
-out = ["""import type { BuddyJob } from '../api';
-import type { GIFTS, GiftKind } from '../gifts';
+out = ["""import type { ITEMS, ItemGift, ItemJob } from '../gifts';
 import type { Frame, Palette } from './pixel-sprite';
 
-// What a grown-up makes at work for one of us (docs/fun-improvements.md, 직업 선물), drawn on the
-// mailbox's letter paper: a 32 × 32 picture for each gift in gifts.ts, lit from the top left, outlined
-// in a darker shade of each thing. Made by scripts/gift-art.py: change it there, not here.
+// What a barista, a cook or a gardener makes at work for one of us (docs/fun-improvements.md, 직업 선물),
+// shown in the chat as it is handed over: a 32 × 32 picture for each item in gifts.ts, lit from the
+// top left, outlined in a darker shade of each thing. Made by scripts/gift-art.py: change it there,
+// not here.
 
 export const GIFT_PALETTE: Palette = {
 """]
 out += [f"  '{key[c]}': '{c}',\n" for c in colors]
 out.append('};\n\n')
-out.append('const GIFT_ART: { [J in BuddyJob]: Record<(typeof GIFTS)[J][number], Frame> } = {\n')
+out.append('const GIFT_ART: { [J in ItemJob]: Record<(typeof ITEMS)[J][number], Frame> } = {\n')
 for job, kinds in frames.items():
     out.append(f'  {job}: {{\n')
     for kind, rows in kinds.items():
@@ -859,8 +681,8 @@ for job, kinds in frames.items():
         out.append('    ],\n')
     out.append('  },\n')
 out.append('};\n\n')
-out.append("""export const giftArt = (gift: GiftKind): Frame =>
-  (GIFT_ART[gift.job] as Record<string, Frame>)[gift.kind];
+out.append("""export const giftArt = (gift: ItemGift): Frame =>
+  (GIFT_ART[gift.job] as Record<string, Frame>)[gift.item];
 """)
 open('src/features/buddy/pixel/gifts.ts', 'w', encoding='utf-8', newline='\n').write(''.join(out))
 print('written', len(colors), 'colors')

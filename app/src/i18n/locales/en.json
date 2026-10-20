@@ -90,15 +90,8 @@
     "togetherBody": "{{buddy}} is thrilled. When you both send a message on the same day, you get it once a day.",
     "jobChangeRule": "The job can be changed once each at Lv.20, 30, 40 and 50, and any time from Lv.60.",
     "graduatedBody": "A photo of {{name}} now hangs in the memory album at the top right of the stage. Look back any time.",
-    "gift": {
-      "BARISTA": "☕ {{buddy}} made {{to}} {{gift}}",
-      "CHEF": "🍳 {{buddy}} cooked {{to}} {{gift}}",
-      "GARDENER": "🌱 {{buddy}} gave {{to}} {{gift}}",
-      "DJ": "🎧 {{buddy}} picked out a record for {{to}}: {{gift}}",
-      "WRITER": "✒️ {{buddy}} wrote {{to}} {{gift}}"
-    },
-    "postcardBody": "It's in your mailbox.",
-    "readPostcard": "Read the postcard"
+    "buddyTo": "{{buddy}} → {{to}}",
+    "letterSent": "I wrote you a letter and left it in the mailbox.\nRead it when you have a moment."
   },
   "invite": {
     "button": "Invite a friend",
@@ -195,6 +188,14 @@
       "dj2": "What should play next?",
       "dj3": "For those who cannot sleep",
       "dj4": "The night is still long",
+      "dj5": "Good song, right?",
+      "dj6": "Taking requests",
+      "dj7": "Turn it up a little",
+      "dj8": "Next song coming up",
+      "dj9": "Tonight’s message…",
+      "dj10": "Stay tuned!",
+      "dj11": "More after this",
+      "dj12": "This one’s for you",
       "writer1": "Got a line for today",
       "writer2": "Writing about you two",
       "writer3": "A good day",
@@ -364,7 +365,7 @@
     "jobPerk": {
       "CHEF": "Gets extra excited at mealtime. Stirs a pot when alone.",
       "GARDENER": "Says \"All tidy\" when the work is done. Tends the big plant when alone.",
-      "DJ": "Upside-down days: on air in the small hours, asleep by day.",
+      "DJ": "Up all night, asleep by day. Talks a lot on its own, like a radio host.",
       "WRITER": "Shows a big heart at loving words. Writes when alone.",
       "BARISTA": "Talks a lot, chiming in even while you chat."
     },
@@ -414,137 +415,122 @@
       "BARISTA": {
         "latte": {
           "name": "Café latte",
-          "inChat": "a café latte",
-          "line": "I tried a heart in the foam and it leaned a little. The taste came out straight."
+          "offer": "I made you a café latte. Want to try it?"
         },
         "icedAmericano": {
           "name": "Iced Americano",
-          "inChat": "an iced Americano",
-          "line": "Plenty of ice. Days like today call for one."
+          "offer": "An iced Americano, plenty of ice."
         },
         "caramelMacchiato": {
           "name": "Caramel macchiato",
-          "inChat": "a caramel macchiato",
-          "line": "I drew a grid in caramel. You could play tic-tac-toe on it."
+          "offer": "A caramel macchiato. You looked like you needed something sweet."
         },
         "matchaLatte": {
           "name": "Matcha latte",
-          "inChat": "a matcha latte",
-          "line": "Whisked the matcha smooth. Not a single lump. Probably."
+          "offer": "Not coffee today. How about a matcha latte?"
         },
         "chipFrappe": {
           "name": "Chocolate chip frappé",
-          "inChat": "a chocolate chip frappé",
-          "line": "I went as high as I liked with the whipped cream."
+          "offer": "A chocolate chip frappé, extra whipped cream."
         }
       },
       "CHEF": {
         "omurice": {
           "name": "Omurice",
-          "inChat": "omurice",
-          "line": "I tried to write your name in ketchup and ran out of egg. The feeling's all there."
+          "offer": "I made omurice. There’s a ketchup heart on it."
         },
         "ramen": {
           "name": "Ramen",
-          "inChat": "a bowl of ramen",
-          "line": "Noodles on the firm side. Drink the broth too."
+          "offer": "Ramen’s ready. Eat it before the noodles go soft."
         },
         "pancakes": {
           "name": "Pancakes",
-          "inChat": "pancakes",
-          "line": "A stack of three. The fourth disappeared during taste-testing."
+          "offer": "Pancakes, with butter on top."
         },
         "riceBalls": {
           "name": "Rice balls",
-          "inChat": "rice balls",
-          "line": "A little salt, a lot of care."
+          "offer": "Rice balls, one for whenever you get peckish."
         },
         "gyoza": {
           "name": "Gyoza",
-          "inChat": "some gyoza",
-          "line": "Crispy on the bottom. Go easy on the soy sauce."
+          "offer": "Gyoza, crispy on the bottom."
         }
       },
       "GARDENER": {
         "rose": {
           "name": "A single rose",
-          "inChat": "a single rose",
-          "line": "I took off all the thorns first. No need to be careful."
+          "offer": "A single rose. I took the thorns off."
         },
         "tulips": {
           "name": "Three tulips",
-          "inChat": "three tulips",
-          "line": "Put them in water and they'll open a little more by morning."
+          "offer": "Three tulips. In water, they’ll open more by tomorrow."
         },
         "sunflower": {
           "name": "Sunflower",
-          "inChat": "a sunflower",
-          "line": "Keep it facing the sun. That's the side it likes."
+          "offer": "A sunflower. Keep it where the sun comes in."
         },
         "succulent": {
           "name": "Little succulent",
-          "inChat": "a little succulent",
-          "line": "Water it once a week. It copes pretty well if you forget."
+          "offer": "A little succulent. Water it once a week."
         },
         "flowers": {
           "name": "Wildflowers",
-          "inChat": "a bunch of wildflowers",
-          "line": "These popped up beside the pot on their own. I watered them every day anyway."
+          "offer": "A bunch of wildflowers. They popped up beside the pot."
         }
+      }
+    },
+    "giftOpen": {
+      "BARISTA": {
+        "o1": "Tired? You did well today.",
+        "o2": "Take a little break.",
+        "o3": "How was your day?",
+        "o4": "Busy day? Catch your breath."
       },
-      "DJ": {
-        "record1": {
-          "name": "“Frequency at 2 a.m.”",
-          "inChat": "“Frequency at 2 a.m.”",
-          "line": "What I play on nights I can't sleep. The B-side is better."
-        },
-        "record2": {
-          "name": "“Waltz for a Rainy Day”",
-          "inChat": "“Waltz for a Rainy Day”",
-          "line": "I take this one out when it rains. It was sunny today, though."
-        },
-        "record3": {
-          "name": "“Songs for Two”",
-          "inChat": "“Songs for Two”",
-          "line": "Alone, you only hear half of it. Listen together."
-        },
-        "record4": {
-          "name": "“Summer Night Radio”",
-          "inChat": "“Summer Night Radio”",
-          "line": "There are cicadas on the recording. On purpose."
-        },
-        "record5": {
-          "name": "“Slow Morning”",
-          "inChat": "“Slow Morning”",
-          "line": "Try it instead of an alarm. You may not want to get up."
-        }
+      "CHEF": {
+        "o1": "Hungry?",
+        "o2": "Have you eaten?",
+        "o3": "Eat well and keep going.",
+        "o4": "You worked hard today."
       },
-      "WRITER": {
-        "sea": {
-          "name": "Postcard: the sea",
-          "inChat": "a postcard of the sea",
-          "line": "I tried to write down the waves and got three lines of “shhh.” Can you hear it?"
-        },
-        "forest": {
-          "name": "Postcard: the forest",
-          "inChat": "a postcard of the forest",
-          "line": "The forest was quiet, so I found a lot to say."
-        },
-        "stars": {
-          "name": "Postcard: the stars",
-          "inChat": "a postcard of the stars",
-          "line": "Last night I counted stars and stopped at two. Two is my favorite."
-        },
-        "cat": {
-          "name": "Postcard: a cat",
-          "inChat": "a postcard of a cat",
-          "line": "I drew our visitor at the window. The tail came out a little long."
-        },
-        "autumn": {
-          "name": "Postcard: autumn leaves",
-          "inChat": "a postcard of autumn leaves",
-          "line": "I stuck a red leaf on it. If it falls off, that's autumn too."
-        }
+      "GARDENER": {
+        "o1": "I thought of you on the way.",
+        "o2": "The flowers came out nicely today.",
+        "o3": "It’ll brighten up your room a little.",
+        "o4": "You looked like you could use a lift."
+      }
+    },
+    "radio": {
+      "show1": "📻 This is {{buddy}} Radio. Thanks for tuning in.\nFirst message tonight is from {{to}}. You did well today.\nFirst song coming up: some quiet piano.",
+      "show2": "📻 Exactly two people listening right now.\nStill the best ratings I’ve ever had.\n{{to}}, send your requests in the chat.",
+      "show3": "📻 Here’s the weather. Clear skies in this room today.\nScattered chatter later on.\nBring earphones, not an umbrella.",
+      "show4": "📻 This one’s for {{to}}.\nNo title. I just hummed it.\n…Next time I’ll play a real record.",
+      "show5": "📻 This show never has ads.\nInstead, a round of applause for {{to}}.\nClap clap. You made it through today.",
+      "show6": "📻 That’s all for today’s show.\n{{to}}, get some rest. Same time tomorrow.\nI’ll close with the sound of rain."
+    },
+    "letter": {
+      "letter1": {
+        "title": "Today’s first line",
+        "body": "Hi.\n\nToday I sat at my desk and rewrote the first line ten times. Then I realized the thing I most want to say is always short.\n\nThank you. For coming by again today."
+      },
+      "letter2": {
+        "title": "Outside the window",
+        "body": "Hi.\n\nA bird landed on the windowsill earlier and flew off again. I wrote it down so I wouldn’t forget to tell you.\n\nHaving someone to tell small things to is a pretty good thing."
+      },
+      "letter3": {
+        "title": "A letter with an ink blot",
+        "body": "Hi.\n\nI spilled a little ink while writing this. I almost started over, but I’m sending it as it is. The blot is part of today too.\n\nIf your day was a bit of a mess, that’s all right as well."
+      },
+      "letter4": {
+        "title": "A story about two",
+        "body": "Hi.\n\nI’ve been writing a story. There are two main characters, and every day they talk a little. Nothing big happens, but somehow you keep wanting to read on.\n\nSound like anyone you know?"
+      },
+      "letter5": {
+        "title": "A letter written at night",
+        "body": "Hi.\n\nWords get more honest at night, so I wrote this one after dark.\n\nYou did well today. I’m cheering for tomorrow’s you too."
+      },
+      "letter6": {
+        "title": "No need to write back",
+        "body": "Hi.\n\nThis letter doesn’t need a reply. Instead, leave a line in the chat today, about anything. That’s plenty.\n\nI’ll read that line quietly, and keep it."
       }
     }
   },
@@ -824,7 +810,7 @@
       "letter": "Letter",
       "notice": "News",
       "guide": "Heads-up",
-      "postcard": "Postcard"
+      "buddyLetter": "Letter"
     },
     "mail": {
       "topLevelLetter": {
