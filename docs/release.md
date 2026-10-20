@@ -20,7 +20,8 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 | 코드 쪽 준비(아래) | 코드 | 완료 |
 | EAS iOS 개발용 빌드·설치 | 운영자(Apple 인증, 기기 등록) | 완료 |
 | iPhone 실기기 검증 | 운영자 조작, 결과에 따른 코드 수정 | 진행 중 |
-| production 빌드·TestFlight | 운영자 인증, CLI는 지원 | 예정 |
+| production 빌드·TestFlight 업로드(1.0.0 빌드 4). 배포 인증서·App Store 프로필·App Store Connect API 키는 EAS에 있다 | 운영자 인증, CLI는 지원 | 완료 |
+| TestFlight로 실기기 확인 | 운영자 | 진행 중 |
 | 스토어 정보 입력·심사 제출 | 문안은 지원, 최종 확인·제출은 운영자 | 예정 |
 
 ## 코드 쪽 준비 (완료)
@@ -52,10 +53,13 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
    - 앱을 닫은 상태의 푸시, 알림을 눌러 돌아오기(EAS APNs 키)
    - 백그라운드 복귀·재연결, 키보드·스크롤, 아이콘·스플래시, 설정의 선택창
    - 문의 접수 후 운영자 수신함에 알림이 실제로 오는지
-3. **TestFlight.** production 빌드 후 `eas submit`으로 올려 확인한다.
+3. **TestFlight.** `app/`에서 production 빌드를 만들고 끝나면 App Store Connect에 바로 올린다(`--auto-submit`).
    ```bash
-   npx eas-cli build --profile production --platform ios
+   npx eas-cli build --profile production --platform ios --auto-submit
    ```
+   빌드 번호는 EAS가 올린다(`appVersionSource: remote`). 첫 빌드 때 Apple 로그인으로 만든 배포 인증서·App Store 프로필·
+   App Store Connect API 키가 EAS에 있고 `eas.json`에 `ascAppId`가 있어서, 다음부터는 `--non-interactive`로도 빌드·업로드된다.
+   Apple 처리(5~10분)가 끝나면 메일이 오고 TestFlight 탭에 보인다. 내부 테스터("Team (Expo)" 그룹)는 심사 없이 설치한다.
 4. **App Store Connect 정보.**
    - 개인정보처리방침 `https://puny-chat.com/privacy`, 지원 URL `https://puny-chat.com/support`
    - 개인정보 수집 항목(처리방침의 실제 수집 내용과 맞춘다), 연령 등급, 스크린샷, 설명, 키워드
