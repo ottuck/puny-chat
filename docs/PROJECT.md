@@ -41,9 +41,11 @@ Yuki:  니가 치워
 - **Solo → Duo.** 혼자 시작할 수 있고(room 멤버 1명), 친구를 초대하면 2명이 되며 Buddy는 그대로 이어진다. room은 최대 2명.
 - **한 화면.** 헤더에 상대(접속·입력 중)와 도움말·설정, 그 아래 화면 높이의 약 1/3이 Buddy 무대, 나머지가 대화. 하단 탭은 없다.
   무대는 입력 중에도, 위로 스크롤해도 접히지 않는다(접었다 펴면 손가락 아래에서 대화가 움직여 스크롤이 튄다).
+  무대는 화면 폭을 꽉 채우고 아래를 바닥 선 색(`stageLine`)의 2px 줄로 닫으며, 그 아래 채팅 위로 옅은 그림자(`StageShade`)를 깐다(말풍선이 방
+  밑으로 지나가는 느낌). 떠 있는 둥근 카드로 두면 대화가 그 밑으로 들어가는 것처럼 보인다.
 - **입력하던 글.** 보내지 않은 입력은 사람·방별로 기기에 저장해(`features/chat/draft.ts`, 바뀔 때마다) 새로고침, 웹의 새 버전
   불러오기, 앱 종료 뒤에도 입력창에 남는다. 보내면 지우고, 로그아웃·계정 전환·계정 삭제 때 모두 지운다. 되살린 글로는 "입력 중"을 보내지 않는다.
-  무대는 화면 폭을 꽉 채우고 아래를 바닥 선 색(`stageLine`)의 2px 줄로 닫으며, 그 아래 채팅 위로 옅은 그림자(`StageShade`)를 깐다(말풍선이 방 밑으로 지나가는 느낌). 떠 있는 둥근 카드로 두면 대화가 그 밑으로 들어가는 것처럼 보인다.- 첫 흐름: 시작하기 → 구경하기 → (위쪽 시작하기) → 이름 → Buddy 이름 짓기(알 탄생) → 혼자 채팅 화면 → 언제든 초대 링크·코드로 친구 초대.
+- 첫 흐름: 시작하기 → 구경하기 → (위쪽 시작하기) → 이름 → Buddy 이름 짓기(알 탄생) → 혼자 채팅 화면 → 언제든 초대 링크·코드로 친구 초대.
   친구에게 코드를 받았으면 첫 화면의 "초대 코드로 시작하기": 4자리 코드 → 이름 → 그 코드로 바로 참가.
 - **마지막 단계 전에는 계정이 없다.** 이름과 알 이름을 정하는 동안은 아직 서비스를 쓰는 것이 아니고(둘러보다 떠나는 사람이 많다), 오는 길의
   코드·이름·알 이름은 앱 메모리에만 둔다(`features/auth/start-flow`). 마지막 단계(알 이름의 "버디 깨우기", 코드로 왔으면 이름의 "다음")에서
@@ -125,7 +127,7 @@ Yuki:  니가 치워
 | 푸시 | 상대 메시지 알림 | 됨(웹 푸시, 아이폰 앱 푸시는 실기기 확인됨) |
 | Buddy | 이름, 배고픔, 청결, 밥·청소, 경험치, 레벨, 진화, 독립과 앨범, 직업 | 됨 |
 | 고객 지원 | 개인정보처리방침·연락처, 문의, 상대 신고·내보내기 | 됨 |
-| 이용 통계 | 시작 흐름·재방문 합계와 주간 메일, 웹 방문(Cloudflare) | 됨. 아이폰 앱은 이 기능이 담긴 EAS Update부터 단계를 보낸다 |
+| 이용 통계 | 시작 흐름·재방문 합계와 주간 메일, 웹 방문(Cloudflare) | 됨 |
 
 넣지 않는 것: 그룹 채팅, 여러 room·여러 상대, 음성·영상 통화, 파일·동영상 첨부, 여러 장 사진·카메라 촬영·사진 저장, 스레드, 정해진 셋 밖의 이모지 반응, 스티커, 공개 프로필·피드·커뮤니티,
 캘린더·공유 앨범·기념일, AI 기능, Buddy 여러 종류·분기 진화·교배, 게임 요소 전부.
@@ -363,7 +365,7 @@ stats          { _id: "steps:<날짜>", ios|web|android: { welcome?, demo?, star
 | `ALREADY_IN_ROOM` | 409 | 2명 room의 멤버가 다른 room에 참가 |
 | `LEAVE_CONFIRMATION_REQUIRED` | 409 | solo room을 두고 참가하려면 확인 필요 |
 | `SEAT_CONFIRMATION_REQUIRED` | 409 | 누군가의 자리를 잇는 코드: 그 사람으로 들어갈지 확인 필요(`detail` = 그 사람 이름) |
-| `BUDDY_NOT_GROWN` | 409 | 20레벨이 안 됐는데 독립 |
+| `BUDDY_NOT_GROWN` | 409 | 60레벨이 안 됐는데 독립(둘이 동시에 하면 늦은 쪽) |
 | `BUDDY_NOT_ADULT` / `JOB_UNCHANGED` / `JOB_CHANGE_LOCKED` | 409 | 직업 바꾸기 불가(직업이 정해지기 전, 같은 직업, 바꿀 수 있는 레벨이 아님) |
 | `PARTNER_CHANGED` | 409 | 같은 `requestId`로 다른 신고 |
 | `SUPPORT_RATE_LIMIT` | 429 | 1시간에 문의 5개 이상 |
@@ -626,56 +628,112 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
 외부: Firebase Authentication, Web Push 서비스, Expo 푸시
 ```
 
-- **서버**: Lightsail 인스턴스(`quant-lab-02`, ap-southeast-2, 2GB + 스왑 2GB, 고정 IP)의 Docker Compose(`server/deploy`, 인스턴스 `/opt/puny-chat`).
-  컨테이너는 서버(복제 1: 연결·presence·typing이 메모리에 있다)와 Caddy(80/443, 인증서 자동, WebSocket 전달). 다른 서비스(quant-lab, ur-check)와
-  나눠 쓰므로 힙 `-Xmx384m`·SerialGC, 컨테이너 640MB로 제한한다. 항상 켜져 있어 콜드 스타트가 없다(앱의 미리 깨우기 `lib/warm-up.ts`는 남겨 둔다).
-  서버 설정은 인스턴스의 `/opt/puny-chat/.env`(견본 `server/deploy/.env.example`)에만 있다. 사진은 인스턴스 디스크 `/opt/puny-chat/photos`
-  (컨테이너 `/data/photos`, 서버 사용자 uid 1001 소유, `update.sh`가 만든다)에 둔다. 이 폴더를 마운트하지 않으면 이미지 안의 `/data`에 쓸 수 없어
-  사진만 `PHOTO_UNAVAILABLE`이 되고 나머지는 그대로 동작한다. `server/deploy`는 서버 이미지에 사본(`/app/deploy`)으로 실려, `update.sh`가 새 이미지를 받은 뒤 `compose.yaml`(문법 확인 뒤 `docker compose up -d`)·`Caddyfile`(제자리에 쓰고 reload, 실패하면 되돌림)·`backup.sh`·`health.sh`(문법 확인 뒤 새 파일로 바꿔 넣기)를 맞춘다. `update.sh` 자신과 systemd 단위는 업데이트가 업데이트 장치를 망가뜨리면 스스로 못 고치므로 바꾸면 손으로 복사한다(다르면 감시가 알린다). 방화벽은 80·443만 열고 SSH는 Lightsail 브라우저 연결만 허용한다.
-  용량(2026-10 확인): 디스크 60GB 중 약 9.4GB 사용. 메모리는 컨테이너를 모두 합쳐 평소 약 0.8GB이고 스왑을 0.7GB쯤 차지하지만, 스왑을 오가는 양(`vmstat`의 si/so)이
-  거의 0이고 OOM이 없어 4GB 요금제로 올리지 않는다. `update.sh`가 새 이미지를 받을 때마다 옛 이미지를 지운다. 같은 저장소의 이미지끼리 레이어를 나눠 써서
-  `docker system df`의 회수 가능 크기는 실제보다 크게 나온다(옛 태그 세 개를 지워도 31MB였다).
-- **DB**: Atlas M0(무료, 512MB, 초당 100 ops), 서버와 같은 시드니. 접근 목록은 Lightsail 고정 IP 하나, 비밀번호(Terraform이 만들어 서버 `.env`로만)와 TLS.
-  인스턴스를 바꾸면 고정 IP를 옮기거나 `var.server_ip`를 바꿔 다시 apply한다. M0는 자동 백업이 없어 인스턴스가 받아 둔다(아래 백업).
-- **백업**: 인스턴스의 systemd 타이머(`puny-chat-backup.timer`, 매일 18:00 UTC)가 `server/deploy/backup.sh`를 실행한다. compose의 `backup` 서비스(`mongo:8.0`,
-  profile이 있어 `up`으로는 뜨지 않고 실행할 때만 잠깐 뜬다)가 `mongodump`로 gzip 아카이브를 받아 `/opt/puny-chat/backups`에 둔다. 매일 것 7개와 일요일 것 3개를
-  남겨 가장 오래된 것도 21일을 넘지 않는다. Atlas 접근 목록이 Lightsail IP뿐이라 GitHub Actions에서는 받을 수 없다.
-  인스턴스는 Lightsail 자동 스냅샷(매일 18:18 UTC쯤, 최근 7개, 인스턴스를 같이 쓰는 서비스 공용)도 남겨서, 덤프와 사진 파일(`photos`)이 스냅샷에 최대 7일 더 남는다.
-  그래서 덤프는 스냅샷까지 합쳐 30일, 지운 사진은 7일을 넘지 않는다(개인정보처리방침의 보관 기간). 덤프를 더 오래 두려면 방침부터 고친다.
-  사진을 되살릴 때는 스냅샷으로 새 인스턴스를 만들어 `photos`를 꺼낸다. 인스턴스를 지우면 자동 스냅샷도 같이 사라진다.
-  인스턴스 밖 사본은 두지 않는다: 인스턴스를 잃어도 운영 데이터는 Atlas에 있고, 인스턴스 침해까지 대비하는 건 이 규모에 과하다.
-  2026-10(사용자 20명, 메시지 220개) 기준 데이터는 약 70KB, 30일치를 모두 합쳐도 1MB가 안 된다. 실패는 `journalctl -u puny-chat-backup`으로 본다.
-  복원은 `/opt/puny-chat`에서 `docker compose run --rm -T backup sh -c 'mongorestore --uri="$SPRING_MONGODB_URI" --gzip --archive=/backups/daily/<날짜>.archive.gz --drop'`.
-  운영 DB에 넣기 전에 확인하려면 임시 MongoDB 컨테이너(`--memory 400m`, `--wiredTigerCacheSizeGB 0.25`, `/backups` 마운트)에서 `mongorestore`로 넣고
-  문서 수를 본 뒤 지운다. 인스턴스 커널(7.0)에서는 `mongod` 8.0이 뜨지 않으므로(SERVER-121912) 이 확인은 `mongo:8.2`로 한다. `mongodump`·`mongorestore`는
-  클라이언트라 8.0 이미지로 된다. 같은 이유로 DB를 인스턴스 안으로 옮기려면 이 커널에서 뜨는 버전을 써야 한다.
-- **감시**: healthchecks.io(이미 다른 서비스에 쓰는 계정, 알림은 메일)의 체크 세 개에 인스턴스가 신호를 보내고, 신호가 끊기거나 `/fail`이 오면
-  알림이 온다. 주소는 인스턴스의 `/opt/puny-chat/healthchecks.env`(견본 `server/deploy/healthchecks.env.example`, Git 제외)에만 있다.
-  - `HC_SERVER`: `health.sh`(`puny-chat-health.timer`, 2분마다)가 공개 주소 `https://api.puny-chat.com/actuator/health`(DNS·Caddy·인증서·서버·DB)를
-    확인해 성공하면 보낸다. 세 번 연속(약 6분, 배포의 재시작은 1분 안에 끝난다) 실패하면 `/fail`로 바로 알리고, 그때 서버 자체도 응답하지 않으면
-    (`/actuator/health/liveness`, DB를 보지 않는다) `server`·`caddy` 컨테이너를 다시 시작한다. Atlas 장애처럼 다시 시작해도 낫지 않는 경우는 알리기만 한다.
-    인스턴스가 통째로 멈추면 신호가 끊겨 알림이 온다.
-  - `HC_BACKUP`: `backup.sh`가 시작(`/start`)과 성공·실패를 보낸다. 하루에 한 번 성공이 없으면 알림이 온다.
-  - `HC_DEPLOY_FILES`: 서버 이미지에 들어 있는 `server/deploy` 사본(`/app/deploy`)과 인스턴스의 파일·systemd 단위를 `health.sh`가 비교해 다르면
-    `/fail`과 다른 파일 이름을 보낸다. `update.sh`가 맞추지 않는 `update.sh`·systemd 단위를 바꾸면 손으로 복사할 때까지 알림이 남는다.
-- **웹 앱**: Cloudflare Worker의 정적 자산(`app/wrangler.jsonc`). `pnpm build:web`이 `expo export -p web` 뒤에 `scripts/worker-assets.mjs`로 404 페이지와
-  `_headers`(서비스 워커 no-cache 등), 배포 버전(`version.json`, 커밋 sha)을 만든다. 홈 화면에 추가한 웹 앱은 새로고침 버튼이 없고 닫아도
-  멈춰 있을 뿐이라, 앱이 다시 보일 때(1분에 한 번까지) 번들에 넣은 버전과 `version.json`을 비교해 다르면 새로 불러온다(`lib/web-update`). 커스텀 도메인은 wrangler 배포가 붙인다(같은 이름의 CNAME이 있으면 안 된다).
-  Cloudflare가 페이지에 Web Analytics 비콘을 자동으로 넣는다(이용 통계).
-- **도메인**: 웹 `puny-chat.com`(Worker), 서버 `api.puny-chat.com`(고정 IP를 가리키는 A 레코드, 프록시 없음, 인증서는 Caddy가 HTTP-01로). Cloudflare Registrar.
-  Firebase 승인된 도메인에 웹 도메인이 있어야 Google 로그인이 된다. 서버 CORS에는 웹 도메인과 로컬 Expo dev 서버.
-- **Terraform**(`infra/`, `infra/README.md`): Atlas 프로젝트·M0·DB 사용자·접근 목록, Cloudflare DNS, VAPID 키. state는 R2, 인증 정보는 `infra/.env`.
-  Lightsail 인스턴스는 나눠 쓰므로 Terraform이 만들지 않는다.
+### 서버
+
+- Lightsail 인스턴스 `quant-lab-02`(ap-southeast-2, 메모리 2GB + 스왑 2GB, 디스크 60GB, 고정 IP)의 Docker Compose. 파일은 `server/deploy`,
+  인스턴스에서는 `/opt/puny-chat`.
+- 컨테이너는 둘이다.
+  - `server`: 복제 1개(연결·presence·typing이 메모리에 있다). 다른 서비스(quant-lab, ur-check)와 인스턴스를 나눠 쓰므로 힙 `-Xmx384m`(`.env`)·SerialGC,
+    컨테이너 640MB로 제한한다.
+  - `caddy`: 80/443, 인증서 자동 발급, WebSocket 전달. 컨테이너 256MB.
+- 항상 켜져 있어 콜드 스타트가 없다. 배포·재시작 직후의 첫 요청을 위해 앱은 열릴 때 서버를 한 번 깨운다(`lib/warm-up.ts`).
+- 서버 설정은 인스턴스의 `/opt/puny-chat/.env`(견본 `server/deploy/.env.example`)에만 있다.
+- 사진은 인스턴스 디스크 `/opt/puny-chat/photos`(컨테이너 `/data/photos`, 서버 사용자 uid 1001 소유, `update.sh`가 만든다). 마운트가 없으면
+  사진만 `PHOTO_UNAVAILABLE`이 되고 나머지는 동작한다.
+- 방화벽은 80·443만 연다. SSH는 Lightsail 브라우저 연결만 허용한다.
+- 메모리는 평소 컨테이너를 모두 합쳐 1GB 아래이고 스왑을 오가는 양(`vmstat`의 si/so)이 거의 없어 4GB 요금제로 올리지 않는다.
+- `update.sh`가 새 이미지를 받을 때마다 옛 이미지를 지운다. 같은 저장소의 이미지끼리 레이어를 나눠 쓰므로 `docker system df`의 회수 가능 크기는
+  실제보다 크게 나온다.
+
+### 배포 파일 맞추기
+
+`server/deploy`는 서버 이미지에 사본(`/app/deploy`)으로 실린다. `update.sh`가 새 이미지를 받은 뒤 인스턴스 파일을 맞춘다.
+
+| 파일 | 맞추는 방법 |
+| --- | --- |
+| `compose.yaml` | 문법 확인 뒤 `docker compose up -d` |
+| `Caddyfile` | 제자리에 쓰고 reload, 실패하면 되돌림 |
+| `backup.sh`, `health.sh` | 문법 확인 뒤 새 파일로 바꿔 넣기 |
+| `update.sh`, systemd 단위 | 맞추지 않고 손으로 복사한다. 업데이트가 업데이트 장치를 망가뜨리면 스스로 고칠 수 없어서다(다르면 감시가 알린다) |
+
+### DB
+
+- Atlas M0(무료, 512MB, 초당 100 ops), 서버와 같은 시드니.
+- 접근 목록은 Lightsail 고정 IP 하나. 비밀번호는 Terraform이 만들어 서버 `.env`에만 두고, TLS로 연결한다.
+- 인스턴스를 바꾸면 고정 IP를 옮기거나 `var.server_ip`를 바꿔 다시 apply한다.
+- M0는 자동 백업이 없어 인스턴스가 받아 둔다(아래 백업).
+
+### 백업
+
+- **DB 덤프.** systemd 타이머 `puny-chat-backup.timer`(매일 18:00 UTC)가 `backup.sh`를 실행한다. compose의 `backup` 서비스(`mongo:8.0`, profile이 있어
+  실행할 때만 잠깐 뜬다)가 `mongodump`로 gzip 아카이브를 `/opt/puny-chat/backups`에 둔다. 매일 것 7개와 일요일 것 3개를 남긴다(가장 오래된 것도 21일 이내).
+  Atlas 접근 목록이 Lightsail IP뿐이라 GitHub Actions에서는 받을 수 없다.
+- **인스턴스 스냅샷.** Lightsail 자동 스냅샷(매일 18:18 UTC쯤, 최근 7개, 인스턴스를 같이 쓰는 서비스 공용)에 덤프와 사진이 최대 7일 더 남는다.
+  인스턴스를 지우면 자동 스냅샷도 사라진다.
+- **보관 기간.** 덤프는 스냅샷까지 합쳐 30일, 지운 사진은 7일을 넘지 않는다(개인정보처리방침의 보관 기간). 더 오래 두려면 방침부터 고친다.
+- **인스턴스 밖 사본은 두지 않는다.** 인스턴스를 잃어도 운영 데이터는 Atlas에 있고, 인스턴스 침해까지 대비하는 건 이 규모에 과하다.
+- **실패 확인.** healthchecks.io가 알린다(아래 감시). 로그는 `journalctl -u puny-chat-backup`.
+- **복원.** `/opt/puny-chat`에서:
+
+  ```bash
+  docker compose run --rm -T backup sh -c 'mongorestore --uri="$SPRING_MONGODB_URI" --gzip --archive=/backups/daily/<날짜>.archive.gz --drop'
+  ```
+
+  운영 DB에 넣기 전에 확인하려면 임시 MongoDB 컨테이너(`--memory 400m`, `--wiredTigerCacheSizeGB 0.25`, `/backups` 마운트)에 넣어 문서 수를 보고 지운다.
+  인스턴스 커널(7.0)에서는 `mongod` 8.0이 뜨지 않으므로(SERVER-121912) 이 확인은 `mongo:8.2`로 한다. `mongodump`·`mongorestore`는 클라이언트라
+  8.0 이미지로 된다. DB를 인스턴스 안으로 옮길 때도 이 커널에서 뜨는 버전을 쓴다.
+- **사진 되살리기.** 스냅샷으로 새 인스턴스를 만들어 `photos`를 꺼낸다.
+
+### 감시
+
+healthchecks.io(다른 서비스와 같은 계정, 알림은 메일)의 체크 세 개에 인스턴스가 신호를 보낸다. 신호가 끊기거나 `/fail`이 오면 알림이 온다.
+주소는 인스턴스의 `/opt/puny-chat/healthchecks.env`(견본 `server/deploy/healthchecks.env.example`, Git 제외)에만 있다.
+
+| 체크 | 신호 | 알림이 오는 때 |
+| --- | --- | --- |
+| `HC_SERVER` | `health.sh`(`puny-chat-health.timer`, 2분마다)가 `https://api.puny-chat.com/actuator/health`(DNS·Caddy·인증서·서버·DB)를 확인하고 성공하면 보낸다 | 세 번 연속(약 6분) 실패하거나 인스턴스가 멈춰 신호가 끊김 |
+| `HC_BACKUP` | `backup.sh`가 시작(`/start`)과 성공·실패를 보낸다 | 하루 동안 성공이 없음 |
+| `HC_DEPLOY_FILES` | `health.sh`가 이미지의 `/app/deploy`와 인스턴스의 파일·systemd 단위를 비교한다 | 다른 파일이 있음(`/fail`에 파일 이름) |
+
+`HC_SERVER`가 실패할 때 서버 자체도 응답하지 않으면(`/actuator/health/liveness`, DB를 보지 않는다) `server`·`caddy` 컨테이너를 다시 시작한다.
+Atlas 장애처럼 재시작으로 낫지 않는 경우는 알리기만 한다. 배포의 재시작은 1분 안에 끝나 알림이 가지 않는다.
+
+### 웹 앱과 도메인
+
+- 웹 앱은 Cloudflare Worker의 정적 자산(`app/wrangler.jsonc`). `pnpm build:web`이 `expo export -p web` 뒤 `scripts/worker-assets.mjs`로 404 페이지,
+  `_headers`(서비스 워커 no-cache 등), 배포 버전 `version.json`(커밋 sha)을 만든다.
+- 홈 화면에 추가한 웹 앱은 새로고침 버튼이 없고 닫아도 멈춰 있을 뿐이라, 앱이 다시 보일 때(1분에 한 번까지) 번들의 버전과 `version.json`을
+  비교해 다르면 새로 불러온다(`lib/web-update`).
+- 도메인은 Cloudflare Registrar.
+  - `puny-chat.com`: Worker. 커스텀 도메인은 wrangler 배포가 붙인다(같은 이름의 CNAME이 있으면 안 된다). Cloudflare가 Web Analytics 비콘을
+    자동으로 넣는다(이용 통계).
+  - `api.puny-chat.com`: 고정 IP를 가리키는 A 레코드, 프록시 없음, 인증서는 Caddy가 HTTP-01로.
+- Firebase 승인된 도메인에 웹 도메인이 있어야 Google 로그인이 된다. 서버 CORS에는 웹 도메인과 로컬 Expo dev 서버.
+
+### Terraform
+
+`infra/`(`infra/README.md`): Atlas 프로젝트·M0·DB 사용자·접근 목록, Cloudflare DNS, VAPID 키. state는 R2, 인증 정보는 `infra/.env`.
+Lightsail 인스턴스는 다른 서비스와 나눠 쓰므로 Terraform이 만들지 않는다. 서버 코드는 아래 배포가 올린다.
+
+### CI와 배포
+
 - **CI**(`.github/workflows/ci.yml`): Actions 무료 분을 아끼려고 `dev`로 가는 PR과 `main` push에서만 돌고, 문서·`infra/`만 바뀌면 건너뛴다.
   바뀐 폴더(`app/`, `server/`)의 잡만 돈다. `main`에서는 마지막으로 CI를 통과한 `main` 커밋과 비교한다(취소된 실행의 변경도 검사하도록).
-- **배포**(`.github/workflows/deploy.yml`): `main` CI가 통과하면(건너뛴 잡은 막지 않는다) 서버 이미지를 GHCR(`ghcr.io/ottuck/puny-chat-server`,
-  `latest`와 sha 태그, 패키지는 Public)에 올리고 웹은 `wrangler deploy`한다. 인스턴스의 systemd 타이머가 1분마다 `server/deploy/update.sh`로 새 이미지를
-  받아 컨테이너를 다시 만든다(CI는 SSH로 들어가지 않는다). `update.sh`가 실행 중인 커밋을 Caddy의 `/_revision`에 내놓으면 CI가 그 값이 방금 올린 sha가
-  될 때까지 기다린 뒤 health를 본다. 서버는 `/_revision`의 커밋에서 `server/`가 바뀌었을 때만 다시 배포한다(새 배포는 모든 WebSocket을 끊는다).
-  수동 실행(`workflow_dispatch`)은 늘 배포한다. 롤백은 인스턴스에서 `compose.yaml`의 이미지 태그를 이전 sha로 바꾸고 타이머를 멈춘 뒤 `docker compose up -d`.
-  GitHub secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`. 변수: `EXPO_PUBLIC_*`(빌드에 들어가는 공개 값).
-- **쓰지 않는 것**: Redis(레플리카 1개라 메모리로 충분하다. 수평 확장이 필요하면 `RoomHub.publish` 뒤에 Pub/Sub), 오브젝트 저장소(사진은
-  인스턴스 디스크로 충분하다: 60GB 중 약 47GB가 비어 있고 서버가 한 대다. 서버가 여러 대가 되면 R2), 전용 VM, self-hosted MongoDB, Kubernetes, Kafka.
+- **배포**(`.github/workflows/deploy.yml`): `main` CI가 통과하면(건너뛴 잡은 막지 않는다) 차례로
+  1. 서버 이미지를 GHCR(`ghcr.io/ottuck/puny-chat-server`, `latest`와 sha 태그, 패키지는 Public)에 올린다. 인스턴스가 실행 중인 커밋(`/_revision`)에서
+     `server/`가 바뀌었을 때만이다(새 배포는 모든 WebSocket을 끊는다). 수동 실행(`workflow_dispatch`)은 늘 올린다.
+  2. 인스턴스의 `puny-chat-update.timer`가 1분마다 `update.sh`로 새 이미지를 받아 컨테이너를 다시 만든다(CI는 SSH로 들어가지 않는다).
+     `update.sh`가 실행 중인 커밋을 Caddy의 `/_revision`에 내놓으면, CI는 그 값이 방금 올린 sha가 될 때까지 기다린 뒤 health를 본다.
+  3. 웹은 `wrangler deploy`로 바로 올린다.
+- **아이폰 앱**(`.github/workflows/app-update.yml`): 배포 뒤 `app/`이 바뀌었으면 EAS Update. 저장소 변수 `EAS_AUTO_UPDATE`가 `true`일 때만(`docs/release.md`).
+- **롤백**: 인스턴스에서 `compose.yaml`의 이미지 태그를 이전 sha로 바꾸고 update 타이머를 멈춘 뒤 `docker compose up -d`.
+- GitHub secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `EXPO_TOKEN`. 변수: `EXPO_PUBLIC_*`(빌드에 들어가는 공개 값), `EAS_AUTO_UPDATE`.
+
+### 쓰지 않는 것
+
+- Redis: 레플리카 1개라 메모리로 충분하다. 수평 확장이 필요하면 `RoomHub.publish` 뒤에 Pub/Sub.
+- 오브젝트 저장소: 서버가 한 대이고 디스크 여유가 커서 사진은 인스턴스 디스크로 충분하다. 서버가 여러 대가 되면 R2.
+- 전용 VM, self-hosted MongoDB, Kubernetes, Kafka.
 
 # 포트폴리오로서
 
