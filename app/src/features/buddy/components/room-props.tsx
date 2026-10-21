@@ -870,18 +870,21 @@ export function SillPot({ flowers, scale }: { flowers: boolean; scale: number })
 }
 
 // The goldfish bowl on its side table (Lv.28; plants and a second fish from Lv.56). The fish swim
-// about with the tick; a tap sends up bubbles.
+// about with the tick; a tap (or the buddy watching) sends up bubbles.
 export function FishBowl({
   plants,
   style = 'table',
   scale,
   tick,
+  bubbleRun = 0,
   onTap,
 }: {
   plants: boolean;
   style?: FishStyle;
   scale: number;
   tick: number;
+  // Bubbles come up for each new run, as for a tap (the buddy watching the fish).
+  bubbleRun?: number;
   onTap: () => void;
 }) {
   const { t } = useTranslation();
@@ -897,7 +900,7 @@ export function FishBowl({
       accessibilityLabel={t('buddy.room.fish')}
     >
       <PixelSprite frame={frame} palette={THINGS_PALETTE} scale={scale} />
-      {run > 0 ? <Bubbles key={run} scale={scale} /> : null}
+      {run + bubbleRun > 0 ? <Bubbles key={run + bubbleRun} scale={scale} /> : null}
     </Pressable>
   );
 }

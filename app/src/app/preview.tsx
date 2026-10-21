@@ -53,6 +53,10 @@ const HAPPENINGS = [
   'owl',
   'squirrel',
   'sit',
+  'musicBox',
+  'waitGuest',
+  'watchFish',
+  'read',
 ] as const;
 const MOODS: Mood[] = ['laugh', 'love', 'cheer', 'comfort', 'goodnight', 'morning'];
 const REACTIONS: ReactionKind[] = [

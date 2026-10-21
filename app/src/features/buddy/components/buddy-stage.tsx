@@ -35,7 +35,7 @@ import {
 } from '../pixel/looks';
 import { type Palette, PixelSprite } from '../pixel/pixel-sprite';
 import { BUNDLE, ROOM_PALETTE, skyAt } from '../pixel/room';
-import type { FishStyle } from '../pixel/room-things';
+import { type FishStyle, OPEN_BOOK, THINGS_PALETTE } from '../pixel/room-things';
 import {
   bowl,
   BUDDY_PALETTE,
@@ -83,6 +83,7 @@ import {
   plantRoom as plantRoomFor,
   type RoomProp,
   sideRoom,
+  thingsAt,
   WallDecor,
 } from './stage-decor';
 
@@ -126,7 +127,16 @@ type Act =
   | Guest
   // A child or grown-up sits down on the rug for a while.
   | 'sit'
+  // Or goes over to a thing in the room and uses it (USES).
+  | Use
   | 'job';
+// Left alone, a child or grown-up uses what the room has (docs/fun-improvements.md, 가끔 생기는
+// 사건): it starts the music box and dances to it, waits at the window until a guest comes, watches
+// the goldfish, takes a book from the shelf and reads it.
+const USES = ['musicBox', 'waitGuest', 'watchFish', 'read'] as const;
+type Use = (typeof USES)[number];
+const isUse = (act: Act | null): act is Use =>
+  act !== null && (USES as readonly string[]).includes(act);
 // A one-word message for the buddy ("밥", "춤", …, features/buddy/chat-words.ts), or the tour's
 // script asking for a dance or a song.
 // "job": the buddy does its work (only asked for by the art preview, app/preview.tsx).
@@ -153,6 +163,7 @@ const HAPPENINGS = [
   'owl',
   'squirrel',
   'sit',
+  ...USES,
 ] as const;
 type Happening = (typeof HAPPENINGS)[number];
 const isHappening = (kind: string): kind is Happening =>
@@ -200,6 +211,11 @@ const ACT_MS: Record<Act, number> = {
   job: 2400,
   // On the rug, once there.
   sit: 5000,
+  // Using a thing, once there; at the window, how long it waits before a guest comes.
+  musicBox: 5000,
+  waitGuest: 2600,
+  watchFish: 5000,
+  read: 5500,
 };
 // How long the butterfly takes to come down onto the head, and to fly off again.
 const BUTTERFLY_FLY_MS = 700;
@@ -210,6 +226,8 @@ const WINDOW_WALK_MAX_MS = 1200;
 const JOB_WALK_MAX_MS = 4000;
 // How long each point of the walk to work takes, in ms: a brisk walk.
 const JOB_WALK_MS = 12;
+// How high the open book is held, in rows up from the bottom of the buddy's grid.
+const BOOK_ABOVE_FEET = 6;
 // The station's left edge on the stage.
 const STATION_LEFT = 12;
 
@@ -247,6 +265,10 @@ const ACT_LINE: Partial<Record<Act, Line>> = {
   owl: 'owl',
   squirrel: 'squirrel',
   sit: 'sit',
+  musicBox: 'musicBox',
+  waitGuest: 'waitGuest',
+  watchFish: 'fish',
+  read: 'read',
 };
 // What it says looking out of the window, by the sky (room.ts, skyAt).
 const WINDOW_LINE = { day: 'windowDay', dusk: 'windowDusk', night: 'windowNight' } as const;
@@ -271,15 +293,19 @@ const GUEST_WEIGHT = 8;
 const PASSER_WEIGHT = 12;
 // A child or grown-up sits down on the rug now and then.
 const SIT_WEIGHT = 10;
+// And uses each thing the room has a little less often, so the dancing and singing stay the most.
+const USE_WEIGHT = 6;
 
 // `dark`: from the evening on (room.ts, skyAt), when a shooting star can be seen. The weather is
-// seen through the window, so none before the room has one (Lv.9).
+// seen through the window, so none before the room has one (Lv.9). `uses`: the things there are to
+// use (a child or grown-up's).
 function pickIdleAct(
   job: BuddyJob | null,
   guests: readonly Guest[],
   sits: boolean,
   dark: boolean,
   hasWindow: boolean,
+  uses: readonly Use[],
 ): Act {
   const passers = guests.filter(isFloorPasser);
   const acts: readonly (readonly [Act, number])[] = [
@@ -287,6 +313,7 @@ function pickIdleAct(
       ([act]) => (hasWindow || !WEATHER.includes(act)) && (dark || act !== 'shootingStar'),
     ),
     ...(sits ? [['sit', SIT_WEIGHT] as const] : []),
+    ...uses.map((use) => [use, USE_WEIGHT] as const),
     ...guests
       .filter((guest) => !isFloorPasser(guest))
       .map((guest) => [guest, GUEST_WEIGHT] as const),
@@ -790,6 +817,22 @@ export function BuddyStage({
   // left of it.
   const bowlRight = 16 + plantRoom + sideRoom(decor);
   const guests = decor.guests.join(',');
+  // The guests that come to the window (not along the floor).
+  const windowGuests = decor.guests.filter((guest) => !isFloorPasser(guest));
+  // What a child or grown-up can go over and use (USES): the music box, the window once guests come
+  // to it, the goldfish, the books.
+  const uses = (
+    atTable
+      ? [
+          decor.musicBox && 'musicBox',
+          decor.window && windowGuests.length > 0 && 'waitGuest',
+          decor.fish > 0 && 'watchFish',
+          decor.books > 0 && 'read',
+        ]
+      : []
+  )
+    .filter((use): use is Use => typeof use === 'string')
+    .join(',');
   const poopRight = atTable ? bowlRight : bowlRight + bowlWidth + 12;
   // The walkable strip: from the left (in front of a job's station) up to the bowl.
   // Wings stick out on both sides: the walk keeps them on the stage and off the bowl.
@@ -868,7 +911,9 @@ export function BuddyStage({
           setAct(null);
         },
         // Work starts on arrival (see below), which restarts this; the walk is the most it waits.
-        next === 'job' || next === 'sit' ? JOB_WALK_MAX_MS + ACT_MS[next] : ACT_MS[next],
+        next === 'job' || next === 'sit' || isUse(next)
+          ? JOB_WALK_MAX_MS + ACT_MS[next]
+          : ACT_MS[next],
       );
     },
     [say, job],
@@ -1047,7 +1092,12 @@ export function BuddyStage({
   // Sitting: walk over to the middle of the rug, then sit there a while. Only with legs to fold
   // (a child or grown-up); otherwise it does not.
   const [seatedRun, setSeatedRun] = useState(-1);
-  const sitting = act === 'sit' && seatedRun === actRun;
+  const measured = width > 0;
+  // Arrived at a thing to use (below).
+  const [usingRun, setUsingRun] = useState(-1);
+  const sitting =
+    (act === 'sit' && seatedRun === actRun) ||
+    ((act === 'read' || act === 'watchFish') && usingRun === actRun);
   useEffect(() => {
     if (act !== 'sit' || width === 0) return;
     let stopped = false;
@@ -1086,9 +1136,10 @@ export function BuddyStage({
     return () => {
       stopped = true;
     };
-    // A new walk for each sit, not for every change of the stage's size.
+    // A new walk for each sit, not for every change of the stage's size (but once it has one: a cue
+    // can come before the stage is measured).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [act, actRun]);
+  }, [act, actRun, measured]);
 
   // A one-word message: dance or sing; for "밥" when full or "청소" with nothing to clean, an
   // answer instead of nothing (the care itself, when needed, comes from the server as an event).
@@ -1203,6 +1254,7 @@ export function BuddyStage({
             atTable,
             darkSky,
             decor.window,
+            uses ? (uses.split(',') as Use[]) : [],
           ),
         ),
       pace * (IDLE_ACT_MIN_MS + Math.random() * (IDLE_ACT_MAX_MS - IDLE_ACT_MIN_MS)),
@@ -1221,6 +1273,7 @@ export function BuddyStage({
     atTable,
     darkSky,
     decor.window,
+    uses,
     perform,
   ]);
 
@@ -1287,13 +1340,17 @@ export function BuddyStage({
   // front: a grown-up's head and umbrella would hide the glass.
   const glass = glassOf(decor, width, height, WALL_TOP);
   const watching = act !== null && WEATHER.includes(act);
+  // Beside the window, on the side with more room: right of a window left of the middle, else left
+  // of it. `onRight`: it stands right of the window (and turns left to look).
+  const besideWindow = (window: NonNullable<typeof glass>) => {
+    const onRight = window.left + window.width / 2 < width / 2;
+    const beside = onRight ? window.left + window.width + 4 : window.left - spriteWidth - 4;
+    return { onRight, spot: Math.min(maxX, Math.max(minX, beside)) };
+  };
   useEffect(() => {
     if (!watching || !glass) return;
     let stopped = false;
-    // On the side with more room: right of a window left of the middle, else left of it.
-    const onRight = glass.left + glass.width / 2 < width / 2;
-    const beside = onRight ? glass.left + glass.width + 4 : glass.left - spriteWidth - 4;
-    const spot = Math.min(maxX, Math.max(minX, beside));
+    const { onRight, spot } = besideWindow(glass);
     x.stopAnimation((from) => {
       if (stopped) return;
       const distance = Math.abs(spot - from);
@@ -1318,6 +1375,99 @@ export function BuddyStage({
     // A new walk for each shower or star, not for every change of the stage's size.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [act, actRun]);
+
+  // Using a thing in the room: walk over (under the shelf, beside the window, up to the goldfish),
+  // turn to it, and use it for a while. At the window a guest comes after the wait. Without the
+  // thing (cued by the art preview) or legs to walk on (a baby), it does not.
+  const using = isUse(act) && usingRun === actRun;
+  // A new run of bubbles each time it starts watching the goldfish.
+  const [fishRun, setFishRun] = useState(0);
+  useEffect(() => {
+    if (!isUse(act) || width === 0) return;
+    let stopped = false;
+    const done = (after: number, then?: () => void) => {
+      if (actTimer.current) clearTimeout(actTimer.current);
+      actTimer.current = setTimeout(() => {
+        actTimer.current = null;
+        setAct(null);
+        then?.();
+      }, after);
+    };
+    const at = thingsAt(decor, width, height, plantRoom);
+    const window = act === 'waitGuest' && glass ? besideWindow(glass) : null;
+    // Where it stands, and which way it looks once there.
+    const target =
+      act === 'waitGuest'
+        ? windowGuests.length > 0 && window
+          ? { spot: window.spot, left: window.onRight }
+          : null
+        : act === 'musicBox' && decor.musicBox
+          ? at.musicBox
+          : act === 'read' && decor.books
+            ? at.books
+            : act === 'watchFish' && decor.fish
+              ? at.fish
+              : null;
+    if (!atTable || target === null) {
+      done(0);
+      return () => {
+        stopped = true;
+      };
+    }
+    const place =
+      typeof target === 'number'
+        ? {
+            spot: Math.min(maxX, Math.max(minX, target - spriteWidth / 2)),
+            left: target < width / 2,
+          }
+        : target;
+    x.stopAnimation((from) => {
+      if (stopped) return;
+      const distance = Math.abs(place.spot - from);
+      setFacingLeft(place.spot < from);
+      setOnRightHalf(place.spot + spriteWidth / 2 > width / 2);
+      setWalking(distance > 2);
+      Animated.timing(x, {
+        toValue: place.spot,
+        duration: Math.min(JOB_WALK_MAX_MS - 200, distance * JOB_WALK_MS),
+        easing: Easing.linear,
+        useNativeDriver: NATIVE_DRIVER,
+      }).start(({ finished }) => {
+        if (!finished || stopped) return;
+        setWalking(false);
+        setFacingLeft(place.left);
+        setUsingRun(actRun);
+        if (act === 'watchFish') setFishRun((n) => n + 1);
+        // At the window, one of the room's guests comes along.
+        done(
+          ACT_MS[act],
+          act === 'waitGuest' ? () => perform(pick(windowGuests), true) : undefined,
+        );
+      });
+    });
+    return () => {
+      stopped = true;
+    };
+    // A new walk for each use, not for every change of the stage's size (once it has one).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [act, actRun, measured]);
+  // Dancing to the music box once it plays.
+  const musicDance = act === 'musicBox' && using;
+  useEffect(() => {
+    if (!musicDance) return;
+    const move = Animated.loop(
+      Animated.sequence([
+        Animated.timing(hop, { toValue: -6, duration: 150, useNativeDriver: NATIVE_DRIVER }),
+        Animated.timing(hop, { toValue: 0, duration: 150, useNativeDriver: NATIVE_DRIVER }),
+        Animated.delay(150),
+      ]),
+    );
+    move.start();
+    return () => {
+      move.stop();
+      hop.setValue(0);
+    };
+  }, [musicDance, hop]);
 
   // Work done (by either of them) is shown at the station; the gardener likes the tidy plant.
   useEffect(() => {
@@ -1637,56 +1787,70 @@ export function BuddyStage({
             ? tick % 2 === 0
               ? 'eat'
               : 'happy'
-            : act === 'sit'
-              ? sitting
-                ? tick % 6 === 0
-                  ? 'blink'
-                  : 'happy'
-                : tick % 2 === 0
+            : isUse(act)
+              ? !using
+                ? tick % 2 === 0
                   ? 'step'
                   : 'idle'
-              : act === 'job' && job
-                ? atWork
-                  ? jobPose(job, tick)
+                : act === 'musicBox'
+                  ? tick % 2 === 0
+                    ? 'happy'
+                    : 'step'
+                  : act === 'watchFish'
+                    ? 'happy'
+                    : tick % 7 === 0
+                      ? 'blink'
+                      : 'idle'
+              : act === 'sit'
+                ? sitting
+                  ? tick % 6 === 0
+                    ? 'blink'
+                    : 'happy'
                   : tick % 2 === 0
                     ? 'step'
                     : 'idle'
-                : watching && walking
-                  ? tick % 2 === 0
-                    ? 'step'
-                    : 'idle'
-                  : act === 'yawn'
-                    ? 'yawn'
-                    : act === 'hiccup'
-                      ? 'hiccup'
-                      : act === 'startle' || act === 'shootingStar'
-                        ? 'surprised'
-                        : act === 'butterfly' || act === 'snow' || isGuest(act)
-                          ? tick % 2 === 0
-                            ? 'happy'
-                            : 'idle'
-                          : act === 'refuse' || act === 'lookAround'
-                            ? 'idle'
-                            : active?.kind === 'cleaned' ||
-                                active?.kind === 'levelUp' ||
-                                active?.kind === 'maxLevel' ||
-                                active?.kind === 'together' ||
-                                active?.kind === 'here' ||
-                                active?.kind === 'joined' ||
-                                ((active?.kind === 'evolved' || changingJob) && !evolving) ||
-                                petted
+                : act === 'job' && job
+                  ? atWork
+                    ? jobPose(job, tick)
+                    : tick % 2 === 0
+                      ? 'step'
+                      : 'idle'
+                  : watching && walking
+                    ? tick % 2 === 0
+                      ? 'step'
+                      : 'idle'
+                    : act === 'yawn'
+                      ? 'yawn'
+                      : act === 'hiccup'
+                        ? 'hiccup'
+                        : act === 'startle' || act === 'shootingStar'
+                          ? 'surprised'
+                          : act === 'butterfly' || act === 'snow' || isGuest(act)
+                            ? tick % 2 === 0
                               ? 'happy'
-                              : sleeping
-                                ? 'sleep'
-                                : buddy.hungry
-                                  ? 'hungry'
-                                  : walking
-                                    ? tick % 2 === 0
-                                      ? 'step'
-                                      : 'idle'
-                                    : tick % 11 === 0
-                                      ? 'blink'
-                                      : 'idle';
+                              : 'idle'
+                            : act === 'refuse' || act === 'lookAround'
+                              ? 'idle'
+                              : active?.kind === 'cleaned' ||
+                                  active?.kind === 'levelUp' ||
+                                  active?.kind === 'maxLevel' ||
+                                  active?.kind === 'together' ||
+                                  active?.kind === 'here' ||
+                                  active?.kind === 'joined' ||
+                                  ((active?.kind === 'evolved' || changingJob) && !evolving) ||
+                                  petted
+                                ? 'happy'
+                                : sleeping
+                                  ? 'sleep'
+                                  : buddy.hungry
+                                    ? 'hungry'
+                                    : walking
+                                      ? tick % 2 === 0
+                                        ? 'step'
+                                        : 'idle'
+                                      : tick % 11 === 0
+                                        ? 'blink'
+                                        : 'idle';
 
   // A mood from the chat shows on the face unless something bigger (eating, straining) is going on.
   const moodPose: Pose | null =
@@ -1818,8 +1982,19 @@ export function BuddyStage({
   const workNod = atWork && job === 'DJ' && tick % 2 === 0 ? scale : 0;
   // Dancing and head-shaking turn the buddy left and right.
   const flipped =
-    act === 'dance' || act === 'refuse' || act === 'lookAround' ? tick % 2 === 0 : facingLeft;
+    act === 'dance' || act === 'refuse' || act === 'lookAround' || musicDance
+      ? tick % 2 === 0
+      : facingLeft;
 
+  // The book from the shelf, open in front of it as it reads.
+  const book: Layer | null =
+    act === 'read' && using
+      ? {
+          frame: OPEN_BOOK,
+          row: frame.length - BOOK_ABOVE_FEET,
+          col: Math.floor((gridWidth - OPEN_BOOK[0].length) / 2),
+        }
+      : null;
   // The umbrella over it as it watches the rain at the window.
   const umbrella = act === 'rain' && buddy.stage !== 'EGG' ? umbrellaFor(buddy.stage) : null;
   const front = evolving ? null : seasonFront(buddy.stage, season);
@@ -1939,8 +2114,10 @@ export function BuddyStage({
         guest={isGuest(act) ? act : null}
         run={actRun}
         tick={tick}
-        singing={act === 'sing'}
+        singing={act === 'sing' || musicDance}
         dancing={act === 'dance'}
+        reading={book !== null}
+        fishRun={fishRun}
         rainEnded={rainEnded}
         weather={watching ? (act as 'rain' | 'snow' | 'shootingStar') : null}
         weatherMs={act ? ACT_MS[act] : 0}
@@ -2252,6 +2429,15 @@ export function BuddyStage({
             layer={umbrella}
             gridWidth={gridWidth}
             palette={PROP_PALETTE}
+            scale={scale}
+            flipped={flipped}
+          />
+        ) : null}
+        {book ? (
+          <LayerSprite
+            layer={book}
+            gridWidth={gridWidth}
+            palette={THINGS_PALETTE}
             scale={scale}
             flipped={flipped}
           />

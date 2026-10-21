@@ -402,6 +402,10 @@ type WallProps = {
   weatherMs: number;
   onToy: () => void;
   onMusic: () => void;
+  // The buddy is reading a book from the shelf: its place there is empty.
+  reading: boolean;
+  // Bubbles from the goldfish as the buddy watches (a new run each time).
+  fishRun: number;
   // A tap on a thing the buddy has something to say about.
   onProp: (prop: RoomProp) => void;
   // The room's time: the device's, or the art preview's.
@@ -432,6 +436,23 @@ export function windowPlace(decor: Decor, width: number, height: number) {
     Math.min((width - windowWidth) / 2, shelfLeft - 10 - windowWidth),
   );
   return { wall, clockScale, windowWidth, windowLeft, shelfScale, shelfWidth };
+}
+
+// Where across the stage (from the left) the things the buddy goes over to use stand: the music
+// box and the books on the shelf, the goldfish's side table on the floor (buddy-stage.tsx).
+export function thingsAt(decor: Decor, width: number, height: number, plantSpace: number) {
+  const { shelfScale, shelfWidth } = windowPlace(decor, width, height);
+  const shelfLeft = width - SHELF_RIGHT - shelfWidth;
+  // The shelf's row: the radio, the books and the music box spread out (shelfRow).
+  const radioWidth = (decor.radio === 2 ? GRAMOPHONE : RADIO)[0][0].length * shelfScale;
+  const booksWidth = booksFrame(decor.books || 1, false)[0].length * shelfScale;
+  const musicWidth = MUSIC_BOX[0][0].length * shelfScale * MUSIC_BOX_SIZE;
+  const gap = (shelfWidth - 4 * shelfScale - radioWidth - booksWidth - musicWidth) / 2;
+  return {
+    musicBox: width - SHELF_RIGHT - 2 * shelfScale - musicWidth / 2,
+    books: shelfLeft + 2 * shelfScale + radioWidth + gap + booksWidth / 2,
+    fish: width - 8 - plantSpace - (decor.lamp ? LAMP_ROOM : 0) - fishRoom(decor) / 2,
+  };
 }
 
 // The window's glass on the stage (for the light it lets in, room-light.tsx); `top` as WallDecor's.
@@ -475,6 +496,8 @@ export function WallDecor({
   weatherMs,
   onToy,
   onMusic,
+  reading,
+  fishRun,
   onProp,
   now,
   lit,
@@ -690,7 +713,7 @@ export function WallDecor({
                 >
                   <Tappable kind="rattle" label={t('buddy.room.books')}>
                     <PixelSprite
-                      frame={booksFrame(decor.books, false)}
+                      frame={booksFrame(decor.books, reading)}
                       palette={THINGS_PALETTE}
                       scale={shelfScale}
                     />
@@ -795,6 +818,7 @@ export function WallDecor({
               style={decor.fishStyle}
               scale={FLOOR_SCALE}
               tick={tick}
+              bubbleRun={fishRun}
               onTap={() => onProp('fish')}
             />
           </Arrive>

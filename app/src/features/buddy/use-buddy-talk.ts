@@ -55,6 +55,10 @@ export type Line =
   | 'rain'
   | 'snow'
   | 'shootingStar'
+  // Using the room's things when left alone (the goldfish has its own word, 'fish').
+  | 'musicBox'
+  | 'waitGuest'
+  | 'read'
   // The room's guests, and goodbye when it goes its own way.
   | 'snail'
   | 'sparrow'
