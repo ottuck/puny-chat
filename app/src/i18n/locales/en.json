@@ -306,6 +306,8 @@
       "mochi": "Kagami mochi (New Year)",
       "rug4": "A big gold-trimmed rug",
       "books": "A stack of books",
+      "bookshelf": "A shelf full of books",
+      "pinkSucculent": "A pink succulent",
       "rainbow": "A rainbow after the rain",
       "squirrel": "A squirrel drops by",
       "gramophone": "A gramophone",
@@ -399,6 +401,7 @@
       "bear": "Teddy bear",
       "bunny": "Bunny plush",
       "books": "Books",
+      "pinkSucculent": "Pink succulent",
       "hangingPlant": "Hanging plant"
     },
     "notice": {

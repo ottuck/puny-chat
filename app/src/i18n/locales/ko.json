@@ -306,6 +306,8 @@
       "mochi": "가가미모찌 (설날)",
       "rug4": "금테 큰 러그",
       "books": "책 더미",
+      "bookshelf": "책이 가득한 선반",
+      "pinkSucculent": "분홍 다육이 화분",
       "rainbow": "비 갠 뒤 무지개",
       "squirrel": "다람쥐 손님",
       "gramophone": "축음기",
@@ -399,6 +401,7 @@
       "bear": "곰 인형",
       "bunny": "토끼 인형",
       "books": "책",
+      "pinkSucculent": "분홍 다육이",
       "hangingPlant": "덩굴 화분"
     },
     "notice": {

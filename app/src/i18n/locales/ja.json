@@ -306,6 +306,8 @@
       "mochi": "鏡餅 (お正月)",
       "rug4": "金ぶちの大きなラグ",
       "books": "本の山",
+      "bookshelf": "本がいっぱいの棚",
+      "pinkSucculent": "ピンクの多肉植物",
       "rainbow": "雨上がりの虹",
       "squirrel": "リスのお客さん",
       "gramophone": "蓄音機",
@@ -399,6 +401,7 @@
       "bear": "くまのぬいぐるみ",
       "bunny": "うさぎのぬいぐるみ",
       "books": "本",
+      "pinkSucculent": "ピンクの多肉植物",
       "hangingPlant": "つり鉢"
     },
     "notice": {
