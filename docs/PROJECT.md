@@ -798,6 +798,7 @@ iPhone / Web ──HTTPS·WSS──▶ AWS Lightsail (Caddy → Spring WebFlux, 
 - 사진은 인스턴스 디스크 `/opt/puny-chat/photos`(컨테이너 `/data/photos`, 서버 사용자 uid 1001 소유, `update.sh`가 만든다). 마운트가 없으면
   사진만 `PHOTO_UNAVAILABLE`이 되고 나머지는 동작한다.
 - 방화벽은 80·443만 연다. SSH는 Lightsail 브라우저 연결만 허용한다.
+- 컨테이너 로그는 `compose.yaml`의 `x-logging`으로 파일 3개(10MB씩)까지만 보관한다(2026-10-21, 모든 컨테이너 로그 합계 30MB를 측정했고 UR Check·모니터링과 같은 값). 다음 배포 때 컨테이너가 다시 만들어지며 적용된다.
 - 메모리는 평소 컨테이너를 모두 합쳐 1GB 아래이고 스왑을 오가는 양(`vmstat`의 si/so)이 거의 없어 4GB 요금제로 올리지 않는다.
 - `update.sh`가 새 이미지를 받을 때마다 옛 이미지를 지운다. 같은 저장소의 이미지끼리 레이어를 나눠 쓰므로 `docker system df`의 회수 가능 크기는
   실제보다 크게 나온다.

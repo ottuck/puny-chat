@@ -2,6 +2,14 @@
 # a .env file with the server's settings (not in Git; see .env.example).
 # CI builds and pushes the image; update.sh (a systemd timer) pulls it and recreates the container.
 
+# Container logs are capped at three 10MB files so a loop of errors cannot fill the shared instance's disk
+# (same values as UR Check and the monitoring containers).
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   server:
     image: ghcr.io/ottuck/puny-chat-server:latest
@@ -9,6 +17,7 @@ services:
     env_file: .env
     # The instance is shared: the JVM heap (-Xmx in .env) plus metaspace and threads must fit.
     mem_limit: 640m
+    logging: *logging
     volumes:
       # Photo files (docs/PROJECT.md, 사진), owned by the image's user (uid 1001); update.sh makes the folder.
       - ./photos:/data/photos
@@ -27,6 +36,7 @@ services:
       - caddy_data:/data
     depends_on:
       - server
+    logging: *logging
 
   # The daily database dump into ./backups (backup.sh). Its profile keeps `up` from starting it.
   backup:
@@ -34,6 +44,7 @@ services:
     profiles: [backup]
     env_file: .env
     mem_limit: 256m
+    logging: *logging
     volumes:
       - ./backups:/backups
     command: sh -c 'mongodump --uri="$$SPRING_MONGODB_URI" --db="$$SPRING_MONGODB_DATABASE" --gzip --archive=/backups/dump.archive.gz --quiet'
