@@ -15,7 +15,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "infoPlist": {
-        "CFBundleLocalizations": ["ja", "ko", "en"],
+        "CFBundleLocalizations": ["ja", "ko", "en", "zh-Hant"],
         "CFBundleAllowMixedLocalizations": true,
         "ITSAppUsesNonExemptEncryption": false
       },
