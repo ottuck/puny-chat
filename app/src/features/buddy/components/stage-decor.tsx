@@ -17,7 +17,7 @@ import {
 } from '../pixel/room';
 import {
   BEAR,
-  BOOKS,
+  booksFrame,
   BUNNY,
   fishBowl,
   fishHome,
@@ -26,6 +26,7 @@ import {
   HANGING_PLANT,
   HANGING_PLANT_AT,
   HANGING_PLANT_FINE,
+  PINK_SUCCULENT,
   RADIO,
   SHELF,
   SILL_POT,
@@ -120,6 +121,8 @@ export type Reward =
   | 'mochi'
   | 'rug4'
   | 'books'
+  | 'bookshelf'
+  | 'pinkSucculent'
   | 'rainbow'
   | 'squirrel'
   | 'gramophone'
@@ -128,11 +131,11 @@ export type Reward =
   | 'bunny'
   | 'sillFlower';
 
-// Shown in the guide and the buddy sheet ("next: Lv.9 window") as well. One for every level that
-// brings nothing of its own: a new stage (3, 5, 10), the job (12) and the first chance to change it
-// (20) bring no thing for the room, nor does the top one, 60, where the whole room sparkles. The later
-// chances (30, 40, 50) each bring a thing that comes only in its season (the wind chime, the cherry
-// petals, the New Year's mochi).
+// Shown in the guide and the buddy sheet ("next: Lv.9 window") as well. One for every level but a
+// new stage (3, 5, 10) and the top one, 60, where the whole room sparkles. The job (12) and the first
+// chance to change it (20) bring the bowl's next tiers, seen at every meal; the later chances (30, 40,
+// 50) each bring a thing that comes only in its season (the wind chime, the cherry petals, the New
+// Year's mochi).
 export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 2, reward: 'plant1' },
   { level: 4, reward: 'crate' },
@@ -141,6 +144,7 @@ export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 8, reward: 'toys' },
   { level: 9, reward: 'window' },
   { level: 11, reward: 'clock' },
+  { level: 12, reward: 'bowl2' },
   { level: 13, reward: 'plant2' },
   { level: 14, reward: 'snail' },
   { level: 15, reward: 'musicBox' },
@@ -148,13 +152,15 @@ export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 17, reward: 'wood' },
   { level: 18, reward: 'sparrow' },
   { level: 19, reward: 'plant3' },
+  { level: 20, reward: 'bowl3' },
   { level: 21, reward: 'hangingPlant' },
   { level: 22, reward: 'firefly' },
   { level: 23, reward: 'ladybug' },
   { level: 24, reward: 'train' },
   { level: 25, reward: 'radio' },
   { level: 26, reward: 'sillPot' },
-  { level: 27, reward: 'bowl2' },
+  // After the shelf (15).
+  { level: 27, reward: 'books' },
   { level: 28, reward: 'lamp' },
   { level: 29, reward: 'rug3' },
   // The job's later chances bring a thing of the season (seen only in its season, so the level's own
@@ -177,11 +183,11 @@ export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 45, reward: 'plant5' },
   { level: 46, reward: 'owl' },
   { level: 47, reward: 'lampShade' },
-  { level: 48, reward: 'bowl3' },
+  { level: 48, reward: 'pinkSucculent' },
   { level: 49, reward: 'vacuum' },
   { level: 50, reward: 'mochi' },
   { level: 51, reward: 'rug4' },
-  { level: 52, reward: 'books' },
+  { level: 52, reward: 'bookshelf' },
   { level: 53, reward: 'rainbow' },
   { level: 54, reward: 'squirrel' },
   { level: 55, reward: 'gramophone' },
@@ -281,6 +287,7 @@ export function decorFor(level: number, seed = '', kind?: number, now = new Date
     // On the sill: 1 a radio, 2 a gramophone; 1 a pot, 2 in flower.
     radio: tierOf<1 | 2>(has, ['radio', 'gramophone']),
     sillPot: tierOf<1 | 2>(has, ['sillPot', 'sillFlower']),
+    pinkSucculent: has('pinkSucculent'),
     // The side table by the lamp: 1 a goldfish, 2 with plants and a second fish.
     fish: tierOf<1 | 2>(has, ['fishbowl', 'waterPlants']),
     table: has('kotatsu')
@@ -291,7 +298,8 @@ export function decorFor(level: number, seed = '', kind?: number, now = new Date
     tea: has('tea'),
     mochi: has('mochi') && inSeason('mochi', now),
     bear: has('bear'),
-    books: has('books'),
+    // On the shelf: 1 a few books, 2 a shelf full.
+    books: tierOf<1 | 2>(has, ['books', 'bookshelf']),
     bunny: has('bunny'),
     lamp: has('lamp'),
     lampShade: has('lampShade'),
@@ -394,6 +402,10 @@ type WallProps = {
   weatherMs: number;
   onToy: () => void;
   onMusic: () => void;
+  // The buddy is reading a book from the shelf: its place there is empty.
+  reading: boolean;
+  // Bubbles from the goldfish as the buddy watches (a new run each time).
+  fishRun: number;
   // A tap on a thing the buddy has something to say about.
   onProp: (prop: RoomProp) => void;
   // The room's time: the device's, or the art preview's.
@@ -424,6 +436,23 @@ export function windowPlace(decor: Decor, width: number, height: number) {
     Math.min((width - windowWidth) / 2, shelfLeft - 10 - windowWidth),
   );
   return { wall, clockScale, windowWidth, windowLeft, shelfScale, shelfWidth };
+}
+
+// Where across the stage (from the left) the things the buddy goes over to use stand: the music
+// box and the books on the shelf, the goldfish's side table on the floor (buddy-stage.tsx).
+export function thingsAt(decor: Decor, width: number, height: number, plantSpace: number) {
+  const { shelfScale, shelfWidth } = windowPlace(decor, width, height);
+  const shelfLeft = width - SHELF_RIGHT - shelfWidth;
+  // The shelf's row: the radio, the books and the music box spread out (shelfRow).
+  const radioWidth = (decor.radio === 2 ? GRAMOPHONE : RADIO)[0][0].length * shelfScale;
+  const booksWidth = booksFrame(decor.books || 1, false)[0].length * shelfScale;
+  const musicWidth = MUSIC_BOX[0][0].length * shelfScale * MUSIC_BOX_SIZE;
+  const gap = (shelfWidth - 4 * shelfScale - radioWidth - booksWidth - musicWidth) / 2;
+  return {
+    musicBox: width - SHELF_RIGHT - 2 * shelfScale - musicWidth / 2,
+    books: shelfLeft + 2 * shelfScale + radioWidth + gap + booksWidth / 2,
+    fish: width - 8 - plantSpace - (decor.lamp ? LAMP_ROOM : 0) - fishRoom(decor) / 2,
+  };
 }
 
 // The window's glass on the stage (for the light it lets in, room-light.tsx); `top` as WallDecor's.
@@ -467,6 +496,8 @@ export function WallDecor({
   weatherMs,
   onToy,
   onMusic,
+  reading,
+  fishRun,
   onProp,
   now,
   lit,
@@ -493,6 +524,9 @@ export function WallDecor({
   const potScale = sillScale * SILL_POT_SIZE;
   const potWidth = SILL_POT[0][0].length * potScale;
   const potLeft = windowLeft + windowWidth - wall - potWidth;
+  // The pink succulent stands beside it, toward the middle (both ends hold two, the glass between
+  // stays clear for the guests).
+  const pinkLeft = potLeft - PINK_SUCCULENT[0].length * potScale;
   const rug = RUGS[decor.rug];
   const rugWidth = rug[0].length * 3;
   const tableWidth = TABLE_CELLS * FLOOR_SCALE;
@@ -595,6 +629,22 @@ export function WallDecor({
           </Arrive>
         </View>
       ) : null}
+      {decor.window && decor.pinkSucculent ? (
+        <View
+          style={[styles.at, { left: pinkLeft, top: sillTop - PINK_SUCCULENT.length * potScale }]}
+        >
+          <Arrive fresh={fresh('pinkSucculent')} width={potWidth}>
+            <Tappable
+              kind="sway"
+              shine
+              label={t('buddy.room.pinkSucculent')}
+              onTap={() => onProp('plant')}
+            >
+              <PixelSprite frame={PINK_SUCCULENT} palette={THINGS_PALETTE} scale={potScale} />
+            </Tappable>
+          </Arrive>
+        </View>
+      ) : null}
       {decor.window && decor.bunny ? (
         <View style={[styles.at, { left: bunnyLeft, top: sillTop - BUNNY.length * sillScale }]}>
           <Arrive fresh={fresh('bunny')} width={BUNNY[0].length * sillScale}>
@@ -632,7 +682,7 @@ export function WallDecor({
       ) : null}
 
       {/* The shelf in the top right, under the corner's buttons, comes with the music box: the radio
-          at its left end, the books in the middle, and the music box, the tallest, at the right
+          at its left end, the books in the middle (a shelf full from Lv.52), and the music box, the tallest, at the right
           against the corner, where it looks steadier. Up there the buddy never hides them. */}
       {decor.musicBox ? (
         <View style={[styles.at, styles.box, { right: SHELF_RIGHT, top: SHELF_TOP }]}>
@@ -656,13 +706,21 @@ export function WallDecor({
                 <View style={{ width: radioWidth }} />
               )}
               {decor.books ? (
-                <Arrive fresh={fresh('books')} width={BOOKS[0].length * shelfScale}>
+                <Arrive
+                  key={`books${decor.books}`}
+                  fresh={fresh(decor.books === 2 ? 'bookshelf' : 'books')}
+                  width={booksFrame(decor.books, false)[0].length * shelfScale}
+                >
                   <Tappable kind="rattle" label={t('buddy.room.books')}>
-                    <PixelSprite frame={BOOKS} palette={THINGS_PALETTE} scale={shelfScale} />
+                    <PixelSprite
+                      frame={booksFrame(decor.books, reading)}
+                      palette={THINGS_PALETTE}
+                      scale={shelfScale}
+                    />
                   </Tappable>
                 </Arrive>
               ) : (
-                <View style={{ width: BOOKS[0].length * shelfScale }} />
+                <View style={{ width: booksFrame(1, false)[0].length * shelfScale }} />
               )}
               <Arrive
                 key={decor.goldMusicBox ? 'gold' : 'wood'}
@@ -760,6 +818,7 @@ export function WallDecor({
               style={decor.fishStyle}
               scale={FLOOR_SCALE}
               tick={tick}
+              bubbleRun={fishRun}
               onTap={() => onProp('fish')}
             />
           </Arrive>

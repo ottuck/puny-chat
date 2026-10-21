@@ -20,6 +20,8 @@ export const THINGS_PALETTE: Palette = {
   B: '#9E6B3F', // the bear, shaded
   V: '#76C1B0', // the radio
   t: '#4E9C8B', // the radio, shaded
+  C: '#86C4AC', // mint, shaded: a book, the glazed pot
+  M: '#A56BB5', // plum: the pink succulent's shade
   // The hanging plant: leaves from light to dark, its vines, the ropes, the pot's lit edge.
   '1': '#BFE79A',
   '2': '#7DC466',
@@ -297,6 +299,21 @@ export const CAT_FACE: [Frame, Frame] = [[
 ]];
 
 // --- On the sill ---
+
+// A pink succulent beside the little pot below (Lv.48): a rosette blushing pink to plum, in a mint glazed pot. The
+// same size as the little pot, its colors far from the green one's.
+// prettier-ignore
+export const PINK_SUCCULENT: Frame = [
+  '..k.k..',
+  '.kpkpk.',
+  'kpvMvpk',
+  'kvMvMvk',
+  '.kMvMk.',
+  'kkkkkkk',
+  'kTTTCCk',
+  '.kTCCk.',
+  '.kkkkk.',
+];
 
 // A little pot of succulents (Lv.26), and in flower (Lv.59).
 // prettier-ignore
@@ -622,8 +639,8 @@ export const BUNNY: Frame = [
   '.kk...kk.',
 ];
 
-// Books standing on the shelf between the music box and the radio (Lv.52), one taller than the
-// others.
+// Books standing on the shelf between the music box and the radio (Lv.27), one taller than the
+// others; while the buddy reads it (a happening in buddy-stage.tsx) its place is empty.
 // prettier-ignore
 export const BOOKS: Frame = [
   '...kkkk...',
@@ -636,6 +653,64 @@ export const BOOKS: Frame = [
   'kaakuukTTk',
   'kaakuukTTk',
   'kkkkkkkkkk',
+];
+// prettier-ignore
+const BOOKS_TAKEN: Frame = [
+  '..........',
+  '..........',
+  'kkkk......',
+  'kaak..kkkk',
+  'kaak..kTTk',
+  'kaak..kTTk',
+  'kaak..kWWk',
+  'kaak..kTTk',
+  'kaak..kTTk',
+  'kkkk..kkkk',
+];
+// The shelf full of books (Lv.52): four of different heights and colors, and a wooden bookend.
+// prettier-ignore
+export const BOOKSHELF: Frame = [
+  '...kkk.......',
+  'kkkkuk.......',
+  'kaAkuk..kkk..',
+  'kyykWkkkkvk..',
+  'kaAkukTCkyk..',
+  'kaAkukTCkvkkk',
+  'kaAkukTCkvkLk',
+  'kaAkukTCkvkLk',
+  'kyykukWWkykLk',
+  'kaAkukTCkvkLk',
+  'kkkkkkkkkkkkk',
+];
+// prettier-ignore
+const BOOKSHELF_TAKEN: Frame = [
+  '.............',
+  'kkkk.........',
+  'kaAk....kkk..',
+  'kyyk.kkkkvk..',
+  'kaAk.kTCkyk..',
+  'kaAk.kTCkvkkk',
+  'kaAk.kTCkvkLk',
+  'kaAk.kTCkvkLk',
+  'kyyk.kWWkykLk',
+  'kaAk.kTCkvkLk',
+  'kkkk.kkkkkkkk',
+];
+
+// The books on the shelf: 1 a few (Lv.27), 2 a shelf full (Lv.52); `out`: the red one is in the
+// buddy's hands.
+export function booksFrame(tier: 1 | 2, out: boolean): Frame {
+  if (tier === 2) return out ? BOOKSHELF_TAKEN : BOOKSHELF;
+  return out ? BOOKS_TAKEN : BOOKS;
+}
+
+// The red book open in the buddy's hands as it reads.
+// prettier-ignore
+export const OPEN_BOOK: Frame = [
+  'kkk.kkk',
+  'kWWkWWk',
+  'kWWkWWk',
+  '.kuuuk.',
 ];
 
 // The shelf on the wall at the top right (with the music box, Lv.15): a plank on two brackets, for

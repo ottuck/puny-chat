@@ -19,7 +19,8 @@ import { WINDOW_BARS, WINDOW_GLASS } from '../pixel/room';
 // keeps its colors while the window glows orange and throws shafts of light, bright where they land;
 // at night it goes dark blue, and the standing lamp (or the moon at the window) lights it, softly,
 // around itself. With the lamp on the moon still shines faintly at the window, and a grown-up's job
-// station has a small light of its own on the left (sprites.ts, JOB_STATIONS). Over the room and the buddy; under the name, the buttons and the notes.
+// station has a small light of its own on the left (sprites.ts, JOB_STATIONS). Around the full
+// moon the moonlight is brighter. Over the room and the buddy; under the name, the buttons and the notes.
 
 const NATIVE_DRIVER = Platform.OS !== 'web';
 // A job station's small light at night: how far it clears the dark, and its round glow; and how far
@@ -72,6 +73,7 @@ export function RoomLight({
   glass,
   lamp,
   station = null,
+  fullMoon = false,
   dark,
 }: {
   hour: RoomHour;
@@ -86,6 +88,8 @@ export function RoomLight({
   // The job station's small light at night, if there is a station; `aim`: where it is turned to,
   // a beam falls there and lights it (the gardener's lamp on the plant).
   station?: { x: number; y: number; color: string; aim?: { x: number; y: number } } | null;
+  // Around the full moon (moon.ts) the moonlight through the window is a little brighter.
+  fullMoon?: boolean;
   // Dark mode: the stage is dark already, the light goes easier on it.
   dark: boolean;
 }) {
@@ -93,6 +97,8 @@ export function RoomLight({
   const id = useId().replace(/[^a-zA-Z0-9]/g, '');
   if (hour === 'day' || width === 0) return null;
   const soften = dark ? 0.6 : 1;
+  // The full moon's light, brighter and reaching further.
+  const moonlit = hour === 'night' && fullMoon ? 1.5 : 1;
   // The window's light falls toward the floor in straight shafts, one through each pane (the
   // mullion between them leaves a strip of shade), leaning away from the sun: right in the morning,
   // left at dusk. Where it reaches the floor it lies there as a patch.
@@ -122,7 +128,11 @@ export function RoomLight({
           ['1', '#FFB866', 0.14],
         ]
       : [
-          ['0', hour === 'morning' ? '#F2FAFF' : '#BFD3FF', hour === 'night' ? 0.16 : 0.55],
+          [
+            '0',
+            hour === 'morning' ? '#F2FAFF' : '#BFD3FF',
+            hour === 'night' ? 0.16 * moonlit : 0.55,
+          ],
           ['1', '#FFFFFF', 0],
         ];
   // At night the light comes from the lamp, or else faintly from the moon at the window.
@@ -158,11 +168,11 @@ export function RoomLight({
               id={`moon${id}`}
               cx={glass.left + glass.width / 2}
               cy={glass.top + glass.height / 2}
-              r={glass.width * 0.9}
+              r={glass.width * 0.9 * moonlit}
               gradientUnits="userSpaceOnUse"
             >
-              <Stop offset="0" stopColor="#C4D6FF" stopOpacity={0.24 * soften} />
-              <Stop offset="0.5" stopColor="#9FB8FF" stopOpacity={0.09 * soften} />
+              <Stop offset="0" stopColor="#C4D6FF" stopOpacity={0.24 * moonlit * soften} />
+              <Stop offset="0.5" stopColor="#9FB8FF" stopOpacity={0.09 * moonlit * soften} />
               <Stop offset="1" stopColor="#9FB8FF" stopOpacity={0} />
             </RadialGradient>
           ) : null}
@@ -221,15 +231,15 @@ export function RoomLight({
               <Stop
                 offset="0"
                 stopColor={lamp ? '#FFD27A' : '#9FB8FF'}
-                stopOpacity={0.3 * soften}
+                stopOpacity={(lamp ? 0.3 : 0.3 * moonlit) * soften}
               />
               <Stop
-                offset={lamp ? '0.16' : '0.1'}
+                offset={lamp ? '0.16' : String(0.1 * moonlit)}
                 stopColor={lamp ? '#FFC870' : '#9FB8FF'}
-                stopOpacity={0.08 * soften}
+                stopOpacity={(lamp ? 0.08 : 0.08 * moonlit) * soften}
               />
               <Stop
-                offset={lamp ? '0.34' : '0.22'}
+                offset={lamp ? '0.34' : String(0.22 * moonlit)}
                 stopColor="#16204F"
                 stopOpacity={0.2 * soften}
               />

@@ -5,6 +5,7 @@ import Svg, { Path } from 'react-native-svg';
 
 import { useColors } from '@/theme';
 
+import { isFullMoon } from '../moon';
 import { type Box, boxPaths } from '../pixel/boxes';
 import { type Frame, PixelSprite } from '../pixel/pixel-sprite';
 import {
@@ -17,6 +18,10 @@ import {
   LAMP_LIT,
   MUSIC_BOX,
   ROOM_PALETTE,
+  FULL_MOON,
+  FULL_MOON_AT,
+  FULL_MOON_FINE,
+  FULL_MOON_PALETTE,
   SKY_PALETTES,
   skyAt,
   SNAIL,
@@ -298,7 +303,7 @@ export type WindowThings = {
   catFace: boolean;
 };
 
-// The window (Lv.9): the sky by the device's clock, the guests at the glass, and now and then rain,
+// The window (Lv.9): the sky by the device's clock (a full moon in its days, moon.ts), the guests at the glass, and now and then rain,
 // snow or a shooting star outside.
 export function RoomWindow({
   scale,
@@ -334,6 +339,23 @@ export function RoomWindow({
     <View>
       <PixelSprite frame={WINDOW} palette={SKY_PALETTES[skyAt(now.getHours())]} scale={scale} />
       <View style={[styles.glass, glass]}>
+        {skyAt(now.getHours()) === 'night' && isFullMoon(now) ? (
+          <View
+            style={[
+              styles.at,
+              {
+                left: (FULL_MOON_AT.col - WINDOW_GLASS.col) * scale,
+                top: (FULL_MOON_AT.row - WINDOW_GLASS.row) * scale,
+              },
+            ]}
+          >
+            <PixelSprite
+              frame={FULL_MOON}
+              palette={FULL_MOON_PALETTE}
+              scale={scale * FULL_MOON_FINE}
+            />
+          </View>
+        ) : null}
         {weather ? (
           <>
             {/* Under the glazing bars, like everything outside. */}
@@ -848,18 +870,21 @@ export function SillPot({ flowers, scale }: { flowers: boolean; scale: number })
 }
 
 // The goldfish bowl on its side table (Lv.28; plants and a second fish from Lv.56). The fish swim
-// about with the tick; a tap sends up bubbles.
+// about with the tick; a tap (or the buddy watching) sends up bubbles.
 export function FishBowl({
   plants,
   style = 'table',
   scale,
   tick,
+  bubbleRun = 0,
   onTap,
 }: {
   plants: boolean;
   style?: FishStyle;
   scale: number;
   tick: number;
+  // Bubbles come up for each new run, as for a tap (the buddy watching the fish).
+  bubbleRun?: number;
   onTap: () => void;
 }) {
   const { t } = useTranslation();
@@ -875,7 +900,7 @@ export function FishBowl({
       accessibilityLabel={t('buddy.room.fish')}
     >
       <PixelSprite frame={frame} palette={THINGS_PALETTE} scale={scale} />
-      {run > 0 ? <Bubbles key={run} scale={scale} /> : null}
+      {run + bubbleRun > 0 ? <Bubbles key={run + bubbleRun} scale={scale} /> : null}
     </Pressable>
   );
 }
