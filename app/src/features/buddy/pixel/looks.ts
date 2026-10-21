@@ -90,8 +90,10 @@ const JOB_LOOKS: Record<BuddyJob, readonly (readonly [row: number, look: Frame])
 
 // --- A week's look for the season ---
 
-export type Season = 'SPRING' | 'SUMMER' | 'HALLOWEEN' | 'AUTUMN' | 'BLACK_FRIDAY' | 'CHRISTMAS';
+export type Season =
+  'VALENTINE' | 'SPRING' | 'SUMMER' | 'HALLOWEEN' | 'AUTUMN' | 'BLACK_FRIDAY' | 'CHRISTMAS';
 export const SEASONS: readonly Season[] = [
+  'VALENTINE',
   'SPRING',
   'SUMMER',
   'HALLOWEEN',
@@ -103,6 +105,7 @@ export const SEASONS: readonly Season[] = [
 // About a week each, by the device's own date: [month, first day, last day]. Black Friday moves
 // with the calendar: the Friday after the fourth Thursday of November, through that Sunday.
 const SEASON_DAYS: Record<Exclude<Season, 'BLACK_FRIDAY'>, readonly [number, number, number]> = {
+  VALENTINE: [2, 10, 14],
   SPRING: [3, 25, 31],
   SUMMER: [7, 15, 21],
   HALLOWEEN: [10, 25, 31],
@@ -186,6 +189,22 @@ const BUNNY_EAR: Frame = [
   '.kwwwk',
   '..kwk.',
 ];
+// A heart on a spring, one of the pair on a headband (Valentine's), behind the head: the spring
+// runs down to where the band meets the head.
+// prettier-ignore
+const HEART_SPRING: Frame = [
+  '.kk.kk.',
+  'khrkrrk',
+  'krrrrrk',
+  '.krrrk.',
+  '..krk..',
+  '...k...',
+  '...k...',
+  '....k..',
+  '....k..',
+  '.....k.',
+  '......k',
+];
 // A red maple leaf caught on the head (autumn).
 // prettier-ignore
 const MAPLE_LEAF: Frame = [
@@ -213,9 +232,11 @@ const BLACK_BOW: Frame = [
 // Where each look goes on each body, in its grid: the left wing's and antler's top-left cell (the
 // right ones mirror them), the swim ring's top row, first column and width, the hand an umbrella is
 // held in (the baby has no arms: by its side) and the top of its head. Ears stand like the
-// antlers; the leaf and the bow sit at the head's upper right ("side").
+// antlers, the hearts' springs reach the head from further out; the leaf and the bow sit at the
+// head's upper right ("side").
 type Fit = {
   wings: readonly [row: number, col: number];
+  hearts: readonly [row: number, col: number];
   antlers: readonly [row: number, col: number];
   ears: readonly [row: number, col: number];
   side: readonly [row: number, col: number];
@@ -226,6 +247,7 @@ type Fit = {
 const FIT: Record<Hatched, Fit> = {
   BABY: {
     wings: [3, -2],
+    hearts: [-6, -2],
     antlers: [-4, 2],
     ears: [-5, 1],
     side: [1, 10],
@@ -235,6 +257,7 @@ const FIT: Record<Hatched, Fit> = {
   },
   CHILD: {
     wings: [5, -5],
+    hearts: [-4, -1],
     antlers: [-2, 2],
     ears: [-3, 3],
     side: [3, 13],
@@ -244,6 +267,7 @@ const FIT: Record<Hatched, Fit> = {
   },
   ADULT: {
     wings: [7, -4],
+    hearts: [-2, -1],
     antlers: [1, 0],
     ears: [-1, 2],
     side: [5, 14],
@@ -355,7 +379,7 @@ function pair(sprite: Frame, row: number, col: number, width: number): Layer {
   };
 }
 
-// What the season puts behind the body: wings, antlers or ears.
+// What the season puts behind the body: wings, antlers, ears or hearts.
 export function seasonBehind(stage: BuddyStage, season: Season | null): Layer | null {
   if (stage === 'EGG') return null;
   const width = buddyFrame(stage, 'idle')[0].length;
@@ -367,6 +391,8 @@ export function seasonBehind(stage: BuddyStage, season: Season | null): Layer | 
       return pair(ANTLER, fit.antlers[0], fit.antlers[1], width);
     case 'SPRING':
       return pair(BUNNY_EAR, fit.ears[0], fit.ears[1], width);
+    case 'VALENTINE':
+      return pair(HEART_SPRING, fit.hearts[0], fit.hearts[1], width);
     default:
       return null;
   }
@@ -534,6 +560,41 @@ const SHOPPING_BAGS: Frame = [
   '.kkkkkkk.....kkkkkkkkkk.',
 ];
 
+// Two heart balloons, red and pink, tied to a little pink box with a gold ribbon (Valentine's).
+// prettier-ignore
+const HEART_BALLOONS: Frame = [
+  '.........kkk...kkk...',
+  '........kHwrk.krrrk..',
+  '.......kHrrrrkrrrrrk.',
+  '.......kHrrrrrrrrrQk.',
+  '.......krrrrrrrrrrQk.',
+  '.......krrrrrrrrrrQk.',
+  '........krrrrrrrrQk..',
+  '.........krrrrrrQk...',
+  '..kkk.kkk.krrrrQk....',
+  '.kHwfkfffk.krrQk.....',
+  'kfwffffffFk.kQk......',
+  'kfffffffFFk..k.......',
+  '.kffffffFk..kQk......',
+  '..kffffFk....x.......',
+  '...kffFk.....x.......',
+  '....kFk.....x........',
+  '.....k......x........',
+  '....kFk.....x........',
+  '.....x.....x.........',
+  '......x....x.........',
+  '......x...x..........',
+  '.......x..x..........',
+  '........x.x..........',
+  '........xx...........',
+  '.........x...........',
+  '.......kkkkk.........',
+  '......kfffffk........',
+  '......kYYYYYk........',
+  '......kfFfFFk........',
+  '......kkkkkkk........',
+];
+
 // The blossom and the maple outlined in a deep shade of their own colors instead of black, the
 // crown in rose or rust, the trunk and its roots in dark bark (`T`): finer at this size.
 function outlined(frame: Frame, trunkFrom: number): Frame {
@@ -548,6 +609,7 @@ const MAPLE_PALETTE: Palette = { ...PROP_PALETTE, k: '#8E3324', T: '#5B3A28' };
 export const SEASON_CORNER: Partial<
   Record<Season, { frame: Frame; size: number; palette?: Palette; sink?: number }>
 > = {
+  VALENTINE: { frame: HEART_BALLOONS, size: 0.8 },
   SPRING: { frame: outlined(CHERRY_TREE, 20), size: 0.85, palette: CHERRY_PALETTE, sink: 2 },
   HALLOWEEN: { frame: PUMPKIN, size: 0.72 },
   AUTUMN: { frame: outlined(MAPLE_TREE, 20), size: 0.85, palette: MAPLE_PALETTE, sink: 2 },
@@ -625,7 +687,8 @@ export function umbrellaFor(stage: Hatched): Layer {
   return layer;
 }
 
-// A heart for the bigger moments (a pet from both, a writer's love), with a shine.
+// A heart for the bigger moments (a pet from both, a writer's love, love in Valentine's week), with
+// a shine.
 // prettier-ignore
 export const HEART_BIG: Frame = [
   '...kkk...kkk...',

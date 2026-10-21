@@ -1724,9 +1724,11 @@ export function BuddyStage({
   // Resting on the head while it is there.
   const butterfly = act === 'butterfly' && buddy.stage !== 'EGG' ? butterflyAt(buddy.stage) : null;
 
-  // A writer's love, and a pet shared by both, show a big heart.
+  // A writer's love, love in Valentine's week, and a pet shared by both show a big heart.
   const bigHeart =
-    mood === 'coPet' || (mood === 'love' && job === 'WRITER') || active?.kind === 'joined';
+    mood === 'coPet' ||
+    (mood === 'love' && (job === 'WRITER' || season === 'VALENTINE')) ||
+    active?.kind === 'joined';
   const showHeart =
     petted ||
     (act === 'job' && job === 'WRITER') ||
