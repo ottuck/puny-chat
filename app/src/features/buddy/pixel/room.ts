@@ -100,6 +100,30 @@ export const SKY_PALETTES: Record<SkyTime, Palette> = {
   dusk: { ...ROOM_PALETTE, ...SKIES.dusk },
   night: { ...ROOM_PALETTE, ...SKIES.night },
 };
+// Around the full moon (moon.ts) a round moon is drawn over the night's crescent, finer than the
+// window (half its cells, FULL_MOON_FINE): pale seas on it and a faint ring of light around.
+export const FULL_MOON_FINE = 0.5;
+// prettier-ignore
+export const FULL_MOON: Frame = [
+  '...hhhh...',
+  '..hmmmmh..',
+  '.hmmmcmMh.',
+  'hmmccmmmMh',
+  'hmmcmmcmMh',
+  'hmmmmmmmMh',
+  'hmcmmmmMMh',
+  '.hmmmmMMh.',
+  '..hMMMMh..',
+  '...hhhh...',
+];
+export const FULL_MOON_PALETTE: Palette = {
+  m: '#FFF1C2', // moon
+  M: '#F0D58C', // moon, shaded
+  c: '#E9D49A', // its seas
+  h: '#3D4C80', // the ring of light, against the night
+};
+// Where it goes in the window's cells: over the crescent (rows 4-7, columns 30-33).
+export const FULL_MOON_AT = { col: 29.5, row: 3.5 };
 
 // A long cream frame of three panes with a sill, wide so the sky shows past what stands on the
 // sill; through it clouds, the sun (or the moon and stars) and green hills. The glazing bars are not
@@ -110,7 +134,7 @@ export const WINDOW: Frame = [
   '.kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.',
   '.kfffffffffffffffffffffffffffffffffffk.',
   '.kfkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkFk.',
-  '.kfkssssssstsssssssssstssssssssstsskFk.',
+  '.kfkssssssstsssssssssstssssstsssssskFk.',
   '.kfksccssssssssssssssssssssssssbbsskFk.',
   '.kfkcccccsstsssssssssstsssssssbbbBskFk.',
   '.kfksssssssssssssssssssssstsssbbBBskFk.',

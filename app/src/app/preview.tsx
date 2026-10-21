@@ -15,6 +15,7 @@ import { type Reward, REWARDS, SEASONAL } from '@/features/buddy/components/stag
 import type { Cue } from '@/features/buddy/components/buddy-stage';
 import { giftFor, ITEMS, LETTERS, RADIO } from '@/features/buddy/gifts';
 import { JOB_ICON, JOB_ORDER } from '@/features/buddy/jobs';
+import { nextFullMoon } from '@/features/buddy/moon';
 import { dressedFrame, type Season, SEASONS, seasonOn } from '@/features/buddy/pixel/looks';
 import { PixelSprite } from '@/features/buddy/pixel/pixel-sprite';
 import { BUDDY_PALETTE, POSES_IN_ORDER } from '@/features/buddy/pixel/sprites';
@@ -118,6 +119,12 @@ const HOURS = [7, 12, 18, 22];
 // Days for the room's seasonal things (stage-decor.tsx, SEASONAL): the New Year (kotatsu, mochi),
 // spring (petals), summer (wind chime), autumn (dragonflies).
 const DATES = ['01-01', '04-01', '08-01', '10-01'];
+// The coming full moon's date, with its year (moon.ts): the window's moon is round then, at night.
+function fullMoonDate(): string {
+  const full = nextFullMoon(new Date());
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${full.getFullYear()}-${pad(full.getMonth() + 1)}-${pad(full.getDate())}`;
+}
 
 function buddyOf(
   stage: BuddyStage,
@@ -672,6 +679,14 @@ function Preview() {
             {DATES.map((d) => (
               <Chip key={d} label={d} onPress={() => setDate(d)} active={d === date} />
             ))}
+            <Chip
+              label="🌕 full moon"
+              onPress={() => {
+                setDate(fullMoonDate());
+                setHour(22);
+              }}
+              active={date === fullMoonDate()}
+            />
           </Group>
           <Group title="plant kind (Lv.13–18)">
             <Chip

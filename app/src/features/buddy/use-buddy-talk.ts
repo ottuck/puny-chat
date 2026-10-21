@@ -79,6 +79,7 @@ export type Line =
   | 'windowDay'
   | 'windowDusk'
   | 'windowNight'
+  | 'windowFullMoon'
   | 'fish'
   | 'plush'
   | 'table'

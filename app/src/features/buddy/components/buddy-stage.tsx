@@ -18,6 +18,7 @@ import { useColorMode, useColors } from '@/theme';
 
 import { type BuddyJob, type BuddyView, JOB_CHANGE_LEVELS, NEXT_STEP_AT } from '../api';
 import { JOB_ICON } from '../jobs';
+import { isFullMoon } from '../moon';
 import {
   BUTTERFLY,
   butterflyAt,
@@ -434,12 +435,14 @@ type Props = {
   fishStyle?: FishStyle;
 };
 
-// The room's time: the device's, or the hour and day the art preview picks.
+// The room's time: the device's, or the hour and day the art preview picks (MM-DD this year, or
+// YYYY-MM-DD for a moon).
 function roomTime(clock: Date, hour?: number, date?: string): Date {
   if (hour === undefined && !date) return clock;
-  const [month, day] = date ? date.split('-').map(Number) : [clock.getMonth() + 1, clock.getDate()];
+  const parts = date ? date.split('-').map(Number) : [clock.getMonth() + 1, clock.getDate()];
+  const [year, month, day] = parts.length === 3 ? parts : [clock.getFullYear(), ...parts];
   return new Date(
-    clock.getFullYear(),
+    year,
     month - 1,
     day,
     hour ?? clock.getHours(),
@@ -1849,7 +1852,13 @@ export function BuddyStage({
       if (isGuest(act)) return say(act);
       const atWindow = decor.guests.filter((guest) => !isFloorPasser(guest));
       if (atWindow.length > 0) return perform(pick(atWindow), true);
-      return perform('lookAround', true, WINDOW_LINE[skyAt(now.getHours())]);
+      const sky = skyAt(now.getHours());
+      // Around the full moon the night sky has a round one.
+      return perform(
+        'lookAround',
+        true,
+        sky === 'night' && isFullMoon(now) ? 'windowFullMoon' : WINDOW_LINE[sky],
+      );
     }
     if (prop === 'clock') return perform('startle', true, 'clock');
     if (prop === 'rug') {
@@ -2466,6 +2475,7 @@ export function BuddyStage({
           floorTop={height - FLOOR}
           glass={glass}
           lamp={decor.lamp && lampLit ? lampShadeAt(width, height, FLOOR, plantRoom) : null}
+          fullMoon={isFullMoon(now)}
           station={
             station
               ? station.light.onBehind && station.behind
