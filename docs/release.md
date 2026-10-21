@@ -30,7 +30,7 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 
 - Sign in with Apple: `app.json`의 `ios.usesAppleSignIn`, `expo-apple-authentication` 플러그인, 로그인·연결·삭제(`lib/social-auth/apple.ios.ts`).
   계정 삭제 때 Apple 토큰을 취소한다.
-- 앱 안 계정 삭제(Guideline 5.1.1(v)), 개인정보처리방침·지원 페이지(로그인 없이, 세 언어), 문의·상대 신고·내보내기.
+- 앱 안 계정 삭제(Guideline 5.1.1(v)), 개인정보처리방침·지원 페이지(로그인 없이, 앱의 언어로), 문의·상대 신고·내보내기.
 - 푸시: `expo-notifications`, EAS projectId 연결. 아이콘·스플래시: `app/assets/README.md`.
 - 수출 규정: `ios.infoPlist`의 `ITSAppUsesNonExemptEncryption: false`(표준 암호화만 쓴다. 업로드마다 묻지 않게).
 - `pnpm dlx expo-doctor` 21/21(SDK 57 최신 패치). 패치는 `app/`에서 `pnpm exec expo install --fix`로 맞춘다. 막 나온 패치는 pnpm의
@@ -65,9 +65,11 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
 4. **App Store Connect 정보.**
    - 개인정보처리방침 `https://puny-chat.com/privacy`, 지원 URL `https://puny-chat.com/support`
    - 판매 지역: 중국 본토와 EU를 뺀 전 세계. 중국 본토는 ICP 등록이 필요하고, EU는 DSA 판매자 신고를 하지 않는다.
-   - 스토어 언어: 기본 언어 영어(그 밖의 나라는 영어 페이지), 일본어·한국어 현지화. 설명·키워드·스크린샷을 세 언어로 따로 넣는다.
-     스크린샷은 `docs/app-store/{ja,ko,en}`의 6.3인치(1206×2622) 6장을 파일 이름 순서로 올린다. 웹 빌드의 구경하기(`/demo`)와
-     `/preview` 장면을 그 언어로 찍어 문구를 얹었다. 이름·부제·프로모션 텍스트·키워드·설명은 같은 폴더의 `listing.txt`.
+   - 스토어 언어: 기본 언어 영어(그 밖의 나라는 영어 페이지), 일본어·한국어·번체 중국어(대만) 현지화. 설명·키워드·스크린샷을 언어마다 따로 넣는다.
+     번체 중국어는 1.0 심사 뒤에 더해서 다음 버전을 낼 때 함께 넣는다(이름·부제·설명은 버전과 같이 심사된다).
+     앱 안의 중국어는 EAS Update로 1.0 빌드에도 가지만, 스토어의 '언어' 표시는 `app.json`의 `CFBundleLocalizations`에 zh-Hant를 넣은 다음 빌드부터다.
+     스크린샷은 `docs/app-store/{ja,ko,en,zh-Hant}`의 6.3인치(1206×2622) 6장을 파일 이름 순서로 올린다. 웹 빌드의 구경하기(`/demo`)와
+     `/preview` 장면을 그 언어로 찍어 문구를 얹었다(글꼴: 영어 Nunito, 일본어 M PLUS Rounded 1c, 한국어 나눔스퀘어라운드, 중국어 jf 粉圓). 이름·부제·프로모션 텍스트·키워드·설명은 같은 폴더의 `listing.txt`.
      기능이 바뀌면 설명도 실제 앱과 맞춘다(없는 기능을 적지 않는다, Guideline 2.3). 설명에는 💩·♨ 같은 기호를 넣을 수 없다(저장이 거절된다).
    - 카테고리: 소셜 네트워킹, 추가로 엔터테인먼트. 가격은 무료. 콘텐츠 권한: 타사 콘텐츠 없음.
    - 연령 등급: 설문은 사용자 생성 콘텐츠·메시지 및 채팅만 "예"(나머지 없음)로 4+가 나오지만, 처리방침대로 13세 이상으로 올렸다.
