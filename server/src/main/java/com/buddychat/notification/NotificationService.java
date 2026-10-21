@@ -38,7 +38,7 @@ public class NotificationService {
     private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
     private static final Pattern EXPO_TOKEN = Pattern.compile("^Expo(nent)?PushToken\\[[^\\]]{1,200}]$");
     private static final int MAX_BODY_LENGTH = 180;
-    private static final Set<String> LANGUAGES = Set.of("ko", "ja", "en");
+    private static final Set<String> LANGUAGES = Set.of("ko", "ja", "en", "zh-Hant");
 
     /** A notice the server writes itself (not a message), in the device's language. */
     public record Notice(String title, String body) {}
@@ -201,6 +201,7 @@ public class NotificationService {
         String body = switch (language == null ? "en" : language) {
             case "ko" -> (name != null ? name + "님이" : "친구가") + " 들어왔어요! 이제 둘이 함께 버디를 키워요.";
             case "ja" -> (name != null ? name + "さんが" : "友だちが") + "入ってきました！これからふたりでBuddyを育てましょう。";
+            case "zh-Hant" -> (name != null ? name : "朋友") + " 加入了！現在兩個人一起養 Buddy 吧。";
             default -> (name != null ? name : "Your friend") + " joined! Now you two raise your buddy together.";
         };
         return new Notice("puny-chat", body);
@@ -226,6 +227,7 @@ public class NotificationService {
         return switch (language == null ? "en" : language) {
             case "ko" -> "사진을 보냈어요";
             case "ja" -> "写真を送りました";
+            case "zh-Hant" -> "傳了一張照片";
             default -> "Sent a photo";
         };
     }

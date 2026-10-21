@@ -85,6 +85,7 @@ class GuestExpiryNotice {
         String body = switch (language == null ? "en" : language) {
             case "ko" -> "게스트 이용 기간이 " + days + "일 남았어요. 설정에서 계정을 연결하면 버디와 대화가 그대로 이어져요.";
             case "ja" -> "ゲストの利用期間は残り" + days + "日です。設定でアカウントを連携すると、Buddyと会話をそのまま続けられます。";
+            case "zh-Hant" -> "訪客使用期限還剩 " + days + " 天。在設定中連結帳號，就能繼續和 Buddy 聊天。";
             default ->
                 (days == 1 ? "1 day" : days + " days")
                         + " left as a guest. Link an account in Settings to keep your buddy and chats.";
