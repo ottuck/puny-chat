@@ -5,12 +5,26 @@
 export type ChatWord = 'feed' | 'clean' | 'work' | 'dance' | 'sing';
 
 const WORDS: Record<ChatWord, readonly string[]> = {
-  feed: ['밥', '🍚', 'ごはん', 'ご飯', 'food', 'feed'],
-  clean: ['청소', '🧹', '똥', '💩', 'そうじ', '掃除', 'うんち', 'clean', 'poop'],
+  feed: ['밥', '🍚', 'ごはん', 'ご飯', '飯', '吃飯', '餵飯', '饭', '吃饭', 'food', 'feed'],
+  clean: [
+    '청소',
+    '🧹',
+    '똥',
+    '💩',
+    'そうじ',
+    '掃除',
+    'うんち',
+    '打掃',
+    '清理',
+    '便便',
+    '打扫',
+    'clean',
+    'poop',
+  ],
   // A grown-up's work at its station; "청소" is for the poops before that.
-  work: ['일', '💼', '仕事', 'しごと', 'work'],
-  dance: ['춤', '춤춰', '💃', '🕺', 'おどって', '踊って', 'ダンス', 'dance'],
-  sing: ['노래', '노래해', '🎵', '🎶', 'うた', '歌', '歌って', 'sing', 'song'],
+  work: ['일', '💼', '仕事', 'しごと', '工作', '上班', 'work'],
+  dance: ['춤', '춤춰', '💃', '🕺', 'おどって', '踊って', 'ダンス', '跳舞', 'dance'],
+  sing: ['노래', '노래해', '🎵', '🎶', 'うた', '歌', '歌って', '唱歌', 'sing', 'song'],
 };
 
 export function chatWord(text: string): ChatWord | null {
@@ -42,6 +56,12 @@ const MOODS: readonly (readonly [Mood, readonly string[]])[] = [
       '大好き',
       '愛してる',
       '会いたい',
+      '愛你',
+      '爱你',
+      '喜歡你',
+      '喜欢你',
+      '好想你',
+      '想你了',
       'love you',
       'miss you',
       '❤',
@@ -51,7 +71,7 @@ const MOODS: readonly (readonly [Mood, readonly string[]])[] = [
       '🥰',
     ],
   ],
-  ['goodnight', ['잘자', '굿나잇', 'おやすみ', 'good night', 'goodnight', '😴', '🌙']],
+  ['goodnight', ['잘자', '굿나잇', 'おやすみ', '晚安', 'good night', 'goodnight', '😴', '🌙']],
   [
     'cheer',
     [
@@ -62,6 +82,7 @@ const MOODS: readonly (readonly [Mood, readonly string[]])[] = [
       'がんばれ',
       '頑張って',
       'ファイト',
+      '加油',
       'fighting',
       'good luck',
       '💪',
@@ -79,13 +100,19 @@ const MOODS: readonly (readonly [Mood, readonly string[]])[] = [
       'つらい',
       'しんどい',
       'さみしい',
+      '難過',
+      '难过',
+      '傷心',
+      '伤心',
+      '嗚嗚',
+      '呜呜',
       '😢',
       '😭',
       '🥺',
     ],
   ],
-  ['laugh', ['ㅋㅋ', 'ㅎㅎ', '笑', 'www', 'lol', 'haha', '😂', '🤣']],
-  ['morning', ['굿모닝', '좋은 아침', 'おはよう', 'good morning']],
+  ['laugh', ['ㅋㅋ', 'ㅎㅎ', '笑', 'www', '哈哈', 'xd', 'lol', 'haha', '😂', '🤣']],
+  ['morning', ['굿모닝', '좋은 아침', 'おはよう', '早安', 'good morning']],
 ];
 
 export function chatMood(text: string): Mood | null {

@@ -11,7 +11,26 @@ import java.util.Locale;
 final class MoodWords {
 
     private static final List<String> LOVE = List.of(
-            "사랑해", "좋아해", "보고싶", "보고 싶", "大好き", "愛してる", "会いたい", "love you", "miss you", "❤", "💕", "💗", "😍", "🥰");
+            "사랑해",
+            "좋아해",
+            "보고싶",
+            "보고 싶",
+            "大好き",
+            "愛してる",
+            "会いたい",
+            "愛你",
+            "爱你",
+            "喜歡你",
+            "喜欢你",
+            "好想你",
+            "想你了",
+            "love you",
+            "miss you",
+            "❤",
+            "💕",
+            "💗",
+            "😍",
+            "🥰");
 
     private MoodWords() {}
 
