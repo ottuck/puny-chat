@@ -259,6 +259,7 @@ public class NotificationFlowTest {
     void theJoinNoticeIsInTheDevicesLanguage() {
         assertThat(NotificationService.joinedNotice("ko", "유키").body()).isEqualTo("유키님이 들어왔어요! 이제 둘이 함께 버디를 키워요.");
         assertThat(NotificationService.joinedNotice("ja", null).body()).startsWith("友だちが");
+        assertThat(NotificationService.joinedNotice("zh-Hant", "Yuki").body()).isEqualTo("Yuki 加入了！現在兩個人一起養 Buddy 吧。");
     }
 
     @Test
@@ -279,6 +280,7 @@ public class NotificationFlowTest {
 
         assertThat(NotificationService.body(photo, "ko")).isEqualTo("사진을 보냈어요");
         assertThat(NotificationService.body(photo, "ja")).isEqualTo("写真を送りました");
+        assertThat(NotificationService.body(photo, "zh-Hant")).isEqualTo("傳了一張照片");
         assertThat(NotificationService.body(photo, null)).isEqualTo("Sent a photo");
     }
 

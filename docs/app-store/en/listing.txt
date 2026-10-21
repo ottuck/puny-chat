@@ -39,7 +39,7 @@ puny-chat is a one-on-one chat app for you and one friend. Above your conversati
 ■ Easy to start
 ・No account needed. Use it as a guest for 30 days, or link your Apple or Google account to keep going
 ・No ads, no purchases, no quests. Just talk
-・Available in English, Japanese and Korean
+・Available in English, Japanese, Korean and Traditional Chinese
 
 Support: https://puny-chat.com/support
 Privacy Policy: https://puny-chat.com/privacy

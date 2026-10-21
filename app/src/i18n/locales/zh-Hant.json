@@ -1,0 +1,876 @@
+{
+  "common": {
+    "close": "關閉",
+    "retry": "再試一次",
+    "cancel": "取消",
+    "back": "← 返回"
+  },
+  "errors": {
+    "loadFailed": "無法連線到伺服器。",
+    "unknown": "發生問題了，請再試一次。",
+    "NETWORK": "無法連線到伺服器，請確認網路連線。",
+    "ROOM_FULL": "這個聊天室已經有兩個人了。",
+    "INVITATION_NOT_FOUND": "找不到這個邀請碼。",
+    "INVITATION_EXPIRED": "邀請已經過期了，請再要一組新的邀請碼。",
+    "INVITATION_USED": "這個邀請已經被使用過了，請再要一組新的邀請碼。如果你原本就在這個聊天室，請用一開始使用的 App 或瀏覽器開啟，或請對方幫你「重新邀請」。",
+    "ALREADY_MEMBER": "你已經在這個聊天室裡了。",
+    "ALREADY_IN_ROOM": "你已經在其他聊天室和別人聊天了。",
+    "BUDDY_NOT_GROWN": "新的蛋已經來了。",
+    "PARTNER_CHANGED": "對方或聊天室已經變更，請在目前的對話中再試一次。",
+    "INVITATION_RATE_LIMIT": "輸入錯誤的邀請碼太多次了，請 10 分鐘後再試。",
+    "SUPPORT_RATE_LIMIT": "目前送出的內容太多，請稍後再試。",
+    "ROOM_NOT_FOUND": "這段對話已經結束了，請重新確認目前的聊天室。",
+    "JOB_CHANGE_LOCKED": "現在還不能換職業。在 20、30、40、50 級各可以換一次，60 級以後隨時都能換。",
+    "JOB_UNCHANGED": "已經是這個職業了。",
+    "BUDDY_NOT_ADULT": "Lv.12 決定職業之後才能更換。"
+  },
+  "signIn": {
+    "tagline": "和喜歡的人聊天，一起養一隻小小的 Buddy。",
+    "google": "使用 Google 繼續",
+    "apple": "使用 Apple 繼續",
+    "error": "無法登入，請再試一次。",
+    "startNow": "馬上開始",
+    "noAccountNeeded": "不需要帳號就能開始。訪客可以使用 30 天，連結帳號後就能繼續使用。",
+    "guestExpired": "以訪客身分開始已經超過 30 天，之前的 Buddy 和對話已經看不到了。隨時都可以重新開始。",
+    "invited": "你是收到朋友的邀請來的。開始後就能直接進入朋友的聊天室。",
+    "withCode": "用邀請碼開始",
+    "start": "開始",
+    "tooMany": "短時間內開始太多次了，請稍後再試。"
+  },
+  "welcome": {
+    "title": "新的 Buddy 快要誕生了！",
+    "subtitle": "幫牠取個名字吧。隨時都可以邀請朋友。",
+    "namePlaceholder": "Buddy 的名字",
+    "startSolo": "叫醒 Buddy"
+  },
+  "join": {
+    "title": "用邀請碼加入",
+    "hint": "請輸入朋友給你的 4 位數邀請碼。直接貼上整段邀請訊息也可以。",
+    "submit": "加入",
+    "leaveTitle": "要和現在的 Buddy 分開嗎？",
+    "leaveMessage": "加入這個聊天室後，現在養的 Buddy 和對話內容都會消失。",
+    "leaveConfirm": "加入",
+    "seatTitle": "要以 {{name}} 的身分繼續進入嗎？",
+    "seatMessage": "這是接手 {{name}} 位置的邀請碼。你會接續到目前為止的對話，{{name}} 原本使用的地方會離開聊天室。\n\n如果你不是 {{name}}，請取消。",
+    "seatConfirm": "繼續進入",
+    "beforeStart": "接下來取好名字，就會直接進入朋友的聊天室。不需要帳號。"
+  },
+  "chat": {
+    "composerPlaceholder": "訊息",
+    "send": "傳送",
+    "connecting": "連線中…",
+    "retry": "傳送失敗 · 點一下重新傳送",
+    "guestName": "訪客",
+    "typing": "輸入中…",
+    "read": "已讀",
+    "react": "留下反應",
+    "reaction": {
+      "LOVE": "愛心",
+      "LIKE": "讚",
+      "CHECK": "收到",
+      "WOW": "驚訝",
+      "SAD": "難過"
+    },
+    "photo": "傳送照片",
+    "photoMessage": "照片",
+    "photoOpen": "放大照片",
+    "photoUnreadableTitle": "無法傳送這張照片",
+    "photoUnreadable": "無法讀取這張照片，請選擇其他照片。",
+    "online": "在線上",
+    "offline": "離線",
+    "emptySolo": "{{buddy}} 誕生了！\n要不要邀請朋友一起養？",
+    "emptySoloHint": "等朋友的時候，先留個訊息吧。\n{{buddy}} 也會跟著長大。",
+    "emptyDuo": "從現在起和 {{partner}} 一起養 Buddy。\n傳送第一則訊息吧！",
+    "grownBody": "在 Lv.20、30、40、50 各可以換一次職業，五種職業都能體驗看看。到最高等級（Lv.60）為止，每升一級房間都會多出訪客、新地板、果樹等小物，或是變得更好。養到最後，還可以讓牠獨立，留在回憶相簿裡。",
+    "maxLevelThanks": "真的很謝謝你！我們正在準備新角色和收藏等各種功能，敬請期待！",
+    "maxLevelJob": "現在可以隨時在 Buddy 詳細資料中更換職業了。",
+    "readLetter": "讀信",
+    "maxLevelMail": "信箱裡有一封信。",
+    "jobChangeOpen": "🔄 可以換一次職業",
+    "togetherBody": "{{buddy}} 好開心！同一天兩個人都傳訊息的話，每天可以拿到一次這個獎勵。",
+    "jobChangeRule": "職業在 Lv.20、30、40、50 各可以換一次，Lv.60 以後隨時都能換。",
+    "graduatedBody": "{{name}} 的照片掛在舞台右上方的回憶相簿裡了，隨時都能拿出來看。",
+    "buddyTo": "{{buddy}} → {{to}}",
+    "letterSent": "我寫了一封信放在信箱裡。\n有空的時候讀讀看吧。"
+  },
+  "invite": {
+    "button": "邀請朋友",
+    "title": "邀請朋友",
+    "hint": "把這組邀請碼傳給朋友，朋友登入後輸入就可以了。",
+    "expires": "{{time}} 前有效 · 只能使用一次",
+    "share": "傳送邀請碼",
+    "shareMessage": "一起在 puny-chat 養 Buddy 吧！🥚\n\n👉 {{link}}\n\n點連結就能馬上加入。\n邀請碼：{{code}}（{{time}} 前有效）",
+    "copy": "複製",
+    "copied": "已複製 ✓",
+    "rejoinButton": "重新邀請 {{name}}",
+    "rejoinTitle": "重新邀請 {{name}}",
+    "rejoinHint": "這是 {{name}} 從其他 App、瀏覽器或裝置進來時使用的邀請碼。用這組邀請碼進來，就會接續到目前為止的對話，原本使用的地方會離開聊天室。",
+    "rejoinShareMessage": "回到我們的 puny-chat 聊天室吧 🥚\n\n👉 {{link}}\n\n點連結就能接續看到目前為止的對話。\n邀請碼：{{code}}（{{time}} 前有效）",
+    "moveTitle": "從其他瀏覽器加入我的聊天室",
+    "moveHint": "在其他 App、瀏覽器或裝置輸入這組邀請碼，就能繼續和現在的 Buddy 聊天。這裡則會離開聊天室。連結帳號的話，不需要邀請碼，只要登入就能繼續使用。",
+    "moveShareMessage": "puny-chat 接續使用的邀請碼：{{code}}（{{time}} 前有效）\n👉 {{link}}"
+  },
+  "buddy": {
+    "level": "Lv.{{level}}",
+    "open": "查看 {{buddy}}",
+    "stage": {
+      "EGG": "蛋",
+      "BABY": "寶寶",
+      "CHILD": "小不點",
+      "ADULT": "大人"
+    },
+    "exp": "經驗值",
+    "fullness": "飽足度",
+    "hungry": "肚子餓了",
+    "full": "吃飽了",
+    "cleanliness": "清潔度",
+    "clean": "乾乾淨淨",
+    "feed": "餵飯",
+    "cleanUp": "打掃",
+    "work": "讓 {{buddy}} 去工作",
+    "workShort": "工作",
+    "growthHint": "越常聊天、照顧牠，Buddy 就會長得越大。",
+    "peckish": "有點餓了",
+    "pet": "摸摸 {{buddy}}",
+    "showStage": "放大 {{buddy}}",
+    "say": {
+      "thanks": "謝謝！",
+      "yummy": "好好吃！",
+      "refreshed": "好清爽！",
+      "digestion": "最近消化很好",
+      "hungry": "肚子餓…",
+      "full": "好飽",
+      "longTime": "好久不見！",
+      "morning": "早安！",
+      "afternoon": "午安～",
+      "evening": "晚上好～",
+      "ateYet": "吃飯了嗎？",
+      "whatsUp": "怎麼了嗎？",
+      "howWasToday": "今天過得怎麼樣？",
+      "alreadyClean": "已經很乾淨了！",
+      "together": "兩個人都來了！",
+      "laugh": "哈哈哈",
+      "love": "嘿嘿嘿",
+      "goodnight": "晚安～",
+      "cheer": "加油！",
+      "comfort": "還好嗎？",
+      "bothHere": "兩個人都在耶！",
+      "friendCame": "朋友來了！",
+      "coPet": "好喜歡！",
+      "bestThing": "今天最開心的是什麼？",
+      "wantEat": "有想吃的東西嗎？",
+      "wantGo": "有想去的地方嗎？",
+      "weekend": "週末要做什麼？",
+      "watching": "最近在看什麼？",
+      "music": "最近在聽什麼歌？",
+      "sleptWell": "昨晚睡得好嗎？",
+      "funny": "有發生什麼好笑的事嗎？",
+      "wish": "現在最想做什麼？",
+      "favFood": "最喜歡的食物是什麼？",
+      "tired": "今天會不會累？",
+      "hiccup": "嗝！",
+      "startle": "嚇我一跳！",
+      "lookAround": "咦？",
+      "yawn": "哈～欠～",
+      "butterfly": "是蝴蝶！",
+      "rain": "下雨了～還好有帶傘",
+      "snow": "下雪了！整個世界白白的",
+      "shootingStar": "啊，流星！快許願",
+      "musicBox": "來開音樂盒吧～ ♪",
+      "waitGuest": "今天誰會來呢？",
+      "read": "這本書好好看～",
+      "chef1": "今天的菜單是祕密",
+      "chef2": "幫我嚐嚐味道？",
+      "chef3": "咕嘟咕嘟",
+      "chef4": "餓了就跟我說",
+      "gardener1": "今天也長得很好",
+      "gardener2": "該澆水了",
+      "gardener3": "多長了一片葉子",
+      "gardener4": "慢慢長大中",
+      "dj1": "現在是凌晨兩點",
+      "dj2": "下一首要放什麼呢",
+      "dj3": "獻給睡不著的你",
+      "dj4": "夜晚還很長",
+      "dj5": "這首歌很棒吧？",
+      "dj6": "歡迎點歌",
+      "dj7": "音量再大一點",
+      "dj8": "下一首來囉",
+      "dj9": "今天的來信是…",
+      "dj10": "鎖定頻道！",
+      "dj11": "稍後繼續",
+      "dj12": "這首歌送給你",
+      "writer1": "今天想到一個好句子",
+      "writer2": "正在寫你們兩個的故事",
+      "writer3": "是個好日子",
+      "writer4": "正在寫信…",
+      "barista1": "今天過得怎麼樣？",
+      "barista2": "要不要喝杯熱的？",
+      "barista3": "我在聽喔",
+      "barista4": "慢慢說沒關係",
+      "chefFed": "味道剛剛好",
+      "gardenerCleaned": "乾乾淨淨了",
+      "writerLove": "我也是",
+      "bath1": "啊～好舒服",
+      "bath2": "暖呼呼的",
+      "bath3": "好想住在這裡",
+      "bathTap1": "嘻嘻，好癢！",
+      "bathTap2": "要一起泡嗎？",
+      "bathTap3": "水溫剛剛好～",
+      "snail": "蝸牛客人來了",
+      "sparrow": "啾啾，你好！",
+      "catTail": "…是貓咪嗎？",
+      "train": "嘟嘟～火車來囉！",
+      "farewell": "謝謝你們的照顧！",
+      "plant": "快快長大～",
+      "clock": "已經這個時間了！",
+      "windowDay": "天氣真好～",
+      "windowDusk": "夕陽好美",
+      "windowNight": "星星一閃一閃",
+      "windowFullMoon": "月亮好圓！",
+      "ladybug": "是瓢蟲！有幾個點點呢？",
+      "dragonfly": "是紅蜻蜓～秋天到了",
+      "swallow": "咻！是燕子",
+      "owl": "貓頭鷹也還沒睡呀",
+      "squirrel": "在找橡實吧",
+      "fish": "啵啵～",
+      "plush": "一起玩吧！",
+      "table": "來喝杯茶吧？",
+      "kotatsu": "暖桌好溫暖～",
+      "sit": "地毯好軟～",
+      "nowChef": "從今天起我是廚師！",
+      "nowGardener": "我變成園丁了！",
+      "nowDj": "電台 DJ，開播囉！",
+      "nowWriter": "我變成作家了！",
+      "nowBarista": "咖啡師出道！",
+      "oranges": "橘子結果了！亮晶晶的",
+      "robot": "嗶嗶，是機器人！你好？",
+      "kitten": "是小貓咪！好像很喜歡毛線球",
+      "vacuum": "掃地機器人經過～亮晶晶"
+    },
+    "graduate": {
+      "title": "讓牠獨立",
+      "body": "{{buddy}} 已經長到最高等級了。讓牠獨立的話，牠會留在回憶相簿裡，舞台上會來一顆新的蛋。{{buddy}} 會帶著小物搬家，所以房間會從頭開始布置。不用急，像現在這樣一起生活，等心意決定了再讓牠獨立吧。",
+      "namePlaceholder": "新蛋的名字",
+      "button": "讓牠獨立",
+      "confirmTitle": "要讓 {{buddy}} 獨立嗎？",
+      "confirmMessage": "{{buddy}} 會進到相簿裡，新的蛋 {{name}} 會來到舞台上。這個動作無法復原。",
+      "confirm": "讓牠獨立"
+    },
+    "album": {
+      "title": "回憶相簿",
+      "together_one": "{{from}} ~ {{to}} · 一起度過 {{count}} 天",
+      "together_other": "{{from}} ~ {{to}} · 一起度過 {{count}} 天",
+      "open": "回憶相簿",
+      "count_one": "已獨立的 Buddy {{count}} 隻",
+      "count_other": "已獨立的 Buddy {{count}} 隻",
+      "view": "查看相簿"
+    },
+    "reward": {
+      "plant1": "新芽盆栽",
+      "crate": "木桌",
+      "bowl1": "銀飯碗",
+      "rug1": "點點地毯",
+      "toys": "玩具",
+      "window": "窗戶",
+      "clock": "掛鐘",
+      "plant2": "茂盛的盆栽",
+      "snail": "蝸牛客人",
+      "musicBox": "音樂盒",
+      "rug2": "條紋地毯",
+      "wood": "木地板",
+      "sparrow": "麻雀客人",
+      "plant3": "開花的陶瓷盆栽",
+      "hangingPlant": "掛在窗邊的藤蔓盆栽",
+      "firefly": "螢火蟲客人",
+      "ladybug": "瓢蟲客人",
+      "train": "玩具火車",
+      "radio": "收音機",
+      "sillPot": "窗台上的多肉盆栽",
+      "bowl2": "金飯碗",
+      "fishbowl": "金魚缸",
+      "rug3": "花紋圓地毯",
+      "furin": "風鈴（6～9 月）",
+      "plant4": "小樹",
+      "dragonfly": "紅蜻蜓客人（9～10 月）",
+      "bear": "小熊玩偶",
+      "catTail": "流浪貓的尾巴",
+      "cuckoo": "布穀鳥鐘",
+      "tatami": "榻榻米地板",
+      "kotatsu": "矮桌（冬天變暖桌）",
+      "swallow": "燕子客人",
+      "sakura": "櫻花花瓣（3～4 月）",
+      "lamp": "氣氛燈",
+      "goldMusicBox": "金色音樂盒",
+      "tea": "溫暖的茶杯",
+      "plant5": "結果的樹",
+      "owl": "貓頭鷹客人（晚上）",
+      "lampShade": "有流蘇的燈罩",
+      "bowl3": "陶瓷餐具",
+      "mochi": "鏡餅（新年）",
+      "rug4": "金邊大地毯",
+      "books": "一疊書",
+      "bookshelf": "擺滿書的書架",
+      "pinkSucculent": "粉紅多肉盆栽",
+      "rainbow": "雨後的彩虹",
+      "squirrel": "松鼠客人",
+      "gramophone": "留聲機",
+      "waterPlants": "水草魚缸",
+      "catFace": "流浪貓客人",
+      "bunny": "兔子玩偶",
+      "sillFlower": "開花的多肉",
+      "robot": "發條機器人",
+      "kitten": "毛線球和小貓咪",
+      "vacuum": "掃地機器人"
+    },
+    "nextReward_one": "下一個獎勵：Lv.{{level}} {{reward}} · 還差 {{count}} 級",
+    "nextReward_other": "下一個獎勵：Lv.{{level}} {{reward}} · 還差 {{count}} 級",
+    "together": {
+      "title": "🤝 兩個人一起",
+      "done": "今天兩個人都來了，獲得 +{{exp}} 經驗值！",
+      "waitPartner": "{{name}} 今天傳訊息的話，就能獲得 +{{exp}} 經驗值。",
+      "waitMe": "{{name}} 今天先來了。傳一則訊息就能獲得 +{{exp}} 經驗值。",
+      "none": "今天兩個人都傳訊息的話，每天可以獲得一次 +{{exp}} 經驗值。",
+      "me": "我",
+      "badge": "今天兩個人都來了"
+    },
+    "job": {
+      "CHEF": "廚師",
+      "GARDENER": "園丁",
+      "DJ": "電台 DJ",
+      "WRITER": "作家",
+      "BARISTA": "咖啡師"
+    },
+    "jobWhy": {
+      "CHEF": "你們很常餵牠吃飯",
+      "GARDENER": "你們很常幫牠清理 💩",
+      "DJ": "你們常常聊到深夜",
+      "WRITER": "你們常常說「愛你」",
+      "BARISTA": "你們什麼都做一點"
+    },
+    "jobCard": {
+      "title": "職業",
+      "leaning": "正朝著 {{icon}} {{job}} 的方向長大",
+      "hint": "到 Lv.12 時，會依照到目前為止的養法決定職業。常常餵飯會變成廚師，常常聊到深夜會變成電台 DJ，要看你們兩個比平常多做了什麼。",
+      "change": "更換職業",
+      "changeTitle": "要換成哪個職業？",
+      "changeAt": "Lv.{{level}} 時可以再換一次。",
+      "current": "目前",
+      "confirmTitle": "要更換職業嗎？",
+      "confirmMessage": "{{icon}} {{job}} · 職業在 20、30、40、50 級各可以換一次，60 級以後隨時都能換。",
+      "confirm": "更換",
+      "locked": "🔒 更換職業 · Lv.{{level}} 開放",
+      "lockedWhy": "職業在 Lv.20、30、40、50 各可以換一次，Lv.60 以後隨時都能換。下一次機會是 Lv.{{level}}，到時候舞台和聊天會通知你。",
+      "changed": "🎉 新職業：{{icon}} {{job}}！關閉後就能在舞台上看到新模樣。"
+    },
+    "nextStage": {
+      "EGG": "Lv.{{level}} 時蛋會孵化",
+      "BABY": "Lv.{{level}} 時會變成小不點",
+      "CHILD": "Lv.{{level}} 時會變成大人",
+      "ADULT": "Lv.{{level}} 時會決定職業，要看你們兩個做了什麼！"
+    },
+    "jobPerk": {
+      "CHEF": "吃飯的時候特別開心。一個人的時候會攪拌鍋子。",
+      "GARDENER": "工作結束時會開心地說「乾乾淨淨了」。一個人的時候會照顧大盆栽。",
+      "DJ": "日夜顛倒。像電台主持人一樣，一個人的時候也常常說話。",
+      "WRITER": "聽到愛的話語會冒出大大的愛心。一個人的時候會寫作。",
+      "BARISTA": "話很多，聊天時也會插上一兩句。"
+    },
+    "bath": {
+      "go": "去泡溫泉",
+      "home": "回家",
+      "bucket": "水桶",
+      "splash": "潑水"
+    },
+    "dream": {
+      "caption": "在夢裡…",
+      "skip": "跳過夢境"
+    },
+    "room": {
+      "toys": "玩具",
+      "music": "音樂盒",
+      "plant": "盆栽",
+      "clock": "掛鐘",
+      "window": "窗戶",
+      "lamp": "氣氛燈",
+      "crate": "木桌",
+      "rug": "地毯",
+      "corner": "季節裝飾",
+      "radio": "收音機",
+      "gramophone": "留聲機",
+      "sillPot": "窗台盆栽",
+      "fish": "魚缸",
+      "kotatsu": "暖桌",
+      "table": "矮桌",
+      "bear": "小熊玩偶",
+      "bunny": "兔子玩偶",
+      "books": "書",
+      "pinkSucculent": "粉紅多肉",
+      "hangingPlant": "藤蔓盆栽"
+    },
+    "notice": {
+      "jobChangeOpen": "可以換一次職業！到 Buddy 詳細資料選選看吧",
+      "jobChangeSoon": "下一級（Lv.{{level}}）就能換職業了",
+      "jobChangeAt": "下一次換職業要等到 Lv.{{level}}",
+      "jobChangeFree": "現在隨時都能換職業了",
+      "newJob": "🎉 新職業：{{icon}} {{job}}！"
+    },
+    "top": {
+      "reached": "到達最高等級了！",
+      "letter": "收到一封感謝信 💌"
+    },
+    "gift": {
+      "BARISTA": {
+        "latte": {
+          "name": "拿鐵",
+          "offer": "我泡了拿鐵，要喝喝看嗎？"
+        },
+        "icedAmericano": {
+          "name": "冰美式",
+          "offer": "冰美式來了，冰塊加滿滿。"
+        },
+        "caramelMacchiato": {
+          "name": "焦糖瑪奇朵",
+          "offer": "我做了焦糖瑪奇朵，覺得你好像需要一點甜的。"
+        },
+        "matchaLatte": {
+          "name": "抹茶拿鐵",
+          "offer": "今天不喝咖啡，來杯抹茶拿鐵怎麼樣？"
+        },
+        "chipFrappe": {
+          "name": "巧克力豆冰沙",
+          "offer": "巧克力豆冰沙，鮮奶油擠得滿滿的。"
+        }
+      },
+      "CHEF": {
+        "omurice": {
+          "name": "蛋包飯",
+          "offer": "我做了蛋包飯，還用番茄醬畫了愛心。"
+        },
+        "ramen": {
+          "name": "拉麵",
+          "offer": "拉麵煮好了，趁麵還沒糊掉快吃。"
+        },
+        "pancakes": {
+          "name": "鬆餅",
+          "offer": "我煎了鬆餅，上面還放了奶油。"
+        },
+        "riceBalls": {
+          "name": "飯糰",
+          "offer": "我做了飯糰，嘴饞的時候吃一個吧。"
+        },
+        "steamedBun": {
+          "name": "包子",
+          "offer": "剛蒸好一顆包子。很燙，吹一吹再吃。"
+        }
+      },
+      "GARDENER": {
+        "rose": {
+          "name": "一朵玫瑰",
+          "offer": "一朵玫瑰，刺都拔掉了。"
+        },
+        "tulips": {
+          "name": "三朵鬱金香",
+          "offer": "三朵鬱金香。插在水裡，明天會開得更漂亮。"
+        },
+        "sunflower": {
+          "name": "向日葵",
+          "offer": "向日葵喔，放在曬得到太陽的地方吧。"
+        },
+        "succulent": {
+          "name": "多肉盆栽",
+          "offer": "多肉盆栽喔，一個星期澆一次水就好。"
+        },
+        "flowers": {
+          "name": "一束野花",
+          "offer": "一束野花，偷偷開在盆栽旁邊的。"
+        }
+      }
+    },
+    "giftOpen": {
+      "BARISTA": {
+        "o1": "累了吧？今天也辛苦了。",
+        "o2": "休息一下吧。",
+        "o3": "今天過得怎麼樣？",
+        "o4": "很忙吧？喘口氣。"
+      },
+      "CHEF": {
+        "o1": "肚子餓了吧？",
+        "o2": "吃飯了嗎？",
+        "o3": "吃飽飽，加油喔。",
+        "o4": "今天也辛苦了。"
+      },
+      "GARDENER": {
+        "o1": "路過的時候想到你。",
+        "o2": "今天的花開得很漂亮。",
+        "o3": "房間會變得亮一點喔。",
+        "o4": "你看起來需要轉換一下心情。"
+      }
+    },
+    "radio": {
+      "show1": "📻 這裡是 {{buddy}} 電台，謝謝你轉到這個頻道。\n今天第一封來信來自 {{to}}。今天也辛苦了。\n那麼第一首歌，是安靜的鋼琴曲。",
+      "show2": "📻 現在收聽這個節目的，剛好兩個人。\n但對我來說是最高收聽率了。\n{{to}}，想點歌的話就用聊天傳給我。",
+      "show3": "📻 為你播報天氣。今天這個房間是晴天。\n局部地區會下起對話雨。\n記得帶耳機，不用帶傘。",
+      "show4": "📻 這首歌送給 {{to}}。\n歌名我不知道，是我剛剛哼的。\n…下次會放正經的唱片。",
+      "show5": "📻 這個節目沒有廣告。\n取而代之，為 {{to}} 鼓掌一下。\n啪啪啪。今天也撐過來了。",
+      "show6": "📻 今天的節目就到這裡。\n{{to}}，好好休息。明天同一時間見。\n片尾曲就用雨聲吧。"
+    },
+    "letter": {
+      "letter1": {
+        "title": "今天寫的第一句",
+        "body": "嗨。\n\n今天坐在書桌前，第一句話改寫了十次。寫著寫著才發現，最想說的話總是很短。\n\n謝謝你，今天也來了。"
+      },
+      "letter2": {
+        "title": "窗外的故事",
+        "body": "嗨。\n\n剛才有一隻鳥停在窗邊，又飛走了。我想告訴你，怕忘記就先寫下來了。\n\n有一個人能讓你想說些小事，是件很好的事。"
+      },
+      "letter3": {
+        "title": "墨水暈開的信",
+        "body": "嗨。\n\n寫到一半打翻了一點墨水。本來想重寫，最後還是就這樣寄出去了。暈開的地方也是今天的一部分。\n\n如果你今天也有點亂七八糟，那也沒關係。"
+      },
+      "letter4": {
+        "title": "兩個人的故事",
+        "body": "嗨。\n\n最近我在寫一個故事。主角有兩個人，每天都聊一點天。沒有什麼大事發生，卻莫名讓人一直想讀下去。\n\n是不是很像你認識的兩個人？"
+      },
+      "letter5": {
+        "title": "夜裡寫的信",
+        "body": "嗨。\n\n到了晚上，文字會變得比較坦白。所以這封信是晚上寫的。\n\n今天辛苦了。明天的你，我也會幫你加油。"
+      },
+      "letter6": {
+        "title": "不用回信也沒關係",
+        "body": "嗨。\n\n這封信不用回也沒關係。不過今天在聊天室裡隨便留一句話給我吧，那樣就夠了。\n\n那一句話，我會偷偷珍惜地讀。"
+      }
+    }
+  },
+  "buddyEvent": {
+    "HUNGRY": "{{buddy}} 肚子餓了 🍚",
+    "FED": "{{actor}} 餵 {{buddy}} 吃飯了",
+    "POOPED": "{{buddy}} 便便了 💩",
+    "CLEANED": "{{actor}} 清理了 {{buddy}} 的 💩",
+    "WORKED": "{{actor}} 和 {{buddy}} 的工作完成了",
+    "BATHED": "{{actor}} 和 {{buddy}} 去泡溫泉了 ♨",
+    "LEVELED_UP": "{{buddy}} 升級了！Lv.{{level}} ⬆️",
+    "LEVELED_UP_REWARD": "{{buddy}} 升級了！Lv.{{level}} ⬆️ 🎁 {{reward}}",
+    "EVOLVED": "{{buddy}} 進化了！✨",
+    "GROWN": "🔄 {{buddy}} 到 Lv.20 了！現在可以換職業了。",
+    "MAX_LEVEL": "🎉 {{buddy}} 到達最高等級 Lv.{{level}} 了！",
+    "GRADUATED": "🎓 {{name}} 獨立了，留在相簿裡。新的蛋來了！",
+    "TOGETHER": "🤝 今天兩個人都來了！一起獎勵 +{{exp}} EXP",
+    "JOB": "{{icon}} {{buddy}} 的職業是{{job}}！",
+    "JOB_CHANGED": "{{icon}} {{actor}} 更換了 {{buddy}} 的職業：{{job}}",
+    "GIFT": "🎁 {{buddy}} 送了禮物給 {{actor}}"
+  },
+  "settings": {
+    "title": "設定",
+    "profile": "個人資料",
+    "signOut": "登出",
+    "joinWithCode": "用邀請碼加入",
+    "room": "聊天室",
+    "buddy": "Buddy",
+    "members": "成員",
+    "since": "{{date}} 起",
+    "leave": "離開聊天室",
+    "leaveTitle": "要離開聊天室嗎？",
+    "leaveDuo": "{{buddy}} 會繼續和 {{partner}} 一起生活。你也將無法再看到對話內容。",
+    "leaveSolo": "{{buddy}} 和對話內容都會消失，而且無法復原。",
+    "leaveConfirm": "離開",
+    "changeName": "更改名字",
+    "account": "帳號",
+    "guestTitle": "目前以訪客身分使用",
+    "guestBody": "訪客可以使用 30 天。連結帳號後，30 天過後或換了裝置，都能繼續和 Buddy 聊天。",
+    "guestPlace": "這個訪客資料存在「{{place}}」中。用其他瀏覽器或 App 開啟的話，會變成新的人重新開始。",
+    "guestPlaceInApp": "App 內建瀏覽器之後很難再找回來，建議先連結帳號。",
+    "places": {
+      "app": "這個 App",
+      "homeScreen": "主畫面的 App",
+      "kakaotalk": "KakaoTalk 內建瀏覽器",
+      "line": "LINE 內建瀏覽器",
+      "inAppBrowser": "App 內建瀏覽器",
+      "samsung": "Samsung Internet",
+      "edge": "Edge",
+      "firefox": "Firefox",
+      "chrome": "Chrome",
+      "safari": "Safari",
+      "browser": "這個瀏覽器"
+    },
+    "linkGoogle": "連結 Google 帳號",
+    "linkNotReady": "App 中的帳號連結即將推出。",
+    "linkedGoogle": "已連結 Google 帳號",
+    "linkedApple": "已連結 Apple 帳號",
+    "linkFailed": "無法連結帳號，請再試一次。",
+    "accountInUseTitle": "這個帳號已經在使用中",
+    "accountInUseMessage": "這個帳號已經有 puny-chat 的紀錄。切換到那個帳號後，現在以訪客身分養的 Buddy 和對話，在這台裝置上就看不到了。",
+    "accountInUseConfirm": "切換",
+    "guestSignOutTitle": "要登出訪客帳號嗎？",
+    "guestSignOutMessage": "登出後就無法再回到這個訪客帳號。想保留 Buddy 和對話的話，請先連結帳號。",
+    "notifications": "通知",
+    "notificationsBody": "對方傳訊息來時會通知你。",
+    "notificationsDenied": "puny-chat 的通知在 iPhone 設定中被關閉了。",
+    "openSettings": "打開設定",
+    "notificationsUnavailable": "這台裝置無法接收通知。",
+    "deleteAccount": "刪除帳號",
+    "deleteTitle": "要刪除帳號嗎？",
+    "deleteLead": "刪除後，下面的內容都會被清除，而且無法復原。",
+    "deleteGone": "會被刪除",
+    "deleteGoneAccount": "名字和帳號",
+    "deleteGoneMessages": "我傳送的訊息和照片（包含以前的聊天室）",
+    "deleteGoneRoom": "{{buddy}} 和目前聊天室的對話",
+    "deleteKept": "會保留",
+    "deleteKeptBuddy": "{{buddy}} 會繼續和 {{partner}} 一起生活",
+    "deleteKeptMessages": "{{partner}} 傳送的訊息",
+    "deleteAgree": "我了解了，繼續",
+    "deleteFinalTitle": "確定要刪除帳號嗎？",
+    "deleteFinalBody": "按下後會立刻刪除。刪除的帳號和訊息無法再找回來。",
+    "deleteConfirm": "刪除帳號",
+    "deleteFailed": "無法刪除帳號，請再試一次。",
+    "display": "顯示",
+    "language": "語言",
+    "theme": "外觀模式",
+    "followDevice": "跟隨裝置設定",
+    "light": "淺色",
+    "dark": "深色",
+    "notificationsDeniedWeb": "puny-chat 的通知在這個瀏覽器中被封鎖了，請到網站設定中允許通知。",
+    "notificationsInstall": "在 iPhone 上，只有加入主畫面的 App 才能收到通知。請在 Safari 點分享按鈕 →「加入主畫面」，再從主畫面的 puny-chat 開啟通知。",
+    "alone": "目前只有你一個人。可以從聊天畫面的「邀請朋友」找朋友來。"
+  },
+  "systemEvent": {
+    "MEMBER_JOINED": "{{name}} 加入了",
+    "MEMBER_LEFT": "{{name}} 離開了",
+    "MEMBER_RETURNED": "{{name}} 回來了"
+  },
+  "name": {
+    "title": "要怎麼稱呼你呢？",
+    "subtitle": "朋友會看到這個名字，之後可以在設定中更改。",
+    "placeholder": "名字",
+    "next": "下一步",
+    "save": "儲存"
+  },
+  "guest": {
+    "daysLeft_one": "還剩 {{count}} 天",
+    "daysLeft_other": "還剩 {{count}} 天"
+  },
+  "demo": {
+    "title": "先看看",
+    "badge": "參觀中 · 不會儲存",
+    "back": "← 回到首頁",
+    "startShort": "開始",
+    "me": "小天",
+    "partner": "Yuki",
+    "buddy": "Buddy",
+    "lines": {
+      "hello": "我們的蛋什麼時候會孵出來啊？",
+      "talk": "聽說多聊天就會孵出來！",
+      "hatched": "哇，孵出來了！！🐣",
+      "hungry": "好像餓了，我來餵",
+      "pooped": "哈哈哈 牠便便了",
+      "cleaned": "我清好了 🧹",
+      "grown": "長好大了耶",
+      "leaves": "長出兩片葉子了 🌱",
+      "weekend": "週末也一起餵牠吧",
+      "ok": "好啊！",
+      "flower": "開花了 🌸"
+    },
+    "replies": {
+      "r1": "喔～原來如此",
+      "r2": "{{buddy}} 好像也很喜歡",
+      "r3": "哈哈 對啊"
+    },
+    "endTitle": "{{buddy}} 長大了！",
+    "endBody": "要不要養一隻自己的 Buddy？不用登入，馬上就能開始。",
+    "replay": "再看一次"
+  },
+  "guide": {
+    "title": "Buddy 養育指南",
+    "banner": {
+      "title": "🥚 怎麼養 Buddy",
+      "body": "越常聊天、照顧牠，牠就長得越大。到了 12 級，會依照你們的養法得到職業；養到最高的 60 級，就可以讓牠獨立。",
+      "open": "查看指南 ›"
+    },
+    "care": {
+      "title": "🍚 照顧",
+      "feed": "肚子餓的時候，寶寶的飯碗會空掉，從小不點開始會想著吃的。點飯碗或肚子餓的 Buddy，或是在聊天中只傳「飯」，就能餵牠吃飯。",
+      "clean": "💩 每點一下就清掉一個。在聊天中傳「打掃」，就能一次清乾淨。",
+      "pet": "點一下 Buddy，牠會開心、跳舞或唱歌。",
+      "words": "聊天中出現「哈哈」「愛你」「晚安」這類的話，Buddy 會有反應。兩個人一起摸摸牠，牠會更開心。"
+    },
+    "grow": {
+      "title": "🌱 長大",
+      "exp": "每則訊息 +1（每天最多 50 則）、餵飯 +2、每清一個 💩 +2、大人的工作 +2（每小時一次）、隔一陣子去泡溫泉 +3（每 12 小時一次）經驗值。",
+      "stages": "蛋 → 寶寶（Lv.3）→ 小不點（Lv.5）→ 大人（Lv.10）。從小不點開始會說話。",
+      "together": "同一天兩個人都傳訊息的話，每天可以獲得一次一起獎勵 +{{exp}} 經驗值。🤝"
+    },
+    "job": {
+      "title": "💼 職業",
+      "decide": "到 Lv.12 時，會依照到目前為止的養法決定職業。不是自己選，而是看你們兩個做了什麼。",
+      "kinds": "常常餵飯會變成廚師，常常清 💩 會變成園丁，常常聊到深夜會變成電台 DJ，常常說「愛你」會變成作家，什麼都做一點會變成咖啡師。",
+      "work": "有了職業後，房間裡會多一個工作的地方。點那個地方或在聊天中傳「工作」，牠就會去工作，每小時一次獲得 +2 經驗值。",
+      "change": "職業在 20、30、40、50 級各可以換一次，60 級以後隨時都能在 Buddy 詳細資料中更換。"
+    },
+    "rewards": {
+      "title": "🎁 等級獎勵",
+      "body": "每升幾級，房間就會多一個新小物，原本的小物也會變得更好。",
+      "more": "查看其他 {{count}} 個獎勵"
+    },
+    "graduate": {
+      "title": "🎓 獨立",
+      "top": "養到最高的 60 級後，就可以在 Buddy 詳細資料或信箱的信中讓牠獨立。要不要獨立由你決定，繼續一起生活也可以。到 60 級為止每升一級房間都會多出新小物或變得更好，之後經驗值也會繼續累積。",
+      "album": "獨立的 Buddy 會以照片的形式留在舞台上方的回憶相簿裡，舞台上則會來一顆新的蛋。",
+      "keep": "小物會由獨立的 Buddy 帶著搬家，新蛋的房間會從頭開始布置。"
+    }
+  },
+  "support": {
+    "title": "聯絡與檢舉",
+    "serviceInfo": "服務說明",
+    "intro": "有任何疑問或不便，都歡迎告訴我們。營運者會確認收到的內容，但不會個別以電子郵件回覆。",
+    "contact": "聯絡方式",
+    "copyEmail": "複製電子郵件地址",
+    "emailDirect": "直接寄電子郵件聯絡",
+    "copyReceipt": "複製完整受理編號",
+    "copyFailed": "無法複製，請再試一次。",
+    "copied": "已複製",
+    "inquiry": "聯絡我們",
+    "report": "檢舉對方",
+    "partnerMenu": "檢舉或移除 {{name}}",
+    "partnerHelp": "可以結束讓你不舒服的對話。檢舉的話，相關對話會保留給營運者確認。",
+    "remove": "移除對方",
+    "removeTitle": "要結束這段對話嗎？",
+    "removeConfirm": "會將 {{name}} 移出聊天室，並刪除兩個人的所有對話紀錄。現有的邀請碼也都會失效。Buddy 和相簿會留給你。這個動作無法復原。",
+    "reportAndRemove": "檢舉並移除對方",
+    "reportConfirm": "要檢舉並移除 {{name}} 嗎？兩個人的對話紀錄都會刪除，現有的邀請也會失效。Buddy 和相簿會留給你。刪除前，最近最多 50 則文字訊息會作為檢舉資料另外保存 90 天。這個動作無法復原。",
+    "target": "檢舉對象：{{name}}",
+    "noPartner": "目前沒有可以檢舉的對象。關於過去的對話，請透過「聯絡我們」告訴我們。",
+    "reason": "檢舉原因",
+    "reasons": {
+      "HARASSMENT": "騷擾・辱罵",
+      "SEXUAL": "性相關內容",
+      "THREATS": "威脅・暴力",
+      "SPAM": "垃圾訊息・詐騙",
+      "OTHER": "其他"
+    },
+    "reportNotice": "檢舉後，對方會被移出聊天室，兩個人的對話紀錄和現有的邀請都會刪除。最近最多 50 則文字訊息會另外保存 90 天以確認檢舉內容，只有營運者可以查看。",
+    "message": "內容",
+    "reportPlaceholder": "請告訴我們發生了什麼事。（選填）",
+    "inquiryPlaceholder": "請寫下你的疑問或不便之處。",
+    "defaultReport": "檢舉對方並要求結束對話",
+    "send": "送出",
+    "received": "已收到",
+    "reportReceived": "已將對方移出，並刪除了現有的邀請和對話紀錄。Buddy 還是留在你身邊。營運者會確認檢舉內容。",
+    "inquiryReceived": "已收到你的訊息。我們不會個別以電子郵件回覆。",
+    "receipt": "受理編號：{{id}}",
+    "done": "返回",
+    "signedOutHelp": "不用登入也可以寄信到上方的電子郵件地址聯絡我們。想在 App 中送出聯絡或檢舉，請先開始使用。",
+    "mailUnavailable": "無法開啟郵件 App，請直接寄信到 {{email}}。",
+    "submissionNotice": "我們不會個別以電子郵件回覆聯絡或檢舉。送出的資料會在伺服器保存 90 天。"
+  },
+  "privacy": {
+    "title": "隱私權政策",
+    "effective": "生效日期 · 2026 年 10 月 19 日",
+    "intro": "puny-chat 提供以邀請為基礎的一對一文字・照片聊天，以及一起照顧 Buddy 的功能。以下說明我們為了提供服務而處理的資訊，以及你可以做的選擇。",
+    "sections": {
+      "operator": {
+        "title": "1. 營運者與聯絡方式",
+        "body": "由個人營運的服務 puny-chat 的營運者負責管理個人資料。聯絡與個人資料相關的請求，請寄到 {{email}}。"
+      },
+      "collection": {
+        "title": "2. 處理的資訊",
+        "body": "我們會處理帳號識別碼（Firebase UID）、顯示名稱、帳號建立與最近使用時間、訪客・帳號連結狀態、參與的聊天室與邀請資訊。也會儲存對話內容（包含傳送的照片；照片會移除位置等中繼資料後重新儲存）、傳送時間、已讀位置，以及 Buddy 與相簿的狀態。開啟通知時，會處理裝置的推播權杖或網頁推播訂閱資訊。連結帳號時，Google 或 Apple 會處理電子郵件等登入資訊，App 可能為了確認帳號而顯示這些資訊。聯絡或檢舉時，會處理你填寫的內容、選擇的原因，以及相關使用者・聊天室的識別碼。舊版本收集的回覆用電子郵件，會依照既有受理資料的保存期限清除。檢舉時，最近最多 50 則文字訊息會另外保存（照片只保留曾傳送的紀錄，檔案會和對話一起刪除）。在網路與主機營運過程中，可能會處理 IP 位址、請求時間與錯誤資訊。"
+      },
+      "purposes": {
+        "title": "3. 使用目的",
+        "body": "這些資訊用於登入與帳號管理、邀請・對話的傳送與復原、維持 Buddy 狀態、傳送你選擇的通知、確認聯絡內容、審查檢舉・結束對話，以及安全與錯誤處理。我們不會販售個人資料，也不會將對話內容用於廣告投放。本服務沒有廣告。為了改善服務的使用統計，只會以無法辨識個人的每日總數彙整：第一次開始時到達各步驟的裝置數，以及註冊後第幾天回來的人數。每台裝置只會在裝置內記住已經傳送過哪些步驟。在網頁上，我們使用不使用 Cookie 的 Cloudflare Web Analytics 統計造訪的頁面與來源。"
+      },
+      "sharing": {
+        "title": "4. 對話與檢舉資訊的公開範圍",
+        "body": "對話會傳送給同一個聊天室的對方。執行檢舉或移除時，會讓對方離開聊天室、使現有的邀請失效，並刪除兩個人的對話紀錄。Buddy 和相簿會留給執行的使用者。檢舉資料會另外保存供營運者審查，不會提供給對方或其他使用者。聯絡・檢舉的內容可能會轉寄到營運者的電子郵件。在負有法律義務的情況下，可能會在必要範圍內提供給相關機關。"
+      },
+      "providers": {
+        "title": "5. 委託處理與境外處理",
+        "body": "我們使用 Google Firebase Authentication 進行登入，驗證資料在美國處理。我們使用 MongoDB Atlas 與 Amazon Web Services（Lightsail）儲存對話・服務資料並營運伺服器，目前的服務區域為雪梨（澳洲）。Cloudflare 用於提供網頁服務、網路安全與網頁造訪統計（不使用 Cookie），技術資訊可能在其全球網路中處理。你選擇的通知會透過 Expo、Apple 或該瀏覽器的推播服務傳送。App 中的聯絡・檢舉通知會透過 Gmail API 直接傳送到營運者的 Google Gmail。寄到公開聯絡信箱的電子郵件會經由 Cloudflare Email Routing 轉寄。電子郵件內容可能在這些業者的全球基礎設施中處理。這些業者為了提供各自的服務而處理資訊，境外處理包含使用服務時必要的網路傳輸。關於聯絡或境外處理的請求，請寄到聯絡信箱。"
+      },
+      "retention": {
+        "title": "6. 保存與刪除",
+        "body": "帳號與服務資料會在你使用期間保存。你可以在設定中刪除帳號。一般離開聊天室而對方仍留下時，對方的聊天室・Buddy・對話會保留。刪除帳號時，你傳送的訊息與含有你名字的系統紀錄，包含以前離開的聊天室，都會刪除，照顧事件中的作者資訊也會移除。對方的訊息・聊天室・Buddy・相簿會保留。最後一位使用者離開聊天室時，聊天室與對話紀錄會刪除。因檢舉・移除對方而結束的對話，雙方的紀錄都會刪除，但檢舉資料會另外保留。伺服器上的聯絡・檢舉・移除受理資料，會在受理後 90 天轉為自動刪除對象，並依資料庫清理週期刪除。營運用的郵件副本在處理完畢、不再需要時會手動刪除。未連結的訪客帳號會在建立 30 天後由 Firebase 清除，伺服器上過期訪客的資料也會定期清除。用於故障復原的資料庫備份與伺服器磁碟快照最多保存 30 天後自動刪除，在此之前，已刪除的資料可能仍留在備份中。照片檔案只會包含在伺服器磁碟快照中，已刪除的照片最多會在快照中保留 7 天，之後自動刪除。安全・錯誤資訊依照相關基礎設施業者的保存政策處理。"
+      },
+      "security": {
+        "title": "7. 保護措施",
+        "body": "通訊使用 HTTPS/WSS，並確認登入的使用者與目前是否為聊天室成員。檢舉資料不會透過公開 API 提供，只有具備營運權限的人可以存取。本服務並非端對端加密聊天，因此伺服器會在提供服務與處理檢舉的必要範圍內處理對話內容。"
+      },
+      "rights": {
+        "title": "8. 使用者的選擇與權利",
+        "body": "你可以在 App 的設定中更改顯示名稱、關閉各裝置的通知、離開聊天室與刪除帳號。查閱、更正、刪除個人資料或限制處理等請求，請寄到 {{email}}。我們會在確認本人身分與其他使用者的權利後，依照適用的法令處理。聯絡與檢舉不需要填寫回覆用的電子郵件。"
+      },
+      "children": {
+        "title": "9. 兒童的個人資料",
+        "body": "本服務不以未滿 13 歲的兒童為對象。如果你認為我們收集了這類兒童的資訊，請透過聯絡方式告訴我們，我們會在必要的確認後採取刪除等措施。"
+      },
+      "changes": {
+        "title": "10. 變更通知",
+        "body": "本政策變更時，會更新此頁面的生效日期與內容。處理目的或分享範圍等重要變更，會透過 App 或服務頁面通知，必要時會另外取得同意。"
+      }
+    }
+  },
+  "mailbox": {
+    "open": "信箱",
+    "title": "信箱",
+    "back": "列表",
+    "unread": "未讀",
+    "kind": {
+      "letter": "信",
+      "notice": "最新消息",
+      "guide": "提醒",
+      "buddyLetter": "信"
+    },
+    "mail": {
+      "topLevelLetter": {
+        "title": "謝謝你們一路陪到最高等級",
+        "body": "你好，我是做出 puny-chat 的人。\n\n真的很謝謝你們走到這裡。最高等級不是一兩天就能到達的地方，正在讀這封信，代表你們已經每天聊天聊了好一段時間了吧。\n\n窗邊有客人來訪、書架上的書一本本變多、冬天會擺上暖桌的這個房間，是你們兩個人的對話一點一滴累積出來的。我準備的小物，現在你們都已經收齊了。\n\n之後隨時都可以更換職業。可以像現在這樣繼續一起生活，也可以在心意決定後，用下面的按鈕讓 Buddy 獨立，和新的蛋從頭開始。獨立的 Buddy 會留在回憶相簿裡。\n\n如果有想要的功能或不方便的地方，歡迎隨時透過設定裡的「聯絡與檢舉」告訴我。每一則我都會讀。\n\n祝你們今天也聊得開心。",
+        "from": "puny-chat 開發者 敬上"
+      },
+      "roomUpdate": {
+        "title": "每升一級，房間都會不一樣",
+        "body": "現在每次升級，房間就會多一個新小物。來窗邊拜訪的客人、牆上架子的音樂盒和收音機、窗台上的玩偶、邊桌上的金魚，還有冬天會變成暖桌的矮桌，一共有 50 種。\n\n也有像櫻花花瓣、風鈴、紅蜻蜓、鏡餅這樣只在當季出現的東西。什麼時候會出現，可以在指南的等級獎勵中查看。\n\n最高等級變成了 60，獨立的 Buddy 現在可以在舞台上方的回憶相簿裡見到。",
+        "from": "puny-chat"
+      },
+      "linkAccount": {
+        "title": "想在其他裝置繼續聊天的話",
+        "body": "你現在以訪客身分使用。訪客的紀錄只存在這個 App（瀏覽器）裡，用其他裝置、瀏覽器或加入主畫面的 App 開啟的話，會從頭開始。過了 30 天也會消失。\n\n在設定中連結帳號後，Buddy 和對話會留在帳號裡，不管在哪裡開啟都能繼續。",
+        "from": "puny-chat"
+      },
+      "guestDays7": {
+        "title": "訪客使用期限還剩 7 天",
+        "body": "7 天後訪客帳號會消失，Buddy 和對話也會看不到。\n\n在設定中連結帳號，就能照現在這樣繼續使用。",
+        "from": "puny-chat"
+      },
+      "guestDays3": {
+        "title": "訪客使用期限還剩 3 天",
+        "body": "3 天後訪客帳號會消失，Buddy 和對話也會看不到。\n\n在設定中連結帳號，就能照現在這樣繼續使用。",
+        "from": "puny-chat"
+      },
+      "guestDays1": {
+        "title": "訪客使用期限明天就要結束了",
+        "body": "再過一天，訪客帳號就會消失，Buddy 和對話也會看不到。\n\n現在到設定中連結帳號，就能照現在這樣繼續使用。",
+        "from": "puny-chat"
+      },
+      "pushOff": {
+        "title": "請開啟訊息通知",
+        "body": "在網頁上，通知需要自己開啟。開啟後，對方傳訊息來時就會馬上通知你。",
+        "from": "puny-chat"
+      },
+      "pushInstall": {
+        "title": "想在 iPhone 上收到訊息通知的話",
+        "body": "iPhone 只有加入主畫面的 App 才能收到通知。請在 Safari 點分享按鈕 →「加入主畫面」，再從主畫面的 puny-chat 開啟。\n\n主畫面的 App 和 Safari 的紀錄是分開的。如果你是訪客，請先連結帳號，這樣在主畫面的 App 中也能接續同一隻 Buddy 和對話。",
+        "from": "puny-chat"
+      }
+    },
+    "action": {
+      "linkAccount": "去連結帳號",
+      "turnOnPush": "開啟通知",
+      "graduate": "🎓 去讓牠獨立"
+    },
+    "giftFrom": "From. {{buddy}}",
+    "letterTo": "To. {{name}}"
+  },
+  "room": {
+    "seatTakenTitle": "已經在其他地方繼續使用",
+    "seatTaken": "已經用邀請碼從其他 App、瀏覽器或裝置進入這個聊天室，所以這裡已經離開聊天室了。"
+  }
+}

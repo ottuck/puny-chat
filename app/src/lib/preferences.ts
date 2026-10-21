@@ -5,7 +5,7 @@ import { useSyncExternalStore } from 'react';
 // (docs/PROJECT.md, 설정). "system" follows the device, as before there was a choice.
 
 export type ThemePreference = 'system' | 'light' | 'dark';
-export type LanguagePreference = 'system' | 'ko' | 'ja' | 'en';
+export type LanguagePreference = 'system' | 'ko' | 'ja' | 'en' | 'zh-Hant';
 export type Preferences = { theme: ThemePreference; language: LanguagePreference };
 
 const KEY = 'preferences';

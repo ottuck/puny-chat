@@ -6,10 +6,12 @@ import { josa, type JosaPair } from './josa';
 import en from './locales/en.json';
 import ja from './locales/ja.json';
 import ko from './locales/ko.json';
+import zhHant from './locales/zh-Hant.json';
 
 export const resources = {
   ja: { translation: ja satisfies typeof en }, // same keys as English
   ko: { translation: ko satisfies typeof en },
+  'zh-Hant': { translation: zhHant satisfies typeof en }, // Traditional, for Taiwan
   en: { translation: en },
 } as const;
 
@@ -21,10 +23,15 @@ function isLanguage(code: string | null): code is Language {
   return code !== null && code in resources;
 }
 
+// Chinese in either script reads the Traditional one: the app is not sold in mainland China
+// (docs/release.md), and Simplified readers can read Traditional better than English.
+const BY_LANGUAGE_CODE: Record<string, Language> = { zh: 'zh-Hant' };
+
 // First supported language in the user's device order, otherwise English.
 export function detectLanguage(): Language {
   for (const { languageCode } of getLocales()) {
-    if (isLanguage(languageCode)) return languageCode;
+    const language = languageCode && (BY_LANGUAGE_CODE[languageCode] ?? languageCode);
+    if (isLanguage(language)) return language;
   }
   return FALLBACK_LANGUAGE;
 }

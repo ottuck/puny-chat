@@ -12,9 +12,9 @@ import java.util.Set;
  * so "밥 먹었어?" stays a question; trailing "!", "~" or "." are fine.
  */
 enum CareCommand {
-    FEED(Set.of("밥", "🍚", "ごはん", "ご飯", "food", "feed")),
-    CLEAN(Set.of("청소", "🧹", "똥", "💩", "そうじ", "掃除", "うんち", "clean", "poop")),
-    WORK(Set.of("일", "💼", "仕事", "しごと", "work"));
+    FEED(Set.of("밥", "🍚", "ごはん", "ご飯", "飯", "吃飯", "餵飯", "饭", "吃饭", "food", "feed")),
+    CLEAN(Set.of("청소", "🧹", "똥", "💩", "そうじ", "掃除", "うんち", "打掃", "清理", "便便", "打扫", "clean", "poop")),
+    WORK(Set.of("일", "💼", "仕事", "しごと", "工作", "上班", "work"));
 
     private final Set<String> words;
 
