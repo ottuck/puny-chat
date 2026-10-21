@@ -46,7 +46,7 @@ class GuestExpiryNotice {
     void daily() {
         run().subscribe(
                         count -> log.info("Guest notices: sent {}", count),
-                        e -> log.warn("Guest notices failed; they run again tomorrow", e));
+                        e -> log.error("Guest notices failed; they run again tomorrow", e));
     }
 
     /** Sends the notices due now, one guest after another. Emits how many. */
