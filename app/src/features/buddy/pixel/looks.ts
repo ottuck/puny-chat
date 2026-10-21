@@ -560,39 +560,24 @@ const SHOPPING_BAGS: Frame = [
   '.kkkkkkk.....kkkkkkkkkk.',
 ];
 
-// Two heart balloons, red and pink, tied to a little pink box with a gold ribbon (Valentine's).
+// Chocolates and candies piled on the floor (Valentine's): a heart-shaped box of chocolates with a
+// gold ribbon standing at the back, a lollipop, and in front a chocolate bar in its pink wrapper, a
+// wrapped candy on it, two truffles and another candy.
 // prettier-ignore
-const HEART_BALLOONS: Frame = [
-  '.........kkk...kkk...',
-  '........kHwrk.krrrk..',
-  '.......kHrrrrkrrrrrk.',
-  '.......kHrrrrrrrrrQk.',
-  '.......krrrrrrrrrrQk.',
-  '.......krrrrrrrrrrQk.',
-  '........krrrrrrrrQk..',
-  '.........krrrrrrQk...',
-  '..kkk.kkk.krrrrQk....',
-  '.kHwfkfffk.krrQk.....',
-  'kfwffffffFk.kQk......',
-  'kfffffffFFk..k.......',
-  '.kffffffFk..kQk......',
-  '..kffffFk....x.......',
-  '...kffFk.....x.......',
-  '....kFk.....x........',
-  '.....k......x........',
-  '....kFk.....x........',
-  '.....x.....x.........',
-  '......x....x.........',
-  '......x...x..........',
-  '.......x..x..........',
-  '........x.x..........',
-  '........xx...........',
-  '.........x...........',
-  '.......kkkkk.........',
-  '......kfffffk........',
-  '......kYYYYYk........',
-  '......kfFfFFk........',
-  '......kkkkkkk........',
+const SWEETS: Frame = [
+  '........kkk.kkk....kkk..',
+  '.......kHwrkrrrk..kfwfk.',
+  '......krwrrYrrrQk.kwFfk.',
+  '......kYYYYYYYYYk.kfFwk.',
+  '.......krrrYrrQk...kkk..',
+  '........krrYrQk.....v...',
+  '.........krYQk......v...',
+  '.kk.kkk.kkkYk.......v...',
+  '.kakawakak.k........v...',
+  'kkkkkkkkkk.kk.kk....v...',
+  'kDRDRDkffkkDRkDkk.kkk.kk',
+  'kRDRDRkFfkkRRkRkykywykyk',
+  'kkkkkkkkkk.kk.kkk.kkk.kk',
 ];
 
 // The blossom and the maple outlined in a deep shade of their own colors instead of black, the
@@ -609,7 +594,7 @@ const MAPLE_PALETTE: Palette = { ...PROP_PALETTE, k: '#8E3324', T: '#5B3A28' };
 export const SEASON_CORNER: Partial<
   Record<Season, { frame: Frame; size: number; palette?: Palette; sink?: number }>
 > = {
-  VALENTINE: { frame: HEART_BALLOONS, size: 0.8 },
+  VALENTINE: { frame: SWEETS, size: 1 },
   SPRING: { frame: outlined(CHERRY_TREE, 20), size: 0.85, palette: CHERRY_PALETTE, sink: 2 },
   HALLOWEEN: { frame: PUMPKIN, size: 0.72 },
   AUTUMN: { frame: outlined(MAPLE_TREE, 20), size: 0.85, palette: MAPLE_PALETTE, sink: 2 },
