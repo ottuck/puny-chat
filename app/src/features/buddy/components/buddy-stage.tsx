@@ -580,7 +580,10 @@ function usePresence(on: boolean, leaveMs: number) {
           easing: Easing.in(Easing.quad),
           useNativeDriver: NATIVE_DRIVER,
         });
-    change.start(({ finished }) => finished && !on && setPresent(false));
+    // Gone once the leave ends, also when it is cut short: the thing's view making way for another
+    // (the thought of food for the level-up mark or a heart) stops the animation, and it would
+    // otherwise stay for good.
+    change.start(() => !on && setPresent(false));
     return () => change.stop();
   }, [on, value, leaveMs]);
   return { present: on || present, value };
