@@ -30,7 +30,30 @@ export type ReactionKind =
   | 'here'
   // A friend just came in with the invite: the room is for two now.
   | 'joined';
-export type Reaction = { id: string; kind: ReactionKind };
+// `follows`: for a new level, the care that earned it (see following).
+export type Reaction = { id: string; kind: ReactionKind; follows?: Reaction };
+
+// A new level comes as its own event right after the care that earned it (a meal, a clean-up,
+// work, the day's bonus). Played as it comes it would cut that one short, so it carries the care
+// along: the stage plays the care to its end first, also when the two arrive together and the care
+// never reaches it on its own.
+const EARNS: readonly ReactionKind[] = ['fed', 'cleaned', 'worked', 'together'];
+const GROWS: readonly ReactionKind[] = ['levelUp', 'maxLevel', 'evolved'];
+// How soon after the care its new level comes, to count as earned by it (on the tap, the care
+// shows before the server has its events).
+export const FOLLOWS_MS = 3000;
+
+// `last`: the reaction before this one, and when it came.
+export function following(
+  next: Reaction,
+  last: { reaction: Reaction; at: number } | null,
+  now: number,
+): Reaction {
+  if (!last || now - last.at > FOLLOWS_MS || !GROWS.includes(next.kind)) return next;
+  // After a new level, an evolution follows the same care.
+  const care = EARNS.includes(last.reaction.kind) ? last.reaction : last.reaction.follows;
+  return care ? { ...next, follows: care } : next;
+}
 
 const BY_EVENT: Partial<Record<string, ReactionKind>> = {
   FED: 'fed',

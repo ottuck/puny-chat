@@ -766,6 +766,28 @@ function Preview() {
             {REACTIONS.map((r) => (
               <Chip key={r} label={r} onPress={() => setReaction({ id: randomUUID(), kind: r })} />
             ))}
+            {/* A meal that earns a new level: its event a moment later, or both at once. */}
+            <Chip
+              label="fed → levelUp"
+              onPress={() => {
+                const fed = { id: randomUUID(), kind: 'fed' } as const;
+                setReaction(fed);
+                setTimeout(
+                  () => setReaction({ id: randomUUID(), kind: 'levelUp', follows: fed }),
+                  300,
+                );
+              }}
+            />
+            <Chip
+              label="fed + levelUp"
+              onPress={() =>
+                setReaction({
+                  id: randomUUID(),
+                  kind: 'levelUp',
+                  follows: { id: randomUUID(), kind: 'fed' },
+                })
+              }
+            />
           </Group>
           <Group title="state">
             <Chip label="hungry" onPress={() => setHungry((h) => !h)} active={hungry} />
