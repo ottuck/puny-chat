@@ -29,7 +29,10 @@ public class TestcontainersConfiguration {
     @ServiceConnection
     @ConditionalOnExpression("'${spring.mongodb.uri:}' == ''")
     MongoDBContainer mongoDbContainer() {
-        return new MongoDBContainer(DockerImageName.parse("mongo:8.0"));
+        // mongod 8.x's bundled TCMalloc fails to start on Linux 6.19+ (GitHub's ubuntu-24.04 runner
+        // moved to 7.0 in October 2026) unless glibc registers rseq (MongoDB SERVER-121912).
+        return new MongoDBContainer(DockerImageName.parse("mongo:8.0"))
+                .withEnv("GLIBC_TUNABLES", "glibc.pthread.rseq=1");
     }
 
     /**
