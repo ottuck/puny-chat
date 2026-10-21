@@ -6,6 +6,7 @@ import type { BuddyView } from '@/features/buddy/api';
 import { chatMood, chatWord } from '@/features/buddy/chat-words';
 import type { Cue } from '@/features/buddy/components/buddy-stage';
 import {
+  following,
   missedMoment,
   type Reaction,
   type ReactionKind,
@@ -118,6 +119,14 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   }, [messages, onRoomLost, onRoomChanged, onBuddy, myId, reads]);
   // The latest live event for the buddy to react to (see reactionTo).
   const [reaction, setReaction] = useState<Reaction | null>(null);
+  // The last one and when it came, for a new level to carry the care that earned it (following).
+  const lastReaction = useRef<{ reaction: Reaction; at: number } | null>(null);
+  const play = useCallback((next: Reaction | null) => {
+    const now = Date.now();
+    const shown = next && following(next, lastReaction.current, now);
+    lastReaction.current = shown && { reaction: shown, at: now };
+    setReaction(shown);
+  }, []);
   // The latest one-word message ("밥", "춤", …) or mood word ("사랑해", "ㅋㅋ", …) from either of us,
   // for the buddy to answer.
   const [cue, setCue] = useState<Cue | null>(null);
@@ -129,17 +138,20 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
   // Care this user did, already shown on the tap (use-buddy.ts): its event from the server, a moment
   // later, is not played again.
   const playedMine = useRef<{ kind: ReactionKind; at: number }[]>([]);
-  const playMine = useCallback((kind: 'fed' | 'cleaned') => {
-    const now = Date.now();
-    playedMine.current.push({ kind, at: now });
-    setReaction({ id: `mine-${kind}-${now}`, kind });
-  }, []);
+  const playMine = useCallback(
+    (kind: 'fed' | 'cleaned') => {
+      const now = Date.now();
+      playedMine.current.push({ kind, at: now });
+      play({ id: `mine-${kind}-${now}`, kind });
+    },
+    [play],
+  );
   const cheerPartnerHere = useCallback(() => {
     const now = Date.now();
     if (now - hereAt.current < HERE_AGAIN_MS) return;
     hereAt.current = now;
-    setReaction({ id: `here-${now}`, kind: 'here' });
-  }, []);
+    play({ id: `here-${now}`, kind: 'here' });
+  }, [play]);
   // When a text last came or went live, for the buddy to start a talk only when it is quiet.
   const [lastTalkAt, setLastTalkAt] = useState(0);
   const cueFrom = useCallback((message: ServerMessage) => {
@@ -265,7 +277,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
       },
       onSynced: (fetched, myRead) => {
         const missed = missedMoment(fetched, myRead);
-        if (missed) setReaction(missed);
+        if (missed) play(missed);
       },
       onSyncing: (next) => {
         syncingRef.current = next;
@@ -288,7 +300,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
       setMessages((prev) => prev.filter((message) => !message.id));
       setHasOlder(false);
       setLoaded(false);
-      setReaction(null);
+      play(null);
       setCue(null);
       readSent.current = undefined;
       sync.reset(myRead);
@@ -362,7 +374,7 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
           message.type === 'BUDDY_EVENT' &&
           message.actorId === myIdRef.current &&
           takePlayed(playedMine.current, next.kind);
-        if (next && !shownAlready) setReaction(next);
+        if (next && !shownAlready) play(next);
         // The friend's first arrival is cheered already; "together now" would follow right after.
         if (next?.kind === 'joined') hereAt.current = Date.now();
         cueFrom(message);
@@ -420,7 +432,16 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
       for (const timer of timers.values()) clearTimeout(timer);
       timers.clear();
     };
-  }, [apply, applyReactions, cheerPartnerHere, cueFrom, markStatus, setTypingOf, uploadPending]);
+  }, [
+    apply,
+    applyReactions,
+    cheerPartnerHere,
+    cueFrom,
+    markStatus,
+    play,
+    setTypingOf,
+    uploadPending,
+  ]);
 
   // While the chat is on screen, tell the others how far I have read: up to the newest message
   // that is not my own. Hex ids sort by time, so comparing strings compares age.

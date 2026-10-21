@@ -66,7 +66,7 @@ class StatsReport {
     void weekly() {
         build(StatsService.day(Instant.now(clock)))
                 .flatMap(this::send)
-                .subscribe(ignored -> {}, e -> log.warn("Weekly stats report failed", e));
+                .subscribe(ignored -> {}, e -> log.error("Weekly stats report failed", e));
     }
 
     /** The report for the 7 days before {@code today}. */

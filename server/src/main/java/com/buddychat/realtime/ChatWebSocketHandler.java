@@ -6,6 +6,7 @@ import com.buddychat.common.ApiException;
 import com.buddychat.room.RoomAccess;
 import com.buddychat.user.User;
 import com.buddychat.user.UserService;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import org.jspecify.annotations.Nullable;
@@ -22,6 +23,7 @@ import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
+import reactor.netty.channel.AbortedException;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -135,7 +137,14 @@ class ChatWebSocketHandler implements WebSocketHandler {
                                         .then();
                                 Mono<Void> noticeBuddy = buddyService
                                         .observe(user.roomId())
-                                        .onErrorResume(e -> Mono.empty())
+                                        // Not worth dropping the connection for; the next look catches up.
+                                        .onErrorResume(e -> {
+                                            log.warn(
+                                                    "[{}] Could not send the buddy notice: {}",
+                                                    session.getId(),
+                                                    e.toString());
+                                            return Mono.empty();
+                                        })
                                         .then();
                                 // The token was checked once, at connect. When it expires the socket
                                 // closes; the app reconnects with a fresh one. (Not a timeout on the
@@ -184,7 +193,17 @@ class ChatWebSocketHandler implements WebSocketHandler {
 
         // When the outbound side ends (rejected, or the client went away) the socket is closed.
         Mono<Void> output = session.send(Flux.merge(events, pings)).then(session.close());
-        return Mono.when(input, output, authDeadline);
+        // Expected failures (ApiException, JwtException) were already answered above. Anything else
+        // drops the socket after the upgrade, where Spring no longer logs it with a stack trace.
+        return Mono.when(input, output, authDeadline)
+                .doOnError(
+                        e -> !clientWentAway(e),
+                        e -> log.error("[{}] WebSocket closed by an unexpected error", session.getId(), e));
+    }
+
+    // The app went to the background or lost the network: nothing to fix on the server.
+    private static boolean clientWentAway(Throwable e) {
+        return e instanceof IOException || e instanceof AbortedException;
     }
 
     private record SignedIn(User user, @Nullable Instant expiresAt) {}

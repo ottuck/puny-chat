@@ -562,6 +562,39 @@ function useActiveReaction(reaction: Reaction | null) {
   return active;
 }
 
+// The reaction to play: the latest, but a new level waits for the care that earned it
+// (Reaction.follows, reactions.ts) to play to its end, and plays it first when it never came on its
+// own (two events arriving together reach the stage as one change). A care played already is not
+// played again.
+function useQueuedReaction(latest: Reaction | null): Reaction | null {
+  const [shown, setShown] = useState(latest);
+  const playing = useRef<{ id?: string; at: number }>({ id: latest?.id, at: 0 });
+  const played = useRef<string[]>([]);
+  useEffect(() => {
+    if (!latest || latest.id === playing.current.id) return;
+    const show = (reaction: Reaction) => {
+      playing.current = { id: reaction.id, at: Date.now() };
+      played.current = [...played.current.slice(-9), reaction.id];
+      setShown(reaction);
+    };
+    const care = latest.follows;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    if (care && care.id === playing.current.id) {
+      const left = REACTION_MS[care.kind] - (Date.now() - playing.current.at);
+      timers.push(setTimeout(() => show(latest), Math.max(0, left)));
+    } else if (care && !played.current.includes(care.id)) {
+      timers.push(
+        setTimeout(() => show(care), 0),
+        setTimeout(() => show(latest), REACTION_MS[care.kind]),
+      );
+    } else {
+      timers.push(setTimeout(() => show(latest), 0));
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [latest]);
+  return shown;
+}
+
 // A new poop drops onto the floor with a little bounce.
 function DroppingIn({ children }: { children: React.ReactNode }) {
   const [drop] = useState(() => new Animated.Value(0));
@@ -736,7 +769,7 @@ export function BuddyStage({
   // The stage mounts again each time it unfolds; what happened before that is not news. Without
   // this, focusing the composer and leaving it replayed the last evolution every time.
   const [mountedAfter] = useState(latest?.id);
-  const reaction = latest && latest.id !== mountedAfter ? latest : null;
+  const reaction = useQueuedReaction(latest && latest.id !== mountedAfter ? latest : null);
   const active = useActiveReaction(reaction);
   const [cueMountedAfter] = useState(latestCue?.id);
   const cue = latestCue && latestCue.id !== cueMountedAfter ? latestCue : null;
@@ -768,6 +801,10 @@ export function BuddyStage({
   const placed = useRef(false);
   const [x] = useState(() => new Animated.Value(0));
   const [hop] = useState(() => new Animated.Value(0));
+  // A reaction's hops, on top of the buddy's own (dancing, a hiccup), so that neither stops the
+  // other halfway.
+  const [leap] = useState(() => new Animated.Value(0));
+  const [rise] = useState(() => Animated.add(hop, leap));
   const [tilt] = useState(() => new Animated.Value(0));
   const [flash] = useState(() => new Animated.Value(0));
   const [glow] = useState(() => new Animated.Value(0));
@@ -1169,9 +1206,10 @@ export function BuddyStage({
   }, [cue]);
 
   // Care or growth takes priority over petting, dancing or singing. A new message does not:
-  // "노래" from the other one is a message too, and asks for the song.
+  // "노래" from the other one is a message too, and asks for the song. Nor a new level after the
+  // care that earned it: the work that care started goes on.
   useEffect(() => {
-    if (!reaction || reaction.kind === 'message') return;
+    if (!reaction || reaction.kind === 'message' || reaction.follows) return;
     const timer = setTimeout(() => {
       if (actTimer.current) clearTimeout(actTimer.current);
       actTimer.current = null;
@@ -1570,13 +1608,13 @@ export function BuddyStage({
     if (!reaction) return;
     const jump = (h: number) =>
       Animated.sequence([
-        Animated.timing(hop, { toValue: -h, duration: 140, useNativeDriver: NATIVE_DRIVER }),
-        Animated.timing(hop, { toValue: 0, duration: 140, useNativeDriver: NATIVE_DRIVER }),
+        Animated.timing(leap, { toValue: -h, duration: 140, useNativeDriver: NATIVE_DRIVER }),
+        Animated.timing(leap, { toValue: 0, duration: 140, useNativeDriver: NATIVE_DRIVER }),
       ]);
     const shake = Animated.loop(
       Animated.sequence([
-        Animated.timing(hop, { toValue: 2, duration: 60, useNativeDriver: NATIVE_DRIVER }),
-        Animated.timing(hop, { toValue: 0, duration: 60, useNativeDriver: NATIVE_DRIVER }),
+        Animated.timing(leap, { toValue: 2, duration: 60, useNativeDriver: NATIVE_DRIVER }),
+        Animated.timing(leap, { toValue: 0, duration: 60, useNativeDriver: NATIVE_DRIVER }),
       ]),
       { iterations: 10 },
     );
@@ -1628,11 +1666,13 @@ export function BuddyStage({
     move?.start();
     return () => {
       move?.stop();
+      // Cut short by the next one, it lands softly; the next one's hops start from where it is.
+      Animated.timing(leap, { toValue: 0, duration: 100, useNativeDriver: NATIVE_DRIVER }).start();
       glow.setValue(0);
       burst.setValue(1);
       flash.setValue(0);
     };
-  }, [reaction, hop, flash, glow, burst]);
+  }, [reaction, leap, flash, glow, burst]);
 
   // Notes over the stage, so there is always something ahead to look forward to: grown into a new
   // stage, the next one (a grown-up's is its job, until it has one); and now and then when the job
@@ -2240,7 +2280,7 @@ export function BuddyStage({
             left: workSway,
             transform: [
               { translateX: x },
-              { translateY: hop },
+              { translateY: rise },
               {
                 rotate: tilt.interpolate({ inputRange: [-1, 1], outputRange: ['-8deg', '8deg'] }),
               },
@@ -2509,7 +2549,7 @@ export function BuddyStage({
               left: workSway,
               width: spriteWidth,
               height: spriteHeight,
-              transform: [{ translateX: x }, { translateY: hop }],
+              transform: [{ translateX: x }, { translateY: rise }],
             },
           ]}
         >

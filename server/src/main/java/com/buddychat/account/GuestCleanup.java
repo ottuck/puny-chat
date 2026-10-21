@@ -44,7 +44,7 @@ class GuestCleanup {
     void weekly() {
         run().subscribe(
                         count -> log.info("Guest clean-up: deleted {} guest(s) Firebase no longer has", count),
-                        e -> log.warn("Guest clean-up failed; it runs again next week", e));
+                        e -> log.error("Guest clean-up failed; it runs again next week", e));
     }
 
     /** Deletes the guests that are gone, one after another. Emits how many. */
