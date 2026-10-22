@@ -21,6 +21,8 @@ public record BuddyView(
         // Members who sent a message today, and whether both have (the day's bonus is given).
         List<String> talkedToday,
         boolean togetherToday,
+        // Past the job, today's messages have earned all the EXP they may (BuddyRules.MESSAGE_EXP_DAILY_CAP).
+        boolean chatExpFull,
         // What it grew up to be (docs/fun-improvements.md, 직업): set once it is an adult.
         @Nullable BuddyJob job,
         // Until the job is settled (a child, or a new grown-up), the job it is heading for so far.
@@ -50,6 +52,7 @@ public record BuddyView(
                 level >= BuddyRules.GRADUATE_AT,
                 buddy.talkedOn(today),
                 today.equals(buddy.togetherDay()),
+                BuddyRules.chatExpFull(buddy, today),
                 BuddyJob.of(buddy.job()),
                 leaning(buddy, level),
                 BuddyRules.canChangeJob(level, buddy.job(), buddy.jobChangedLevel()),

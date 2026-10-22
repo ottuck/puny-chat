@@ -55,6 +55,8 @@ export type BuddyView = {
   // Members who sent a message today (Japan time), and whether both have: the day's bonus is in.
   talkedToday: string[];
   togetherToday: boolean;
+  // Once it has its job, today's messages have earned all the EXP they may. Missing from a server from before.
+  chatExpFull?: boolean;
   // Fixed when it becomes an adult; null before, and for adults from before jobs existed.
   job: BuddyJob | null;
   // As a child, the job it is heading for so far.

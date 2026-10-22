@@ -176,6 +176,7 @@ export function BuddyGuide() {
         t('guide.job.decide'),
         t('guide.job.kinds'),
         t('guide.job.work'),
+        t('guide.job.grow'),
         t('guide.job.change'),
       ])}
       {section(t('guide.graduate.title'), [

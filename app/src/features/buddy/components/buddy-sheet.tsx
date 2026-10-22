@@ -18,7 +18,7 @@ import { errorMessage } from '@/features/room/error-message';
 import { confirm } from '@/lib/confirm';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
-import { type BuddyJob, type BuddyView, TOGETHER_EXP } from '../api';
+import { type BuddyJob, type BuddyView, NEXT_STEP_AT, TOGETHER_EXP } from '../api';
 import { isJob, JOB_ICON, JOB_ORDER } from '../jobs';
 import { BuddyAvatar } from './buddy-avatar';
 import { rewardIcon } from './buddy-guide';
@@ -113,6 +113,8 @@ export function BuddySheet({ visible, buddy, onClose, onGraduate, onChangeJob, t
 
             {together ? <TogetherCard buddy={buddy} {...together} /> : null}
 
+            <ChatExpCard buddy={buddy} />
+
             <JobCard buddy={buddy} onChangeJob={onChangeJob} />
 
             <NextReward level={buddy.level} />
@@ -157,6 +159,22 @@ function TogetherCard({
       </Text>
       <Text lineBreakStrategyIOS="hangul-word" style={[styles.body, { color: colors.textMuted }]}>
         {t(`buddy.together.${state}`, { name: partnerName, exp: TOGETHER_EXP })}
+      </Text>
+    </View>
+  );
+}
+
+// Once it has its job, a day's messages earn only so much EXP (docs/PROJECT.md, 돌봄): whether today's is
+// full. Said only as full or not, the count is not shown.
+function ChatExpCard({ buddy }: { buddy: BuddyView }) {
+  const colors = useColors();
+  const { t } = useTranslation();
+  if (buddy.chatExpFull === undefined || buddy.level < NEXT_STEP_AT.ADULT) return null;
+  return (
+    <View style={[styles.card, { backgroundColor: colors.surface }]}>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('buddy.chatExp.title')}</Text>
+      <Text lineBreakStrategyIOS="hangul-word" style={[styles.body, { color: colors.textMuted }]}>
+        {t(buddy.chatExpFull ? 'buddy.chatExp.full' : 'buddy.chatExp.open')}
       </Text>
     </View>
   );

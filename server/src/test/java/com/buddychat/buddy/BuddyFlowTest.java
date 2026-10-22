@@ -26,7 +26,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -331,7 +330,7 @@ class BuddyFlowTest {
     @Test
     void theTopLevelSaysThanksOnceAndStaysThere() {
         String roomId = createRoom("henry").id();
-        int almost = (BuddyRules.MAX_LEVEL - 1) * BuddyRules.expPerLevel() - 1;
+        int almost = BuddyRules.minExp(BuddyRules.MAX_LEVEL) - 1;
         mongo.updateFirst(
                         Query.query(Criteria.where("_id").is(new ObjectId(roomId))),
                         new Update().set("buddy.exp", almost),
@@ -383,17 +382,35 @@ class BuddyFlowTest {
     }
 
     @Test
-    void messageExpIsCappedPerDayEvenWhenSentConcurrently() {
+    void messageExpIsCappedPerDayOnceItHasItsJobEvenWhenSentConcurrently() {
         String roomId = createRoom("henry").id();
+        int job = BuddyRules.minExp(BuddyRules.JOB_AT);
+        setExp(roomId, job);
 
         race(
                 BuddyRules.MESSAGE_EXP_DAILY_CAP + 15,
                 i -> buddyService.onMessageSent(roomId).thenReturn(true).block());
-        assertThat(room("henry").buddy().exp()).isEqualTo(BuddyRules.MESSAGE_EXP_DAILY_CAP);
+        BuddyView buddy = room("henry").buddy();
+        assertThat(buddy.exp()).isEqualTo(job + BuddyRules.MESSAGE_EXP_DAILY_CAP);
+        assertThat(buddy.chatExpFull()).isTrue();
 
         clock.advance(Duration.ofDays(1));
         buddyService.onMessageSent(roomId).block();
-        assertThat(room("henry").buddy().exp()).isEqualTo(BuddyRules.MESSAGE_EXP_DAILY_CAP + 1);
+        buddy = room("henry").buddy();
+        assertThat(buddy.exp()).isEqualTo(job + BuddyRules.MESSAGE_EXP_DAILY_CAP + 1);
+        assertThat(buddy.chatExpFull()).isFalse();
+    }
+
+    @Test
+    void beforeItsJobEveryMessageCounts() {
+        String roomId = createRoom("henry").id();
+        int many = BuddyRules.MESSAGE_EXP_DAILY_CAP + 15;
+
+        race(many, i -> buddyService.onMessageSent(roomId).thenReturn(true).block());
+
+        BuddyView buddy = room("henry").buddy();
+        assertThat(buddy.exp()).isEqualTo(many);
+        assertThat(buddy.chatExpFull()).isFalse();
     }
 
     @Test
@@ -424,7 +441,7 @@ class BuddyFlowTest {
         String roomId = createRoom("henry").id();
 
         // Level 2 (still an egg), then level 3 (hatching, an evolution).
-        for (int i = 0; i < 2 * BuddyRules.expPerLevel(); i++)
+        for (int i = 0; i < BuddyRules.minExp(BuddyRules.BABY_AT); i++)
             buddyService.onMessageSent(roomId).block();
 
         assertThat(timeline("henry")).containsExactly("LEVELED_UP", "EVOLVED");
@@ -510,21 +527,57 @@ class BuddyFlowTest {
     }
 
     @Test
-    void changingTheExpPerLevelKeepsEveryLevel() {
-        String roomId = createRoom("henry").id();
-        // Earned under 3 EXP per level: level 10, two thirds of the way to 11.
-        int exp = 3 * 9 + 2;
-        setExp(roomId, exp);
-        mongo.save(new BuddyExpScale.Setting(BuddyExpScale.ID, 3), BuddyExpScale.SETTINGS)
+    void changingTheExpCurveKeepsEveryLevel() {
+        String young = createRoom("henry").id();
+        String old = createRoom("yuki").id();
+        // Earned under 5 EXP for every level, from before the curve: level 10, two fifths of the way to
+        // 11, and level 30, three fifths of the way to 31.
+        setExp(young, 5 * 9 + 2);
+        setExp(old, 5 * 29 + 3);
+        mongo.save(new BuddyExpScale.Setting(BuddyExpScale.ID, 5, null), BuddyExpScale.SETTINGS)
                 .block();
 
-        expScale.run(new DefaultApplicationArguments());
-        expScale.run(new DefaultApplicationArguments()); // scaled once, not again
+        expScale.carryOver();
+        expScale.carryOver(); // carried once, not again
 
         BuddyView buddy = room("henry").buddy();
-        assertThat(buddy.exp()).isEqualTo(exp * BuddyRules.expPerLevel() / 3);
         assertThat(buddy.level()).isEqualTo(10);
-        assertThat(buddy.levelProgress()).isBetween(0.6, 0.7);
+        assertThat(buddy.levelProgress()).isEqualTo(0.4);
+        buddy = room("yuki").buddy();
+        assertThat(buddy.level()).isEqualTo(30);
+        assertThat(buddy.levelProgress()).isEqualTo(0.6);
+    }
+
+    @Test
+    void aBuddyThatChangedWhileCarriedIsCarriedFromWhatItIsNow() {
+        String roomId = createRoom("henry").id();
+        ExpCurve before = new ExpCurve(5, 5);
+        // Read at level 30, three fifths in; then a message, one EXP more, before it was carried.
+        int seen = 5 * 29 + 3;
+        setExp(roomId, seen + 1);
+
+        boolean carried = mongo.getCollection(BuddyExpScale.ROOMS)
+                .flatMap(rooms -> BuddyExpScale.carry(rooms, new ObjectId(roomId), seen, before, BuddyRules.CURVE))
+                .block();
+
+        assertThat(carried).isTrue();
+        BuddyView buddy = room("henry").buddy();
+        assertThat(buddy.exp()).isEqualTo(before.carry(seen + 1, BuddyRules.CURVE));
+        assertThat(buddy.level()).isEqualTo(30);
+        assertThat(buddy.levelProgress()).isEqualTo(0.8);
+    }
+
+    @Test
+    void theExpCurveIsQuickUpToTheJob() {
+        assertThat(BuddyRules.minExp(BuddyRules.JOB_AT) - BuddyRules.minExp(BuddyRules.JOB_AT - 1))
+                .isEqualTo(BuddyRules.CURVE.early());
+        assertThat(BuddyRules.minExp(BuddyRules.JOB_AT + 1) - BuddyRules.minExp(BuddyRules.JOB_AT))
+                .isEqualTo(BuddyRules.CURVE.late());
+        for (int level = 1; level <= BuddyRules.MAX_LEVEL; level++) {
+            assertThat(BuddyRules.level(BuddyRules.minExp(level))).isEqualTo(level);
+            if (level > 1)
+                assertThat(BuddyRules.level(BuddyRules.minExp(level) - 1)).isEqualTo(level - 1);
+        }
     }
 
     @Test

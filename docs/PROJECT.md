@@ -225,7 +225,7 @@ Buddy 상태(레벨, 배고픔, 💩, 돌볼 수 있는지)는 서버가 계산�
   대화 한 줄이 남는다. 남은 시간은 보여주지 않는다.
 - **채팅으로 돌보기.** 메시지 전체가 "밥"·"청소"·"똥"·"일"(과 각 언어의 같은 말)이면 그 돌봄을 한다. "춤"·"노래"면 춤추고 노래한다. 할 게
   없으면 "배불러", "이미 깨끗해!"로 답한다. 낱말 목록은 [Buddy 규칙](#buddy-규칙).
-- **Buddy 상세.** 이름·레벨을 누르면 경험치, 배부름, 청결, 직업, 다음 보상, 함께 보너스가 보인다. 밥·청소·일 버튼은 두지 않는다(무대의
+- **Buddy 상세.** 이름·레벨을 누르면 경험치, 배부름, 청결, 직업, 다음 보상, 함께 보너스, 직업이 생긴 뒤에는 오늘의 수다가 보인다. 밥·청소·일 버튼은 두지 않는다(무대의
   밥그릇·💩·직업 장치로 한다).
 - **누르자마자 반응한다.** 밥그릇이나 💩을 누르면 서버를 기다리지 않고 바로 밥그릇이 차고 💩이 사라지며 버디가 반응한다(`use-buddy.ts`).
   - 요청은 뒤에서 차례로 보내(빠르게 여러 💩을 눌러도 동시 요청으로 거절되지 않게) 모두 답이 오면 서버 상태로 맞춘다. 실패하면 원래대로 돌아간다.
@@ -238,19 +238,26 @@ Buddy 상태(레벨, 배고픔, 💩, 돌볼 수 있는지)는 서버가 계산�
 
 ## 성장
 
-경험치(레벨)로만 진화한다. 레벨당 **5 EXP**. 공식은 사용자에게 보여주지 않고 "대화하고 돌봐줄수록 Buddy가 성장해요" 정도로만 말한다.
+경험치(레벨)로만 진화한다. 레벨당 EXP는 **직업(Lv.12)까지 10, 그 뒤 20**. 공식은 사용자에게 보여주지 않고 "대화하고 돌봐줄수록 Buddy가
+성장해요" 정도로만 말한다.
 
-| 단계 | 누적 EXP | 혼자 | 둘이 함께 |
+| 단계 | 누적 EXP | 많이 이야기하는 둘 | 가볍게 쓰는 둘 |
 | --- | --- | --- | --- |
-| 아기 (Lv.3) | 10 | 첫날 | 첫날 |
-| 꼬마 (Lv.5) | 20 | 약 2일 | 첫날 |
-| 어른 (Lv.10) | 45 | 약 5일 | 약 2일 |
-| 직업 (Lv.12) | 55 | 약 6일 | 약 2일 |
-| 직업 바꾸기 (Lv.20, 이후 10레벨마다) | 95 | 약 10일 | 약 4일 |
-| 최고·독립 (Lv.60) | 295 | 약 31일 | 약 12일 |
+| 아기 (Lv.3) | 20 | 첫날 | 첫날 |
+| 꼬마 (Lv.5) | 40 | 첫날 | 첫날 |
+| 어른 (Lv.10) | 90 | 2일 | 2일 |
+| 직업 (Lv.12) | 110 | 2일 | 3일 |
+| 직업 바꾸기 (Lv.20, 이후 10레벨마다) | 270 | 약 6일 | 약 10일 |
+| 최고·독립 (Lv.60) | 1070 | 약 3주 반 | 약 6주 |
 
-기간은 메시지 하루 10개(혼자) 또는 방 전체 20–30개와 함께 보너스(둘이)를 가정한 대략의 값이고, 밥·청소를 더하면 더 빠르다. 어른이 일찍 되는
-것이 목적이다: 직업, 직업 장치, 일하기 같은 어른의 볼거리를 첫 주 안에 모두 겪게 한다.
+기간은 하루에 메시지 60개 또는 25개와 함께 보너스, 밥·청소·일·온천을 더해 직업 전에는 하루 약 85 또는 45, 직업 뒤에는 메시지 상한(하루 20)
+때문에 약 45 또는 25 EXP를 번다고 가정한 대략의 값이다. 어른·직업에 볼거리가 몰려 있어 거기까지는 이야기하는 만큼 빨리 가고(메시지 상한이
+없다), 그 뒤로는 하루 1–2레벨, 방 소품 하나 남짓씩이다. 레벨이 오를수록 필요한 EXP가 커지는 곡선은 쓰지 않는다: 하루에 버는 EXP가 거의
+일정해서 레벨 업만 점점 드물어진다.
+
+- **직업 뒤의 메시지 상한 안내.** 직업이 정해지면 우편함에 편지가 와서 그 버디가 독립할 때까지 남는다(`grownUpLetter`: 이제 수다만으로는
+  천천히 자라고, 밥·일·온천·둘이 함께로 쑥쑥 자란다). Buddy 상세의 "💬 오늘의 수다"는 그날 메시지 EXP를 다 받았는지만 보여 주고 개수는
+  보이지 않는다(`chatExpFull`). 도움말의 직업에도 한 줄. 매일 채팅에 알리거나 잠금 표시를 하지 않는다: 대화를 줄이게 하지 않으려고.
 
 - **둘이 함께.** 같은 날 두 사람이 모두 메시지를 보내면 하루 한 번 +10 EXP. 대화에 "🤝 오늘은 둘 다 왔어요!" 카드, 무대에서 하트와 두 번
   크게 뛰기, 그날은 레벨 옆에 🤝. Buddy 상세에 "나 ✅ · 상대 ⏳"와 남은 일. 상대에게 메시지를 보내라는 알림은 보내지 않는다.
@@ -351,7 +358,7 @@ messages       { _id, roomId, senderId?, type (TEXT | PHOTO | SYSTEM | BUDDY_EVE
 invitations    { _id, roomId, code (unique), createdBy, createdAt, expiresAt, usedAt?, usedBy?, previousRoomId?, replacesId? }
 reads          { _id: "<roomId>:<userId>", roomId, userId, messageId, updatedAt }
 push_tokens    { _id: <Expo push token | Web Push endpoint>, userId, updatedAt, p256dh?, auth? }
-settings       { _id: "buddy", expPerLevel }
+settings       { _id: "buddy", expPerLevel, expPerLevelAfterJob? }
 supportTickets { _id: requestId, kind (INQUIRY | REPORT | REMOVE), reporterId, reporterName?, replyEmail?, reason?, description,
                  roomId?, roomSnapshot?, targetId?, targetName?, nextRoomId?, evidence [], createdAt, expiresAt, completedAt?,
                  closureConfirmed, emailStatus, emailAttempts, nextEmailAttemptAt }
@@ -549,11 +556,11 @@ server → client
 
 ## Buddy 규칙
 
-수치는 `buddy/BuddyRules.java`, 주기는 서버 설정 `buddychat.buddy.*`(`full-to-empty` 150분, `poop-every` 1시간, `exp-per-level` 5).
+수치는 `buddy/BuddyRules.java`, 주기는 서버 설정 `buddychat.buddy.*`(`full-to-empty` 150분, `poop-every` 1시간). 레벨 곡선은 코드(`BuddyRules.CURVE`)에 있다.
 테스트는 숫자 대신 `BuddyRules.hungryAfter()`, `poopEvery()`로 시간을 보낸다. "하루"는 모두 일본 날짜다.
 
 앱은 `BuddyView`를 그대로 보여준다: `name`, `exp`, `level`, `stage`, `levelProgress`, `fullness`, `poops`, `hungry`, `canFeed`, `canClean`,
-`grown`(독립할 수 있음), `talkedToday`, `togetherToday`, `job`, `leaning`, `canChangeJob`, `jobChangeAt`, `gifts`(직업 이벤트, 최근 것부터).
+`grown`(독립할 수 있음), `talkedToday`, `togetherToday`, `chatExpFull`, `job`, `leaning`, `canChangeJob`, `jobChangeAt`, `gifts`(직업 이벤트, 최근 것부터).
 
 ### 돌봄
 
@@ -563,7 +570,7 @@ server → client
 | 💩 | 바닥이 깨끗해진 뒤(`lastCleanedAt`) 1시간마다 하나, 최대 3개. 누를 때마다 하나씩 치운다(`poopsCleaned` 증가, 마지막 하나면 `lastCleanedAt`을 지금으로 옮겨 새 주기). 어른은 💩이 생기지 않는다 | 하나에 +2 |
 | 일 | 어른만. 언제든 할 수 있지만 EXP와 타임라인 `WORKED`는 `lastWorkedAt`에서 1시간이 지났을 때만 | +2 |
 | 온천 | 알이 아니면. 앱이 온천에 들어설 때 보낸다. EXP와 `BATHED`는 `lastBathedAt`에서 12시간이 지났을 때만(방에 하나). 온천에 있는지는 저장하지 않는다 | +3 |
-| 메시지 | 텍스트·사진 하나 | +1(방마다 하루 50까지) |
+| 메시지 | 텍스트·사진 하나. 직업(Lv.12) 전에는 상한이 없고, 그 뒤에는 방마다 하루 20까지(그날의 개수는 직업 전에도 센다) | +1 |
 
 - **직업 이벤트**(`docs/fun-improvements.md`). 직업이 있는 버디가 일하면, 일을 시킨 사람의 지난 이벤트가 사흘(`GIFT_EVERY_DAYS`, 일본 날짜)
   전보다 오래됐을 때 그 사람에게 이벤트를 하나 연다. EXP의 1시간 주기와 따로, 사람마다 센다. `buddy.giftDays.<userId>`(마지막 날)가
@@ -583,10 +590,13 @@ server → client
 
 ### 레벨
 
-- 레벨 = `exp ÷ 레벨당 EXP + 1`, 최고 60(`MAX_LEVEL`). 60이 넘어도 EXP는 계속 쌓이고 레벨과 바는 멈춘다.
+- 레벨당 EXP는 직업 레벨(`JOB_AT` 12)까지 10, 그 뒤 20(`BuddyRules.CURVE`, `ExpCurve`). 최고 60(`MAX_LEVEL`). 60이 넘어도 EXP는 계속
+  쌓이고 레벨과 바는 멈춘다.
 - 단계: 아기 `BABY_AT` 3, 꼬마 `CHILD_AT` 5, 어른 `ADULT_AT` 10. 직업 `JOB_AT` 12, 직업 바꾸기 `JOB_CHANGE_FROM` 20부터 10레벨마다, 독립 `GRADUATE_AT` 60.
-- **레벨당 EXP를 바꿔도 레벨은 그대로**(`BuddyExpScale`): 서버가 시작할 때 `settings`에 기록한 값과 다르면 모든 Buddy의 EXP를
-  `exp × 새 값 ÷ 옛 값`(내림)으로 바꾼다. 새 값을 조건부 update로 먼저 기록하므로 서버 두 대가 같이 떠도 한 번만 바꾼다. 트래픽 전 1회성이라 blocking.
+- **곡선을 바꿔도 레벨은 그대로**(`BuddyExpScale`): 서버가 시작할 때 `settings`에 기록한 곡선과 다르면 모든 Buddy의 EXP를 같은 레벨,
+  그 레벨 안에서 같은 만큼 간 자리로 옮긴다(60을 넘은 EXP는 마지막 레벨의 비율로). 새 곡선을 조건부 update로 먼저 기록하므로 서버 두 대가
+  같이 떠도 한 번만 옮긴다. 웹 서버가 열리기 전에 돌아(`SmartInitializingSingleton`, `ApplicationRunner`는 연 뒤라 옮기는 사이 메시지가
+  올 수 있다) 1회성 blocking이고, 그래도 읽은 뒤 바뀐 버디(다른 서버가 아직 떠 있을 때)는 다시 읽어 옮긴다. `expPerLevelAfterJob`이 없는 기록은 곡선 전의 것으로, 모든 레벨이 `expPerLevel`이다.
 
 ### 둘이 함께
 

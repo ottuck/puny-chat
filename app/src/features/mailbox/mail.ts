@@ -14,6 +14,7 @@ import type { PushState } from '@/features/notifications/push';
 
 export type MailId =
   | 'roomUpdate'
+  | 'grownUpLetter'
   | 'topLevelLetter'
   | 'linkAccount'
   | 'guestDays7'
@@ -91,6 +92,9 @@ export const MAIL: readonly Mail[] = [
   { id: 'linkAccount', kind: 'guide', comes: guest, action: 'linkAccount' },
   // The thank-you at the top level, the level a buddy may go its own way from (server: BuddyRules.GRADUATE_AT).
   { id: 'topLevelLetter', kind: 'letter', fromLevel: 60, action: 'graduate' },
+  // With the job (server: BuddyRules.JOB_AT): from here a day's messages earn only so much EXP, and care
+  // grows it more.
+  { id: 'grownUpLetter', kind: 'letter', fromLevel: 12 },
   { id: 'roomUpdate', kind: 'notice', date: '2026-10-17' },
 ];
 
