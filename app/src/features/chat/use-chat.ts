@@ -516,9 +516,10 @@ export function useChat({ myId, onRoomLost, onRoomChanged, onBuddy }: Options) {
       setMessages((prev) =>
         prev.map((m) => {
           if (!isMemberMessage(m) || m.id !== messageId) return m;
+          // Like the server: a changed reaction keeps its place, a new one goes last.
           const next = { ...m.reactions };
-          delete next[myId];
           if (reaction) next[myId] = reaction;
+          else delete next[myId];
           return { ...m, reactions: Object.keys(next).length > 0 ? next : undefined };
         }),
       );

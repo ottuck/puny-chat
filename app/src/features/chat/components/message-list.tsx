@@ -252,6 +252,7 @@ export function MessageList({
                 onReact={
                   onReact && item.id ? (rect) => setPicking({ message: item, rect }) : undefined
                 }
+                onUnreact={onReact && item.id ? () => onReact(item.id!, null) : undefined}
               />
             </View>
           );

@@ -22,6 +22,8 @@ import { BUDDY_PALETTE, POSES_IN_ORDER } from '@/features/buddy/pixel/sprites';
 import type { FishStyle } from '@/features/buddy/pixel/room-things';
 import type { Reaction, ReactionKind } from '@/features/buddy/reactions';
 import { BuddyGiftMessage } from '@/features/chat/components/buddy-gift-message';
+import { MessageBubble } from '@/features/chat/components/message-bubble';
+import { MESSAGE_REACTIONS, type MessageReaction, REACTION_EMOJI } from '@/features/chat/types';
 import type { AlbumEntry } from '@/features/room/api';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 
@@ -218,6 +220,64 @@ function GiftMessages() {
           toName={t('chat.guestName')}
           onOpenMail={() => {}}
         />
+      ))}
+    </View>
+  );
+}
+
+// Reaction chips under a bubble of each side (docs/PROJECT.md, 읽음과 반응): mine and the partner's
+// reaction set from the buttons, so chips coming in on the right and sliding off can be watched.
+// Tapping my chip takes it off, as in the chat.
+function ReactionChips() {
+  const colors = useColors();
+  const [mine, setMine] = useState<MessageReaction | null>(null);
+  const [theirs, setTheirs] = useState<MessageReaction | null>(null);
+  const [order, setOrder] = useState<('me' | 'partner')[]>([]);
+  // Like the server: a member's reaction keeps the place where it was first put.
+  const reactions: Record<string, MessageReaction> = {};
+  for (const who of order) {
+    const reaction = who === 'me' ? mine : theirs;
+    if (reaction) reactions[who] = reaction;
+  }
+  const set = (who: 'me' | 'partner', reaction: MessageReaction | null) => {
+    (who === 'me' ? setMine : setTheirs)(reaction);
+    setOrder((prev) => {
+      const rest = prev.filter((w) => w !== who);
+      if (!reaction) return rest;
+      return prev.includes(who) ? prev : [...rest, who];
+    });
+  };
+  return (
+    <View style={styles.giftMessages}>
+      <MessageBubble
+        text="Preview"
+        mine={false}
+        reactions={reactions}
+        myId="me"
+        onReact={() => {}}
+        onUnreact={() => set('me', null)}
+      />
+      <MessageBubble
+        text="Preview"
+        mine
+        reactions={reactions}
+        myId="me"
+        onReact={() => {}}
+        onUnreact={() => set('me', null)}
+      />
+      {(['me', 'partner'] as const).map((who) => (
+        <View key={who} style={[styles.row, styles.centered]}>
+          <Text style={{ color: colors.text }}>{who}</Text>
+          {MESSAGE_REACTIONS.map((reaction) => (
+            <Chip
+              key={reaction}
+              label={REACTION_EMOJI[reaction]}
+              active={(who === 'me' ? mine : theirs) === reaction}
+              onPress={() => set(who, reaction)}
+            />
+          ))}
+          <Chip label="off" onPress={() => set(who, null)} />
+        </View>
       ))}
     </View>
   );
@@ -632,6 +692,9 @@ function Preview() {
               leave();
             }}
           />
+          <Group title="reaction chips">
+            <ReactionChips />
+          </Group>
           <Group title="scene">
             <Chip label="dream" onPress={() => setDreamRun((n) => n + 1)} />
             {[...Array(DREAM_CUTS)].map((_, i) => (
@@ -819,6 +882,7 @@ const styles = StyleSheet.create({
   group: { gap: 6, paddingHorizontal: 12 },
   title: { fontSize: 12, fontWeight: '700' },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  centered: { alignItems: 'center' },
   pose: { alignItems: 'center', justifyContent: 'flex-end', padding: 4, borderRadius: 6 },
   poseName: { fontSize: 10 },
   held: { marginHorizontal: 12, borderRadius: 20, overflow: 'hidden' },
