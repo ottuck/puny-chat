@@ -10,7 +10,7 @@
 
 <br>
 
-<img src="docs/images/demo.gif" width="300" alt="The tour: an egg hatches, eats, poops, a friend cleans up, and it grows through a kid into a flowering adult">
+<img src="docs/images/demo.gif" width="240" alt="The tour: an egg hatches, eats, poops, a friend cleans up, and it grows through a kid into a flowering adult">
 
 <sub>The tour: from egg to adult in 55 seconds</sub>
 
@@ -41,10 +41,14 @@ at you, no daily missions. Just **having something to raise together** makes the
 <div align="center">
 <table>
   <tr>
-    <td align="center"><img src="docs/images/empty.png" width="200" alt="A room started alone: the buddy has hatched, with an invite button"><br><sub><b>Start on your own</b><br>The egg hatches, straight into the chat</sub></td>
-    <td align="center"><img src="docs/images/invite.png" width="200" alt="A 4-character invite code"><br><sub><b>Invite one friend</b><br>4-character code, single use</sub></td>
-    <td align="center"><img src="docs/images/chat.png" width="200" alt="A conversation with Buddy events in between"><br><sub><b>Chat and care together</b><br>Typing · read · online</sub></td>
-    <td align="center"><img src="docs/images/buddy.png" width="200" alt="Buddy details: EXP, fullness, cleanliness, feed, clean up"><br><sub><b>Look after the Buddy</b><br>Feed · clean up</sub></td>
+    <td align="center"><img src="docs/images/store-en-01-chat.png" width="180" alt="The chat with the buddy's room above it"></td>
+    <td align="center"><img src="docs/images/store-en-02-care.png" width="180" alt="Feeding the buddy and cleaning up its poop together"></td>
+    <td align="center"><img src="docs/images/store-en-03-grow.png" width="180" alt="The room from egg to kid to level 60"></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/store-en-04-light.png" width="180" alt="The same room in morning, evening and night light"></td>
+    <td align="center"><img src="docs/images/store-en-05-bath.png" width="180" alt="The buddy soaking in the hot spring"></td>
+    <td align="center"><img src="docs/images/store-en-06-leave.png" width="180" alt="At level 60 the buddy goes its own way and a new egg arrives"></td>
   </tr>
 </table>
 </div>
@@ -88,7 +92,7 @@ at you, no daily missions. Just **having something to raise together** makes the
 Nothing is pushed out of the room: a spot not used yet fills, or a thing already there gets finer. When the buddy goes its own way it packs its things in a bundle, waves goodbye and walks off, and a new egg arrives in a bare room. Its photo goes into the memory album, opened from the button beside the hot spring.
 
 <div align="center">
-<img src="docs/images/room-story.png" width="640" alt="The room from level 9 to 60: a toy box and a window, the wall shelf with its music box, sunset light through the panes, a morning sparrow, a night lit by the lamp, the New Year's kotatsu, the stray cat's face, a full room in summer; then the buddy moving out with a bundle and a new egg in a bare room">
+<img src="docs/images/room-story.png" width="520" alt="The room from level 9 to 60: a toy box and a window, the wall shelf with its music box, sunset light through the panes, a morning sparrow, a night lit by the lamp, the New Year's kotatsu, the stray cat's face, a full room in summer; then the buddy moving out with a bundle and a new egg in a bare room">
 </div>
 
 <br>
@@ -100,9 +104,9 @@ Tap ♨ in the stage's corner and the buddy goes for a soak in an open-air hot s
 <div align="center">
 <table>
   <tr>
-    <td align="center"><img src="docs/images/iris.png" width="260" alt="The scene change: a stepped black circle closing on the buddy"><br><sub>The circle closes on the buddy</sub></td>
-    <td align="center"><img src="docs/images/bath.png" width="260" alt="The buddy in a wooden tub with a towel on its head, a bamboo fence and clouds behind"><br><sub>In the hot spring</sub></td>
-    <td align="center"><img src="docs/images/bath-snow.png" width="260" alt="The same hot spring with snow falling"><br><sub>In winter it snows</sub></td>
+    <td align="center"><img src="docs/images/iris.png" width="200" alt="The scene change: a stepped black circle closing on the buddy"><br><sub>The circle closes on the buddy</sub></td>
+    <td align="center"><img src="docs/images/bath.png" width="200" alt="The buddy in a wooden tub with a towel on its head, a bamboo fence and clouds behind"><br><sub>In the hot spring</sub></td>
+    <td align="center"><img src="docs/images/bath-snow.png" width="200" alt="The same hot spring with snow falling"><br><sub>In winter it snows</sub></td>
   </tr>
 </table>
 </div>
@@ -112,10 +116,10 @@ The first time a room shows its egg, it opens instead on a dream of what the egg
 <div align="center">
 <table>
   <tr>
-    <td align="center"><img src="docs/images/dream-1.png" width="190" alt="Dream cut 1: a barista dancing by its café counter"><br><sub>A barista</sub></td>
-    <td align="center"><img src="docs/images/dream-2.png" width="190" alt="Dream cut 2: a writer with a big heart, saying 'Me too'"><br><sub>A writer in love</sub></td>
-    <td align="center"><img src="docs/images/dream-3.png" width="190" alt="Dream cut 3: antlers, a Christmas tree and snow"><br><sub>Christmas</sub></td>
-    <td align="center"><img src="docs/images/dream-4.png" width="190" alt="Dream cut 4: the hot spring"><br><sub>The hot spring</sub></td>
+    <td align="center"><img src="docs/images/dream-1.png" width="150" alt="Dream cut 1: a barista dancing by its café counter"><br><sub>A barista</sub></td>
+    <td align="center"><img src="docs/images/dream-2.png" width="150" alt="Dream cut 2: a writer with a big heart, saying 'Me too'"><br><sub>A writer in love</sub></td>
+    <td align="center"><img src="docs/images/dream-3.png" width="150" alt="Dream cut 3: antlers, a Christmas tree and snow"><br><sub>Christmas</sub></td>
+    <td align="center"><img src="docs/images/dream-4.png" width="150" alt="Dream cut 4: the hot spring"><br><sub>The hot spring</sub></td>
   </tr>
 </table>
 </div>
@@ -198,8 +202,8 @@ On an iPhone, open it with a development build. The commands are collected in [C
 - [x] Web Push (the web added to the home screen)
 - [x] Jobs, seasonal looks, small happenings, the hot spring and the dream before the first egg
 - [x] The room's things every level, seasonal things, the memory album, the mailbox, the light of the hour
-- [ ] iPhone build checked on a device (Sign in with Apple and push are written, not yet tried on an iPhone)
-- [ ] App Store release
+- [x] iPhone build checked on a device (Sign in with Apple and Google, push, photos) and TestFlight
+- [ ] App Store release (1.0 is in review)
 
 ## License
 

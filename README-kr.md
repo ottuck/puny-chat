@@ -12,7 +12,7 @@
 
 <br>
 
-<img src="docs/images/demo.gif" width="300" alt="구경하기 화면. 알이 깨어나 밥을 먹고 💩을 싸고, 친구가 치워 주고, 꼬마를 거쳐 꽃이 핀 어른으로 자란다">
+<img src="docs/images/demo.gif" width="240" alt="구경하기 화면. 알이 깨어나 밥을 먹고 💩을 싸고, 친구가 치워 주고, 꼬마를 거쳐 꽃이 핀 어른으로 자란다">
 
 <sub>구경하기: 55초 동안 알이 어른이 될 때까지</sub>
 
@@ -43,10 +43,14 @@ Yuki    싫어 ㅋㅋ
 <div align="center">
 <table>
   <tr>
-    <td align="center"><img src="docs/images/empty.png" width="200" alt="혼자 시작한 방. 버디가 태어났다는 안내와 친구 초대 버튼"><br><sub><b>혼자 시작해요</b><br>알이 태어나면 바로 채팅 화면</sub></td>
-    <td align="center"><img src="docs/images/invite.png" width="200" alt="4자리 초대 코드"><br><sub><b>친구 한 명을 초대해요</b><br>4자리 코드, 한 번만 사용</sub></td>
-    <td align="center"><img src="docs/images/chat.png" width="200" alt="Buddy 이벤트가 섞인 대화"><br><sub><b>대화하며 함께 돌봐요</b><br>입력 중 · 읽음 · 접속 표시</sub></td>
-    <td align="center"><img src="docs/images/buddy.png" width="200" alt="Buddy 상세: 경험치, 배부름, 청결, 밥주기, 청소하기"><br><sub><b>Buddy를 챙겨요</b><br>밥주기 · 청소하기</sub></td>
+    <td align="center"><img src="docs/images/store-ko-01-chat.png" width="180" alt="버디의 방이 위에 있는 채팅 화면"></td>
+    <td align="center"><img src="docs/images/store-ko-02-care.png" width="180" alt="둘이 함께 밥을 주고 똥을 치우는 모습"></td>
+    <td align="center"><img src="docs/images/store-ko-03-grow.png" width="180" alt="알에서 꼬마, Lv.60까지 자라는 방"></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/store-ko-04-light.png" width="180" alt="아침, 저녁, 밤의 빛이 다른 같은 방"></td>
+    <td align="center"><img src="docs/images/store-ko-05-bath.png" width="180" alt="온천에서 쉬는 버디"></td>
+    <td align="center"><img src="docs/images/store-ko-06-leave.png" width="180" alt="Lv.60에 독립하는 버디와 새 알"></td>
   </tr>
 </table>
 </div>
@@ -90,7 +94,7 @@ Yuki    싫어 ㅋㅋ
 방의 소품은 밀려나지 않아요. 비어 있던 자리가 채워지거나 있던 것이 더 좋아져요. 독립하는 날에는 버디가 소품을 보따리에 싸서 메고 인사한 뒤 걸어 나가고, 빈 방에 새 알이 와요. 그 버디의 사진은 온천 버튼 옆 추억 앨범에 남아요.
 
 <div align="center">
-<img src="docs/images/room-story-kr.png" width="640" alt="Lv.9부터 Lv.60까지의 방. 장난감 상자와 창문, 오르골이 놓인 벽 선반, 창살로 들어오는 노을빛, 아침의 참새, 무드등만 켜진 밤, 설날의 코타츠, 얼굴을 내민 길고양이, 여름의 가득 찬 방. 보따리를 메고 이사 가는 버디와 빈 방의 새 알">
+<img src="docs/images/room-story-kr.png" width="520" alt="Lv.9부터 Lv.60까지의 방. 장난감 상자와 창문, 오르골이 놓인 벽 선반, 창살로 들어오는 노을빛, 아침의 참새, 무드등만 켜진 밤, 설날의 코타츠, 얼굴을 내민 길고양이, 여름의 가득 찬 방. 보따리를 메고 이사 가는 버디와 빈 방의 새 알">
 </div>
 
 <br>
@@ -102,9 +106,9 @@ Yuki    싫어 ㅋㅋ
 <div align="center">
 <table>
   <tr>
-    <td align="center"><img src="docs/images/iris.png" width="260" alt="장면 전환. 계단 모양의 검은 원이 버디 쪽으로 좁혀진다"><br><sub>버디 쪽으로 닫히는 원</sub></td>
-    <td align="center"><img src="docs/images/bath.png" width="260" alt="수건을 얹고 나무통에 들어간 버디. 뒤에 대나무 울타리와 구름"><br><sub>온천</sub></td>
-    <td align="center"><img src="docs/images/bath-snow.png" width="260" alt="눈이 내리는 온천"><br><sub>겨울에는 눈이 와요</sub></td>
+    <td align="center"><img src="docs/images/iris.png" width="200" alt="장면 전환. 계단 모양의 검은 원이 버디 쪽으로 좁혀진다"><br><sub>버디 쪽으로 닫히는 원</sub></td>
+    <td align="center"><img src="docs/images/bath.png" width="200" alt="수건을 얹고 나무통에 들어간 버디. 뒤에 대나무 울타리와 구름"><br><sub>온천</sub></td>
+    <td align="center"><img src="docs/images/bath-snow.png" width="200" alt="눈이 내리는 온천"><br><sub>겨울에는 눈이 와요</sub></td>
   </tr>
 </table>
 </div>
@@ -114,10 +118,10 @@ Yuki    싫어 ㅋㅋ
 <div align="center">
 <table>
   <tr>
-    <td align="center"><img src="docs/images/dream-1.png" width="190" alt="꿈 1. 카페 카운터 앞에서 춤추는 바리스타"><br><sub>바리스타</sub></td>
-    <td align="center"><img src="docs/images/dream-2.png" width="190" alt="꿈 2. 큰 하트와 '나도, 그래' 말풍선의 작가"><br><sub>사랑에 빠진 작가</sub></td>
-    <td align="center"><img src="docs/images/dream-3.png" width="190" alt="꿈 3. 사슴뿔, 크리스마스트리, 눈"><br><sub>크리스마스</sub></td>
-    <td align="center"><img src="docs/images/dream-4.png" width="190" alt="꿈 4. 온천"><br><sub>온천</sub></td>
+    <td align="center"><img src="docs/images/dream-1.png" width="150" alt="꿈 1. 카페 카운터 앞에서 춤추는 바리스타"><br><sub>바리스타</sub></td>
+    <td align="center"><img src="docs/images/dream-2.png" width="150" alt="꿈 2. 큰 하트와 '나도, 그래' 말풍선의 작가"><br><sub>사랑에 빠진 작가</sub></td>
+    <td align="center"><img src="docs/images/dream-3.png" width="150" alt="꿈 3. 사슴뿔, 크리스마스트리, 눈"><br><sub>크리스마스</sub></td>
+    <td align="center"><img src="docs/images/dream-4.png" width="150" alt="꿈 4. 온천"><br><sub>온천</sub></td>
   </tr>
 </table>
 </div>
@@ -199,8 +203,8 @@ iPhone에서는 개발용 빌드로 열어요. 자세한 명령은 [CLAUDE.md](C
 - [x] 웹 푸시 (홈 화면에 추가한 웹)
 - [x] 직업, 계절 모습, 가끔 생기는 사건, 온천과 첫 알 전의 꿈
 - [x] 레벨마다 오는 방 소품, 철 따라 나오는 소품, 추억 앨범, 우편함, 시간대별 방의 빛
-- [ ] iPhone 실기기 확인 (Apple 로그인과 푸시는 만들어 두었고 아이폰에서는 아직 확인 전)
-- [ ] App Store 출시
+- [x] iPhone 실기기 확인 (Apple·Google 로그인, 푸시, 사진)과 TestFlight
+- [ ] App Store 출시 (1.0 심사 중)
 
 ## 라이선스
 
