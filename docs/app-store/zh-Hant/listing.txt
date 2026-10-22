@@ -1,5 +1,5 @@
 [名稱] (30字)
-puny-chat
+Puny Chat
 
 [副標題] (30字)
 兩個人一起養的小小 Buddy

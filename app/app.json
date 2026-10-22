@@ -15,6 +15,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "infoPlist": {
+        "CFBundleDisplayName": "Puny Chat",
         "CFBundleLocalizations": ["ja", "ko", "en", "zh-Hant"],
         "CFBundleAllowMixedLocalizations": true,
         "ITSAppUsesNonExemptEncryption": false
