@@ -22,8 +22,8 @@ export default function Root({ children }: PropsWithChildren) {
         <title>{TITLE}</title>
         <meta name="description" content={DESCRIPTION} />
         {/* Link previews (KakaoTalk, Slack, X, …) read these without running the app. The image
-            is public/og.png (the hot spring scene,
-            docs/images/bath.png), in Japanese for the Japanese App Store launch. */}
+            is public/og.png (a kid buddy's room from /preview, stage=CHILD&level=11), in Japanese for
+            the Japanese App Store launch. */}
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content={TITLE} />
         <meta property="og:title" content={`${TITLE} · 小さなバディをいっしょに育てよう`} />
