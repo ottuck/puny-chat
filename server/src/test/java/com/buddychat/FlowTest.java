@@ -36,12 +36,16 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
             "buddychat.photos.dir=build/test-photos",
             "buddychat.photos.min-free-space=0B",
             // Off in production until the app that shows them is out (BuddyProperties).
-            "buddychat.buddy.gifts=true"
+            "buddychat.buddy.gifts=true",
+            // Error reports are on, but SentryCapture keeps them in memory: nothing is sent.
+            "sentry.dsn=https://key@o1.ingest.us.sentry.io/1",
+            "sentry.release=test-release"
         })
 @Import({
     TestcontainersConfiguration.class,
     TestJwtConfiguration.class,
     MutableClock.Config.class,
+    SentryCapture.class,
     NotificationFlowTest.FakePush.class,
     SupportFlowTest.MailConfig.class
 })

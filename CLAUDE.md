@@ -107,7 +107,7 @@
 - `./gradlew test` — Testcontainers로 MongoDB를 띄워 테스트 · `./gradlew spotlessApply` — 포맷(palantir-java-format)
 - 커밋 전 `./gradlew spotlessCheck test`(server 변경 시)
 - 이미지: `docker build -t buddy-chat-server server/`(`server/Dockerfile`). 운영 설정은 환경변수
-  (`SPRING_MONGODB_URI`, `SPRING_MONGODB_DATABASE`, `FIREBASE_PROJECT_ID`, `CORS_ALLOWED_ORIGINS`).
+  (`SPRING_MONGODB_URI`, `SPRING_MONGODB_DATABASE`, `FIREBASE_PROJECT_ID`, `CORS_ALLOWED_ORIGINS`, 오류 보고용 `SENTRY_DSN`은 비우면 꺼짐, `docs/PROJECT.md`의 오류 보고).
 
 ## Infra (`infra/`에서 실행)
 

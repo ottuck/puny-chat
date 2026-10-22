@@ -17,6 +17,19 @@ buddychat:
     # Expo web dev servers. Native apps don't send an Origin, so they are unaffected.
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8081,http://localhost:8082,http://localhost:8083}
 
+# Unexpected errors (ERROR logs and uncaught exceptions) go to Sentry when SENTRY_DSN is set. An empty DSN
+# leaves the SDK off. What is collected beyond the error itself is turned off in common/ErrorReporting.
+sentry:
+  dsn: ${SENTRY_DSN:}
+  release: ${SENTRY_RELEASE:}
+  environment: production
+  send-default-pii: false
+  max-breadcrumbs: 0
+  max-request-body-size: none
+  attach-server-name: false
+  logging:
+    minimum-event-level: error
+
 management:
   health:
     # Mail authorization or provider outages must not take durable report intake offline.
