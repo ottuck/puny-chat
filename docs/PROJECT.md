@@ -869,6 +869,15 @@ healthchecks.io(다른 서비스와 같은 계정, 알림은 메일)의 체크 �
 `HC_SERVER`가 실패할 때 서버 자체도 응답하지 않으면(`/actuator/health/liveness`, DB를 보지 않는다) `server`·`caddy` 컨테이너를 다시 시작한다.
 Atlas 장애처럼 재시작으로 낫지 않는 경우는 알리기만 한다. 배포의 재시작은 1분 안에 끝나 알림이 가지 않는다.
 
+### 오류 보고 (Sentry)
+
+예상 못 한 오류(ERROR로 남긴 로그와 처리 안 된 예외, WebFlux 500 포함)는 Sentry(Cloud 무료, 프로젝트 `puny-chat`)로 보낸다. 인스턴스 `.env`에
+`SENTRY_DSN`을 넣었을 때만 켜지고 비어 있으면 SDK가 꺼진다. 릴리스는 이미지를 만들 때 넣은 커밋 sha(`SENTRY_RELEASE`)다.
+
+- 보내는 것은 오류 종류·스택·짧은 메시지뿐이다. 요청(헤더·본문·쿼리)·사용자·breadcrumb·서버 이름·트레이싱은 보내지 않고, 글에 든 이메일·bearer 토큰·URL의 계정 정보는
+  가리며 300자로 자른다. 같은 오류(같은 예외 종류, 같은 위치)는 한 시간에 한 번만 보낸다(무료 한도 월 5,000건 보호). 구현은 `common/ErrorReporting`·`ErrorReportFilter`.
+- WARN은 보내지 않는다. 사용자가 알아야 하는 실패는 ERROR로 남긴다(`GuestCleanup`, `StatsReport`, WebSocket 예상 못 한 오류).
+
 ### 웹 앱과 도메인
 
 - 웹 앱은 Cloudflare Worker의 정적 자산(`app/wrangler.jsonc`). `pnpm build:web`이 `expo export -p web` 뒤 `scripts/worker-assets.mjs`로 404 페이지,

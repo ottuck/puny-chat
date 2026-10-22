@@ -30,6 +30,9 @@ EXPOSE 8080
 # Photos go to a volume the instance mounts here (deploy/compose.yaml). Without it /data is not writable:
 # sending photos then fails with PHOTO_UNAVAILABLE and the rest works.
 ENV BUDDYCHAT_PHOTOS_DIR=/data/photos
+# The commit this image was built from, so an error report says which release it came from (Sentry).
+ARG GIT_SHA=unknown
+ENV SENTRY_RELEASE=$GIT_SHA
 # The container's memory limit decides the heap.
 # The WebP encoder loads libwebp (chat/PhotoStore).
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "--enable-native-access=ALL-UNNAMED", "org.springframework.boot.loader.launch.JarLauncher"]

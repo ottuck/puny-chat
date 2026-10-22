@@ -25,6 +25,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-mail")
+    // Unexpected errors go to Sentry when SENTRY_DSN is set (common/ErrorReporting). The logback module turns ERROR logs into events.
+    implementation("io.sentry:sentry-spring-boot-4:8.61.1")
+    implementation("io.sentry:sentry-logback:8.61.1")
     // Photos are stored as WebP; ImageIO has no WebP writer. Bundles libwebp for Linux, macOS and Windows.
     implementation("com.github.usefulness:webp-imageio:0.10.0")
     // Starts compose.yaml (local MongoDB) on bootRun.
