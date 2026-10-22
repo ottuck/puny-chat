@@ -4,8 +4,8 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.mongodb.client.result.UpdateResult;
-import java.util.List;
 import org.bson.Document;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -14,14 +14,14 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Keeps every buddy's level when the EXP per level changes (docs/PROJECT.md, Buddy 규칙). The
- * level is computed from EXP, so a bigger value would drop existing buddies' levels. At startup,
- * if the value differs from the one recorded last time, every buddy's EXP is scaled by new / old:
- * the level stays and the bar stays about where it was. The first start only records the value.
- * Blocking is fine here: it runs once before the app serves traffic.
+ * Keeps every buddy's level when the EXP curve changes (docs/PROJECT.md, 레벨). The level is computed from
+ * EXP, so a steeper curve would drop existing buddies' levels. At startup, if the curve differs from the
+ * one recorded last time, every buddy's EXP is carried over: the same level, and as far into it. The first
+ * start only records the curve. Blocking is fine here: it runs once before the app serves traffic.
  */
 @Component
 class BuddyExpScale implements ApplicationRunner {
@@ -30,51 +30,63 @@ class BuddyExpScale implements ApplicationRunner {
     static final String SETTINGS = "settings";
     static final String ID = "buddy";
 
-    record Setting(@Id String id, int expPerLevel) {}
+    // `expPerLevelAfterJob` is missing from the setting of a single EXP per level, from before the curve.
+    record Setting(@Id String id, int expPerLevel, @Nullable Integer expPerLevelAfterJob) {
+
+        static Setting of(ExpCurve curve) {
+            return new Setting(ID, curve.early(), curve.late());
+        }
+
+        ExpCurve curve() {
+            return new ExpCurve(expPerLevel, expPerLevelAfterJob == null ? expPerLevel : expPerLevelAfterJob);
+        }
+    }
 
     private final ReactiveMongoTemplate mongo;
-    private final int expPerLevel;
 
-    BuddyExpScale(ReactiveMongoTemplate mongo, BuddyProperties properties) {
+    BuddyExpScale(ReactiveMongoTemplate mongo) {
         this.mongo = mongo;
-        this.expPerLevel = properties.expPerLevel();
     }
 
     @Override
     public void run(ApplicationArguments args) {
+        ExpCurve curve = BuddyRules.CURVE;
         Setting recorded = mongo.findById(ID, Setting.class, SETTINGS).block();
         if (recorded == null) {
-            mongo.save(new Setting(ID, expPerLevel), SETTINGS).block();
+            mongo.save(Setting.of(curve), SETTINGS).block();
             return;
         }
-        int previous = recorded.expPerLevel();
-        if (previous == expPerLevel) return;
-        // Record the new value first: if the scaling then fails, levels are lower but never
-        // scaled twice. Of two servers starting at once, one does it.
+        ExpCurve previous = recorded.curve();
+        if (previous.equals(curve)) return;
+        // Record the new curve first: if carrying then fails, levels are lower but never carried
+        // twice. Of two servers starting at once, one does it.
         Setting claimed = mongo.findAndModify(
-                        query(where("_id").is(ID).and("expPerLevel").is(previous)),
-                        new Update().set("expPerLevel", expPerLevel),
+                        query(where("_id")
+                                .is(ID)
+                                .and("expPerLevel")
+                                .is(recorded.expPerLevel())
+                                .and("expPerLevelAfterJob")
+                                .is(recorded.expPerLevelAfterJob())),
+                        new Update().set("expPerLevel", curve.early()).set("expPerLevelAfterJob", curve.late()),
                         Setting.class,
                         SETTINGS)
                 .block();
         if (claimed == null) return;
-        // exp = floor(exp * new / old), as an int like the rest.
-        Document scaled = new Document(
-                "$toInt",
-                new Document(
-                        "$floor",
-                        new Document(
-                                "$divide",
-                                List.of(new Document("$multiply", List.of("$buddy.exp", expPerLevel)), previous))));
-        UpdateResult result = mongo.getCollection("rooms")
-                .flatMap(rooms -> Mono.from(rooms.updateMany(
-                        new Document("buddy.exp", new Document("$gt", 0)),
-                        List.of(new Document("$set", new Document("buddy.exp", scaled))))))
+        Long carried = mongo.getCollection("rooms")
+                .flatMapMany(rooms -> Flux.from(rooms.find(new Document("buddy.exp", new Document("$gt", 0)))
+                                .projection(new Document("buddy.exp", 1)))
+                        .concatMap(room -> {
+                            int exp = room.get("buddy", Document.class)
+                                    .get("exp", Number.class)
+                                    .intValue();
+                            // Only if it is still what was read: nothing else writes before traffic.
+                            return Mono.from(rooms.updateOne(
+                                    new Document("_id", room.get("_id")).append("buddy.exp", exp),
+                                    new Document("$set", new Document("buddy.exp", previous.carry(exp, curve)))));
+                        }))
+                .map(UpdateResult::getModifiedCount)
+                .reduce(0L, Long::sum)
                 .block();
-        log.info(
-                "EXP per level {} -> {}: scaled the EXP of {} buddies",
-                previous,
-                expPerLevel,
-                result == null ? 0 : result.getModifiedCount());
+        log.info("EXP curve {} -> {}: carried the EXP of {} buddies", previous.key(), curve.key(), carried);
     }
 }

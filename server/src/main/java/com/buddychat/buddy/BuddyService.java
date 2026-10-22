@@ -58,7 +58,6 @@ public class BuddyService {
             RoomHub hub,
             Clock clock,
             BuddyProperties properties) {
-        BuddyRules.useExpPerLevel(properties.expPerLevel());
         BuddyRules.useTiming(properties.fullToEmpty(), properties.poopEvery());
         this.mongo = mongo;
         this.chatService = chatService;
@@ -476,8 +475,9 @@ public class BuddyService {
     }
 
     /**
-     * +1 EXP for a sent message, at most {@link BuddyRules#MESSAGE_EXP_DAILY_CAP} a day per room.
-     * Both updates are conditional, so the cap holds under concurrent sends.
+     * +1 EXP for a sent message, at most {@link BuddyRules#MESSAGE_EXP_DAILY_CAP} a day per room once
+     * the buddy has its job (the day's count runs before it too). Both updates are conditional, so the
+     * cap holds under concurrent sends.
      */
     public Mono<Void> onMessageSent(String roomId) {
         Instant now = Instant.now(clock);
@@ -487,8 +487,9 @@ public class BuddyService {
                         .is(roomId)
                         .and("buddy.expDay")
                         .is(today)
-                        .and("buddy.messageExpToday")
-                        .lt(BuddyRules.MESSAGE_EXP_DAILY_CAP)),
+                        .orOperator(
+                                where("buddy.messageExpToday").lt(BuddyRules.MESSAGE_EXP_DAILY_CAP),
+                                where("buddy.exp").lt(BuddyRules.minExp(BuddyRules.JOB_AT)))),
                 new Update().inc("buddy.exp", BuddyRules.MESSAGE_EXP).inc("buddy.messageExpToday", 1),
                 RETURN_NEW,
                 RoomBuddy.class,
@@ -537,24 +538,20 @@ public class BuddyService {
             // Grown up: from here its job may be changed, and the room keeps growing up to the top level.
             // A card with the way to it. ("GROWN" as it is stored.)
             event = chatService.recordBuddyEvent(
-                    roomId, "GROWN", String.valueOf(level), null, eventKey(after, "grown:" + BuddyRules.expPerLevel()));
+                    roomId, "GROWN", String.valueOf(level), null, eventKey(after, "grown:" + BuddyRules.CURVE.key()));
         } else if (level == BuddyRules.MAX_LEVEL && levelBefore < level) {
             // The top: a thank-you in the timeline instead of one more level.
             event = chatService.recordBuddyEvent(
-                    roomId,
-                    "MAX_LEVEL",
-                    String.valueOf(level),
-                    null,
-                    eventKey(after, "max:" + BuddyRules.expPerLevel()));
+                    roomId, "MAX_LEVEL", String.valueOf(level), null, eventKey(after, "max:" + BuddyRules.CURVE.key()));
         } else if (level > levelBefore) {
-            // Keyed by the level and the EXP per level: the same level reached again under another
-            // setting is a new event.
+            // Keyed by the level and the EXP curve: the same level reached again under another curve
+            // is a new event.
             event = chatService.recordBuddyEvent(
                     roomId,
                     "LEVELED_UP",
                     String.valueOf(level),
                     null,
-                    eventKey(after, "level:" + BuddyRules.expPerLevel() + ":" + level));
+                    eventKey(after, "level:" + BuddyRules.CURVE.key() + ":" + level));
         } else {
             event = Mono.empty();
         }

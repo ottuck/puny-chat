@@ -14,9 +14,9 @@ import org.jspecify.annotations.Nullable;
  */
 public final class BuddyRules {
 
-    public static final int DEFAULT_EXP_PER_LEVEL = 5;
-    // Set once at startup from BuddyProperties.
-    private static volatile int expPerLevel = DEFAULT_EXP_PER_LEVEL;
+    // Quick up to the job, then a level or two a day (docs/PROJECT.md, 성장). A change here keeps every
+    // buddy's level (BuddyExpScale).
+    public static final ExpCurve CURVE = new ExpCurve(10, 20);
     public static final int FEED_EXP = 2;
     public static final int CLEAN_EXP = 2;
     // A grown-up's work at its station: EXP for it once in this long (docs/PROJECT.md, 직업 무대 장치).
@@ -31,8 +31,9 @@ public final class BuddyRules {
     public static final int BATH_EXP = 3;
     public static final Duration BATH_EVERY = Duration.ofHours(12);
     public static final int MESSAGE_EXP = 1;
-    // Stops "ㅎ ㅎ ㅎ" spam from levelling the buddy.
-    public static final int MESSAGE_EXP_DAILY_CAP = 50;
+    // A day's message EXP per room once it has its job: from there it grows by being cared for, and
+    // "ㅎ ㅎ ㅎ" does not level it. Before, talking gets it there as fast as the two talk.
+    public static final int MESSAGE_EXP_DAILY_CAP = 20;
     // Once a day, when both members have sent a message that day (docs/PROJECT.md, 둘이 함께).
     public static final int TOGETHER_EXP = 10;
 
@@ -56,10 +57,6 @@ public final class BuddyRules {
 
     private BuddyRules() {}
 
-    public static int expPerLevel() {
-        return expPerLevel;
-    }
-
     static void useTiming(Duration fullToEmptyValue, Duration poopEveryValue) {
         if (fullToEmptyValue.isNegative()
                 || fullToEmptyValue.isZero()
@@ -80,27 +77,31 @@ public final class BuddyRules {
         return poopEvery;
     }
 
-    static void useExpPerLevel(int value) {
-        if (value < 1) throw new IllegalArgumentException("EXP per level must be at least 1");
-        expPerLevel = value;
-    }
-
     // The highest level (docs/PROJECT.md, 최고 레벨). EXP keeps counting past it.
     public static final int MAX_LEVEL = 60;
 
     public static int level(int exp) {
-        return Math.min(MAX_LEVEL, exp / expPerLevel + 1);
+        return CURVE.level(exp);
     }
 
     /** The EXP a level starts at. */
     static int minExp(int level) {
-        return (level - 1) * expPerLevel;
+        return CURVE.minExp(level);
     }
 
     /** How far into the current level, 0..1; full at the highest level. */
     public static double levelProgress(int exp) {
         if (level(exp) == MAX_LEVEL) return 1;
-        return (exp % expPerLevel) / (double) expPerLevel;
+        return CURVE.progress(exp);
+    }
+
+    /** Whether a message today still earns EXP (MESSAGE_EXP_DAILY_CAP): always before the job. */
+    static boolean chatExpFull(Buddy buddy, String today) {
+        Integer earned = buddy.messageExpToday();
+        return level(buddy.exp()) >= JOB_AT
+                && today.equals(buddy.expDay())
+                && earned != null
+                && earned >= MESSAGE_EXP_DAILY_CAP;
     }
 
     // The level each stage starts at.
