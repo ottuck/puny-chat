@@ -10,14 +10,10 @@
 
 <table>
   <tr>
-    <td align="center"><img src="docs/images/store-en-01-chat.png" width="180" alt="The chat with the buddy's room above it"></td>
-    <td align="center"><img src="docs/images/store-en-02-care.png" width="180" alt="Feeding the buddy and cleaning up its poop together"></td>
-    <td align="center"><img src="docs/images/store-en-03-grow.png" width="180" alt="The room from egg to kid to level 60"></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/images/store-en-04-light.png" width="180" alt="The same room in morning, evening and night light"></td>
-    <td align="center"><img src="docs/images/store-en-05-bath.png" width="180" alt="The buddy soaking in the hot spring"></td>
-    <td align="center"><img src="docs/images/store-en-06-leave.png" width="180" alt="At level 60 the buddy goes its own way and a new egg arrives"></td>
+    <td align="center"><img src="docs/images/empty.png" width="180" alt="A room started alone: the egg, with an invite button"><br><sub><b>Start on your own</b><br>An egg, straight into the chat</sub></td>
+    <td align="center"><img src="docs/images/invite.png" width="180" alt="A 4-character invite code"><br><sub><b>Invite one friend</b><br>4-character code, single use</sub></td>
+    <td align="center"><img src="docs/images/chat.png" width="180" alt="A conversation with Buddy events in between, the partner typing"><br><sub><b>Chat and care together</b><br>Typing · read · online</sub></td>
+    <td align="center"><img src="docs/images/buddy.png" width="180" alt="Buddy details: EXP, fullness, cleanliness, the together bonus and its job"><br><sub><b>Look after the Buddy</b><br>Level · fullness · cleanliness</sub></td>
   </tr>
 </table>
 
