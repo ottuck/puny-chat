@@ -595,7 +595,8 @@ server → client
 - 단계: 아기 `BABY_AT` 3, 꼬마 `CHILD_AT` 5, 어른 `ADULT_AT` 10. 직업 `JOB_AT` 12, 직업 바꾸기 `JOB_CHANGE_FROM` 20부터 10레벨마다, 독립 `GRADUATE_AT` 60.
 - **곡선을 바꿔도 레벨은 그대로**(`BuddyExpScale`): 서버가 시작할 때 `settings`에 기록한 곡선과 다르면 모든 Buddy의 EXP를 같은 레벨,
   그 레벨 안에서 같은 만큼 간 자리로 옮긴다(60을 넘은 EXP는 마지막 레벨의 비율로). 새 곡선을 조건부 update로 먼저 기록하므로 서버 두 대가
-  같이 떠도 한 번만 옮긴다. 트래픽 전 1회성이라 blocking. `expPerLevelAfterJob`이 없는 기록은 곡선 전의 것으로, 모든 레벨이 `expPerLevel`이다.
+  같이 떠도 한 번만 옮긴다. 웹 서버가 열리기 전에 돌아(`SmartInitializingSingleton`, `ApplicationRunner`는 연 뒤라 옮기는 사이 메시지가
+  올 수 있다) 1회성 blocking이고, 그래도 읽은 뒤 바뀐 버디(다른 서버가 아직 떠 있을 때)는 다시 읽어 옮긴다. `expPerLevelAfterJob`이 없는 기록은 곡선 전의 것으로, 모든 레벨이 `expPerLevel`이다.
 
 ### 둘이 함께
 
