@@ -1,5 +1,5 @@
 [Name] (30 characters)
-puny-chat
+Puny Chat
 
 [Subtitle] (30 characters)
 Chat for two, raise a Buddy

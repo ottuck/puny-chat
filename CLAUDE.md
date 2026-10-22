@@ -203,4 +203,5 @@ iOS 1.0(빌드 4, 커밋 `0666641`)이 심사 중이라 `EAS_AUTO_UPDATE`를 꺼
 2. `pnpm app-update`로 쌓인 변경을 업데이트 하나로 보낸다(변경 수와 상관없이 최신 코드 전체가 한 번에 간다. 네이티브·`version`은 그대로라 빌드 4에 간다).
 3. 실기기에서 업데이트가 적용됐는지(다음 실행에 반영), 중국어 기기에서 번체로 보이는지 확인한다.
 4. 그다음 서버 `BuddyProperties`의 `gifts` 기본값을 `true`로 바꿔 배포한다. 앱 업데이트보다 먼저 켜면 빌드 4 채팅에 `buddyEvent.GIFT`가 글자 그대로 보인다.
-5. 다음 버전을 낼 때 App Store에 번체 중국어 현지화(`docs/app-store/zh-Hant`)를 넣는다. 스토어의 언어 표시는 그 빌드부터다.
+5. 하루이틀 지켜본 뒤 다음 버전(1.0.1)을 낸다: `version`을 올려 빌드하고 자동 업데이트를 끈 채 제출한다. App Store에 번체 중국어 현지화
+   (`docs/app-store/zh-Hant`)를 넣고, 앱 이름을 네 언어 모두 "Puny Chat"으로 바꾼다(홈 화면 이름 `CFBundleDisplayName`과 스토어 언어 표시는 그 빌드부터).

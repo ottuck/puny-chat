@@ -64,6 +64,7 @@ iOS 앱을 App Store에 올리는 순서, 지금 상태, 제출 전에 확인할
    Apple 처리(5–10분)가 끝나면 메일이 오고 TestFlight 탭에 보인다. 내부 테스터("Team (Expo)" 그룹)는 심사 없이 설치한다.
 4. **App Store Connect 정보.**
    - 개인정보처리방침 `https://puny-chat.com/privacy`, 지원 URL `https://puny-chat.com/support`
+   - 앱 이름: 스토어와 홈 화면 모두 "Puny Chat"(홈 화면은 `app.json`의 `ios.infoPlist.CFBundleDisplayName`, 다음 빌드부터. 1.0은 `puny-chat`).
    - 판매 지역: 중국 본토와 EU를 뺀 전 세계. 중국 본토는 ICP 등록이 필요하고, EU는 DSA 판매자 신고를 하지 않는다.
    - 스토어 언어: 기본 언어 영어(그 밖의 나라는 영어 페이지), 일본어·한국어·번체 중국어(대만) 현지화. 설명·키워드·스크린샷을 언어마다 따로 넣는다.
      번체 중국어는 1.0 심사 뒤에 더해서 다음 버전을 낼 때 함께 넣는다(이름·부제·설명은 버전과 같이 심사된다).
