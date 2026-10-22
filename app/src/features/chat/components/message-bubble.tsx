@@ -1,10 +1,10 @@
-import { useRef } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useColors } from '@/theme';
 
-import { MESSAGE_REACTIONS, type MessageReaction, REACTION_EMOJI } from '../types';
+import { type MessageReaction, REACTION_EMOJI } from '../types';
 
 // Where the bubble is on screen, for the reaction picker to open next to it.
 export type BubbleRect = { x: number; y: number; width: number; height: number };
@@ -12,6 +12,9 @@ export type BubbleRect = { x: number; y: number; width: number; height: number }
 // Reactions sit in a row of chips under the bubble; the time beside the bubble moves up as much.
 const CHIP_HEIGHT = 24;
 const CHIP_GAP = 4;
+// A chip taken off slides this far outwards while it fades, and the others close up behind it.
+const CHIP_LEAVE_SLIDE = 16;
+const CHIP_LEAVE_MS = 220;
 
 // A photo keeps its shape inside this box. Only a very long strip is cut, to stay PHOTO_MIN thick.
 const PHOTO_MAX_WIDTH = 220;
@@ -46,8 +49,11 @@ type Props = {
   // User id → reaction, and whose this device is (to mark my own).
   reactions?: Record<string, MessageReaction>;
   myId?: string;
-  // Long press (or a reaction chip): open the reaction picker. Absent while the message is unconfirmed.
+  // Long press (or someone else's reaction chip): open the reaction picker. Absent while the
+  // message is unconfirmed.
   onReact?: (rect: BubbleRect) => void;
+  // A tap on my own reaction chip takes my reaction off.
+  onUnreact?: () => void;
 };
 
 export function MessageBubble({
@@ -62,17 +68,12 @@ export function MessageBubble({
   reactions,
   myId,
   onReact,
+  onUnreact,
 }: Props) {
   const colors = useColors();
   const { t } = useTranslation();
   const bubbleRef = useRef<View>(null);
-  const given = Object.entries(reactions ?? {});
-  // In the order the picker shows them, each with how many gave it and whether I am one of them.
-  const kinds = MESSAGE_REACTIONS.map((kind) => ({
-    kind,
-    count: given.filter(([, reaction]) => reaction === kind).length,
-    mine: given.some(([userId, reaction]) => userId === myId && reaction === kind),
-  })).filter(({ count }) => count > 0);
+  const chips = useChips(reactionChips(reactions, myId));
   const openPicker = () =>
     bubbleRef.current?.measureInWindow((x, y, width, height) => onReact?.({ x, y, width, height }));
 
@@ -122,34 +123,41 @@ export function MessageBubble({
             </Text>
           )}
         </Pressable>
-        {kinds.length > 0 ? (
+        {chips.shown.length > 0 ? (
           <View style={[styles.chips, mine ? styles.chipsMine : styles.chipsTheirs]}>
-            {kinds.map(({ kind, count, mine: picked }) => (
-              <Pressable
-                key={kind}
-                onPress={openPicker}
-                disabled={!onReact}
-                accessibilityRole="button"
-                accessibilityLabel={`${t(`chat.reaction.${kind}`)} ${count}`}
-                hitSlop={4}
-                style={[
-                  styles.chip,
-                  {
-                    backgroundColor: picked ? colors.bubbleMine : colors.surface,
-                    borderColor: picked ? colors.accent : colors.border,
-                  },
-                ]}
+            {chips.shown.map((chip) => (
+              <LeavingChip
+                key={chip.kind}
+                leaving={chip.leaving}
+                outwards={mine ? 1 : -1}
+                onGone={() => chips.forget(chip.kind)}
               >
-                <Text style={styles.chipEmoji}>{REACTION_EMOJI[kind]}</Text>
-                <Text
+                <Pressable
+                  onPress={chip.mine ? onUnreact : openPicker}
+                  disabled={chip.leaving || !onReact}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t(`chat.reaction.${chip.kind}`)} ${chip.count}`}
+                  accessibilityHint={chip.mine ? t('chat.unreact') : undefined}
+                  hitSlop={4}
                   style={[
-                    styles.chipCount,
-                    { color: picked ? colors.bubbleMineText : colors.textMuted },
+                    styles.chip,
+                    {
+                      backgroundColor: chip.mine ? colors.bubbleMine : colors.surface,
+                      borderColor: chip.mine ? colors.accent : colors.border,
+                    },
                   ]}
                 >
-                  {count}
-                </Text>
-              </Pressable>
+                  <Text style={styles.chipEmoji}>{REACTION_EMOJI[chip.kind]}</Text>
+                  <Text
+                    style={[
+                      styles.chipCount,
+                      { color: chip.mine ? colors.bubbleMineText : colors.textMuted },
+                    ]}
+                  >
+                    {chip.count}
+                  </Text>
+                </Pressable>
+              </LeavingChip>
             ))}
           </View>
         ) : null}
@@ -162,7 +170,7 @@ export function MessageBubble({
         <View
           style={[
             mine ? styles.metaMine : styles.metaTheirs,
-            kinds.length > 0 && { marginBottom: 2 + CHIP_GAP + CHIP_HEIGHT },
+            chips.shown.length > 0 && { marginBottom: 2 + CHIP_GAP + CHIP_HEIGHT },
           ]}
         >
           {receipt ? (
@@ -172,6 +180,104 @@ export function MessageBubble({
         </View>
       ) : null}
     </View>
+  );
+}
+
+type Chip = { kind: MessageReaction; count: number; mine: boolean };
+
+// One chip per reaction kind, with how many gave it and whether I am one of them, in the order the
+// kinds were first given (the server keeps each member's reaction where it was first put).
+function reactionChips(reactions: Props['reactions'], myId: string | undefined): Chip[] {
+  const chips: Chip[] = [];
+  for (const [userId, kind] of Object.entries(reactions ?? {})) {
+    let chip = chips.find((c) => c.kind === kind);
+    if (!chip) {
+      chip = { kind, count: 0, mine: false };
+      chips.push(chip);
+    }
+    chip.count += 1;
+    if (userId === myId) chip.mine = true;
+  }
+  return chips;
+}
+
+// The chips on screen: each keeps its place as counts change, a new kind joins on the right, and a
+// kind taken off stays a moment longer, leaving, until its slide is over (then it is forgotten).
+function useChips(chips: Chip[]) {
+  const key = chips.map((c) => `${c.kind}${c.count}${c.mine ? '*' : ''}`).join();
+  const [seen, setSeen] = useState(key);
+  const [shown, setShown] = useState(() => chips.map((c) => ({ ...c, leaving: false })));
+  if (key !== seen) {
+    setSeen(key);
+    setShown((prev) => [
+      ...prev.map((old) => {
+        const now = chips.find((c) => c.kind === old.kind);
+        return now ? { ...now, leaving: false } : { ...old, leaving: true };
+      }),
+      ...chips
+        .filter((c) => !prev.some((old) => old.kind === c.kind))
+        .map((c) => ({ ...c, leaving: false })),
+    ]);
+  }
+  const forget = (kind: MessageReaction) =>
+    setShown((prev) => prev.filter((c) => !(c.kind === kind && c.leaving)));
+  return { shown, forget };
+}
+
+// Once leaving, the chip slides outwards and fades while its width closes, then calls onGone.
+function LeavingChip({
+  leaving,
+  outwards,
+  onGone,
+  children,
+}: {
+  leaving: boolean;
+  outwards: 1 | -1;
+  onGone: () => void;
+  children: ReactNode;
+}) {
+  const [progress] = useState(() => new Animated.Value(0));
+  const [width, setWidth] = useState(0);
+  const gone = useRef(onGone);
+  useEffect(() => {
+    gone.current = onGone;
+  });
+
+  useEffect(() => {
+    if (!leaving) {
+      progress.setValue(0);
+      return;
+    }
+    // Width can't run on the native driver, so the whole leave runs in JS; it is short.
+    const leave = Animated.timing(progress, {
+      toValue: 1,
+      duration: CHIP_LEAVE_MS,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: false,
+    });
+    leave.start(({ finished }) => {
+      if (finished) gone.current();
+    });
+    return () => leave.stop();
+  }, [leaving, progress]);
+
+  const leave = (to: number) => progress.interpolate({ inputRange: [0, 1], outputRange: [0, to] });
+  return (
+    <Animated.View
+      onLayout={leaving ? undefined : (e) => setWidth(e.nativeEvent.layout.width)}
+      style={
+        leaving && {
+          opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+          transform: [{ translateX: leave(outwards * CHIP_LEAVE_SLIDE) }],
+          width: progress.interpolate({ inputRange: [0, 1], outputRange: [width, 0] }),
+          // The row's gap closes with it.
+          marginHorizontal: leave(-CHIP_GAP / 2),
+          alignItems: outwards > 0 ? 'flex-end' : 'flex-start',
+        }
+      }
+    >
+      {children}
+    </Animated.View>
   );
 }
 

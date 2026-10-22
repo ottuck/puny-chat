@@ -64,6 +64,7 @@
     "typing": "입력 중…",
     "read": "읽음",
     "react": "반응 남기기",
+    "unreact": "눌러서 내 반응 지우기",
     "reaction": {
       "LOVE": "사랑해요",
       "LIKE": "좋아요",
