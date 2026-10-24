@@ -303,7 +303,7 @@ export type WindowThings = {
   catFace: boolean;
 };
 
-// The window (Lv.9): the sky by the device's clock (a full moon in its days, moon.ts), the guests at the glass, and now and then rain,
+// The window (Lv.2, the first thing, so its sky and light are seen early): the sky by the device's clock (a full moon in its days, moon.ts), the guests at the glass, and now and then rain,
 // snow or a shooting star outside.
 export function RoomWindow({
   scale,

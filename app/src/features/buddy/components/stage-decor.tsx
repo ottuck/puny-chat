@@ -131,18 +131,18 @@ export type Reward =
   | 'bunny'
   | 'sillFlower';
 
-// Shown in the guide and the buddy sheet ("next: Lv.9 window") as well. One for every level but a
+// Shown in the guide and the buddy sheet ("next: Lv.4 table") as well. One for every level but a
 // new stage (3, 5, 10) and the top one, 60, where the whole room sparkles. The job (12) and the first
 // chance to change it (20) bring the bowl's next tiers, seen at every meal; the later chances (30, 40,
 // 50) each bring a thing that comes only in its season (the wind chime, the cherry petals, the New
 // Year's mochi).
 export const REWARDS: readonly { level: number; reward: Reward }[] = [
-  { level: 2, reward: 'plant1' },
+  { level: 2, reward: 'window' },
   { level: 4, reward: 'crate' },
   { level: 6, reward: 'bowl1' },
   { level: 7, reward: 'rug1' },
   { level: 8, reward: 'toys' },
-  { level: 9, reward: 'window' },
+  { level: 9, reward: 'plant1' },
   { level: 11, reward: 'clock' },
   { level: 12, reward: 'bowl2' },
   { level: 13, reward: 'plant2' },
@@ -326,7 +326,7 @@ export function nextReward(level: number) {
 // fruit (45) are one tree: it keeps growing through both, and fruits without shrinking back.
 const PLANT_SMALLEST = 2.2;
 const PLANT_LARGEST = 3.2;
-const PLANT_FROM: Record<PlantTier, number> = { 1: 2, 2: 13, 3: 19, 4: 32, 5: 32 };
+const PLANT_FROM: Record<PlantTier, number> = { 1: 9, 2: 13, 3: 19, 4: 32, 5: 32 };
 const PLANT_FULL_AT: Record<PlantTier, number> = { 1: 12, 2: 18, 3: 31, 4: 60, 5: 60 };
 
 function plantScale(tier: PlantTier | 0, level: number): number {
