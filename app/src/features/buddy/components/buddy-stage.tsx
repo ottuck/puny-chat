@@ -2100,41 +2100,55 @@ export function BuddyStage({
         { height, backgroundColor: colors.stage },
       ]}
     >
-      <Pressable
-        onPress={onOpenDetail}
-        disabled={dream}
-        accessibilityRole="button"
-        accessibilityLabel={t('buddy.open', { buddy: buddy.name })}
+      <View
         style={[
           styles.info,
-          cornerButton ? { right: 14 + corners * (CORNER_SIZE + 6) } : null,
+          cornerButton ? { right: 6 + corners * (CORNER_SIZE + 6) } : null,
           dream ? styles.hidden : null,
         ]}
       >
-        <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
-          {buddy.name}
-        </Text>
-        <Text
-          style={[
-            styles.level,
-            levelingUp ? styles.levelUp : null,
-            { color: levelingUp ? colors.accent : colors.textMuted },
+        {/* A tile like the corner buttons, with a chevron, so it reads as the way into the details. */}
+        <Pressable
+          onPress={onOpenDetail}
+          disabled={dream}
+          accessibilityRole="button"
+          accessibilityLabel={t('buddy.open', { buddy: buddy.name })}
+          hitSlop={4}
+          style={({ pressed }) => [
+            styles.pill,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              opacity: pressed ? 0.7 : 1,
+            },
           ]}
         >
-          {t('buddy.level', { level: buddy.level })}
-        </Text>
-        {/* Ready to go its own way (in the buddy's details). */}
-        {buddy.grown ? <Text style={styles.grown}>🎓</Text> : null}
-        {/* Both have talked today: the day's bonus is in. */}
-        {buddy.togetherToday ? (
-          <Text style={styles.grown} accessibilityLabel={t('buddy.together.badge')}>
-            🤝
+          <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
+            {buddy.name}
           </Text>
-        ) : null}
-        <View style={styles.bar}>
-          <ProgressBar progress={buddy.levelProgress} />
-        </View>
-      </Pressable>
+          <Text
+            style={[
+              styles.level,
+              levelingUp ? styles.levelUp : null,
+              { color: levelingUp ? colors.accent : colors.textMuted },
+            ]}
+          >
+            {t('buddy.level', { level: buddy.level })}
+          </Text>
+          {/* Ready to go its own way (in the buddy's details). */}
+          {buddy.grown ? <Text style={styles.grown}>🎓</Text> : null}
+          {/* Both have talked today: the day's bonus is in. */}
+          {buddy.togetherToday ? (
+            <Text style={styles.grown} accessibilityLabel={t('buddy.together.badge')}>
+              🤝
+            </Text>
+          ) : null}
+          <View style={styles.bar}>
+            <ProgressBar progress={buddy.levelProgress} />
+          </View>
+          <Text style={[styles.chevron, { color: colors.textMuted }]}>›</Text>
+        </Pressable>
+      </View>
 
       <View
         style={[
@@ -2769,16 +2783,34 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     overflow: 'hidden',
   },
+  // The space left of the corner buttons; only the tile in it takes taps.
   info: {
     position: 'absolute',
-    top: 10,
-    left: 14,
-    right: 14,
+    top: 8,
+    left: 6,
+    right: 6,
+    alignItems: 'flex-start',
+    pointerEvents: 'box-none',
+    // Over the room's light (room-light.tsx).
+    zIndex: 2,
+  },
+  // Ends above WALL_TOP, so the wall's things stay clear of it.
+  pill: {
+    maxWidth: '100%',
+    height: 26,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    // Over the room's light (room-light.tsx).
-    zIndex: 2,
+    paddingLeft: 10,
+    paddingRight: 8,
+    borderRadius: 13,
+    borderWidth: 1,
+  },
+  chevron: {
+    marginLeft: -2,
+    fontSize: 16,
+    lineHeight: 18,
+    fontWeight: '700',
   },
   name: {
     fontSize: 14,
