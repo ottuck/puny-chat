@@ -39,7 +39,7 @@ import {
 import { Iris, type IrisRun } from './iris';
 
 // The buddy's stage with its other scenes (docs/fun-improvements.md, 목욕·미래의 꿈), changed with an
-// iris: home, the hot spring, and once, before the first egg, a dream of what it may become.
+// iris: home, the hot spring, and, each time it opens on an egg, a dream of what it may become.
 //
 // The bath is this device's alone (the partner still sees the buddy at home); only the EXP for going
 // after a while is the room's (`onBathe`, the server decides). It goes back home only
@@ -53,15 +53,14 @@ import { Iris, type IrisRun } from './iris';
 // button calls (a dot, a little shake) until the newest photo has been seen on this device.
 
 const BATH_MAX_MS = 10 * 60_000;
-const DREAM_SEEN_KEY = 'buddy-dream-seen';
 // The newest photo seen in the album on this device (its graduatedAt).
 const ALBUM_SEEN_KEY = 'buddy-album-seen';
 // The wave, and the walk out of the room.
 const MOVE_OUT_MS = LEAVE_WAVE_MS + 1600;
 
 type Props = ComponentProps<typeof BuddyStage> & {
-  // Plays the dream before the first egg (the real room only, not the tour). 'always': right away,
-  // whatever it is and whether it was seen (the art preview).
+  // Plays the dream whenever it opens on an egg, like a game's opening (the real room only, not the
+  // tour). 'always': whatever the buddy is (the art preview).
   dreams?: boolean | 'always';
   // While the dream is on (the guide banner waits for it).
   onDreaming?: (dreaming: boolean) => void;
@@ -329,21 +328,11 @@ export function BuddyScene({
     return () => clearTimeout(timer);
   }, [mailRequest]);
 
-  // The dream: only for an egg, only once on this device.
+  // The dream: each time the stage opens on an egg (a tap skips it).
   const egg = buddy.stage === 'EGG';
-  const [dream, setDream] = useState<'checking' | 'playing' | 'over'>(
-    dreams === 'always' ? 'playing' : dreams && egg ? 'checking' : 'over',
+  const [dream, setDream] = useState<'playing' | 'over'>(
+    dreams === 'always' || (dreams && egg) ? 'playing' : 'over',
   );
-  useEffect(() => {
-    if (dream !== 'checking') return;
-    let cancelled = false;
-    AsyncStorage.getItem(DREAM_SEEN_KEY)
-      .catch(() => '1')
-      .then((seen) => !cancelled && setDream(seen ? 'over' : 'playing'));
-    return () => {
-      cancelled = true;
-    };
-  }, [dream]);
   const dreaming = dream !== 'over';
 
   // Moving out: an egg in place of a hatched buddy means it went its own way.
@@ -375,7 +364,6 @@ export function BuddyScene({
   };
   const wakeUp = () => {
     if (iris) return;
-    AsyncStorage.setItem(DREAM_SEEN_KEY, '1').catch(() => {});
     run(() => setDream('over'));
   };
   // Something happened in the room during the dream (the egg hatching, say): it ends there.
@@ -468,9 +456,7 @@ export function BuddyScene({
   const hasAlbum = album.length > 0 && !dreaming && !moving;
 
   let scene;
-  if (dream === 'checking') {
-    scene = <View style={{ height, backgroundColor: colors.stage }} />;
-  } else if (dream === 'playing') {
+  if (dream === 'playing') {
     scene = <BuddyDream buddy={buddy} height={height} onEnd={wakeUp} />;
   } else if (moving) {
     scene = (
