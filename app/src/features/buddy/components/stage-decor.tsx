@@ -139,10 +139,10 @@ export type Reward =
 export const REWARDS: readonly { level: number; reward: Reward }[] = [
   { level: 2, reward: 'window' },
   { level: 4, reward: 'crate' },
-  { level: 6, reward: 'bowl1' },
+  { level: 6, reward: 'plant1' },
   { level: 7, reward: 'rug1' },
   { level: 8, reward: 'toys' },
-  { level: 9, reward: 'plant1' },
+  { level: 9, reward: 'bowl1' },
   { level: 11, reward: 'clock' },
   { level: 12, reward: 'bowl2' },
   { level: 13, reward: 'plant2' },
@@ -326,7 +326,7 @@ export function nextReward(level: number) {
 // fruit (45) are one tree: it keeps growing through both, and fruits without shrinking back.
 const PLANT_SMALLEST = 2.2;
 const PLANT_LARGEST = 3.2;
-const PLANT_FROM: Record<PlantTier, number> = { 1: 9, 2: 13, 3: 19, 4: 32, 5: 32 };
+const PLANT_FROM: Record<PlantTier, number> = { 1: 6, 2: 13, 3: 19, 4: 32, 5: 32 };
 const PLANT_FULL_AT: Record<PlantTier, number> = { 1: 12, 2: 18, 3: 31, 4: 60, 5: 60 };
 
 function plantScale(tier: PlantTier | 0, level: number): number {
