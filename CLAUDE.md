@@ -188,6 +188,9 @@
 - 커밋 전 `pnpm check`(app 변경 시).
 - 비밀 값(.env, 키, 인증서)을 커밋하지 않는다.
 - Git 텍스트(커밋 메시지, PR 제목·본문)는 자연스러운 한국어. 브랜치 이름과 기술 용어는 영어.
+- worktree는 작업을 병합하거나 버리기로 한 즉시 `git worktree remove`로 지우고 같은 이름의 로컬 브랜치도 정리한다.
+  세션을 시작할 때 `git worktree list`로 남은 것을 보고, 변경이 없고 PR이 병합된 것은 지운다. 커밋하지 않은 변경이나
+  병합되지 않은 커밋이 있으면 지우지 말고 사용자에게 알린다(worktree마다 의존성이 따로 설치돼 수백 MB를 차지한다).
 - PR을 만들 때는 assignee를 `ottuck`으로 지정하고 라벨을 붙인다: 종류 하나(`enhancement` / `bug` / `chore` /
   `refactor` / `test` / `documentation`)와 바뀐 영역(`area: app` / `area: server` / `area: infra` / `area: auth` /
   `area: i18n` / `area: docs`). 예: `gh pr create --assignee ottuck --label enhancement --label "area: app"`
