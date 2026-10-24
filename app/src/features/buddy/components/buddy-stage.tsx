@@ -297,7 +297,7 @@ const SIT_WEIGHT = 10;
 const USE_WEIGHT = 6;
 
 // `dark`: from the evening on (room.ts, skyAt), when a shooting star can be seen. The weather is
-// seen through the window, so none before the room has one (Lv.9). `uses`: the things there are to
+// seen through the window, so none before the room has one (Lv.2). `uses`: the things there are to
 // use (a child or grown-up's).
 function pickIdleAct(
   job: BuddyJob | null,

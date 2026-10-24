@@ -49,7 +49,7 @@ export const ROOM_PALETTE: Palette = {
   K: '#5E6B4A', // the cloth edge
 };
 
-// --- The window (Lv.9) ---
+// --- The window (Lv.2) ---
 
 // Its sky follows the device's clock: day, dusk, night. One grid, three palettes: the sun and the
 // moon share a disc (`B` is lit by day and sky at night, which bites the crescent out of it), the
