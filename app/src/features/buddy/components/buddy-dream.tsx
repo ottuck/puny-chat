@@ -9,9 +9,9 @@ import { PROP_PALETTE, SPARKLE } from '../pixel/sprites';
 import { BathStage } from './bath-stage';
 import { BuddyStage, type Cue } from './buddy-stage';
 
-// A dream of the future (docs/fun-improvements.md, 미래의 꿈): before the egg is first shown, a few
-// quick cuts of what it may grow into, each a different job and a different day. buddy-scene.tsx
-// plays it once on this device and then opens on the egg with the iris. A tap skips it. Quick and
+// A dream of the future (docs/fun-improvements.md, 미래의 꿈): before the egg is shown, a few quick
+// cuts of what it may grow into, each a different job and a different day. buddy-scene.tsx plays it
+// each time it opens on an egg, like a game's opening, and then opens on the egg with the iris. A tap skips it. Quick and
 // lively rather than hazy: each cut comes in with a flash and a little punch, a second and a half
 // each, about ten seconds in all with the iris.
 
