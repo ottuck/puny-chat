@@ -129,7 +129,7 @@ function ChatScreen({ me, room, onRoomLost, onRoomChanged, onGuideSeen }: ChatSc
   // back from wherever the app was left (settings, the guide). This screen stays under those.
   useEffect(() => onNotificationTap(() => router.navigate('/')), []);
   const [inviteOpen, setInviteOpen] = useState(false);
-  // The guide waits for the dream before the first egg to end.
+  // The guide waits for the dream before the egg to end.
   const [dreaming, setDreaming] = useState(false);
   // The chat's card for a buddy gone its own way opens the album on the stage.
   const [albumRequest, setAlbumRequest] = useState<string | null>(null);

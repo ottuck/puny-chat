@@ -26,7 +26,7 @@ async function seenOnThisDevice(): Promise<number> {
   return Math.max(local, legacy ? 1 : 0);
 }
 
-// `hold`: not yet (the dream before the first egg is on).
+// `hold`: not yet (the dream before the egg is on).
 export function GuideBanner({
   seenVersion,
   onSeen,
