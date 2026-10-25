@@ -297,7 +297,7 @@ const SIT_WEIGHT = 10;
 const USE_WEIGHT = 6;
 
 // `dark`: from the evening on (room.ts, skyAt), when a shooting star can be seen. The weather is
-// seen through the window, so none before the room has one (Lv.2). `uses`: the things there are to
+// seen through the window, so none before the room has one (Lv.3). `uses`: the things there are to
 // use (a child or grown-up's).
 function pickIdleAct(
   job: BuddyJob | null,
@@ -888,7 +888,7 @@ export function BuddyStage({
   );
   // A grown-up's station on the left, where it goes to work.
   const station = buddy.stage === 'ADULT' && job ? JOB_STATIONS[job] : null;
-  // A station that comes while the stage is open (the job settled at Lv.12, or changed) pops in.
+  // A station that comes while the stage is open (the job settled at Lv.10, or changed) pops in.
   const [jobAtMount] = useState(job);
   // The station's cell: the buddy's pixel, or finer.
   const cell = scale * (station?.fine ?? 1);

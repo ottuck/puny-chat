@@ -4,6 +4,8 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.mongodb.reactivestreams.client.MongoCollection;
+import java.util.Collections;
+import java.util.List;
 import org.bson.Document;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -32,15 +34,26 @@ class BuddyExpScale implements SmartInitializingSingleton {
     static final String ID = "buddy";
     static final String ROOMS = "rooms";
 
-    // `expPerLevelAfterJob` is missing from the setting of a single EXP per level, from before the curve.
-    record Setting(@Id String id, int expPerLevel, @Nullable Integer expPerLevelAfterJob) {
+    // Older settings lack the later fields: `expPerLevelAfterJob` from when every level took the same EXP,
+    // `expBeforeJob` (each level's EXP up to the job) from when those levels all took `expPerLevel` and the
+    // job came at Lv.12.
+    static final int LEVELS_BEFORE_JOB_AT_12 = 11;
+
+    record Setting(
+            @Id String id,
+            int expPerLevel,
+            @Nullable Integer expPerLevelAfterJob,
+            @Nullable List<Integer> expBeforeJob) {
 
         static Setting of(ExpCurve curve) {
-            return new Setting(ID, curve.early(), curve.late());
+            return new Setting(ID, curve.early().getFirst(), curve.late(), curve.early());
         }
 
         ExpCurve curve() {
-            return new ExpCurve(expPerLevel, expPerLevelAfterJob == null ? expPerLevel : expPerLevelAfterJob);
+            int late = expPerLevelAfterJob == null ? expPerLevel : expPerLevelAfterJob;
+            List<Integer> early =
+                    expBeforeJob == null ? Collections.nCopies(LEVELS_BEFORE_JOB_AT_12, expPerLevel) : expBeforeJob;
+            return new ExpCurve(early, late);
         }
     }
 
@@ -72,8 +85,13 @@ class BuddyExpScale implements SmartInitializingSingleton {
                                 .and("expPerLevel")
                                 .is(recorded.expPerLevel())
                                 .and("expPerLevelAfterJob")
-                                .is(recorded.expPerLevelAfterJob())),
-                        new Update().set("expPerLevel", curve.early()).set("expPerLevelAfterJob", curve.late()),
+                                .is(recorded.expPerLevelAfterJob())
+                                .and("expBeforeJob")
+                                .is(recorded.expBeforeJob())),
+                        new Update()
+                                .set("expPerLevel", curve.early().getFirst())
+                                .set("expPerLevelAfterJob", curve.late())
+                                .set("expBeforeJob", curve.early()),
                         Setting.class,
                         SETTINGS)
                 .block();

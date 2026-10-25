@@ -33,7 +33,7 @@ export const TOGETHER_EXP = 10;
 export const GROWN_LEVEL = 20;
 // The level each stage after it starts at, and where its job is settled; told to the user as goals.
 // server: BuddyRules.BABY_AT, CHILD_AT, ADULT_AT, JOB_AT
-export const NEXT_STEP_AT: Record<BuddyStage, number> = { EGG: 3, BABY: 5, CHILD: 10, ADULT: 12 };
+export const NEXT_STEP_AT: Record<BuddyStage, number> = { EGG: 2, BABY: 5, CHILD: 8, ADULT: 10 };
 // Levels where the job may be changed once (from the top level, any time). server: BuddyRules.JOB_CHANGE_FROM
 export const JOB_CHANGE_LEVELS = [20, 30, 40, 50];
 

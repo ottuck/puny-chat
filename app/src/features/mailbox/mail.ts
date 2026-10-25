@@ -94,7 +94,7 @@ export const MAIL: readonly Mail[] = [
   { id: 'topLevelLetter', kind: 'letter', fromLevel: 60, action: 'graduate' },
   // With the job (server: BuddyRules.JOB_AT): from here a day's messages earn only so much EXP, and care
   // grows it more.
-  { id: 'grownUpLetter', kind: 'letter', fromLevel: 12 },
+  { id: 'grownUpLetter', kind: 'letter', fromLevel: 10 },
   { id: 'roomUpdate', kind: 'notice', date: '2026-10-17' },
 ];
 

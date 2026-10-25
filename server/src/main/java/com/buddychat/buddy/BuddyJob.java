@@ -6,7 +6,7 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * What a buddy grows up to be, from how the two raised it (docs/fun-improvements.md, 직업). Nobody
- * picks it: each habit is counted, and the job is settled at Lv.12 (BuddyRules.JOB_AT) by the habit
+ * picks it: each habit is counted, and the job is settled at Lv.10 (BuddyRules.JOB_AT) by the habit
  * that stands out most against what a pair usually does by then. Each count is measured against its
  * own usual amount, so no habit wins just by coming more often (meals come more often than love
  * letters), and every job comes about as often. With no habit a quarter beyond its usual amount it is
@@ -14,18 +14,18 @@ import org.jspecify.annotations.Nullable;
  */
 public enum BuddyJob {
     // Meals given.
-    CHEF(5),
+    CHEF(2),
     // Poops cleaned up.
-    GARDENER(4),
+    GARDENER(2),
     // Messages written at night (23:00 to 7:00, Japan time).
-    DJ(6),
+    DJ(2),
     // Messages with a "love you" in them.
-    WRITER(3),
+    WRITER(1),
     // Nothing stood out.
     BARISTA(0);
 
-    // What a pair usually does by Lv.12, for the habits (about two days for two, three for one):
-    // five meals, four poops cleaned up, six messages at night, three with a "love you".
+    // What a pair usually does by Lv.10, for the habits (half a day or so, a day alone): two meals, two
+    // poops cleaned up, two messages at night, one with a "love you".
     private final int usual;
 
     BuddyJob(int usual) {

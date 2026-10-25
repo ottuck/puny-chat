@@ -32,7 +32,7 @@ import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
 // Not part of the app: it only opens in development builds, and nothing links to it.
 
 const STAGES: BuddyStage[] = ['EGG', 'BABY', 'CHILD', 'ADULT'];
-const LEVEL: Record<BuddyStage, number> = { EGG: 1, BABY: 3, CHILD: 5, ADULT: 10 };
+const LEVEL: Record<BuddyStage, number> = { EGG: 1, BABY: 2, CHILD: 5, ADULT: 8 };
 const HAPPENINGS = [
   'hiccup',
   'startle',
@@ -79,11 +79,12 @@ const REACTIONS: ReactionKind[] = [
 // The level grid: every level up to the top, and what comes at each besides the room's rewards
 // (docs/PROJECT.md, 성장). server: BuddyRules.BABY_AT, CHILD_AT, ADULT_AT, JOB_AT, JOB_CHANGE_FROM, MAX_LEVEL
 const MAX_LEVEL = 60;
+const JOB_AT = 10;
 const MILESTONES: Record<number, string> = {
-  3: '🐣 BABY',
+  2: '🐣 BABY',
   5: '🌱 CHILD',
-  10: '🌸 ADULT',
-  12: '💼 job settled',
+  8: '🌸 ADULT',
+  10: '💼 job settled',
   20: '🔄 job change',
   30: '🔄 job change',
   40: '🔄 job change',
@@ -112,12 +113,12 @@ const stageAt = (level: number): BuddyStage =>
 function jobChange(level: number, job: BuddyJob | null, changedAt: number | null) {
   const window = (l: number) => Math.floor(l / 10);
   const can =
-    level >= 12 &&
+    level >= JOB_AT &&
     (!job ||
       level >= MAX_LEVEL ||
       (level >= 20 && (changedAt === null || window(changedAt) < window(level))));
   const at =
-    level >= 12 && !can ? Math.min(MAX_LEVEL, Math.max(20, (window(level) + 1) * 10)) : null;
+    level >= JOB_AT && !can ? Math.min(MAX_LEVEL, Math.max(20, (window(level) + 1) * 10)) : null;
   return { canChangeJob: can, jobChangeAt: at };
 }
 // The room's window, lamp and light by the hour: morning, day, dusk, night.
