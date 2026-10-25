@@ -364,7 +364,8 @@ supportTickets { _id: requestId, kind (INQUIRY | REPORT | REMOVE), reporterId, r
                  closureConfirmed, emailStatus, emailAttempts, nextEmailAttemptAt }
 history_deletions  계정 삭제 중 영향받는 방 id(삭제 진행 표식)
 stats          { _id: "steps:<날짜>", ios|web|android: { welcome?, demo?, start?, name?, wake? } }
-               { _id: "joined:<날짜>", joined?, d1?..d60? }   이용 통계(날짜는 일본 날짜, 사람별 기록 없음)
+               { _id: "joined:<날짜>", joined?, d1?..d60? }
+               { _id: "care:<날짜>", feed|clean|work: { chat?, tap? } }   이용 통계(날짜는 일본 날짜, 사람별 기록 없음)
 ```
 
 - **Buddy는 room에 embed한다.** room과 1:1로 생기고 지워지며 항상 같이 읽는다. 돌봄을 room 문서 하나의 atomic update로 처리한다.
@@ -761,7 +762,10 @@ App Store Guideline 5.1.1(v) 때문에 있다. 게스트는 Firebase가 30일 �
   `name`·`wake`에 들어가지 않는다.
 - **재방문**: 사용자가 생기면 가입한 날의 `joined`, 다음 날부터 그날 첫 요청이면 가입한 날 문서의 `d<N>`(1–60일째)을 올린다.
   `lastSeenAt`을 하루 한 번 적는 조건부 update와 같은 자리라, 동시에 온 요청도 하루 한 번만 센다.
-- **보기**: 매주 월요일 09:00(일본 시간) 지난 7일의 시작 흐름과 최근 6주 가입자의 1·7·30일째 재방문을 문의 메일과 같은 주소로
+- **채팅으로 돌보기**: 밥·청소·일이 실제로 된 횟수를 채팅 낱말(`chat`, `CareCommand`)과 누르기(`tap`)로 나눠 그날 문서에 올린다
+  (`BuddyService`의 `counted`). 배부를 때·💩이 없을 때·1시간이 안 된 일처럼 아무것도 바뀌지 않은 것은 세지 않는다. 채팅 낱말을 계속 둘지
+  보려는 것이다.
+- **보기**: 매주 월요일 09:00(일본 시간) 지난 7일의 시작 흐름·돌보기(채팅 / 누르기)와 최근 6주 가입자의 1·7·30일째 재방문을 문의 메일과 같은 주소로
   보낸다(`stats/StatsReport`). 메일 설정이 없으면 로그에만 남긴다.
 - **웹 방문**: Cloudflare Web Analytics(쿠키 없음). Cloudflare가 puny-chat.com 페이지에 비콘을 자동으로 넣으므로 앱에는 코드가 없다.
   대시보드의 Web Analytics에서 페이지·유입 경로·나라를 본다.

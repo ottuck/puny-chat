@@ -40,6 +40,11 @@ class StatsReport {
             "name", "이름",
             "wake", "버디 깨우기");
 
+    private static final Map<String, String> CARE_NAMES = Map.of(
+            "feed", "밥",
+            "clean", "청소",
+            "work", "일(EXP가 붙은 것만)");
+
     private static final DateTimeFormatter SHORT = DateTimeFormatter.ofPattern("M/d");
 
     private final StatsService stats;
@@ -72,6 +77,7 @@ class StatsReport {
     /** The report for the 7 days before {@code today}. */
     Mono<String> build(LocalDate today) {
         Set<String> ids = new HashSet<>(StatsService.stepIds(today.minusDays(7), today));
+        ids.addAll(StatsService.careIds(today.minusDays(7), today));
         ids.addAll(StatsService.joinedIds(today.minusWeeks(WEEKS), today));
         return stats.find(ids).collectMap(doc -> doc.getString("_id")).map(docs -> text(today, docs));
     }
@@ -114,6 +120,25 @@ class StatsReport {
                 out.append(i == 0 ? "" : " / ").append(sum);
             }
             out.append('\n');
+        }
+
+        out.append("\n돌보기: 실제로 된 횟수 (채팅으로 / 눌러서)\n");
+        for (String action : StatsService.CARE) {
+            long chat = 0;
+            long tap = 0;
+            for (LocalDate day = first; day.isBefore(today); day = day.plusDays(1)) {
+                Document doc = docs.get("care:" + day);
+                Document counts = doc == null ? null : doc.get(action, Document.class);
+                chat += number(counts, "chat");
+                tap += number(counts, "tap");
+            }
+            out.append("  ")
+                    .append(CARE_NAMES.get(action))
+                    .append(": ")
+                    .append(chat)
+                    .append(" / ")
+                    .append(tap)
+                    .append('\n');
         }
 
         out.append("\n재방문: 가입한 주별로, 가입하고 N일째 되는 날 다시 온 사람 수 (… 아직 그날이 안 됨)\n");
