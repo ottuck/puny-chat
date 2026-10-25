@@ -90,6 +90,10 @@ class StatsFlowTest {
         assertThat(joined.getInteger("d7")).isEqualTo(1);
         assertThat(joined.keySet()).containsExactlyInAnyOrder("_id", "joined", "d1", "d7");
         assertThat(stats("joined:2026-10-19").getInteger("joined")).isEqualTo(1);
+        // Visitors: the day they join counts too, and each later day once.
+        assertThat(stats("visits:2026-10-12").getInteger("users")).isEqualTo(1);
+        assertThat(stats("visits:2026-10-13").getInteger("users")).isEqualTo(1);
+        assertThat(stats("visits:2026-10-19").getInteger("users")).isEqualTo(2);
     }
 
     @Test
@@ -107,6 +111,7 @@ class StatsFlowTest {
                 .blockLast();
 
         assertThat(stats("joined:2026-10-12").getInteger("d1")).isEqualTo(1);
+        assertThat(stats("visits:2026-10-13").getInteger("users")).isEqualTo(1);
     }
 
     @Test
@@ -123,6 +128,8 @@ class StatsFlowTest {
         String text = report.build(LocalDate.parse("2026-10-19")).block();
 
         assertThat(text).contains("10/12 ~ 10/18");
+        assertThat(text).contains("10/12 1 · 10/13 1 · 10/14 0");
+        assertThat(text).contains("하루 평균 0.3명");
         assertThat(text).contains("첫 화면: 1 / 0 / 0");
         assertThat(text).contains("버디 깨우기: 0 / 1 / 0");
         assertThat(text).contains("밥: 1 / 1");

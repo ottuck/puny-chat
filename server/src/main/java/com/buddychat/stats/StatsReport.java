@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import org.bson.Document;
@@ -77,6 +78,7 @@ class StatsReport {
     /** The report for the 7 days before {@code today}. */
     Mono<String> build(LocalDate today) {
         Set<String> ids = new HashSet<>(StatsService.stepIds(today.minusDays(7), today));
+        ids.addAll(StatsService.visitIds(today.minusDays(7), today));
         ids.addAll(StatsService.careIds(today.minusDays(7), today));
         ids.addAll(StatsService.joinedIds(today.minusWeeks(WEEKS), today));
         return stats.find(ids).collectMap(doc -> doc.getString("_id")).map(docs -> text(today, docs));
@@ -105,6 +107,20 @@ class StatsReport {
                 .append(" ~ ")
                 .append(today.minusDays(1).format(SHORT))
                 .append(", 일본 시간)\n\n");
+
+        out.append("방문자: 그날 앱을 연 사람 수 (게스트 포함)\n  ");
+        long visits = 0;
+        for (LocalDate day = first; day.isBefore(today); day = day.plusDays(1)) {
+            long users = number(docs.get("visits:" + day), "users");
+            visits += users;
+            out.append(day.equals(first) ? "" : " · ")
+                    .append(day.format(SHORT))
+                    .append(' ')
+                    .append(users);
+        }
+        out.append("\n  하루 평균 ")
+                .append(String.format(Locale.ROOT, "%.1f", visits / 7.0))
+                .append("명\n\n");
 
         out.append("시작 흐름: 그 단계에 처음 온 기기 수 (iOS / 웹 / 안드로이드)\n");
         for (String step : StatsService.STEPS) {

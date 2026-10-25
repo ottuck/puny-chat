@@ -29,7 +29,8 @@ import reactor.core.publisher.Mono;
  * <p>One document per day and kind in {@code stats}: {@code steps:2026-10-19} holds
  * {@code {ios: {welcome: 3, ...}, web: {...}}}, {@code joined:2026-10-19} holds how many users
  * joined that day ({@code joined}) and how many of them came back N days later ({@code d1}, ...), and
- * {@code care:2026-10-19} how often care did something, by chat or tap ({@code {feed: {chat: 2, tap: 9}}}).
+ * {@code care:2026-10-19} how often care did something, by chat or tap ({@code {feed: {chat: 2, tap: 9}}}),
+ * and {@code visits:2026-10-19} how many users came that day ({@code users}).
  */
 @Service
 public class StatsService {
@@ -78,6 +79,11 @@ public class StatsService {
         return add("care:" + day(now), action + "." + (byChat ? "chat" : "tap"));
     }
 
+    /** A user's first request of a day, the day they joined included: one of the day's visitors. */
+    public Mono<Void> visited(Instant now) {
+        return add("visits:" + day(now), "users");
+    }
+
     /** A user was created. */
     public Mono<Void> joined(Instant createdAt) {
         return add("joined:" + day(createdAt), "joined");
@@ -101,6 +107,10 @@ public class StatsService {
 
     static Set<String> stepIds(LocalDate from, LocalDate until) {
         return ids("steps:", from, until);
+    }
+
+    static Set<String> visitIds(LocalDate from, LocalDate until) {
+        return ids("visits:", from, until);
     }
 
     static Set<String> careIds(LocalDate from, LocalDate until) {
