@@ -63,8 +63,9 @@ export function MailboxSheet({
           from: t('mailbox.giftFrom', { buddy: buddyName }),
         }
       : {
-          title: t(`mailbox.mail.${mail.id}.title`),
-          body: t(`mailbox.mail.${mail.id}.body`),
+          // A letter may name the buddy it came to (the grown-up one).
+          title: t(`mailbox.mail.${mail.id}.title`, { buddy: buddyName }),
+          body: t(`mailbox.mail.${mail.id}.body`, { buddy: buddyName }),
           from: t(`mailbox.mail.${mail.id}.from`),
         };
   const opened = mails.find((mail) => mail.id === open);
