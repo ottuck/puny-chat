@@ -14,9 +14,11 @@ import org.jspecify.annotations.Nullable;
  */
 public final class BuddyRules {
 
-    // Quick up to the job, then a level or two a day (docs/PROJECT.md, 성장). A change here keeps every
-    // buddy's level (BuddyExpScale).
-    public static final ExpCurve CURVE = new ExpCurve(10, 20);
+    // One EXP for each level before the job, steep at first: the egg hatches in three messages and the job,
+    // where the room gets lively, comes in a few dozen. Then a steady 10 a level (docs/PROJECT.md, 성장): it
+    // goes its own way and a new egg comes, so there is no end to save. A change here keeps every buddy's
+    // level (BuddyExpScale).
+    public static final ExpCurve CURVE = new ExpCurve(List.of(3, 3, 3, 4, 4, 4, 5, 5, 5), 10);
     public static final int FEED_EXP = 2;
     public static final int CLEAN_EXP = 2;
     // A grown-up's work at its station: EXP for it once in this long (docs/PROJECT.md, 직업 무대 장치).
@@ -105,15 +107,15 @@ public final class BuddyRules {
     }
 
     // The level each stage starts at.
-    static final int BABY_AT = 3;
+    static final int BABY_AT = 2;
     static final int CHILD_AT = 5;
-    static final int ADULT_AT = 10;
+    static final int ADULT_AT = 8;
     // The buddy may go its own way only once raised all the way (docs/PROJECT.md, 독립과 앨범): a choice
     // at the top level, so the rewards up to it are not skipped. It can keep living there after.
     static final int GRADUATE_AT = MAX_LEVEL;
     // The job is settled a little after it grows up (docs/fun-improvements.md, 직업): first the new grown-up
     // look on its own, then the job, from how the two raised it.
-    static final int JOB_AT = 12;
+    static final int JOB_AT = 10;
     // The members may change the job once every this many levels from JOB_CHANGE_FROM (at 20, 30, 40 and 50:
     // with the settled one, a buddy can try all five jobs), and as they like from the top level.
     static final int JOB_CHANGE_EVERY = 10;

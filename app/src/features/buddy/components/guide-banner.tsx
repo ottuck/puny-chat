@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useColors } from '@/theme';
 
-// Above the chat until opened once: what the buddy is about and what levels bring (a job at 12,
+// Above the chat until opened once: what the buddy is about and what levels bring (a job at 10,
 // its own way from 20), so there is something to look forward to from the first day.
 // The whole card opens the guide, the ✕ too: people tap it to get it out of the way, and that is
 // the moment to show them the rest.

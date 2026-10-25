@@ -170,7 +170,7 @@ export function BuddyGuide() {
         t('guide.grow.together', { exp: TOGETHER_EXP }),
         t('guide.grow.stages'),
       ])}
-      {/* What levels bring, the big steps first: a job at 12, its own way from 20, then the
+      {/* What levels bring, the big steps first: a job at 10, its own way from 20, then the
           room's props level by level. */}
       {section(t('guide.job.title'), [
         t('guide.job.decide'),

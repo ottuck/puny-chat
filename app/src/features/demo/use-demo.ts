@@ -18,7 +18,7 @@ import { DEMO_ME, DEMO_PARTNER, REPLIES, SCRIPT, type Step, type Who } from './s
 // timeline, the buddy, "typing…" and reactions. The buddy's changes here are scripted, not the
 // server's rules, and nothing is sent anywhere.
 
-const LEVEL_OF: Record<BuddyStage, number> = { EGG: 1, BABY: 3, CHILD: 5, ADULT: 10 };
+const LEVEL_OF: Record<BuddyStage, number> = { EGG: 1, BABY: 2, CHILD: 5, ADULT: 8 };
 const REACTION_OF: Partial<Record<BuddyEvent, ReactionKind>> = {
   FED: 'fed',
   CLEANED: 'cleaned',

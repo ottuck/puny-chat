@@ -440,11 +440,11 @@ class BuddyFlowTest {
     void aNewLevelIsInTheTimelineButAnEvolutionIsOneLine() {
         String roomId = createRoom("henry").id();
 
-        // Level 2 (still an egg), then level 3 (hatching, an evolution).
-        for (int i = 0; i < BuddyRules.minExp(BuddyRules.BABY_AT); i++)
+        // Level 2 (hatching, an evolution), then level 3.
+        for (int i = 0; i < BuddyRules.minExp(BuddyRules.BABY_AT + 1); i++)
             buddyService.onMessageSent(roomId).block();
 
-        assertThat(timeline("henry")).containsExactly("LEVELED_UP", "EVOLVED");
+        assertThat(timeline("henry")).containsExactly("EVOLVED", "LEVELED_UP");
         JsonNode levelUp = http.get()
                 .uri("/api/rooms/me/messages?limit=2")
                 .header("Authorization", "Bearer " + token("henry"))
@@ -453,8 +453,8 @@ class BuddyFlowTest {
                 .returnResult()
                 .getResponseBody()
                 .get("messages")
-                .get(1);
-        assertThat(levelUp.get("text").asString()).isEqualTo("2");
+                .get(0); // newest first
+        assertThat(levelUp.get("text").asString()).isEqualTo("3");
     }
 
     @Test
@@ -530,18 +530,18 @@ class BuddyFlowTest {
     void changingTheExpCurveKeepsEveryLevel() {
         String young = createRoom("henry").id();
         String old = createRoom("yuki").id();
-        // Earned under 5 EXP for every level, from before the curve: level 10, two fifths of the way to
-        // 11, and level 30, three fifths of the way to 31.
-        setExp(young, 5 * 9 + 2);
+        // Earned under 5 EXP for every level, from before the curve: level 8, two fifths of the way to
+        // 9, and level 30, three fifths of the way to 31.
+        setExp(young, 5 * 7 + 2);
         setExp(old, 5 * 29 + 3);
-        mongo.save(new BuddyExpScale.Setting(BuddyExpScale.ID, 5, null), BuddyExpScale.SETTINGS)
+        mongo.save(new BuddyExpScale.Setting(BuddyExpScale.ID, 5, null, null), BuddyExpScale.SETTINGS)
                 .block();
 
         expScale.carryOver();
         expScale.carryOver(); // carried once, not again
 
         BuddyView buddy = room("henry").buddy();
-        assertThat(buddy.level()).isEqualTo(10);
+        assertThat(buddy.level()).isEqualTo(8);
         assertThat(buddy.levelProgress()).isEqualTo(0.4);
         buddy = room("yuki").buddy();
         assertThat(buddy.level()).isEqualTo(30);
@@ -551,7 +551,7 @@ class BuddyFlowTest {
     @Test
     void aBuddyThatChangedWhileCarriedIsCarriedFromWhatItIsNow() {
         String roomId = createRoom("henry").id();
-        ExpCurve before = new ExpCurve(5, 5);
+        ExpCurve before = new ExpCurve(List.of(), 5);
         // Read at level 30, three fifths in; then a message, one EXP more, before it was carried.
         int seen = 5 * 29 + 3;
         setExp(roomId, seen + 1);
@@ -568,9 +568,36 @@ class BuddyFlowTest {
     }
 
     @Test
+    void aCurveOfOneEarlyAndOneLateExpIsCarriedToTheCurveThatDiffersByLevel() {
+        String young = createRoom("henry").id();
+        String old = createRoom("yuki").id();
+        // Earned under 10 EXP a level up to the job at 12 and 20 after: level 4, half way to 5, and level
+        // 25, a fifth of the way to 26.
+        setExp(young, 10 * 3 + 5);
+        setExp(old, 10 * 11 + 20 * 13 + 4);
+        mongo.save(new BuddyExpScale.Setting(BuddyExpScale.ID, 10, 20, null), BuddyExpScale.SETTINGS)
+                .block();
+
+        expScale.carryOver();
+
+        BuddyView buddy = room("henry").buddy();
+        assertThat(buddy.level()).isEqualTo(4);
+        assertThat(buddy.levelProgress()).isEqualTo(0.5);
+        buddy = room("yuki").buddy();
+        assertThat(buddy.level()).isEqualTo(25);
+        assertThat(buddy.levelProgress()).isEqualTo(0.2);
+        BuddyExpScale.Setting recorded = mongo.findById(
+                        BuddyExpScale.ID, BuddyExpScale.Setting.class, BuddyExpScale.SETTINGS)
+                .block();
+        assertThat(recorded.curve()).isEqualTo(BuddyRules.CURVE);
+    }
+
+    @Test
     void theExpCurveIsQuickUpToTheJob() {
-        assertThat(BuddyRules.minExp(BuddyRules.JOB_AT) - BuddyRules.minExp(BuddyRules.JOB_AT - 1))
-                .isEqualTo(BuddyRules.CURVE.early());
+        // The egg hatches in three messages, alone too, and the job comes in a few dozen.
+        assertThat(BuddyRules.minExp(BuddyRules.BABY_AT)).isEqualTo(3);
+        assertThat(BuddyRules.minExp(BuddyRules.JOB_AT)).isEqualTo(36);
+        assertThat(BuddyRules.CURVE.early()).hasSize(BuddyRules.JOB_AT - 1);
         assertThat(BuddyRules.minExp(BuddyRules.JOB_AT + 1) - BuddyRules.minExp(BuddyRules.JOB_AT))
                 .isEqualTo(BuddyRules.CURVE.late());
         for (int level = 1; level <= BuddyRules.MAX_LEVEL; level++) {
@@ -736,12 +763,15 @@ class BuddyFlowTest {
     @Test
     void nightMessagesAndLovesAreCountedAndOrdinaryOnesAreNot() {
         String roomId = createRoom("henry").id();
+        // Early in a level, so the four messages bring no level up.
+        int start = BuddyRules.minExp(BuddyRules.ADULT_AT);
+        setExp(roomId, start);
         TestSocket henry = connect("henry").ignoring("buddy", "presence");
         clock.set(Instant.parse("2026-01-10T03:00:00Z")); // noon in Japan
         say(henry, "c-1", "그거 진짜 웃겨 ㅋㅋ"); // a laugh counts for no job
         say(henry, "c-2", "사랑해 ㅋㅋ");
         say(henry, "c-3", "오늘 뭐 먹을까");
-        await(() -> room("henry").buddy().exp() == 3); // all three are counted before the night comes
+        await(() -> room("henry").buddy().exp() == start + 3); // all three are counted before the night comes
         clock.set(Instant.parse("2026-01-10T15:30:00Z")); // half past midnight in Japan
         say(henry, "c-4", "자야겠다");
 
@@ -894,7 +924,7 @@ class BuddyFlowTest {
     @Test
     void withNothingStandingOutItIsABarista() {
         String roomId = createRoom("henry").id();
-        setBuddy(roomId, new Update().set("buddy.fedCount", 4).set("buddy.cleanedCount", 4));
+        setBuddy(roomId, new Update().set("buddy.fedCount", 2).set("buddy.cleanedCount", 2));
         setExp(roomId, BuddyRules.minExp(BuddyRules.JOB_AT) - 1);
 
         buddyService.onMessageSent(roomId).block();
@@ -904,15 +934,15 @@ class BuddyFlowTest {
 
     @Test
     void eachHabitCountsAgainstItsUsualAmountAndOneThatStandsOutWins() {
-        // Usual by the job's level: 5 meals, 4 poops, 6 night messages, 3 love messages.
-        assertThat(BuddyJob.decide(counts(7, 0, 0, 0))).isEqualTo(BuddyJob.CHEF);
-        assertThat(BuddyJob.decide(counts(0, 5, 0, 0))).isEqualTo(BuddyJob.GARDENER);
-        assertThat(BuddyJob.decide(counts(0, 0, 8, 0))).isEqualTo(BuddyJob.DJ);
-        assertThat(BuddyJob.decide(counts(0, 0, 0, 4))).isEqualTo(BuddyJob.WRITER);
-        // Measured against the usual: six love messages (twice the usual) beat seven meals.
-        assertThat(BuddyJob.decide(counts(7, 4, 6, 6))).isEqualTo(BuddyJob.WRITER);
+        // Usual by the job's level: 2 meals, 2 poops, 2 night messages, 1 love message.
+        assertThat(BuddyJob.decide(counts(3, 0, 0, 0))).isEqualTo(BuddyJob.CHEF);
+        assertThat(BuddyJob.decide(counts(0, 3, 0, 0))).isEqualTo(BuddyJob.GARDENER);
+        assertThat(BuddyJob.decide(counts(0, 0, 3, 0))).isEqualTo(BuddyJob.DJ);
+        assertThat(BuddyJob.decide(counts(0, 0, 0, 2))).isEqualTo(BuddyJob.WRITER);
+        // Measured against the usual: three love messages (three times the usual) beat four meals.
+        assertThat(BuddyJob.decide(counts(4, 2, 2, 3))).isEqualTo(BuddyJob.WRITER);
         // Nothing a quarter beyond the usual: the barista.
-        assertThat(BuddyJob.decide(counts(6, 4, 7, 3))).isEqualTo(BuddyJob.BARISTA);
+        assertThat(BuddyJob.decide(counts(2, 2, 2, 1))).isEqualTo(BuddyJob.BARISTA);
         assertThat(BuddyJob.leaning(counts(0, 0, 0, 0))).isNull();
         assertThat(BuddyJob.leaning(counts(1, 0, 0, 0))).isEqualTo(BuddyJob.BARISTA);
         assertThat(BuddyJob.leaning(counts(0, 0, 0, 20))).isEqualTo(BuddyJob.WRITER);
@@ -920,7 +950,7 @@ class BuddyFlowTest {
 
     @Test
     void equalHabitsGoByADrawThatStaysTheSameForTheBuddy() {
-        Buddy tied = counts(10, 8, 0, 0); // both twice the usual
+        Buddy tied = counts(4, 4, 0, 0); // both twice the usual
         BuddyJob job = BuddyJob.decide(tied);
         assertThat(job).isIn(BuddyJob.CHEF, BuddyJob.GARDENER);
         assertThat(BuddyJob.decide(tied)).isEqualTo(job);
