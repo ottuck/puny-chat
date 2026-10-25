@@ -8,6 +8,7 @@ import com.buddychat.chat.Message;
 import com.buddychat.common.ApiException;
 import com.buddychat.realtime.RoomHub;
 import com.buddychat.realtime.ServerEvent;
+import com.buddychat.stats.StatsService;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ public class BuddyService {
     private final ReactiveMongoTemplate mongo;
     private final ChatService chatService;
     private final RoomHub hub;
+    private final StatsService stats;
     private final Clock clock;
     private final boolean gifts;
 
@@ -56,12 +58,14 @@ public class BuddyService {
             ReactiveMongoTemplate mongo,
             ChatService chatService,
             RoomHub hub,
+            StatsService stats,
             Clock clock,
             BuddyProperties properties) {
         BuddyRules.useTiming(properties.fullToEmpty(), properties.poopEvery());
         this.mongo = mongo;
         this.chatService = chatService;
         this.hub = hub;
+        this.stats = stats;
         this.clock = clock;
         this.gifts = properties.gifts();
     }
@@ -99,7 +103,12 @@ public class BuddyService {
         });
     }
 
+    /** A tap on the bowl (or the buddy, hungry at an age with hands). */
     public Mono<CareResult> feed(String roomId, String actorId) {
+        return counted("feed", false, feeding(roomId, actorId));
+    }
+
+    private Mono<CareResult> feeding(String roomId, String actorId) {
         Instant now = Instant.now(clock);
         return care(
                 roomId,
@@ -116,12 +125,7 @@ public class BuddyService {
 
     /** Cleans up one poop (a tap on it). EXP per poop; the last one leaves CLEANED in the timeline. */
     public Mono<CareResult> clean(String roomId, String actorId) {
-        return cleanUp(roomId, actorId, false);
-    }
-
-    /** Cleans up every poop at once ("청소" in the chat). */
-    public Mono<CareResult> cleanAll(String roomId, String actorId) {
-        return cleanUp(roomId, actorId, true);
+        return counted("clean", false, cleanUp(roomId, actorId, false));
     }
 
     /**
@@ -130,6 +134,10 @@ public class BuddyService {
      * the timeline. Before growing up there is no station: nothing happens.
      */
     public Mono<CareResult> work(String roomId, String actorId) {
+        return counted("work", false, working(roomId, actorId));
+    }
+
+    private Mono<CareResult> working(String roomId, String actorId) {
         Instant now = Instant.now(clock);
         return load(roomId).flatMap(buddy -> {
             if (BuddyRules.stage(BuddyRules.level(buddy.exp())) != BuddyRules.Stage.ADULT) {
@@ -360,6 +368,18 @@ public class BuddyService {
         return new ApiException(HttpStatus.CONFLICT, "BUDDY_NOT_GROWN");
     }
 
+    /**
+     * Care that did something (fed, cleaned up, or worked for EXP) is counted for the operator by how it was
+     * asked for, a word in the chat or a tap (stats/StatsService). A failed count does not fail the care.
+     */
+    private Mono<CareResult> counted(String action, boolean byChat, Mono<CareResult> care) {
+        return care.flatMap(result -> result.changed()
+                ? stats.cared(action, byChat, Instant.now(clock))
+                        .onErrorResume(e -> Mono.empty())
+                        .thenReturn(result)
+                : Mono.just(result));
+    }
+
     // The field as read: that value, or still absent.
     private static Criteria sameOrMissing(String field, @Nullable Object value) {
         return value == null ? where(field).exists(false) : where(field).is(value);
@@ -371,11 +391,12 @@ public class BuddyService {
      * (not hungry, no poop) is fine: the message is just a message.
      */
     public Mono<Void> onMessageSent(String roomId, String senderId, String text) {
+        // "청소" cleans up every poop at once.
         Mono<?> care = CareCommand.of(text)
                 .map(command -> switch (command) {
-                    case FEED -> feed(roomId, senderId);
-                    case CLEAN -> cleanAll(roomId, senderId);
-                    case WORK -> work(roomId, senderId);
+                    case FEED -> counted("feed", true, feeding(roomId, senderId));
+                    case CLEAN -> counted("clean", true, cleanUp(roomId, senderId, true));
+                    case WORK -> counted("work", true, working(roomId, senderId));
                 })
                 .orElse(Mono.empty());
         return onMessageSent(roomId)
