@@ -35,6 +35,9 @@ class StatsFlowTest {
     @Autowired
     StatsReport report;
 
+    @Autowired
+    StatsService stats;
+
     private WebTestClient http;
 
     @BeforeEach
@@ -111,6 +114,9 @@ class StatsFlowTest {
         me(guestToken("a"));
         step("welcome", "ios");
         step("wake", "web");
+        stats.cared("feed", true, clock.instant()).block();
+        stats.cared("feed", false, clock.instant()).block();
+        stats.cared("clean", false, clock.instant()).block();
         clock.advance(Duration.ofDays(1));
         me(guestToken("a"));
 
@@ -119,6 +125,8 @@ class StatsFlowTest {
         assertThat(text).contains("10/12 ~ 10/18");
         assertThat(text).contains("첫 화면: 1 / 0 / 0");
         assertThat(text).contains("버디 깨우기: 0 / 1 / 0");
+        assertThat(text).contains("밥: 1 / 1");
+        assertThat(text).contains("청소: 0 / 1");
         assertThat(text).contains("10/12~10/18 가입 1 · 1일째 … · 7일째 … · 30일째 …");
     }
 

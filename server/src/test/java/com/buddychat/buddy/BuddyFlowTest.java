@@ -10,6 +10,7 @@ import com.buddychat.chat.Message;
 import com.buddychat.room.Invitation;
 import com.buddychat.room.Room;
 import com.buddychat.room.RoomView;
+import com.buddychat.stats.StatsService;
 import com.buddychat.user.User;
 import com.buddychat.user.UserService;
 import java.net.URI;
@@ -627,6 +628,26 @@ class BuddyFlowTest {
         assertThat(buddy.hungry()).isFalse();
         assertThat(buddy.poops()).isZero();
         assertThat(timeline("henry")).containsOnlyOnce("FED");
+    }
+
+    @Test
+    void careThatDidSomethingIsCountedByChatOrTap() {
+        mongo.remove(new Query(), "stats").block();
+        createRoom("henry");
+        clock.advance(BuddyRules.hungryAfter()); // hungry, and a poop by now
+        room("henry");
+        TestSocket henry = connect("henry");
+
+        henry.send(Map.of("type", "send", "clientMessageId", "c-1", "text", "밥"));
+        await(() -> timeline("henry").contains("FED"));
+        post("henry", "/api/rooms/me/buddy/feed", Map.of()).expectStatus().isOk(); // full now: nothing done
+        post("henry", "/api/rooms/me/buddy/clean", Map.of()).expectStatus().isOk();
+
+        String id = "care:" + StatsService.day(clock.instant());
+        await(() -> mongo.findById(id, Document.class, "stats").block() != null);
+        Document care = mongo.findById(id, Document.class, "stats").block();
+        assertThat(care.get("feed", Document.class)).isEqualTo(new Document("chat", 1));
+        assertThat(care.get("clean", Document.class)).isEqualTo(new Document("tap", 1));
     }
 
     @Test
