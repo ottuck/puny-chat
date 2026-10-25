@@ -303,7 +303,7 @@ export type WindowThings = {
   catFace: boolean;
 };
 
-// The window (Lv.2, the first thing, so its sky and light are seen early): the sky by the device's clock (a full moon in its days, moon.ts), the guests at the glass, and now and then rain,
+// The window (Lv.3, the first thing after hatching, so its sky and light are seen early): the sky by the device's clock (a full moon in its days, moon.ts), the guests at the glass, and now and then rain,
 // snow or a shooting star outside.
 export function RoomWindow({
   scale,
@@ -670,7 +670,7 @@ function CuckooOut({ scale }: { scale: number }) {
 
 // --- On the floor ---
 
-// The left of the floor until a job's station takes it: a table (Lv.4), then toys on it (Lv.8).
+// The left of the floor until a job's station takes it: a table (Lv.4), then toys on it (Lv.7).
 // A tap rattles the table; on the toys it sends the ball bouncing out, and the buddy is glad.
 export function FloorToy({
   toys,

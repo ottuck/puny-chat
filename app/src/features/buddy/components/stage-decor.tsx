@@ -132,19 +132,19 @@ export type Reward =
   | 'sillFlower';
 
 // Shown in the guide and the buddy sheet ("next: Lv.4 table") as well. One for every level but a
-// new stage (3, 5, 10) and the top one, 60, where the whole room sparkles. The job (12) and the first
+// new stage (2, 5, 8) and the top one, 60, where the whole room sparkles. The job (10) and the first
 // chance to change it (20) bring the bowl's next tiers, seen at every meal; the later chances (30, 40,
 // 50) each bring a thing that comes only in its season (the wind chime, the cherry petals, the New
 // Year's mochi).
 export const REWARDS: readonly { level: number; reward: Reward }[] = [
-  { level: 2, reward: 'window' },
+  { level: 3, reward: 'window' },
   { level: 4, reward: 'crate' },
   { level: 6, reward: 'plant1' },
-  { level: 7, reward: 'rug1' },
-  { level: 8, reward: 'toys' },
+  { level: 7, reward: 'toys' },
   { level: 9, reward: 'bowl1' },
-  { level: 11, reward: 'clock' },
-  { level: 12, reward: 'bowl2' },
+  { level: 10, reward: 'bowl2' },
+  { level: 11, reward: 'rug1' },
+  { level: 12, reward: 'clock' },
   { level: 13, reward: 'plant2' },
   { level: 14, reward: 'snail' },
   { level: 15, reward: 'musicBox' },

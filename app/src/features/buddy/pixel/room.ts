@@ -49,7 +49,7 @@ export const ROOM_PALETTE: Palette = {
   K: '#5E6B4A', // the cloth edge
 };
 
-// --- The window (Lv.2) ---
+// --- The window (Lv.3) ---
 
 // Its sky follows the device's clock: day, dusk, night. One grid, three palettes: the sun and the
 // moon share a disc (`B` is lit by day and sky at night, which bites the crescent out of it), the
@@ -214,7 +214,7 @@ export function clockAt(hours: number, minutes: number): Frame {
   return cells.map((row) => row.join(''));
 }
 
-// --- The left of the floor, until the job's station comes (Lv.4, Lv.8) ---
+// --- The left of the floor, until the job's station comes (Lv.4, Lv.7) ---
 
 // prettier-ignore
 const TABLE_ROWS: Frame = [
