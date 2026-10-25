@@ -106,6 +106,9 @@ const TABLE_CELLS = 27;
 const TICK_MS = 450;
 // While evolving the old and new looks swap this fast.
 const FAST_TICK_MS = 90;
+// Shaking its head, it sways from side to side this fast (a body moved, not mirrored: mirrored, only
+// the light on its head jumped about).
+const SHAKE_TICK_MS = 150;
 const PET_MS = 900;
 // Things the buddy does by itself: a dance, a song, shaking its head at a full bowl, or the small
 // happenings (docs/fun-improvements.md, 가끔 생기는 사건): a hiccup, a start, a look around, a yawn, and
@@ -779,7 +782,7 @@ export function BuddyStage({
   const [act, setAct] = useState<Act | null>(null);
   const [actRun, setActRun] = useState(0);
   const actTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const tick = useTick(evolving || act === 'refuse' ? FAST_TICK_MS : TICK_MS);
+  const tick = useTick(evolving ? FAST_TICK_MS : act === 'refuse' ? SHAKE_TICK_MS : TICK_MS);
   const job = buddy.job;
   // The job before the latest change, for the change's old and new looks in turn.
   const [jobs, setJobs] = useState({ now: job, before: job });
@@ -2020,9 +2023,11 @@ export function BuddyStage({
   // At work the cook sways to the pot and the DJ nods.
   const workSway = atWork && job === 'CHEF' ? (tick % 2 === 0 ? -scale : 0) : 0;
   const workNod = atWork && job === 'DJ' && tick % 2 === 0 ? scale : 0;
-  // Dancing and head-shaking turn the buddy left and right.
+  // Shaking its head at a full bowl, it sways a pixel each way.
+  const headShake = act === 'refuse' ? (tick % 2 === 0 ? -scale : scale) : 0;
+  // Dancing and looking around turn the buddy left and right.
   const flipped =
-    act === 'dance' || act === 'refuse' || act === 'lookAround' || musicDance
+    act === 'dance' || act === 'lookAround' || musicDance
       ? tick % 2 === 0
       : facingLeft;
 
@@ -2291,7 +2296,7 @@ export function BuddyStage({
           styles.buddy,
           {
             bottom: FLOOR - scale - workNod - (sitting ? SIT_ROWS * scale : 0),
-            left: workSway,
+            left: workSway + headShake,
             transform: [
               { translateX: x },
               { translateY: rise },
