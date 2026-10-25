@@ -63,7 +63,7 @@ public class UserService {
     }
 
     // At most one write a day (Japan's day) per user, or right away when they stop being a guest.
-    // The first request of a day also counts the user as back (stats/StatsService).
+    // The first request of a day also counts the user as a visitor that day and as back (stats/StatsService).
     private Mono<User> noteSeen(User user, boolean guest) {
         Instant now = Instant.now(clock);
         Instant today = StatsService.startOfDay(now);
@@ -84,8 +84,11 @@ public class UserService {
         // also protects against a stale request racing with the request that recorded the link.
         if (!guest) note.set("guest", false);
         return mongo.findAndModify(which, note, FindAndModifyOptions.options().returnNew(true), User.class)
-                .flatMap(updated ->
-                        newDay ? stats.cameBack(updated.createdAt(), now).thenReturn(updated) : Mono.just(updated))
+                .flatMap(updated -> newDay
+                        ? stats.visited(now)
+                                .then(stats.cameBack(updated.createdAt(), now))
+                                .thenReturn(updated)
+                        : Mono.just(updated))
                 .defaultIfEmpty(user);
     }
 
@@ -101,7 +104,9 @@ public class UserService {
         return users.findByFirebaseUid(firebaseUid)
                 .switchIfEmpty(Mono.defer(() -> users.save(
                                 User.create(firebaseUid, displayName, guest, Instant.now(clock)))
-                        .flatMap(created -> stats.joined(created.createdAt()).thenReturn(created))))
+                        .flatMap(created -> stats.joined(created.createdAt())
+                                .then(stats.visited(created.createdAt()))
+                                .thenReturn(created))))
                 .onErrorResume(DuplicateKeyException.class, e -> users.findByFirebaseUid(firebaseUid));
     }
 
