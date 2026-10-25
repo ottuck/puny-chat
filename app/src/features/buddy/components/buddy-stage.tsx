@@ -2027,9 +2027,7 @@ export function BuddyStage({
   const headShake = act === 'refuse' ? (tick % 2 === 0 ? -scale : scale) : 0;
   // Dancing and looking around turn the buddy left and right.
   const flipped =
-    act === 'dance' || act === 'lookAround' || musicDance
-      ? tick % 2 === 0
-      : facingLeft;
+    act === 'dance' || act === 'lookAround' || musicDance ? tick % 2 === 0 : facingLeft;
 
   // The book from the shelf, open in front of it as it reads.
   const book: Layer | null =
