@@ -828,8 +828,8 @@
     },
     "mail": {
       "grownUpLetter": {
-        "title": "Your buddy is all grown up",
-        "body": "Congratulations! Your buddy has a job now.\n\nFrom here on, chatting alone makes it grow a little more slowly. Feed it, give it work, take it to the hot spring now and then, and drop by on the same day, the two of you, and it will keep growing.\n\nIts details show when today's chat EXP is full. Chat as much as you like, though: listening to you two is still its favorite thing 💬",
+        "title": "{{buddy}} is a proper grown-up now",
+        "body": "Congratulations! {{buddy}} has a job now.\n\nNo more poops, and off to work every day: a proper grown-up. No more cleaning up! 🧹✨ The pay is still just a bowl of rice, mind you 🍚\n\nFrom here on, chatting alone makes it grow a little more slowly. Feed it, give it work, take it to the hot spring now and then, and drop by on the same day, the two of you, and it will keep growing.\n\nIts details show when today's chat EXP is full. Chat as much as you like, though: listening to you two is still {{buddy}}'s favorite thing 💬",
         "from": "puny-chat"
       },
       "topLevelLetter": {
