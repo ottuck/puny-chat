@@ -424,8 +424,7 @@ export const GRAMOPHONE: [Frame, Frame] = [
 
 // --- The side table, by the lamp ---
 
-// A goldfish bowl (Lv.28) on a little wooden side table; with water plants and a second fish
-// (Lv.56). The fish are placed by the tick (fishBowl).
+// A goldfish bowl (Lv.42) on a little wooden side table. The fish are placed by the tick (fishBowl).
 const BOWL = [
   '..kkkkkkk..',
   '.kIcccccdk.',
@@ -495,8 +494,8 @@ export function fishBowl(turn: number, plants: boolean): Frame {
   return [...cells.map((line) => line.join('')), ...SIDE_TABLE];
 }
 
-// Where the goldfish lives, being decided (the preview compares them): the bowl on its side table,
-// a tank built into the wall, or a tall planted tank standing on the floor.
+// Where the goldfish lives: the bowl on its side table (Lv.42), a tall planted tank standing on the
+// floor (Lv.56), or a tank built into the wall (only in the preview, to compare).
 export type FishStyle = 'table' | 'wall' | 'floor';
 
 // prettier-ignore

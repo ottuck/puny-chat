@@ -19,7 +19,6 @@ import {
   BEAR,
   booksFrame,
   BUNNY,
-  fishBowl,
   fishHome,
   type FishStyle,
   GRAMOPHONE,
@@ -288,7 +287,8 @@ export function decorFor(level: number, seed = '', kind?: number, now = new Date
     radio: tierOf<1 | 2>(has, ['radio', 'gramophone']),
     sillPot: tierOf<1 | 2>(has, ['sillPot', 'sillFlower']),
     pinkSucculent: has('pinkSucculent'),
-    // The side table by the lamp: 1 a goldfish, 2 with plants and a second fish.
+    // By the lamp: 1 a goldfish bowl on a side table, 2 a tall planted tank on the floor with a
+    // second fish.
     fish: tierOf<1 | 2>(has, ['fishbowl', 'waterPlants']),
     table: has('kotatsu')
       ? inSeason('kotatsu', now)
@@ -304,7 +304,7 @@ export function decorFor(level: number, seed = '', kind?: number, now = new Date
     lamp: has('lamp'),
     lampShade: has('lampShade'),
     fireflies: has('firefly'),
-    fishStyle: 'table' as FishStyle,
+    fishStyle: (has('waterPlants') ? 'floor' : 'table') as FishStyle,
     guests: GUESTS.filter(
       (guest) =>
         has(guest) &&
@@ -347,10 +347,9 @@ export function plantRoom(decor: Decor): number {
 const FLOOR_SCALE = 3;
 // Floor the standing lamp and the side table take beside the plant.
 const LAMP_ROOM = LAMP[0].length * FLOOR_SCALE + 6;
-const FISH_ROOM = fishBowl(0, false)[0].length * FLOOR_SCALE + 6;
-// Floor the goldfish takes, by where it lives (none when its tank is in the wall).
-const fishRoom = (decor: Decor) =>
-  decor.fishStyle === 'wall' ? 0 : fishHome(decor.fishStyle, 0, false)[0].length * FLOOR_SCALE + 6;
+// How wide the goldfish's home is drawn, and the floor it takes (none when its tank is in the wall).
+const fishWidth = (decor: Decor) => fishHome(decor.fishStyle, 0, false)[0].length * FLOOR_SCALE;
+const fishRoom = (decor: Decor) => (decor.fishStyle === 'wall' ? 0 : fishWidth(decor) + 6);
 
 // Floor kept on the right, besides the plant's, for the lamp and the goldfish's side table: the bowl
 // and the poops stand left of it.
@@ -812,7 +811,10 @@ export function WallDecor({
             },
           ]}
         >
-          <Arrive fresh={fresh(decor.fish === 2 ? 'waterPlants' : 'fishbowl')} width={FISH_ROOM}>
+          <Arrive
+            fresh={fresh(decor.fish === 2 ? 'waterPlants' : 'fishbowl')}
+            width={fishWidth(decor)}
+          >
             <FishBowl
               plants={decor.fish === 2}
               style={decor.fishStyle}
