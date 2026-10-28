@@ -569,18 +569,6 @@ export const VACUUM: [Frame, Frame] = [[
   '.kkkkkkkkkkkkkk.',
 ]];
 
-// A firefly, for the guide: in the room they are only their glow.
-// prettier-ignore
-export const FIREFLY: Frame = [
-  '..k.k..',
-  '.kwkwk.',
-  'kwwNwwk',
-  '.kkNkk.',
-  '..kyk..',
-  '..kyk..',
-  '...k...',
-];
-
 // The floors, for the guide (the stage draws them across its floor, room-props.tsx).
 // prettier-ignore
 export const WOOD_SWATCH: Frame = [
