@@ -869,8 +869,8 @@ export function SillPot({ flowers, scale }: { flowers: boolean; scale: number })
   return <PixelSprite frame={SILL_POT[flowers ? 1 : 0]} palette={THINGS_PALETTE} scale={scale} />;
 }
 
-// The goldfish bowl on its side table (Lv.28; plants and a second fish from Lv.56). The fish swim
-// about with the tick; a tap (or the buddy watching) sends up bubbles.
+// The goldfish bowl on its side table (Lv.42; a tall planted tank and a second fish from Lv.56).
+// The fish swim about with the tick; a tap (or the buddy watching) sends up bubbles.
 export function FishBowl({
   plants,
   style = 'table',

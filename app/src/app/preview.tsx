@@ -592,8 +592,8 @@ function Preview() {
   // The hot spring: each press opens the stage there again; snow on it by the season, or on or off.
   const [bathRun, setBathRun] = useState(0);
   const [bathSnow, setBathSnow] = useState<boolean | undefined>(undefined);
-  // Where the goldfish lives, to compare before deciding (from Lv.42).
-  const [fishStyle, setFishStyle] = useState<FishStyle>('table');
+  // Where the goldfish lives, to compare (from Lv.42): unset, as the level puts it.
+  const [fishStyle, setFishStyle] = useState<FishStyle | undefined>(undefined);
 
   return (
     <FoldAll.Provider value={foldAll}>
@@ -708,6 +708,11 @@ function Preview() {
             ))}
           </Group>
           <Group title="goldfish (compare, from Lv.42)" startOpen>
+            <Chip
+              label="by level"
+              onPress={() => setFishStyle(undefined)}
+              active={fishStyle === undefined}
+            />
             {(['table', 'wall', 'floor'] as const).map((style) => (
               <Chip
                 key={style}

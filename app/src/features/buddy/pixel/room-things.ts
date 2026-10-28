@@ -22,6 +22,7 @@ export const THINGS_PALETTE: Palette = {
   t: '#4E9C8B', // the radio, shaded
   C: '#86C4AC', // mint, shaded: a book, the glazed pot
   M: '#A56BB5', // plum: the pink succulent's shade
+  J: '#EAF79A', // the firefly's glow
   // The hanging plant: leaves from light to dark, its vines, the ropes, the pot's lit edge.
   '1': '#BFE79A',
   '2': '#7DC466',
@@ -170,23 +171,50 @@ export const RAINBOW: Frame = [
 
 // --- Guests at the window ---
 
-// A ladybug climbing the glass (Lv.23), its legs going.
+// A ladybug climbing the glass (Lv.23), seen from above: a black head with white eyes, spotted red
+// wing cases parted down the middle, its legs going.
 // prettier-ignore
 export const LADYBUG: [Frame, Frame] = [[
-  '.k...k.',
-  '..kkk..',
-  '.kuNuk.',
-  'kuukuuk',
-  'kNukuNk',
-  '.kkkkk.',
+  '..k...k..',
+  '...kkk...',
+  '..kwNwk..',
+  'k.kkkkk.k',
+  '.kwuNuuk.',
+  'kuNuNuNuk',
+  'kuuuNuuuk',
+  'kNuuNuuNk',
+  '.kUuNuUk.',
+  'k.kkkkk.k',
 ], [
-  'k.....k',
-  '..kkk..',
-  'kkuNukk',
-  'kuukuuk',
-  'kNukuNk',
-  'kkkkkkk',
+  '..k...k..',
+  '...kkk...',
+  'k.kwNwk.k',
+  '.kkkkkkk.',
+  '.kwuNuuk.',
+  'kuNuNuNuk',
+  'kuuuNuuuk',
+  'kNuuNuuNk',
+  'kkUuNuUkk',
+  '..kkkkk..',
 ]];
+
+// A firefly (Lv.22), for the guide: in the room they are only their glow. Wings open, its tail lit.
+// prettier-ignore
+export const FIREFLY: Frame = [
+  '...k.....k...',
+  '....k...k....',
+  '.....kkk.....',
+  '....kokok....',
+  '.kkkkkNkkkkk.',
+  'kIIIkNNNkIIIk',
+  'kIIIkNNNkIIIk',
+  '.kIIkNNNkIIk.',
+  '..kkkNNNkkk..',
+  '...JkyyykJ...',
+  '..JJkywykJJ..',
+  '...JkyyykJ...',
+  '....JkkkJ....',
+];
 
 // A red dragonfly (Lv.33, in autumn), seen from above as it hovers, its glassy wings flickering.
 // prettier-ignore
@@ -396,8 +424,7 @@ export const GRAMOPHONE: [Frame, Frame] = [
 
 // --- The side table, by the lamp ---
 
-// A goldfish bowl (Lv.28) on a little wooden side table; with water plants and a second fish
-// (Lv.56). The fish are placed by the tick (fishBowl).
+// A goldfish bowl (Lv.42) on a little wooden side table. The fish are placed by the tick (fishBowl).
 const BOWL = [
   '..kkkkkkk..',
   '.kIcccccdk.',
@@ -467,8 +494,8 @@ export function fishBowl(turn: number, plants: boolean): Frame {
   return [...cells.map((line) => line.join('')), ...SIDE_TABLE];
 }
 
-// Where the goldfish lives, being decided (the preview compares them): the bowl on its side table,
-// a tank built into the wall, or a tall planted tank standing on the floor.
+// Where the goldfish lives: the bowl on its side table (Lv.42), a tall planted tank standing on the
+// floor (Lv.56), or a tank built into the wall (only in the preview, to compare).
 export type FishStyle = 'table' | 'wall' | 'floor';
 
 // prettier-ignore
