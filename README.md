@@ -106,8 +106,6 @@ Live on the web at [puny-chat.com](https://puny-chat.com). The iOS app (1.0) is 
 
 ## License
 
-Copyright (C) 2026 ottuck
+Copyright (c) 2026 ottuck. All rights reserved. No license is granted: you may view and fork this repository on GitHub, but not use, copy, modify, or distribute the code. See [LICENSE](LICENSE).
 
-[GNU Affero General Public License v3.0 only](LICENSE) (`AGPL-3.0-only`). You can use, change and share the code. If you share it, or run a changed version as a service others use over a network, you must offer them its source under the same license.
-
-The license covers the code in this repository. The services it connects to (Firebase, MongoDB Atlas, Expo push, Sentry and others) have their own terms, and users' data is not part of it.
+The services it connects to (Firebase, MongoDB Atlas, the Gmail API, Expo, Cloudflare, Sentry) have their own terms, and users' data is not part of this repository.

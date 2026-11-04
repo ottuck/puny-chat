@@ -28,7 +28,7 @@ COPY --from=build /src/extracted/snapshot-dependencies/ ./
 COPY --from=build /src/extracted/application/ ./
 # The instance's copies of these must match: deploy/health.sh compares them and reports a difference.
 COPY server/deploy/ /app/deploy/
-# AGPL-3.0-only: the license text goes with every copy of the image.
+# The image is public, so its terms (All rights reserved) go with every copy.
 COPY LICENSE /app/LICENSE
 EXPOSE 8080
 # Photos go to a volume the instance mounts here (deploy/compose.yaml). Without it /data is not writable:
