@@ -107,7 +107,7 @@
 - `./gradlew bootRun` — 로컬 실행. `compose.yaml`의 MongoDB가 Docker로 같이 뜬다(Docker Desktop 필요). :8080
 - `./gradlew test` — Testcontainers로 MongoDB를 띄워 테스트 · `./gradlew spotlessApply` — 포맷(palantir-java-format)
 - 커밋 전 `./gradlew spotlessCheck test`(server 변경 시)
-- 이미지: `docker build -t buddy-chat-server server/`(`server/Dockerfile`). 운영 설정은 환경변수
+- 이미지: 저장소 루트에서 `docker build -f server/Dockerfile -t buddy-chat-server .`(`server/Dockerfile`, 이미지에 `LICENSE`를 넣으려고 컨텍스트가 루트이고 `server/Dockerfile.dockerignore`에 적은 파일만 들어간다). 운영 설정은 환경변수
   (`SPRING_MONGODB_URI`, `SPRING_MONGODB_DATABASE`, `FIREBASE_PROJECT_ID`, `CORS_ALLOWED_ORIGINS`, 오류 보고용 `SENTRY_DSN`은 비우면 꺼짐, `docs/PROJECT.md`의 오류 보고).
 
 ## Infra (`infra/`에서 실행)
