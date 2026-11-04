@@ -23,7 +23,10 @@ import type { SocialAuthOptions } from './types';
 // Typical use: start as an anonymous guest, later `linkOrSwitch` a provider so the uid (and the
 // user's data) stays; if that account already has a user, confirm and switch to it instead.
 export function createSocialAuth(auth: Auth, options: SocialAuthOptions = {}) {
-  return { google: googleProvider(auth, options.google), apple: appleProvider(auth) };
+  return {
+    google: googleProvider(auth, options.google),
+    apple: appleProvider(auth, options),
+  };
 }
 
 export {

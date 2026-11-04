@@ -46,16 +46,34 @@ class MeController {
                 .map(MeResponse::from);
     }
 
-    /** @param guideSeenVersion 0 until the guide card is first opened. */
+    record TermsAcceptedRequest(int version) {}
+
+    // The user agreed to the terms of use: kept per user, so other devices do not ask again. The app
+    // bumps its version when the terms change.
+    @PutMapping("/api/me/terms-accepted")
+    Mono<MeResponse> termsAccepted(@AuthenticationPrincipal Jwt jwt, @RequestBody TermsAcceptedRequest request) {
+        return userService
+                .current(jwt)
+                .flatMap(user -> userService.markTermsAccepted(user, request.version()))
+                .map(MeResponse::from);
+    }
+
+    /**
+     * @param guideSeenVersion 0 until the guide card is first opened.
+     * @param termsAcceptedVersion 0 until the terms of use are first agreed to.
+     */
     record MeResponse(
             String id,
             @Nullable String displayName,
             @Nullable String roomId,
-            int guideSeenVersion) {
+            int guideSeenVersion,
+            int termsAcceptedVersion) {
 
         static MeResponse from(User user) {
             Integer seen = user.guideSeenVersion();
-            return new MeResponse(user.id(), user.displayName(), user.roomId(), seen == null ? 0 : seen);
+            Integer terms = user.termsAcceptedVersion();
+            return new MeResponse(
+                    user.id(), user.displayName(), user.roomId(), seen == null ? 0 : seen, terms == null ? 0 : terms);
         }
     }
 }

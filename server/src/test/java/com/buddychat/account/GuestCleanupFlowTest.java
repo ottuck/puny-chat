@@ -19,6 +19,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import tools.jackson.databind.JsonNode;
@@ -100,9 +101,15 @@ class GuestCleanupFlowTest {
                 .getResponseBody()
                 .get("code")
                 .asString();
-        post(guestToken("guest-friend"), "/api/invitations/" + code + "/accept")
+        post(token("guest-friend"), "/api/invitations/" + code + "/accept")
                 .expectStatus()
                 .isOk();
+        // A guest who joined before connecting with someone needed an account.
+        mongo.updateFirst(
+                        Query.query(Criteria.where("firebaseUid").is("guest-friend")),
+                        Update.update("guest", true),
+                        User.class)
+                .block();
         String roomId = user("henry").roomId();
 
         clock.advance(Duration.ofDays(40));

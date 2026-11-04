@@ -123,6 +123,40 @@ class MeControllerTest {
         assertThat(me("uid-1", null).guideSeenVersion()).isZero();
     }
 
+    @Test
+    void termsAcceptedFollowsTheUserAndOnlyGoesUp() {
+        assertThat(me("uid-1", null).termsAcceptedVersion()).isZero();
+
+        assertThat(termsAccepted("uid-1", 1)
+                        .expectStatus()
+                        .isOk()
+                        .expectBody(MeController.MeResponse.class)
+                        .returnResult()
+                        .getResponseBody()
+                        .termsAcceptedVersion())
+                .isEqualTo(1);
+        // Not a version: refused, and the agreement stays.
+        termsAccepted("uid-1", 0).expectStatus().isBadRequest();
+        termsAccepted("uid-1", UserService.MAX_TERMS_VERSION + 1).expectStatus().isBadRequest();
+        assertThat(me("uid-1", null).termsAcceptedVersion()).isEqualTo(1);
+
+        termsAccepted("uid-1", 2).expectStatus().isOk();
+        // Another device still on the older terms cannot ask for them again.
+        termsAccepted("uid-1", 1).expectStatus().isOk();
+        assertThat(me("uid-1", null).termsAcceptedVersion()).isEqualTo(2);
+        assertThat(me("uid-1", null).guideSeenVersion()).isZero();
+
+        assertThat(me("uid-2", null).termsAcceptedVersion()).isZero();
+    }
+
+    private WebTestClient.ResponseSpec termsAccepted(String uid, int version) {
+        return client.mutateWith(mockJwt().jwt(jwt -> jwt.subject(uid)))
+                .put()
+                .uri("/api/me/terms-accepted")
+                .bodyValue(java.util.Collections.singletonMap("version", version))
+                .exchange();
+    }
+
     private WebTestClient.ResponseSpec guideSeen(String uid, int version) {
         return client.mutateWith(mockJwt().jwt(jwt -> jwt.subject(uid)))
                 .put()

@@ -19,6 +19,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
  *     Null until the first.
  * @param guideSeenVersion the newest version of the in-chat guide card the user has opened, on any
  *     device. The app shows the card while this is below its own version. Null until the first.
+ * @param termsAcceptedVersion the newest version of the terms of use the user has agreed to, on any
+ *     device. The app asks again while this is below its own version. Null until the first.
  */
 @Document("users")
 public record User(
@@ -31,11 +33,12 @@ public record User(
         @Nullable Instant lastSeenAt,
         @Nullable String roomJoinId,
         @Nullable Integer guestNoticeDays,
-        @Nullable Integer guideSeenVersion) {
+        @Nullable Integer guideSeenVersion,
+        @Nullable Integer termsAcceptedVersion) {
 
     public static final int MAX_NAME_LENGTH = 20;
 
     static User create(String firebaseUid, @Nullable String displayName, boolean guest, Instant now) {
-        return new User(null, firebaseUid, displayName, null, now, guest, now, null, null, null);
+        return new User(null, firebaseUid, displayName, null, now, guest, now, null, null, null, null);
     }
 }
