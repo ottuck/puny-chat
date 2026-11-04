@@ -37,7 +37,7 @@ puny-chat is a one-on-one chat app for you and one friend. Above your conversati
 ・Raise it to Lv.60 and it can go its own way. Its photo stays in your memory album, and a new egg arrives
 
 ■ Easy to start
-・No account needed. Use it as a guest for 30 days, or link your Apple or Google account to keep going
+・No account needed to start: try it on your own as a guest for 30 days. To invite a friend or join one, link your Apple or Google account, which also keeps everything going
 ・No ads, no purchases, no quests. Just talk
 ・Available in English, Japanese, Korean and Traditional Chinese
 
