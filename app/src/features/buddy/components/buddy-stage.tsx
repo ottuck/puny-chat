@@ -40,6 +40,8 @@ import {
   bowl,
   BUDDY_PALETTE,
   buddyFrame,
+  DREAM_FOOD,
+  DREAM_PALETTE,
   EXCLAIM,
   HEART,
   JOB_STATIONS,
@@ -1526,8 +1528,9 @@ export function BuddyStage({
   // The bowl and the poops bob now and then while they need tapping.
   const wantsFood = buddy.hungry && !eating;
   // Hungry, it thinks of food over its head from the egg on (no words needed), and a tap on it
-  // feeds it.
-  const thinking = wantsFood && !sleeping;
+  // feeds it. Asleep, it dreams of it (DREAM_FOOD) with its zzz beside, so a sleeping buddy can be
+  // seen to be hungry and fed too.
+  const thinking = wantsFood;
   const thought = usePresence(thinking, THOUGHT_POP_MS);
   const hasPoop = buddy.poops > 0;
   useEffect(() => {
@@ -2364,8 +2367,8 @@ export function BuddyStage({
             ]}
           >
             <PixelSprite
-              frame={THOUGHT_FOOD}
-              palette={PROP_PALETTE}
+              frame={sleeping ? DREAM_FOOD : THOUGHT_FOOD}
+              palette={sleeping ? DREAM_PALETTE : PROP_PALETTE}
               scale={2}
               flipped={!onRightHalf}
             />
@@ -2374,8 +2377,10 @@ export function BuddyStage({
           <View style={styles.above}>
             <PixelSprite frame={EXCLAIM} palette={BUDDY_PALETTE} scale={3} />
           </View>
-        ) : sleeping && tick % 4 < 2 ? (
-          <View style={styles.above}>
+        ) : null}
+        {sleeping && tick % 4 < 2 && !levelingUp && !showHeart && act !== 'startle' ? (
+          // Over the head, on the side away from a dream of food.
+          <View style={[styles.above, thought.present && !onRightHalf ? styles.aboveRight : null]}>
             <PixelSprite frame={ZZZ} palette={BUDDY_PALETTE} scale={3} />
           </View>
         ) : null}
@@ -2886,6 +2891,9 @@ const styles = StyleSheet.create({
   },
   thoughtLeft: {
     left: -4,
+  },
+  aboveRight: {
+    right: 0,
   },
   aboveBig: {
     top: -44,
