@@ -30,7 +30,7 @@ puny-chat is a one-on-one chat app for you and one friend. Above your conversati
 
 ■ Watch your Buddy and its room grow
 ・It grows from egg to baby, kid and adult, and starts talking as a kid
-・At Lv.12 it finds a job based on what you two do: chef, gardener, radio DJ, writer or barista
+・At Lv.10 it finds a job based on what you two do: chef, gardener, radio DJ, writer or barista
 ・Every level brings new furniture and things to the room
 ・The light changes from morning to evening to night, and seasonal touches drop by
 ・Tap the hot spring button and your Buddy unwinds in the hot spring
