@@ -1,0 +1,9 @@
+# The context is the repository root (Dockerfile). Send only what the image needs.
+*
+!LICENSE
+!server/gradlew
+!server/settings.gradle.kts
+!server/build.gradle.kts
+!server/gradle
+!server/src
+!server/deploy

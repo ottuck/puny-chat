@@ -14,6 +14,8 @@
 
 - 서비스 이름은 **puny-chat**(소문자, `puny-chat.com`), GitHub 저장소도 puny-chat. 코드 패키지·로컬 폴더 이름은 buddy-chat.
 - Pokémon·Tamagotchi를 떠올리게 하는 이름(PokeChat, Tama-, -gotchi 등)은 쓰지 않는다.
+- 라이선스는 All rights reserved(`LICENSE`, 2026-11-05)다. 저장소가 공개되어도 GitHub에서 보고 fork하는 것 말고는 허락하지 않는다. 그 전에
+  MIT로 배포된 판(GHCR 공개 서버 이미지)은 받은 사람에게 MIT로 남는다. 서버 이미지에는 `LICENSE`가 실린다.
 
 # 제품
 
@@ -924,11 +926,12 @@ Lightsail 인스턴스는 다른 서비스와 나눠 쓰므로 Terraform이 만�
 
 ### CI와 배포
 
-- **CI**(`.github/workflows/ci.yml`): Actions 무료 분을 아끼려고 `dev`로 가는 PR과 `main` push에서만 돌고, 문서·`infra/`만 바뀌면 건너뛴다.
+- **CI**(`.github/workflows/ci.yml`): Actions 무료 분을 아끼려고 `dev`로 가는 PR과 `main` push에서만 돌고, 문서·`infra/`만 바뀌면 건너뛴다
+  (`LICENSE`는 `main`에서 배포 판단까지 간다).
   바뀐 폴더(`app/`, `server/`)의 잡만 돈다. `main`에서는 마지막으로 CI를 통과한 `main` 커밋과 비교한다(취소된 실행의 변경도 검사하도록).
 - **배포**(`.github/workflows/deploy.yml`): `main` CI가 통과하면(건너뛴 잡은 막지 않는다) 차례로
   1. 서버 이미지를 GHCR(`ghcr.io/ottuck/puny-chat-server`, `latest`와 sha 태그, 패키지는 Public)에 올린다. 인스턴스가 실행 중인 커밋(`/_revision`)에서
-     `server/`가 바뀌었을 때만이다(새 배포는 모든 WebSocket을 끊는다). 수동 실행(`workflow_dispatch`)은 늘 올린다.
+     `server/`나 `LICENSE`(이미지에 실린다)가 바뀌었을 때만이다(새 배포는 모든 WebSocket을 끊는다). 수동 실행(`workflow_dispatch`)은 늘 올린다.
   2. 인스턴스의 `puny-chat-update.timer`가 1분마다 `update.sh`로 새 이미지를 받아 컨테이너를 다시 만든다(CI는 SSH로 들어가지 않는다).
      `update.sh`가 실행 중인 커밋을 Caddy의 `/_revision`에 내놓으면, CI는 그 값이 방금 올린 sha가 될 때까지 기다린 뒤 health를 본다.
   3. 웹은 `wrangler deploy`로 바로 올린다.

@@ -1,13 +1,15 @@
-# Server image, built by CI from this folder and run on the Lightsail instance (deploy/, docs/PROJECT.md, 인프라).
-# docker build -t buddy-chat-server server/
+# Server image, built by CI and run on the Lightsail instance (deploy/, docs/PROJECT.md, 인프라).
+# The build context is the repository root so the image can carry LICENSE (the image is public on GHCR).
+# Only the files listed in Dockerfile.dockerignore go into the context.
+# docker build -f server/Dockerfile -t buddy-chat-server .
 
 FROM eclipse-temurin:25-jdk AS build
 WORKDIR /src
 # Dependencies first, so code changes reuse the cached layer.
-COPY gradlew settings.gradle.kts build.gradle.kts ./
-COPY gradle gradle
+COPY server/gradlew server/settings.gradle.kts server/build.gradle.kts ./
+COPY server/gradle gradle
 RUN ./gradlew --no-daemon dependencies > /dev/null
-COPY src src
+COPY server/src src
 # Tests run in CI before an image is built.
 RUN ./gradlew --no-daemon bootJar \
     && java -Djarmode=tools -jar build/libs/app.jar extract --layers --launcher --destination extracted
@@ -25,7 +27,9 @@ COPY --from=build /src/extracted/spring-boot-loader/ ./
 COPY --from=build /src/extracted/snapshot-dependencies/ ./
 COPY --from=build /src/extracted/application/ ./
 # The instance's copies of these must match: deploy/health.sh compares them and reports a difference.
-COPY deploy/ /app/deploy/
+COPY server/deploy/ /app/deploy/
+# The image is public, so its terms (All rights reserved) go with every copy.
+COPY LICENSE /app/LICENSE
 EXPOSE 8080
 # Photos go to a volume the instance mounts here (deploy/compose.yaml). Without it /data is not writable:
 # sending photos then fails with PHOTO_UNAVAILABLE and the rest works.
