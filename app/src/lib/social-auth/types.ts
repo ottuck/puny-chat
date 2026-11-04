@@ -11,6 +11,9 @@ export type GoogleOptions = {
 
 export type SocialAuthOptions = {
   google?: GoogleOptions;
+  // The name a provider gave on signing in, before the sign-in completes (Apple on the iPhone, the
+  // first time only), for an app that uses it rather than asking for one.
+  onProfileName?: (name: string) => void;
 };
 
 // One way to sign in (Google, Apple) on this platform, bound to a Firebase Auth instance.

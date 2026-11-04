@@ -77,6 +77,7 @@ class InvitationService {
      * seat). Otherwise, in a full room, for the other member to come back from somewhere else.
      */
     Mono<Invitation> create(User user, boolean self) {
+        if (!self && isGuest(user)) return Mono.error(accountRequired());
         return roomService.findMine(user).flatMap(room -> {
             String replaces = self
                     ? user.id()
@@ -132,6 +133,8 @@ class InvitationService {
                     if (!resuming && invitation.usedAt() != null) return Mono.error(invitationUsed());
                     if (!resuming && !invitation.expiresAt().isAfter(now))
                         return Mono.error(new ApiException(HttpStatus.GONE, "INVITATION_EXPIRED"));
+                    // Before anything is claimed: after linking an account, the same code still works.
+                    if (!resuming && !isSelfCode(invitation) && isGuest(user)) return Mono.error(accountRequired());
                     return (resuming ? Mono.<Void>empty() : checkTakesSeat(invitation, takeSeat))
                             .then(alreadyHere ? Mono.<Void>empty() : checkCanLeaveCurrentRoom(user, leaveCurrentRoom))
                             .then(claim(invitation, user, now))
@@ -321,6 +324,26 @@ class InvitationService {
                         new Update().unset("usedAt").unset("usedBy").unset("previousRoomId"),
                         Invitation.class)
                 .then();
+    }
+
+    /**
+     * Connecting with another person takes a linked account (Apple or Google); a guest can still do
+     * everything alone, including moving their own seat with a code for themselves (docs/PROJECT.md).
+     * {@code guest} is cleared by the request that first shows the link; null (users not seen since
+     * the field was added) counts as linked.
+     */
+    private static boolean isGuest(User user) {
+        return Boolean.TRUE.equals(user.guest());
+    }
+
+    // A code its maker made for their own seat (InviteRequest.self); a friend's code has no seat, and
+    // a code for the partner's seat is made by the other member.
+    private static boolean isSelfCode(Invitation invitation) {
+        return invitation.createdBy().equals(invitation.replacesId());
+    }
+
+    private static ApiException accountRequired() {
+        return new ApiException(HttpStatus.FORBIDDEN, "ACCOUNT_REQUIRED");
     }
 
     private static ApiException alreadyInRoom() {

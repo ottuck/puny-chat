@@ -80,7 +80,8 @@
   `AuthProvider`에 앱의 Firebase `auth`를 넘겨 쓴다(`features/auth/auth-provider.tsx`). `lib/account`는 `lib/social-auth`와 함께 옮긴다.
 - **게스트 우선.** 첫 화면의 주 버튼 "시작하기"는 구경하기를 먼저 보여 주고, 이름·알 이름을 정한 마지막 단계("버디 깨우기")에서
   Firebase 익명 로그인을 한다. 운영에서도 정식 기능이다.
-  게스트도 모든 기능을 쓴다. 이름·알 이름을 계정 없이 먼저 받고(`features/auth/start-flow`), 마지막 단계에서 익명 로그인 후 이름 저장·방 만들기.
+  혼자 쓰는 기능은 게스트도 모두 쓰고, 다른 사람과 연결(친구 초대·참가)은 Google·Apple 계정을 연결한 뒤에만 된다(App Store 1.2, 서버
+  `ACCOUNT_REQUIRED`, 앱 `features/auth/components/account-required`). 계정이 생기면 먼저 이용약관에 동의한다(`features/terms`). 이름·알 이름을 계정 없이 먼저 받고(`features/auth/start-flow`), 마지막 단계에서 익명 로그인 후 이름 저장·방 만들기.
 - 계정은 나중에 설정에서 연결한다. 익명 계정에 Google을 `linkWithPopup`으로 붙이므로 Firebase uid가 그대로라 서버 데이터를
   옮기지 않는다. 이미 다른 사용자인 Google 계정이면 합치지 않고, 확인 후 그 계정으로 전환한다(게스트 데이터는 이 기기에서 못 봄).
 - Google·Apple 로그인은 `lib/social-auth`에 모은다. 앱 코드(`@/`, 번역, 서버 호출)를 import하지 않는 코어라 다른 Expo 앱에
@@ -197,14 +198,13 @@
 - PR 본문은 사람이 쓴 것처럼 짧고 담백하게. 무엇을 왜 바꿨는지, 어떻게 확인했는지 위주로 쓰고 과한 제목·굵은 글씨·
   번역투("\~를 진행합니다", "\~하였습니다")는 피한다.
 
-## 임시: 1.0 심사 승인 뒤 할 일 (다 하면 이 절을 지운다)
+## 임시: 1.0 다시 제출 (다 하면 이 절을 지운다)
 
-iOS 1.0(빌드 4, 커밋 `0666641`)이 심사 중이라 `EAS_AUTO_UPDATE`를 꺼 두었다. 그 뒤 main에 들어간 앱 변경(직업 이벤트,
-보름달, 발렌타인, 소품 쓰기, 밥그릇·책 레벨, 버그 수정 2개, 번체 중국어)은 아이폰에 아직 없다. 승인되면 이 순서로 한다.
+iOS 1.0 빌드 4가 2026-11-04에 리젝됐다(4.0 Apple 로그인 뒤 이름, 2.3.3 스크린샷, 1.2 사용자 콘텐츠, `docs/release.md`의 1.0 리젝). 대응은
+main에 들어갔고, 빌드 5에 그동안 쌓인 앱 변경·번체 중국어·"Puny Chat" 이름도 함께 들어간다. `EAS_AUTO_UPDATE`는 계속 꺼 둔다.
 
-1. `pnpm app-update:on`으로 자동 업데이트를 다시 켠다.
-2. `pnpm app-update`로 쌓인 변경을 업데이트 하나로 보낸다(변경 수와 상관없이 최신 코드 전체가 한 번에 간다. 네이티브·`version`은 그대로라 빌드 4에 간다).
-3. 실기기에서 업데이트가 적용됐는지(다음 실행에 반영), 중국어 기기에서 번체로 보이는지 확인한다.
-4. 그다음 서버 `BuddyProperties`의 `gifts` 기본값을 `true`로 바꿔 배포한다. 앱 업데이트보다 먼저 켜면 빌드 4 채팅에 `buddyEvent.GIFT`가 글자 그대로 보인다.
-5. 하루이틀 지켜본 뒤 다음 버전(1.0.1)을 낸다: `version`을 올려 빌드하고 자동 업데이트를 끈 채 제출한다. App Store에 번체 중국어 현지화
-   (`docs/app-store/zh-Hant`)를 넣고, 앱 이름을 네 언어 모두 "Puny Chat"으로 바꾼다(홈 화면 이름 `CFBundleDisplayName`과 스토어 언어 표시는 그 빌드부터).
+1. 사용자가 `app/`에서 production 빌드 5를 만들어 올린다(Apple 로그인 필요): `npx eas-cli build --profile production --platform ios --auto-submit`.
+2. App Store Connect에서 새 스크린샷(`docs/app-store`), 번체 중국어 현지화, 이름 "Puny Chat", 심사 메모를 넣고, 리젝 메시지에 답장해
+   18+ 등급이 아직 필요한지 묻고 빌드 5로 다시 제출한다. 18+를 요구하면 등급을 올린다.
+3. 승인되면 `pnpm app-update:on`, 그다음 서버 `BuddyProperties`의 `gifts` 기본값을 `true`로 바꿔 배포한다.
+4. 실기기에서 Apple 로그인(이름을 묻지 않음), 약관 동의, 친구 초대·참가 때 계정 연결 요구, 중국어 기기의 번체를 확인한다.

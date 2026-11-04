@@ -118,6 +118,9 @@ export default function SignInScreen() {
           {busy ? <ActivityIndicator color={colors.accent} /> : null}
           {error ? <Text style={[styles.error, { color: colors.accent }]}>{error}</Text> : null}
           <View style={styles.links}>
+            <Pressable onPress={() => router.push('/terms')} accessibilityRole="link">
+              <Text style={[styles.notice, { color: colors.textMuted }]}>{t('terms.title')}</Text>
+            </Pressable>
             <Pressable onPress={() => router.push('/privacy')} accessibilityRole="link">
               <Text style={[styles.notice, { color: colors.textMuted }]}>{t('privacy.title')}</Text>
             </Pressable>

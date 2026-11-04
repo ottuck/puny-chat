@@ -5,6 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { WebFrame } from '@/components/web-frame';
+import { AccountRequired } from '@/features/auth/components/account-required';
+import { ApiError } from '@/lib/api';
 import { copyText } from '@/lib/clipboard';
 import { siteUrl } from '@/lib/site-url';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
@@ -54,13 +56,19 @@ export function InviteContent({
   const insets = useSafeAreaInsets();
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // A guest links an account first to invite someone (a code for themselves needs none).
+  const [needsAccount, setNeedsAccount] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     createInvitation(self)
       .then(setInvitation)
-      .catch((e) => setError(errorMessage(t, e)));
-  }, [t, self]);
+      .catch((e) => {
+        if (e instanceof ApiError && e.code === 'ACCOUNT_REQUIRED') setNeedsAccount(true);
+        else setError(errorMessage(t, e));
+      });
+  }, [t, self, attempt]);
 
   const expires = invitation
     ? new Intl.DateTimeFormat(i18n.language, {
@@ -135,40 +143,50 @@ export function InviteContent({
               : t('invite.hint')}
         </Text>
 
-        <View style={[styles.codeCard, { backgroundColor: colors.surface }]}>
-          {invitation ? (
-            <>
-              <View style={styles.codeRow}>
-                <Text selectable style={[styles.code, { color: colors.text }]}>
-                  {spacedCode(invitation.code)}
-                </Text>
-                <Pressable
-                  onPress={copy}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('invite.copy')}
-                  hitSlop={8}
-                  style={({ pressed }) => [
-                    styles.copy,
-                    { borderColor: colors.border, opacity: pressed ? 0.6 : 1 },
-                  ]}
-                >
-                  <Text style={[styles.copyLabel, { color: colors.accent }]}>
-                    {copied ? t('invite.copied') : t('invite.copy')}
+        {needsAccount ? (
+          <AccountRequired
+            onLinked={() => {
+              setNeedsAccount(false);
+              setAttempt((n) => n + 1);
+            }}
+          />
+        ) : (
+          <>
+            <View style={[styles.codeCard, { backgroundColor: colors.surface }]}>
+              {invitation ? (
+                <>
+                  <View style={styles.codeRow}>
+                    <Text selectable style={[styles.code, { color: colors.text }]}>
+                      {spacedCode(invitation.code)}
+                    </Text>
+                    <Pressable
+                      onPress={copy}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('invite.copy')}
+                      hitSlop={8}
+                      style={({ pressed }) => [
+                        styles.copy,
+                        { borderColor: colors.border, opacity: pressed ? 0.6 : 1 },
+                      ]}
+                    >
+                      <Text style={[styles.copyLabel, { color: colors.accent }]}>
+                        {copied ? t('invite.copied') : t('invite.copy')}
+                      </Text>
+                    </Pressable>
+                  </View>
+                  <Text style={[styles.expires, { color: colors.textMuted }]}>
+                    {t('invite.expires', { time: expires })}
                   </Text>
-                </Pressable>
-              </View>
-              <Text style={[styles.expires, { color: colors.textMuted }]}>
-                {t('invite.expires', { time: expires })}
-              </Text>
-            </>
-          ) : error ? (
-            <Text style={[styles.error, { color: colors.accent }]}>{error}</Text>
-          ) : (
-            <ActivityIndicator color={colors.accent} />
-          )}
-        </View>
-
-        <Button label={t('invite.share')} onPress={share} disabled={!invitation} />
+                </>
+              ) : error ? (
+                <Text style={[styles.error, { color: colors.accent }]}>{error}</Text>
+              ) : (
+                <ActivityIndicator color={colors.accent} />
+              )}
+            </View>
+            <Button label={t('invite.share')} onPress={share} disabled={!invitation} />
+          </>
+        )}
       </View>
     </View>
   );

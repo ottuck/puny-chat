@@ -27,6 +27,7 @@ import reactor.core.publisher.Mono;
 public class UserService {
 
     static final int MAX_GUIDE_VERSION = 1000;
+    static final int MAX_TERMS_VERSION = 1000;
 
     private final UserRepository users;
     private final ReactiveMongoTemplate mongo;
@@ -194,6 +195,21 @@ public class UserService {
         return mongo.findAndModify(
                 query(where("_id").is(user.id())),
                 new Update().max("guideSeenVersion", version),
+                FindAndModifyOptions.options().returnNew(true),
+                User.class);
+    }
+
+    /**
+     * Notes that the user has agreed to the terms of use of {@code version}. Only ever raises the
+     * value, so a late request from another device cannot ask for an older agreement again.
+     */
+    public Mono<User> markTermsAccepted(User user, int version) {
+        if (version < 1 || version > MAX_TERMS_VERSION) {
+            return Mono.error(new ApiException(HttpStatus.BAD_REQUEST, "INVALID_REQUEST"));
+        }
+        return mongo.findAndModify(
+                query(where("_id").is(user.id())),
+                new Update().max("termsAcceptedVersion", version),
                 FindAndModifyOptions.options().returnNew(true),
                 User.class);
     }

@@ -85,6 +85,23 @@ class ChatFlowTest {
     }
 
     @Test
+    void objectionableWordsAreMaskedBeforeAnyoneSeesThem() {
+        duoRoom("henry", "yuki");
+        TestSocket henry = connect("henry");
+        TestSocket yuki = connect("yuki");
+
+        henry.send(Map.of("type", "send", "clientMessageId", "c-1", "text", "what the FUCK, 씨발 class"));
+
+        String masked = "what the ****, ** class";
+        assertThat(henry.expect("ack").get("message").get("text").asString()).isEqualTo(masked);
+        assertThat(yuki.expect("message").get("message").get("text").asString()).isEqualTo(masked);
+        assertThat(history("yuki", "").messages())
+                .filteredOn(m -> m.type() == Message.Type.TEXT)
+                .extracting(Message::text)
+                .containsExactly(masked);
+    }
+
+    @Test
     void ownerHearsWhenAFriendJoins() {
         createRoom("henry");
         TestSocket henry = connect("henry");
