@@ -203,8 +203,8 @@
 iOS 1.0 빌드 4가 2026-11-04에 리젝됐다(4.0 Apple 로그인 뒤 이름, 2.3.3 스크린샷, 1.2 사용자 콘텐츠, `docs/release.md`의 1.0 리젝). 대응은
 main에 들어갔고, 빌드 5에 그동안 쌓인 앱 변경·번체 중국어·"Puny Chat" 이름도 함께 들어간다. `EAS_AUTO_UPDATE`는 계속 꺼 둔다.
 
-1. 사용자가 `app/`에서 production 빌드 5를 만들어 올린다(Apple 로그인 필요): `npx eas-cli build --profile production --platform ios --auto-submit`.
-2. App Store Connect에서 새 스크린샷(`docs/app-store`), 번체 중국어 현지화, 이름 "Puny Chat", 심사 메모를 넣고, 리젝 메시지에 답장해
-   18+ 등급이 아직 필요한지 묻고 빌드 5로 다시 제출한다. 18+를 요구하면 등급을 올린다.
+1. (완료) 빌드 5를 만들어 스크린샷·번체 중국어·"Puny Chat" 이름·심사 메모와 함께 2026-11-04에 다시 제출했고, 리젝 메시지 답장으로
+   18+ 등급이 아직 필요한지 물었다. 지금 심사 대기 중.
+2. Apple이 18+를 요구하면 App Store Connect의 연령 등급을 올린다.
 3. 승인되면 `pnpm app-update:on`, 그다음 서버 `BuddyProperties`의 `gifts` 기본값을 `true`로 바꿔 배포한다.
 4. 실기기에서 Apple 로그인(이름을 묻지 않음), 약관 동의, 친구 초대·참가 때 계정 연결 요구, 중국어 기기의 번체를 확인한다.
