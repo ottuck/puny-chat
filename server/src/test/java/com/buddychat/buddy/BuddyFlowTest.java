@@ -202,6 +202,8 @@ class BuddyFlowTest {
 
     @Test
     void atWorkAGrownUpWithAJobHasAnEventForEachMemberOnceInAFewDays() {
+        // Noon in Japan, where days are counted: the hour of work below must not cross midnight there.
+        clock.set(Instant.parse("2026-01-10T03:00:00Z"));
         String roomId = duoRoom("henry", "yuki");
         setExp(roomId, BuddyRules.minExp(BuddyRules.JOB_AT));
         setBuddy(roomId, new Update().set("buddy.job", "BARISTA"));
