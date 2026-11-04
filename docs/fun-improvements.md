@@ -222,7 +222,7 @@ Lv.60 어른(직업, 낮의 창가 손님 여섯)에서 춤·노래가 혼자 �
 | 무엇 | 어디 |
 | --- | --- |
 | 격자 → SVG | `pixel/pixel-sprite.tsx`, 사각형 묶기 `pixel/boxes.ts` |
-| 단계별 격자(`EGG`, `BABY`, `CHILD`, `ADULT`), 자세(`makePoses`, `ANATOMY`), 팔레트(`BUDDY_PALETTE`, `PROP_PALETTE`), 장치(`JOB_STATIONS`), 화분(`PLANTS`, 단계마다 종류 목록)·밥상(`mealTable`)·밥 생각 풍선(`THOUGHT_FOOD`) | `pixel/sprites.ts` |
+| 단계별 격자(`EGG`, `BABY`, `CHILD`, `ADULT`), 자세(`makePoses`, `ANATOMY`), 팔레트(`BUDDY_PALETTE`, `PROP_PALETTE`), 장치(`JOB_STATIONS`), 화분(`PLANTS`, 단계마다 종류 목록)·밥상(`mealTable`)·밥 생각 풍선(`THOUGHT_FOOD`, 잘 때는 꿈 구름 `DREAM_FOOD`) | `pixel/sprites.ts` |
 | 직업 모습(`JOB_LOOKS`), 기간 한정 모습(`seasonOn`, `FIT`, `seasonBehind`, `seasonFront`, `SEASON_CORNER`), 나비·우산·큰 하트, 얹기(`dressedFrame`) | `pixel/looks.ts` |
 | 무대(자세 고르기, 사건, 움직임, 말풍선) | `components/buddy-stage.tsx` |
 | 방의 빛 / 최고 레벨 연출 / 우편함 | `components/room-light.tsx` / `components/top-level.tsx` / `features/mailbox` |

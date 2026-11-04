@@ -30,14 +30,14 @@ puny-chat is a one-on-one chat app for you and one friend. Above your conversati
 
 ■ Watch your Buddy and its room grow
 ・It grows from egg to baby, kid and adult, and starts talking as a kid
-・At Lv.12 it finds a job based on what you two do: chef, gardener, radio DJ, writer or barista
+・At Lv.10 it finds a job based on what you two do: chef, gardener, radio DJ, writer or barista
 ・Every level brings new furniture and things to the room
 ・The light changes from morning to evening to night, and seasonal touches drop by
 ・Tap the hot spring button and your Buddy unwinds in the hot spring
 ・Raise it to Lv.60 and it can go its own way. Its photo stays in your memory album, and a new egg arrives
 
 ■ Easy to start
-・No account needed. Use it as a guest for 30 days, or link your Apple or Google account to keep going
+・No account needed to start: try it on your own as a guest for 30 days. To invite a friend or join one, link your Apple or Google account, which also keeps everything going
 ・No ads, no purchases, no quests. Just talk
 ・Available in English, Japanese, Korean and Traditional Chinese
 
