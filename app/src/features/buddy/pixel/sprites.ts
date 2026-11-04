@@ -478,6 +478,13 @@ export const THOUGHT_FOOD: Frame = [
   '.k.................',
 ];
 
+// Asleep and hungry, it dreams of the bowl instead: the same cloud, a soft lavender (DREAM_PALETTE),
+// with the rice kept cream so it still reads as food.
+export const DREAM_FOOD: Frame = THOUGHT_FOOD.map((row, y) =>
+  y === 4 ? row.slice(0, 8) + row.slice(8, 12).replace(/w/g, 'n') + row.slice(12) : row,
+);
+export const DREAM_PALETTE: Palette = { ...PROP_PALETTE, w: '#EEE7FF', z: '#D3C8F0' };
+
 // prettier-ignore
 export const HEART: Frame = [
   '.rr.rr.',
