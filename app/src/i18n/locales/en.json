@@ -22,7 +22,8 @@
     "ROOM_NOT_FOUND": "This conversation has ended. Please reload your current room.",
     "JOB_CHANGE_LOCKED": "The job can't be changed right now. You can change it once each at level 20, 30, 40 and 50, and any time from 60.",
     "JOB_UNCHANGED": "It already has that job.",
-    "BUDDY_NOT_ADULT": "The job can be changed once it is settled at Lv.10."
+    "BUDDY_NOT_ADULT": "The job can be changed once it is settled at Lv.10.",
+    "ACCOUNT_REQUIRED": "Link an account first to chat with a friend."
   },
   "signIn": {
     "tagline": "Chat with someone you like, and raise a tiny buddy together.",
@@ -30,12 +31,16 @@
     "apple": "Continue with Apple",
     "error": "Couldn’t sign in. Please try again.",
     "startNow": "Start now",
-    "noAccountNeeded": "No account needed. Guests can use puny-chat for 30 days, and linking an account keeps everything.",
+    "noAccountNeeded": "No account needed to start. Link an account to chat with a friend. Guests can use puny-chat for 30 days.",
     "guestExpired": "It has been more than 30 days since you started as a guest, so your old Buddy and chats are gone. You can start again anytime.",
-    "invited": "You were invited by a friend. Start, and you will go straight to their room.",
+    "invited": "You were invited by a friend. Start and link an account, and you will go straight to their room.",
     "withCode": "Start with an invite code",
     "start": "Get started",
     "tooMany": "Started too many times in a short while. Please try again in a bit."
+  },
+  "accountRequired": {
+    "title": "Link an account to chat with a friend",
+    "body": "To keep conversations safe, inviting a friend or joining an invite needs a Google or Apple account. Your buddy and messages stay as they are."
   },
   "welcome": {
     "title": "A new buddy is about to hatch!",
@@ -53,7 +58,7 @@
     "seatTitle": "Come in as {{name}}?",
     "seatMessage": "This code takes over {{name}}'s seat. You pick up the conversation so far, and the place {{name}} used before leaves the room.\n\nIf you're not {{name}}, cancel.",
     "seatConfirm": "Come in",
-    "beforeStart": "Next, pick a name and you're in your friend's room. No account needed."
+    "beforeStart": "Next, pick a name and link an account to enter your friend’s room."
   },
   "chat": {
     "composerPlaceholder": "Message",
@@ -582,7 +587,7 @@
     "changeName": "Change name",
     "account": "Account",
     "guestTitle": "Using as a guest",
-    "guestBody": "Guests can use puny-chat for 30 days. Link an account to keep your buddy and messages after that, or on a new device.",
+    "guestBody": "Guests can use puny-chat for 30 days and need an account to chat with a friend. Link an account to keep your buddy and messages after that, or on a new device.",
     "guestPlace": "This guest lives in {{place}}. Opened in another browser or app, puny-chat starts someone new.",
     "guestPlaceInApp": "In-app browsers are hard to find your way back to, so link an account.",
     "places": {
@@ -648,7 +653,8 @@
     "subtitle": "Your friend will see this name. You can change it later in settings.",
     "placeholder": "Name",
     "next": "Next",
-    "save": "Save"
+    "save": "Save",
+    "fallback": "Friend"
   },
   "guest": {
     "daysLeft_one": "{{count}} day left",
@@ -812,6 +818,47 @@
       "changes": {
         "title": "10. Changes",
         "body": "We update this page and its effective date when the policy changes. Significant changes to purposes or sharing are announced in the app or service website, with separate consent where required."
+      }
+    }
+  },
+  "terms": {
+    "title": "Terms of Use",
+    "effective": "Effective · November 4, 2026",
+    "intro": "Please read these terms before using puny-chat. By using the service you agree to them. There is no tolerance for objectionable content or abusive users.",
+    "agreeLead": "Please agree to the Terms of Use to use puny-chat. There is no tolerance for objectionable content or abusive users.",
+    "agree": "Agree and continue",
+    "sections": {
+      "service": {
+        "title": "1. The service",
+        "body": "puny-chat is a one-on-one chat with one person you connect with through an invite code or link, where you raise a Buddy together. There is no public feed, no user search and no way to be matched with strangers. It is run by an individual and provided free of charge."
+      },
+      "accounts": {
+        "title": "2. Accounts and guests",
+        "body": "You can start as a guest without an account and use the app on your own; a guest lasts 30 days. To invite a friend or join an invite, you need to link a Google or Apple account. You must be 13 or older to use puny-chat. Please keep your account and device secure."
+      },
+      "conduct": {
+        "title": "3. Prohibited conduct (zero tolerance)",
+        "body": "The following content and behavior are never allowed: harassment, abusive language or hate speech; sexual content, and any inappropriate content involving minors; threats or encouraging violence; spam, scams or impersonation; illegal content or content that infringes others’ rights; and disrupting the service. Violations may lead to content being removed without notice and permanent loss of access to the service."
+      },
+      "safety": {
+        "title": "4. Reports and action",
+        "body": "Tap your partner’s name in the chat and choose “Report & remove partner”: they leave the room immediately, the conversation is deleted for both of you, and all existing invites stop working, so they cannot contact you again. Some objectionable words are hidden automatically when sent. We review reports within 24 hours, remove violating content and remove the user who posted it from the service. You can reach us from “Help & reports” in Settings or at {{email}}."
+      },
+      "content": {
+        "title": "5. Your content",
+        "body": "Messages and photos belong to the person who sends them. We store and process them only as needed to provide the service, as described in the Privacy Policy."
+      },
+      "ending": {
+        "title": "6. Suspension and account deletion",
+        "body": "You can delete your account in Settings at any time, which deletes your information and messages. We may restrict or delete the account of anyone who breaks these terms. The service is provided as is and may change or end after notice."
+      },
+      "changes": {
+        "title": "7. Changes",
+        "body": "When these terms change, we update the effective date and let you know in the app. For important changes, we ask you to agree again."
+      },
+      "contact": {
+        "title": "8. Contact",
+        "body": "Questions about these terms: {{email}}"
       }
     }
   },

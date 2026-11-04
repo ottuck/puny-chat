@@ -11,29 +11,40 @@ import {
 
 import { linkUser, signedInUser } from './account';
 import { revokeAppleToken } from './revoke-apple-token';
-import type { SocialProvider } from './types';
+import type { SocialAuthOptions, SocialProvider } from './types';
 
 // Sign in with Apple (App Store Guideline 4.8), through Apple's own sheet and then Firebase.
-// Needs `ios.usesAppleSignIn` in app.json. No name or email is asked for.
-async function appleSheet() {
+// Needs `ios.usesAppleSignIn` in app.json. Signing in asks Apple for the name (the person can edit
+// or hide it in Apple's sheet), so the app does not ask again (Guideline 4.0). No email is asked for.
+async function appleSheet(withName = false) {
   // Ties Apple's token to this request: Apple gets the SHA-256 of the nonce, Firebase the raw one.
   const rawNonce = Crypto.randomUUID();
   const nonce = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, rawNonce);
-  const result = await AppleAuthentication.signInAsync({ nonce });
+  const result = await AppleAuthentication.signInAsync({
+    nonce,
+    requestedScopes: withName ? [AppleAuthentication.AppleAuthenticationScope.FULL_NAME] : [],
+  });
   if (!result.identityToken) throw new Error('Apple returned no identity token.');
   const credential = new OAuthProvider('apple.com').credential({
     idToken: result.identityToken,
     rawNonce,
   });
-  return { credential, authorizationCode: result.authorizationCode };
+  // Apple gives the name only the first time someone signs in to the app.
+  const name = result.fullName ? AppleAuthentication.formatFullName(result.fullName).trim() : '';
+  return { credential, authorizationCode: result.authorizationCode, name };
 }
 
-export function appleProvider(auth: Auth): SocialProvider {
+export function appleProvider(
+  auth: Auth,
+  { onProfileName }: Pick<SocialAuthOptions, 'onProfileName'> = {},
+): SocialProvider {
   return {
     id: 'apple',
     supported: true,
     signIn: async () => {
-      const { credential } = await appleSheet();
+      const { credential, name } = await appleSheet(true);
+      // Before Firebase signs in, so the app has the name by the time it sees the new user.
+      if (name) onProfileName?.(name);
       await signInWithCredential(auth, credential);
     },
     link: async () => {

@@ -14,12 +14,7 @@ import {
 
 import { AppSwitch } from '@/components/app-switch';
 import { PageTitle } from '@/components/page-title';
-import {
-  deleteAccount,
-  noteAccountLinked,
-  prepareAccountSwitch,
-  signOut,
-} from '@/features/auth/actions';
+import { deleteAccount, signOut } from '@/features/auth/actions';
 import { ChevronRightIcon } from '@/components/icons';
 import { useAuth } from '@/features/auth/auth-provider';
 import { useGuestDaysLeft } from '@/features/auth/guest-expiry';
@@ -28,6 +23,7 @@ import { isInAppBrowser } from '@/features/auth/guest-place-ua';
 import { AppleButton } from '@/features/auth/components/apple-button';
 import { DeleteAccountDialog } from '@/features/auth/components/delete-account-dialog';
 import { social } from '@/features/auth/social';
+import { useLinkAccount } from '@/features/auth/use-link-account';
 import {
   registerForPush,
   type PushState,
@@ -36,13 +32,7 @@ import {
 } from '@/features/notifications/push';
 import { DisplayCard } from '@/features/preferences/components/display-card';
 import type { Room } from '@/features/room/api';
-import {
-  isCancelledSignIn,
-  linkOrSwitch,
-  onPopupClosed,
-  type ProviderId,
-  type SocialProvider,
-} from '@/lib/social-auth';
+import { isCancelledSignIn, onPopupClosed, type ProviderId } from '@/lib/social-auth';
 import { useRoom } from '@/features/room/room-provider';
 import { confirm } from '@/lib/confirm';
 import { MAX_CONTENT_WIDTH, useColors } from '@/theme';
@@ -159,6 +149,7 @@ export default function SettingsScreen() {
           </Text>
           <NavRow label={t('support.title')} onPress={() => router.push('/support')} />
           <NavRow label={t('privacy.title')} onPress={() => router.push('/privacy')} />
+          <NavRow label={t('terms.title')} onPress={() => router.push('/terms')} />
         </View>
 
         <Pressable
@@ -219,36 +210,9 @@ function AccountCard({
 }) {
   const colors = useColors();
   const { t } = useTranslation();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { busy, error, link } = useLinkAccount();
   // Where this guest lives, so they know where to open puny-chat to find it again.
   const [place] = useState(currentGuestPlace);
-  // A closed popup takes Firebase 8 seconds to report; the buttons come back as soon as it closes.
-  useEffect(() => (busy ? onPopupClosed(() => setBusy(false)) : undefined), [busy]);
-
-  const link = async (provider: SocialProvider) => {
-    setBusy(true);
-    setError(null);
-    try {
-      const outcome = await linkOrSwitch(provider, {
-        confirmSwitch: () =>
-          confirm({
-            title: t('settings.accountInUseTitle'),
-            message: t('settings.accountInUseMessage'),
-            confirmLabel: t('settings.accountInUseConfirm'),
-            cancelLabel: t('common.cancel'),
-            destructive: true,
-          }),
-        beforeSwitch: prepareAccountSwitch,
-      });
-      if (outcome === 'linked') await noteAccountLinked();
-    } catch (e) {
-      console.warn(e);
-      setError(t('settings.linkFailed'));
-    } finally {
-      setBusy(false);
-    }
-  };
 
   return (
     <View style={[styles.card, { backgroundColor: colors.surface }]}>

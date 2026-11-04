@@ -398,6 +398,104 @@ class RoomFlowTest {
     }
 
     @Test
+    void aGuestNeedsAnAccountToInviteSomeone() {
+        postAsGuest("guest", "/api/rooms", Map.of("buddyName", "Mugi"))
+                .expectStatus()
+                .isCreated();
+
+        assertError(postAsGuest("guest", "/api/rooms/me/invitations", null), HttpStatus.FORBIDDEN, "ACCOUNT_REQUIRED");
+        assertError(
+                postAsGuest("guest", "/api/rooms/me/invitations", Map.of("self", false)),
+                HttpStatus.FORBIDDEN,
+                "ACCOUNT_REQUIRED");
+        assertThat(invitations.count().block()).isZero();
+        // Moving one's own seat to another device stays open to guests.
+        postAsGuest("guest", "/api/rooms/me/invitations", Map.of("self", true))
+                .expectStatus()
+                .isCreated();
+
+        // Linking Google keeps the uid; the next request is no longer a guest's.
+        invite("guest");
+    }
+
+    @Test
+    void aGuestInAFullRoomNeedsAnAccountToCallThePartnerBack() {
+        createRoom("henry", "Mugi");
+        accept("yuki", invite("henry"), false).expectStatus().isOk();
+        // E.g. joined before connecting needed an account.
+        mongo.updateFirst(
+                        Query.query(Criteria.where("firebaseUid").is("yuki")), Update.update("guest", true), User.class)
+                .block();
+
+        assertError(postAsGuest("yuki", "/api/rooms/me/invitations", null), HttpStatus.FORBIDDEN, "ACCOUNT_REQUIRED");
+        postAsGuest("yuki", "/api/rooms/me/invitations", Map.of("self", true))
+                .expectStatus()
+                .isCreated();
+    }
+
+    @Test
+    void aGuestNeedsAnAccountToJoinSomeoneAndTheCodeStillWorksAfterLinking() {
+        RoomView room = createRoom("henry", "Mugi");
+        String code = invite("henry");
+        postAsGuest("guest", "/api/rooms", Map.of("buddyName", "Mochi"))
+                .expectStatus()
+                .isCreated();
+
+        assertError(acceptAsGuest("guest", code), HttpStatus.FORBIDDEN, "ACCOUNT_REQUIRED");
+        // Unknown codes say so as before.
+        assertError(acceptAsGuest("guest", "ZZZZ"), HttpStatus.NOT_FOUND, "INVITATION_NOT_FOUND");
+
+        // Nothing was claimed or reserved: not the code, not the user, not the room.
+        Invitation untouched = invitations.findByCode(code).block();
+        assertThat(untouched.usedBy()).isNull();
+        assertThat(untouched.usedAt()).isNull();
+        assertThat(untouched.previousRoomId()).isNull();
+        User guest = mongo.findOne(Query.query(Criteria.where("firebaseUid").is("guest")), User.class)
+                .block();
+        assertThat(guest.roomJoinId()).isNull();
+        assertThat(guest.roomId()).isNotEqualTo(room.id());
+        assertThat(rooms.findById(room.id()).block().memberIds()).containsExactly(userId("henry"));
+
+        // After linking an account, the same code lets them in.
+        accept("guest", code, true).expectStatus().isOk();
+        assertThat(rooms.findById(room.id()).block().memberIds()).containsExactly(userId("henry"), userId("guest"));
+    }
+
+    @Test
+    void aGuestCannotTakeThePartnersSeatEither() {
+        createRoom("henry", "Mugi");
+        accept("yuki", invite("henry"), false).expectStatus().isOk();
+        String forYuki = invite("henry"); // a full room: the code is for yuki's seat
+
+        assertError(
+                postAsGuest("guest", "/api/invitations/" + forYuki + "/accept", Map.of("takeSeat", true)),
+                HttpStatus.FORBIDDEN,
+                "ACCOUNT_REQUIRED");
+        assertThat(invitations.findByCode(forYuki).block().usedBy()).isNull();
+    }
+
+    @Test
+    void aGuestCanStillMoveTheirOwnSeat() {
+        RoomView room = postAsGuest("guest", "/api/rooms", Map.of("buddyName", "Mugi"))
+                .expectStatus()
+                .isCreated()
+                .expectBody(RoomView.class)
+                .returnResult()
+                .getResponseBody();
+        String code = postAsGuest("guest", "/api/rooms/me/invitations", Map.of("self", true))
+                .expectBody(Invite.class)
+                .returnResult()
+                .getResponseBody()
+                .code();
+
+        postAsGuest("guest-new-phone", "/api/invitations/" + code + "/accept", Map.of("takeSeat", true))
+                .expectStatus()
+                .isOk();
+
+        assertThat(rooms.findById(room.id()).block().memberIds()).containsExactly(userId("guest-new-phone"));
+    }
+
+    @Test
     void unknownAndExpiredCodesAreRejected() {
         RoomView room = createRoom("henry", "Mugi");
         Instant past = Instant.now().minusSeconds(60);
@@ -712,6 +810,20 @@ class RoomFlowTest {
     // Having said yes to coming in as the one whose seat the code is for.
     private WebTestClient.ResponseSpec acceptSeat(String uid, String code, boolean leave) {
         return post(uid, "/api/invitations/" + code + "/accept", Map.of("leaveCurrentRoom", leave, "takeSeat", true));
+    }
+
+    private WebTestClient.ResponseSpec acceptAsGuest(String uid, String code) {
+        return postAsGuest(uid, "/api/invitations/" + code + "/accept", Map.of("leaveCurrentRoom", true));
+    }
+
+    // Signed in anonymously, with no account linked (UserService.isGuest).
+    private WebTestClient.ResponseSpec postAsGuest(String uid, String path, Object body) {
+        var request = client.mutateWith(mockJwt()
+                        .jwt(jwt -> jwt.subject(uid)
+                                .claim("firebase", Map.of("sign_in_provider", "anonymous", "identities", Map.of()))))
+                .post()
+                .uri(path);
+        return (body == null ? request : request.bodyValue(body)).exchange();
     }
 
     private WebTestClient.ResponseSpec get(String uid, String path) {

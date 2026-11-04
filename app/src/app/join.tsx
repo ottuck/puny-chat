@@ -6,6 +6,7 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { PageTitle } from '@/components/page-title';
 import { Button } from '@/components/button';
 import { useAuth } from '@/features/auth/auth-provider';
+import { AccountRequired } from '@/features/auth/components/account-required';
 import { acceptInvitation } from '@/features/room/api';
 import { errorMessage } from '@/features/room/error-message';
 import { spacedCode } from '@/features/room/invite-code';
@@ -39,6 +40,8 @@ export default function JoinScreen() {
   const [code, setCode] = useState(() => codeFrom(params.code ?? ''));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A guest links an account before joining someone (a code for their own seat needs none).
+  const [needsAccount, setNeedsAccount] = useState(false);
 
   // Before signing in (from the first screen): keep the code and go on to the name; the guest is
   // made there, and
@@ -94,7 +97,8 @@ export default function JoinScreen() {
       setRoom(room);
       router.dismissTo('/');
     } catch (e) {
-      setError(errorMessage(t, e));
+      if (e instanceof ApiError && e.code === 'ACCOUNT_REQUIRED') setNeedsAccount(true);
+      else setError(errorMessage(t, e));
       setBusy(false);
     }
   };
@@ -116,7 +120,10 @@ export default function JoinScreen() {
         <Text style={[styles.hint, { color: colors.textMuted }]}>{t('join.hint')}</Text>
         <TextInput
           value={spacedCode(code)}
-          onChangeText={(value) => setCode(codeFrom(value))}
+          onChangeText={(value) => {
+            setCode(codeFrom(value));
+            setNeedsAccount(false);
+          }}
           placeholder="K7 PM"
           placeholderTextColor={colors.border}
           autoCapitalize="characters"
@@ -134,10 +141,18 @@ export default function JoinScreen() {
             {error}
           </Text>
         ) : null}
+        {needsAccount ? (
+          <AccountRequired
+            onLinked={() => {
+              setNeedsAccount(false);
+              void join();
+            }}
+          />
+        ) : null}
         <Button
           label={user ? t('join.submit') : t('name.next')}
           onPress={submit}
-          disabled={busy || code.length !== CODE_LENGTH}
+          disabled={busy || needsAccount || code.length !== CODE_LENGTH}
         />
         {user ? null : (
           <Text style={[styles.hint, { color: colors.textMuted }]}>{t('join.beforeStart')}</Text>

@@ -8,6 +8,8 @@ export type Me = {
   roomId: string | null;
   // The newest guide card version this user has opened, on any device (0 for none).
   guideSeenVersion?: number;
+  // The newest terms version this user agreed to (0 for none).
+  termsAcceptedVersion?: number;
 };
 export type RoomMember = { id: string; displayName: string | null };
 // A buddy that grew up and went its own way, kept in the room's album.
@@ -37,6 +39,13 @@ export const updateMyName = (displayName: string) =>
 // The guide card above the chat was opened (server keeps the highest version).
 export const markGuideSeen = (version: number) =>
   api<Me>('/api/me/guide-seen', { method: 'PUT', body: { version } });
+
+// The terms everyone agrees to before using the service (app/terms.tsx). Bumped when they change in
+// a way people must agree to again.
+export const TERMS_VERSION = 1;
+
+export const acceptTerms = (version: number) =>
+  api<Me>('/api/me/terms-accepted', { method: 'PUT', body: { version } });
 
 export const fetchRoom = () => api<Room>('/api/rooms/me');
 

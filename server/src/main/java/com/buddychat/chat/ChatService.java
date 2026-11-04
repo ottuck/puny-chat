@@ -37,6 +37,7 @@ public class ChatService {
     private final UserService userService;
     private final PhotoStore photos;
     private final SendLimiter limiter;
+    private final WordFilter words;
 
     ChatService(
             MessageRepository messages,
@@ -45,7 +46,8 @@ public class ChatService {
             RoomAccess access,
             UserService userService,
             PhotoStore photos,
-            SendLimiter limiter) {
+            SendLimiter limiter,
+            WordFilter words) {
         this.messages = messages;
         this.mongo = mongo;
         this.clock = clock;
@@ -53,6 +55,7 @@ public class ChatService {
         this.userService = userService;
         this.photos = photos;
         this.limiter = limiter;
+        this.words = words;
     }
 
     /** {@code created} is false when this was a resend of an already stored message. */
@@ -61,8 +64,10 @@ public class ChatService {
     public record MessagePage(List<Message> messages, boolean hasMore) {}
 
     /**
-     * Stores a text message in the sender's room. Sending the same {@code clientMessageId} again
-     * (a retry after a dropped connection) returns the stored message instead of a duplicate.
+     * Stores a text message in the sender's room, with objectionable words masked ({@link WordFilter}),
+     * so the partner, the history and push previews never see them. Sending the same
+     * {@code clientMessageId} again (a retry after a dropped connection) returns the stored message
+     * instead of a duplicate.
      */
     public Mono<SendResult> send(User sender, String clientMessageId, String rawText) {
         String roomId = sender.roomId();
@@ -79,7 +84,7 @@ public class ChatService {
         if (!limiter.tryAcquire(sender.id(), SendLimiter.Kind.TEXT, Instant.now(clock))) {
             return Mono.error(new ApiException(HttpStatus.TOO_MANY_REQUESTS, "MESSAGE_RATE_LIMIT"));
         }
-        Message message = Message.text(roomId, sender.id(), clientMessageId, text, Instant.now(clock));
+        Message message = Message.text(roomId, sender.id(), clientMessageId, words.mask(text), Instant.now(clock));
         return access.requireMember(roomId, sender.id())
                 .then(messages.insert(message)
                         .map(saved -> new SendResult(saved, true))

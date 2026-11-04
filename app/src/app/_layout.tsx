@@ -1,7 +1,7 @@
 import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -13,10 +13,11 @@ import { WebFrame } from '@/components/web-frame';
 import { AuthProvider, useAuth } from '@/features/auth/auth-provider';
 import { nameSaved, roomMade, takeStartCode, useStart } from '@/features/auth/start-flow';
 import { useHome } from '@/features/auth/use-home';
-import { createRoom, updateMyName } from '@/features/room/api';
+import { createRoom, TERMS_VERSION, updateMyName } from '@/features/room/api';
 import { RoomProvider, useRoom } from '@/features/room/room-provider';
 import { loadPreferences, usePreferences } from '@/lib/preferences';
 import { rememberInviteFromUrl, takePendingInvite } from '@/features/room/pending-invite';
+import { TermsGate } from '@/features/terms/terms-gate';
 import { registerServiceWorker } from '@/lib/service-worker';
 import { warmUpServer } from '@/lib/warm-up';
 import { watchForNewVersion } from '@/lib/web-update';
@@ -68,7 +69,7 @@ export default function RootLayout() {
 }
 
 function RootNavigator() {
-  const { user, initializing } = useAuth();
+  const { user, account, initializing } = useAuth();
   const home = useHome();
   const { state, reload, setMe, setRoom } = useRoom();
   const { t, i18n } = useTranslation();
@@ -77,19 +78,32 @@ function RootNavigator() {
   const me = state.status === 'none' || state.status === 'ready' ? state.me : null;
   // Guests start without a name; they pick one before anything else (the friend sees it).
   const named = !!me?.displayName;
+  // Everyone agrees to the terms once before anything else (features/terms/terms-gate.tsx).
+  const needsTerms = signedIn && !!me && (me.termsAcceptedVersion ?? 0) < TERMS_VERSION;
+  // Signed in with Google or Apple and still without a name: the one the account gave (Apple's
+  // comes through the start flow, below), or a plain one to change in settings. Someone who signs
+  // in with Apple is not asked for a name again (App Store Guideline 4.0).
+  // If saving it fails, the name screen asks instead.
+  const [accountNameFailed, setAccountNameFailed] = useState(false);
+  const accountName =
+    signedIn && !!me && !named && account && !account.guest && !accountNameFailed
+      ? user?.displayName?.trim() || t('name.fallback')
+      : null;
+  const startName = pending.name ?? accountName;
   // Just made by the start flow (start-flow.ts): first the name it was given is saved, then the
   // room with the egg's name is made, or the friend's code is used. A loading screen meanwhile.
-  const savingName = signedIn && !!me && !named && !!pending.name;
-  const makingRoom = signedIn && named && state.status === 'none' && !!pending.buddyName;
+  const savingName = signedIn && !!me && !named && !!startName && !needsTerms;
+  const makingRoom =
+    signedIn && named && state.status === 'none' && !!pending.buddyName && !needsTerms;
   const roomReady = state.status === 'ready';
   const waking = !!pending.buddyName;
 
   // The stack was replaced by the loading screen meanwhile, so each step says where to go. A failure
   // leaves the screen for doing it by hand (name, or the egg's name).
   useEffect(() => {
-    if (!savingName || !pending.name) return;
+    if (!savingName || !startName) return;
     let gone = false;
-    updateMyName(pending.name)
+    updateMyName(startName)
       .then((next) => {
         if (gone) return;
         nameSaved();
@@ -110,12 +124,14 @@ function RootNavigator() {
       })
       .catch((e) => {
         console.warn('saving the name failed', e);
-        if (!gone) nameSaved();
+        if (gone) return;
+        nameSaved();
+        setAccountNameFailed(true);
       });
     return () => {
       gone = true;
     };
-  }, [savingName, pending.name, waking, roomReady, setMe]);
+  }, [savingName, startName, waking, roomReady, setMe]);
 
   useEffect(() => {
     if (!makingRoom || !pending.buddyName) return;
@@ -137,7 +153,7 @@ function RootNavigator() {
   }, [makingRoom, pending.buddyName, setRoom]);
   const settled = !initializing && (!signedIn || state.status !== 'loading');
   const pathname = usePathname();
-  const publicPage = pathname === '/privacy' || pathname === '/support';
+  const publicPage = pathname === '/privacy' || pathname === '/support' || pathname === '/terms';
   const canJoin =
     signedIn && (state.status === 'none' || state.status === 'ready') && !!state.me.displayName;
 
@@ -167,6 +183,7 @@ function RootNavigator() {
 
   if (initializing && !publicPage) return null;
   if (signedIn && state.status === 'loading' && !publicPage) return <StatusScreen loading />;
+  if (needsTerms && !publicPage) return <TermsGate onAccepted={setMe} />;
   if (savingName || makingRoom) return <StatusScreen loading />;
   if (signedIn && state.status === 'error' && !publicPage) {
     return (
@@ -222,6 +239,7 @@ function RootNavigator() {
         <Stack.Screen name="join" options={withHeader(t('join.title'))} />
       </Stack.Protected>
       <Stack.Screen name="privacy" options={withHeader(t('privacy.title'))} />
+      <Stack.Screen name="terms" options={withHeader(t('terms.title'))} />
       <Stack.Screen name="support" options={withHeader(t('support.title'))} />
     </Stack>
   );

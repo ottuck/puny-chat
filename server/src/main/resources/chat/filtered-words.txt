@@ -1,0 +1,77 @@
+# Words masked in text messages (chat/WordFilter): one per line, UTF-8, case-insensitive.
+# Latin-alphabet entries match whole words only ("cunt" leaves "Scunthorpe" alone); entries with
+# Hangul, kana or CJK match anywhere, also inside longer words. Kept short: severe slurs, explicit
+# sexual terms and violent abuse only. Leave out anything that is, or sits inside, an everyday word:
+# Korean 시발 (시발점), 씨바 (아저씨바빠), 보지 ("don't look"), 자지 ("don't sleep");
+# Japanese しね (わたしね), 殺す alone, ガイジ (ガイジン); Chinese 去死 (過去死亡), 機掰 (手機掰開),
+# 雜種 (mixed-breed dog), 智障 (plain word for intellectual disability).
+
+# English
+fuck
+fucks
+fucked
+fucking
+fucker
+motherfucker
+cunt
+cunts
+nigger
+niggers
+nigga
+faggot
+faggots
+retard
+retarded
+whore
+slut
+kill yourself
+
+# 한국어
+씨발
+씨빨
+씨팔
+개새끼
+개새기
+개색끼
+병신
+좆
+니애미
+느금마
+엠창
+씹새끼
+씹년
+미친년
+창녀
+죽어버려
+
+# 日本語
+死ね
+氏ね
+ぶっ殺す
+ぶっころす
+殺すぞ
+自殺しろ
+クソ野郎
+くそ野郎
+糞野郎
+まんこ
+ちんぽ
+チンポ
+キチガイ
+気違い
+売女
+
+# 繁體中文
+幹你娘
+幹恁娘
+操你媽
+操你娘
+雞掰
+王八蛋
+婊子
+賤人
+狗娘養的
+屌你老母
+肏
+屄
+去死吧
