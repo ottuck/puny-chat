@@ -17,11 +17,12 @@ on:
       - ".claude/**"
   push:
     branches: [main]
+    # LICENSE is not skipped here: the server image carries it, so a LICENSE-only push still has to
+    # reach deploy. "changes" skips its tests.
     paths-ignore:
       - "**/*.md"
       - "docs/**"
       - "infra/**"
-      - "LICENSE"
       - ".claude/**"
 
 concurrency:
@@ -70,7 +71,7 @@ jobs:
           else
             while IFS= read -r f; do
               case "$f" in
-                # The same files paths-ignore skips.
+                # The same files paths-ignore skips (plus LICENSE on main, which only redeploys).
                 *.md|docs/*|infra/*|LICENSE|.claude/*) ;;
                 app/*) app=true ;;
                 server/*) server=true ;;
