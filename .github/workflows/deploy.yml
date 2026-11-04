@@ -47,7 +47,7 @@ jobs:
           case "$running" in *[!0-9a-f]*) running= ;; esac
           echo "running: ${running:-unknown}"
           if [ "$EVENT" = "push" ] && [ -n "$running" ] && git cat-file -e "$running^{commit}" 2>/dev/null \
-            && git diff --quiet "$running" HEAD -- server; then
+            && git diff --quiet "$running" HEAD -- server LICENSE; then
             echo "deploy=false" >> "$GITHUB_OUTPUT"
           else
             echo "deploy=true" >> "$GITHUB_OUTPUT"
@@ -69,7 +69,8 @@ jobs:
         if: steps.changed.outputs.deploy == 'true'
         uses: docker/build-push-action@v6
         with:
-          context: server
+          context: .
+          file: server/Dockerfile
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/puny-chat-server:latest

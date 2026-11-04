@@ -1,21 +1,44 @@
-MIT License
+Copyright (c) 2026 ottuck. All rights reserved.
 
-Copyright (c) 2026 ottuck
+This repository and everything in it (source code, documentation, designs,
+pixel art, images, and data) is the exclusive property of the copyright holder.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+No license or other right is granted, expressly or by implication. Without the
+copyright holder's prior written permission, you may not use, copy, modify,
+merge, publish, distribute, sublicense, sell, or create derivative works of any
+part of this repository, in whole or in part.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Being able to view this repository does not grant any of these rights. If it is
+public on GitHub, the only permission given is the one GitHub's Terms of Service
+give other GitHub users: to view it and fork it on GitHub. That does not include
+running, using, modifying, or distributing the code anywhere else.
+
+Third-party services and data: this app relies on external services such as
+Firebase, MongoDB Atlas, the Gmail API, Expo, Cloudflare, and Sentry. Their
+services, SDKs, and data belong to their respective owners and remain subject to
+those services' own terms. Nothing in this repository grants any right to them,
+and users' data is not part of this repository.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+IMPLIED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES
+OR OTHER LIABILITY ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR
+ITS USE.
+
+---
+
+저작권 (c) 2026 ottuck. 모든 권리 보유.
+
+이 저장소와 그 안의 모든 것(소스 코드, 문서, 설계, 도트 그림, 이미지, 데이터)은
+저작권자의 독점 재산입니다. 어떤 사용 허락도 주지 않습니다. 저작권자의 사전 서면
+허락 없이 이 저장소의 전부나 일부를 사용·복제·수정·배포·재허락·판매하거나 이를
+바탕으로 다른 저작물을 만들 수 없습니다.
+
+이 저장소를 볼 수 있다는 것이 이런 권리를 뜻하지 않습니다. GitHub에 공개되어
+있다면 허락하는 것은 GitHub 이용약관이 다른 GitHub 사용자에게 주는 것, 곧
+GitHub에서 보고 fork하는 것뿐입니다. GitHub 밖에서 코드를 실행·사용·수정·배포하는
+것은 포함하지 않습니다.
+
+Firebase, MongoDB Atlas, Gmail API, Expo, Cloudflare, Sentry 등 외부 서비스와 그
+SDK·데이터는 각 소유자의 것이며 각 서비스의 약관을 따릅니다. 이 저장소는 그에 대한
+어떤 권리도 주지 않으며, 사용자의 데이터는 이 저장소에 포함되지 않습니다. 이
+소프트웨어는 어떤 보증도 없이 있는 그대로 제공됩니다.

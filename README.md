@@ -106,4 +106,6 @@ Live on the web at [puny-chat.com](https://puny-chat.com). The iOS app (1.0) is 
 
 ## License
 
-[MIT](LICENSE). Use the code freely; keep the copyright notice and license text with it.
+Copyright (c) 2026 ottuck. All rights reserved. No license is granted: you may view and fork this repository on GitHub, but not use, copy, modify, or distribute the code. See [LICENSE](LICENSE).
+
+The services it connects to (Firebase, MongoDB Atlas, the Gmail API, Expo, Cloudflare, Sentry) have their own terms, and users' data is not part of this repository.
