@@ -36,15 +36,18 @@ export function TermsGate({ onAccepted }: { onAccepted: (me: Me) => void }) {
       <PageTitle title={t('terms.title')} />
       <ScrollView contentContainerStyle={styles.page}>
         <View style={styles.column}>
-          <Text lineBreakStrategyIOS="hangul-word" style={[styles.lead, { color: colors.accent }]}>
-            {t('terms.agreeLead')}
-          </Text>
           <TermsBody />
         </View>
       </ScrollView>
       <View style={[styles.footer, { borderColor: colors.border }]}>
-        <View style={styles.column}>
+        <View style={[styles.column, styles.footerColumn]}>
           {error ? <Text style={[styles.error, { color: colors.accent }]}>{error}</Text> : null}
+          <Text
+            lineBreakStrategyIOS="hangul-word"
+            style={[styles.note, { color: colors.textMuted }]}
+          >
+            {t('terms.agreeLead')}
+          </Text>
           <Button label={t('terms.agree')} onPress={agree} disabled={busy} />
         </View>
       </View>
@@ -56,7 +59,8 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   page: { alignItems: 'center', padding: 24 },
   column: { width: '100%', maxWidth: MAX_CONTENT_WIDTH, gap: 18, alignSelf: 'center' },
-  lead: { fontSize: 15, lineHeight: 22, fontWeight: '600' },
   footer: { borderTopWidth: StyleSheet.hairlineWidth, paddingHorizontal: 24, paddingVertical: 12 },
+  footerColumn: { gap: 10 },
+  note: { fontSize: 13, lineHeight: 19, textAlign: 'center' },
   error: { fontSize: 14, textAlign: 'center' },
 });
