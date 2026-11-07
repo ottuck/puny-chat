@@ -1,0 +1,24 @@
+{
+  "title": "Puny Chat delivery",
+  "width": 1040,
+  "height": 430,
+  "summary": "On main, GitHub Actions pushes the server image to GHCR, which the instance pulls every minute, deploys the web Worker and publishes an EAS Update. Sentry and healthchecks.io watch the server.",
+  "groups": [{ "title": "GitHub", "x": 30, "y": 20, "w": 560, "h": 120 }],
+  "nodes": [
+    { "id": "gha", "x": 170, "y": 80, "title": "GitHub Actions", "note": "ci → deploy → app-update" },
+    { "id": "ghcr", "x": 500, "y": 80, "title": "GHCR", "note": "Server image" },
+    { "id": "server", "x": 860, "y": 80, "title": "Spring WebFlux", "note": "AWS Lightsail" },
+    { "id": "cf", "x": 500, "y": 230, "title": "Cloudflare", "note": "Worker (web)" },
+    { "id": "eas", "x": 500, "y": 370, "title": "EAS Update", "note": "production channel", "tone": "outside" },
+    { "id": "app", "x": 860, "y": 370, "title": "Expo app", "note": "iPhone" },
+    { "id": "mon", "x": 860, "y": 230, "title": "Monitoring", "note": "Sentry · healthchecks.io", "tone": "outside" }
+  ],
+  "edges": [
+    { "from": "gha", "to": "ghcr", "label": "Push image" },
+    { "from": "ghcr", "to": "server", "label": "Pulled every minute", "dashed": true },
+    { "from": "gha", "to": "cf", "label": "wrangler deploy", "route": "vh", "fromOffset": 30 },
+    { "from": "gha", "to": "eas", "label": "Publish", "route": "vh", "fromOffset": -30 },
+    { "from": "eas", "to": "app", "label": "JS update" },
+    { "from": "server", "to": "mon", "label": "Errors · health", "dashed": true }
+  ]
+}

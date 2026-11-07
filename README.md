@@ -6,6 +6,8 @@
 
 **[👀 Take a look, no sign-up](https://puny-chat.com/demo)** · [Start on the web](https://puny-chat.com) · [Spec (Korean)](docs/PROJECT.md)
 
+[![CI](https://github.com/ottuck/puny-chat/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ottuck/puny-chat/actions/workflows/ci.yml?query=branch%3Amain)
+
 <br>
 
 <table>
@@ -43,31 +45,10 @@ The buddy gets hungry and poops, and it grows the more you two talk. It picks up
 
 ## How it's built
 
-```mermaid
-flowchart LR
-    subgraph Client["📱 App · 🌐 Web (Expo · React Native)"]
-        App["iOS app"]
-        Web["Web app<br/>Cloudflare Workers"]
-    end
-
-    Firebase["Firebase Auth<br/>sign-in · ID tokens"]
-
-    subgraph Cloud["☁️ Sydney"]
-        Server["Spring WebFlux server<br/>AWS Lightsail"]
-        DB[("MongoDB Atlas")]
-    end
-
-    Expo["Expo Push → APNs"]
-
-    App -- sign-in --> Firebase
-    Web -- sign-in --> Firebase
-    App -- "REST · WebSocket" --> Server
-    Web -- "REST · WebSocket" --> Server
-    Server -- verifies tokens --> Firebase
-    Server <--> DB
-    Server -- unread message alerts --> Expo
-    Expo --> App
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/architecture-dark.svg">
+  <img src="docs/images/architecture.svg" alt="The Expo app (iPhone and web, served by a Cloudflare Worker) signs in with Firebase Auth and talks to a Spring WebFlux server on AWS Lightsail in Sydney over REST and WebSocket. The server verifies Firebase ID tokens, stores data in MongoDB Atlas, and sends unread-message pushes through Expo push and Web Push.">
+</picture>
 
 | Area | Built with |
 | --- | --- |
@@ -82,8 +63,18 @@ Built **small**, to fit a small service:
 - **Messages arrive exactly once.** After a dropped connection the app fills in what it missed and resends what it couldn't send, without duplicates.
 - **No broker, no scheduler.** One server holds every live connection, and the buddy's hunger and 💩 are computed when looked at.
 - **No transactions.** Concurrency (two people feeding at once, racing invites) is handled with conditional updates and unique indexes, and shown in tests.
+- **Tested against a real database.** Server tests run on MongoDB in Testcontainers: racing invites, both people feeding or cleaning at once, resent messages stored once, no access to another room. The app tests cover message recovery, reconnects and sign-in with Node's built-in test runner.
 
 The decisions and the reasons behind them are in the [spec](docs/PROJECT.md) (Korean).
+
+### Delivery and monitoring
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/architecture-delivery-dark.svg">
+  <img src="docs/images/architecture-delivery.svg" alt="On main, GitHub Actions pushes the server image to GHCR, which the Lightsail instance pulls every minute, deploys the web app with wrangler to a Cloudflare Worker, and publishes an EAS Update for the iPhone app. Sentry and healthchecks.io watch the server.">
+</picture>
+
+The diagrams are drawn from `docs/images/architecture*.json`.
 
 <br>
 
