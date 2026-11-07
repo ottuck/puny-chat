@@ -6,6 +6,8 @@
 
 **[👀 Take a look, no sign-up](https://puny-chat.com/demo)** · [Start on the web](https://puny-chat.com) · [Spec (Korean)](docs/PROJECT.md)
 
+[![CI](https://github.com/ottuck/puny-chat/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ottuck/puny-chat/actions/workflows/ci.yml?query=branch%3Amain)
+
 <br>
 
 <table>
@@ -61,6 +63,7 @@ Built **small**, to fit a small service:
 - **Messages arrive exactly once.** After a dropped connection the app fills in what it missed and resends what it couldn't send, without duplicates.
 - **No broker, no scheduler.** One server holds every live connection, and the buddy's hunger and 💩 are computed when looked at.
 - **No transactions.** Concurrency (two people feeding at once, racing invites) is handled with conditional updates and unique indexes, and shown in tests.
+- **Tested against a real database.** Server tests run on MongoDB in Testcontainers: racing invites, both people feeding or cleaning at once, resent messages stored once, no access to another room. The app tests cover message recovery, reconnects and sign-in with Node's built-in test runner.
 
 The decisions and the reasons behind them are in the [spec](docs/PROJECT.md) (Korean).
 
