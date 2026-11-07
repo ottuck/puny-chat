@@ -224,7 +224,8 @@ Lv.60 어른(직업, 낮의 창가 손님 여섯)에서 춤·노래가 혼자 �
 | 격자 → SVG | `pixel/pixel-sprite.tsx`, 사각형 묶기 `pixel/boxes.ts` |
 | 단계별 격자(`EGG`, `BABY`, `CHILD`, `ADULT`), 자세(`makePoses`, `ANATOMY`), 팔레트(`BUDDY_PALETTE`, `PROP_PALETTE`), 장치(`JOB_STATIONS`), 화분(`PLANTS`, 단계마다 종류 목록)·밥상(`mealTable`)·밥 생각 풍선(`THOUGHT_FOOD`, 잘 때는 꿈 구름 `DREAM_FOOD`) | `pixel/sprites.ts` |
 | 직업 모습(`JOB_LOOKS`), 기간 한정 모습(`seasonOn`, `FIT`, `seasonBehind`, `seasonFront`, `SEASON_CORNER`), 나비·우산·큰 하트, 얹기(`dressedFrame`) | `pixel/looks.ts` |
-| 무대(자세 고르기, 사건, 움직임, 말풍선) / 행동 종류·혼자 고르는 사건·대사 표, 크기·시간, 작은 훅 | `components/buddy-stage.tsx` / `components/stage/` (`acts.ts`, `constants.ts`, `hooks.ts`, `motion.tsx`, `room-time.ts`) |
+| 무대(행동과 걷기, 쓰다듬기, 부품을 그리는 순서) | `components/buddy-stage.tsx` |
+| 무대의 나머지: 행동 종류·혼자 고르는 사건·대사 표(`acts.ts`), 크기·시간(`constants.ts`), 자세 고르기(`pose.ts`), 이름 타일·그릇·식탁·똥·버디와 그 주변 표시·직업 장치·안내(`stage-header.tsx`, `care.tsx`, `buddy-parts.tsx`, `station.tsx`, `notice.tsx`), 반응 움직임·안내 노트·최고 레벨·밥그릇과 똥 자리(`use-*.ts`) | `components/stage/` |
 | 방의 빛 / 최고 레벨 연출 / 우편함 | `components/room-light.tsx` / `components/top-level.tsx` / `features/mailbox` |
 | 직업 이벤트 목록 / 그림(만드는 스크립트 `app/scripts/gift-art.py`) / 채팅의 말 | `gifts.ts` / `pixel/gifts.ts` / `features/chat/components/buddy-gift-message.tsx` |
 | 무대 꾸미기(보상 목록과 자리) / 추억 앨범 | `components/stage-decor.tsx` / `components/album-gallery.tsx` |

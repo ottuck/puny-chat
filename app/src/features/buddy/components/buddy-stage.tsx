@@ -2,11 +2,9 @@ import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { Animated, Easing, type LayoutChangeEvent, StyleSheet, View } from 'react-native';
 
-import {} from '@/components/progress-bar';
 import { useColorMode, useColors } from '@/theme';
 
 import { type BuddyView } from '../api';
-import {} from '../jobs';
 import { isFullMoon } from '../moon';
 import {
   butterflyAt,
@@ -98,7 +96,6 @@ import {
   useTick,
   useEggRock,
 } from './stage/hooks';
-import {} from './stage/motion';
 import { roomTime } from './stage/room-time';
 import { BuddyFigure, BuddyMarks } from './stage/buddy-parts';
 import { Bowl, MealTable, Poops, ThoughtTap } from './stage/care';
