@@ -4,9 +4,6 @@ import {
   Animated,
   Easing,
   type LayoutChangeEvent,
-  type StyleProp,
-  type ViewStyle,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -16,7 +13,7 @@ import {
 import { ProgressBar } from '@/components/progress-bar';
 import { useColorMode, useColors } from '@/theme';
 
-import { type BuddyJob, type BuddyView, JOB_CHANGE_LEVELS, NEXT_STEP_AT } from '../api';
+import { type BuddyView, JOB_CHANGE_LEVELS, NEXT_STEP_AT } from '../api';
 import { JOB_ICON } from '../jobs';
 import { isFullMoon } from '../moon';
 import {
@@ -24,16 +21,14 @@ import {
   butterflyAt,
   dressedFrame,
   HEART_BIG,
-  isWinter,
   type Layer,
   SEASON_CORNER,
   type Season,
   seasonBehind,
   seasonFront,
-  seasonOn,
   umbrellaFor,
 } from '../pixel/looks';
-import { type Palette, PixelSprite } from '../pixel/pixel-sprite';
+import { PixelSprite } from '../pixel/pixel-sprite';
 import { BUNDLE, ROOM_PALETTE, skyAt } from '../pixel/room';
 import { type FishStyle, OPEN_BOOK, THINGS_PALETTE } from '../pixel/room-things';
 import {
@@ -61,16 +56,13 @@ import {
   ZZZ,
 } from '../pixel/sprites';
 import type { Reaction, ReactionKind } from '../reactions';
-import type { ChatWord, Mood } from '../chat-words';
 import { JOB_LINES, type Line, NEW_JOB_LINE, pick, useBuddyTalk } from '../use-buddy-talk';
 import { RoomLight, roomHour } from './room-light';
 import { SpeechBubble } from './speech-bubble';
 import { Feathers, TOP_NOTE_MS, TopLevelLight, TopLevelNotes } from './top-level';
 import {
   Arrive,
-  GUEST_MS,
   type Guest,
-  GUESTS,
   isFloorPasser,
   RoomSparkle,
   Tappable,
@@ -88,6 +80,75 @@ import {
   thingsAt,
   WallDecor,
 } from './stage-decor';
+import {
+  type Act,
+  ACT_LINE,
+  ACT_MS,
+  ACT_REPEATS,
+  type Cue,
+  isGuest,
+  isHappening,
+  isUse,
+  jobPose,
+  MOOD_LINE,
+  MOOD_MS,
+  nextJobChange,
+  type Notice,
+  pickIdleAct,
+  type StageMood,
+  type Use,
+  WEATHER,
+  WINDOW_LINE,
+} from './stage/acts';
+import {
+  BOOK_ABOVE_FEET,
+  BURST,
+  BUTTERFLY_FLY_MS,
+  CO_PET_MS,
+  CORNER_SIZE,
+  EGG_ROOM,
+  EVOLVE_MS,
+  FAST_TICK_MS,
+  FLOOR,
+  GLOW_MS,
+  gridScale,
+  IDLE_ACT_MAX_MS,
+  IDLE_ACT_MIN_MS,
+  JOB_WALK_MAX_MS,
+  JOB_WALK_MS,
+  LEAVE_WALK_MS,
+  LEAVE_WAVE_MS,
+  NATIVE_DRIVER,
+  NOTICE_AFTER_MS,
+  NOTICE_GAP_MS,
+  NOTICE_MS,
+  PET_MS,
+  PROP_SCALE,
+  SHAKE_TICK_MS,
+  STATION_LEFT,
+  TABLE_AWAY_MS,
+  TABLE_CELLS,
+  THOUGHT_POP_MS,
+  THOUGHT_SLOP,
+  THOUGHT_TOP,
+  TICK_MS,
+  WALL_TOP,
+  WINDOW_WALK_MAX_MS,
+} from './stage/constants';
+import {
+  useActiveReaction,
+  usePresence,
+  useQueuedReaction,
+  useSeason,
+  useSleeping,
+  useTick,
+} from './stage/hooks';
+import { DroppingIn, FlyingAway, LayerSprite } from './stage/motion';
+import { roomTime } from './stage/room-time';
+
+export type { Cue } from './stage/acts';
+export { CORNER_SIZE, FLOOR, gridScale, LEAVE_WAVE_MS } from './stage/constants';
+export { useSleeping } from './stage/hooks';
 
 // The buddy's stage above the chat (docs/PROJECT.md, 핵심 경험): the buddy walks around, waits by
 // an empty bowl when hungry, leaves poops on the floor and sleeps at night. Tapping the bowl or a
@@ -96,145 +157,6 @@ import {
 // alone it dances or sings now and then, and once grown it talks (use-buddy-talk.ts). It keeps its
 // size while typing and reading back: a stage that folds and unfolds moved the chat under the
 // finger and broke scrolling.
-
-export const FLOOR = 22;
-// The corner button's square (buddy-scene.tsx).
-export const CORNER_SIZE = 36;
-// Where the wall's things begin, below the name and level.
-const WALL_TOP = 34;
-const PROP_SCALE = 3;
-// How wide the meal table is, in its pixels (sprites.ts, mealTable).
-const TABLE_CELLS = 27;
-const TICK_MS = 450;
-// While evolving the old and new looks swap this fast.
-const FAST_TICK_MS = 90;
-// Shaking its head, it sways from side to side this fast (a body moved, not mirrored: mirrored, only
-// the light on its head jumped about).
-const SHAKE_TICK_MS = 150;
-const PET_MS = 900;
-// Things the buddy does by itself: a dance, a song, shaking its head at a full bowl, or the small
-// happenings (docs/fun-improvements.md, 가끔 생기는 사건): a hiccup, a start, a look around, a yawn, and
-// with pictures, a butterfly landing on its head, a shower under an umbrella, a shooting star in a sky
-// gone dark for a moment.
-type Act =
-  | 'dance'
-  | 'sing'
-  | 'refuse'
-  | 'hiccup'
-  | 'startle'
-  | 'lookAround'
-  | 'yawn'
-  | 'butterfly'
-  | 'rain'
-  | 'snow'
-  | 'shootingStar'
-  // Guests the room has grown into (stage-decor.tsx): at the window, or a toy train on the floor.
-  | Guest
-  // A child or grown-up sits down on the rug for a while.
-  | 'sit'
-  // Or goes over to a thing in the room and uses it (USES).
-  | Use
-  | 'job';
-// Left alone, a child or grown-up uses what the room has (docs/fun-improvements.md, 가끔 생기는
-// 사건): it starts the music box and dances to it, waits at the window until a guest comes, watches
-// the goldfish, takes a book from the shelf and reads it.
-const USES = ['musicBox', 'waitGuest', 'watchFish', 'read'] as const;
-type Use = (typeof USES)[number];
-const isUse = (act: Act | null): act is Use =>
-  act !== null && (USES as readonly string[]).includes(act);
-// A one-word message for the buddy ("밥", "춤", …, features/buddy/chat-words.ts), or the tour's
-// script asking for a dance or a song.
-// "job": the buddy does its work (only asked for by the art preview, app/preview.tsx).
-// The happenings can be cued too, but only the preview screen does (app/preview.tsx).
-const HAPPENINGS = [
-  'hiccup',
-  'startle',
-  'lookAround',
-  'yawn',
-  'butterfly',
-  'rain',
-  'snow',
-  'shootingStar',
-  'snail',
-  'sparrow',
-  'catTail',
-  'train',
-  'robot',
-  'kitten',
-  'vacuum',
-  'ladybug',
-  'dragonfly',
-  'swallow',
-  'owl',
-  'squirrel',
-  'sit',
-  ...USES,
-] as const;
-type Happening = (typeof HAPPENINGS)[number];
-const isHappening = (kind: string): kind is Happening =>
-  (HAPPENINGS as readonly string[]).includes(kind);
-const isGuest = (act: Act | null): act is Guest =>
-  act !== null && (GUESTS as readonly string[]).includes(act);
-export type Cue = { id: string; kind: ChatWord | Mood | 'job' | Happening };
-// How long a mood from the chat ("사랑해", "ㅋㅋ", …, chat-words.ts) shows, and what the buddy says.
-type StageMood = Mood | 'coPet';
-const MOOD_MS: Record<StageMood, number> = {
-  coPet: 2400,
-  laugh: 1800,
-  love: 2200,
-  goodnight: 4000,
-  cheer: 1800,
-  comfort: 1800,
-  morning: 1400,
-};
-const MOOD_LINE: Record<StageMood, Line> = {
-  coPet: 'coPet',
-  laugh: 'laugh',
-  love: 'love',
-  goodnight: 'goodnight',
-  cheer: 'cheer',
-  comfort: 'comfort',
-  morning: 'morning',
-};
-// Both petted it within this long: a bigger moment than either alone.
-const CO_PET_MS = 4000;
-const ACT_REPEATS = 1;
-const ACT_MS: Record<Act, number> = {
-  dance: 300,
-  sing: 800,
-  refuse: 900,
-  hiccup: 900,
-  startle: 900,
-  lookAround: 1400,
-  yawn: 1500,
-  butterfly: 4200,
-  rain: 5000,
-  snow: 5000,
-  shootingStar: 2800,
-  ...GUEST_MS,
-  // At the station, once there.
-  job: 2400,
-  // On the rug, once there.
-  sit: 5000,
-  // Using a thing, once there; at the window, how long it waits before a guest comes.
-  musicBox: 5000,
-  waitGuest: 2600,
-  watchFish: 5000,
-  read: 5500,
-};
-// How long the butterfly takes to come down onto the head, and to fly off again.
-const BUTTERFLY_FLY_MS = 700;
-// The weather outside the window (weather.tsx): the buddy goes over to watch it, in at most this long.
-const WEATHER: readonly Act[] = ['rain', 'snow', 'shootingStar'];
-const WINDOW_WALK_MAX_MS = 1200;
-// The longest the walk over to the station may take before the work starts anyway.
-const JOB_WALK_MAX_MS = 4000;
-// How long each point of the walk to work takes, in ms: a brisk walk.
-const JOB_WALK_MS = 12;
-// How high the open book is held, in rows up from the bottom of the buddy's grid.
-const BOOK_ABOVE_FEET = 6;
-// The station's left edge on the stage.
-const STATION_LEFT = 12;
 
 // Where a held tool goes in the buddy's box: smaller than its own size, its right edge (the handle)
 // stays at the hand and its middle at the same height.
@@ -247,173 +169,6 @@ function heldAt(held: NonNullable<Station['held']>, scale: number) {
     top: held.row * scale + (height * (scale - own)) / 2,
   };
 }
-// What it says as it happens, once grown.
-const ACT_LINE: Partial<Record<Act, Line>> = {
-  hiccup: 'hiccup',
-  startle: 'startle',
-  lookAround: 'lookAround',
-  yawn: 'yawn',
-  butterfly: 'butterfly',
-  rain: 'rain',
-  snow: 'snow',
-  shootingStar: 'shootingStar',
-  snail: 'snail',
-  sparrow: 'sparrow',
-  catTail: 'catTail',
-  train: 'train',
-  robot: 'robot',
-  kitten: 'kitten',
-  vacuum: 'vacuum',
-  ladybug: 'ladybug',
-  dragonfly: 'dragonfly',
-  swallow: 'swallow',
-  owl: 'owl',
-  squirrel: 'squirrel',
-  sit: 'sit',
-  musicBox: 'musicBox',
-  waitGuest: 'waitGuest',
-  watchFish: 'fish',
-  read: 'read',
-};
-// What it says looking out of the window, by the sky (room.ts, skyAt).
-const WINDOW_LINE = { day: 'windowDay', dusk: 'windowDusk', night: 'windowNight' } as const;
-// What it does when left alone, by weight: dancing and singing most, the small happenings between.
-const IDLE_ACTS: readonly (readonly [Act, number])[] = [
-  ['dance', 25],
-  ['sing', 25],
-  ['hiccup', 15],
-  ['startle', 15],
-  ['lookAround', 10],
-  ['yawn', 10],
-  ['butterfly', 8],
-  ['rain', 6],
-  ['shootingStar', 6],
-];
-// A grown buddy with a job also does its work (docs/fun-improvements.md, 직업).
-const JOB_ACT_WEIGHT = 30;
-// The room's guests, once it has them, as often as a butterfly.
-const GUEST_WEIGHT = 8;
-// The floor's passers (the train, the tin robot, the kitten, the vacuum) together, a little more
-// often: one about every 8 to 10 minutes while the stage is open and the buddy left alone.
-const PASSER_WEIGHT = 12;
-// A child or grown-up sits down on the rug now and then.
-const SIT_WEIGHT = 10;
-// And uses each thing the room has a little less often, so the dancing and singing stay the most.
-const USE_WEIGHT = 6;
-
-// `dark`: from the evening on (room.ts, skyAt), when a shooting star can be seen. The weather is
-// seen through the window, so none before the room has one (Lv.3). `uses`: the things there are to
-// use (a child or grown-up's).
-function pickIdleAct(
-  job: BuddyJob | null,
-  guests: readonly Guest[],
-  sits: boolean,
-  dark: boolean,
-  hasWindow: boolean,
-  uses: readonly Use[],
-): Act {
-  const passers = guests.filter(isFloorPasser);
-  const acts: readonly (readonly [Act, number])[] = [
-    ...IDLE_ACTS.filter(
-      ([act]) => (hasWindow || !WEATHER.includes(act)) && (dark || act !== 'shootingStar'),
-    ),
-    ...(sits ? [['sit', SIT_WEIGHT] as const] : []),
-    ...uses.map((use) => [use, USE_WEIGHT] as const),
-    ...guests
-      .filter((guest) => !isFloorPasser(guest))
-      .map((guest) => [guest, GUEST_WEIGHT] as const),
-    // Those passing along the floor take turns, as one happening: one of them, now and then.
-    ...(passers.length > 0 ? [[pick(passers), PASSER_WEIGHT] as const] : []),
-    ...(job ? [['job', JOB_ACT_WEIGHT] as const] : []),
-  ];
-  let roll = Math.random() * acts.reduce((sum, [, weight]) => sum + weight, 0);
-  for (const [act, weight] of acts) {
-    roll -= weight;
-    // In winter the rain comes as snow.
-    if (roll < 0) return act === 'rain' && isWinter(new Date()) ? 'snow' : act;
-  }
-  return 'dance';
-}
-// Leaving home: how long it waves before setting off, and how long each point of the walk takes.
-export const LEAVE_WAVE_MS = 1100;
-const LEAVE_WALK_MS = 7;
-// How often, left alone, it dances or sings.
-const IDLE_ACT_MIN_MS = 20_000;
-const IDLE_ACT_MAX_MS = 40_000;
-// Floor kept free at the right end for the tour's egg.
-const EGG_ROOM = 72;
-const SLEEP_FROM = 23;
-const SLEEP_UNTIL = 7;
-// The radio DJ (DJ) keeps the opposite hours: on air in the small hours, asleep through the morning.
-const DJ_SLEEP_FROM = 3;
-const DJ_SLEEP_UNTIL = 11;
-
-// The face at work, at its station (JOB_STATIONS); the station's own frames do the rest.
-function jobPose(job: BuddyJob, tick: number): Pose {
-  switch (job) {
-    case 'CHEF': // stirring the pot, swaying to it
-      return tick % 2 === 0 ? 'happy' : 'idle';
-    case 'GARDENER': // watering the plant
-      return 'happy';
-    case 'DJ': // on air, nodding to the music
-      return tick % 2 === 0 ? 'happy' : 'blink';
-    case 'WRITER': // writing, and liking it
-      return tick % 3 === 0 ? 'blink' : 'happy';
-    case 'BARISTA': // talking over the coffee
-      return tick % 2 === 0 ? 'eat' : 'happy';
-  }
-}
-// How long each reaction plays.
-const REACTION_MS: Record<ReactionKind, number> = {
-  message: 1400,
-  fed: 3200,
-  cleaned: 1800,
-  pooped: 1400,
-  worked: 1800,
-  levelUp: 1600,
-  maxLevel: 2600,
-  evolved: 2600,
-  jobChanged: 3200,
-  together: 2400,
-  here: 2000,
-  joined: 3000,
-};
-// Of 'fed', the part spent chewing; the rest is a happy heart.
-const CHEW_MS = 2400;
-// Of 'evolved' and 'jobChanged', the transformation (rings of light, old and new looks flickering);
-// the rest shows off the new look with a burst of sparkles.
-const EVOLVE_MS = 1400;
-// A note over the stage shows for this long: the next goal after growing ("Lv.5에 꼬마가 돼요"), or
-// when the job can be changed.
-const NOTICE_MS = 4500;
-// Between two notes in a row.
-const NOTICE_GAP_MS = 300;
-// After a level up or a job change, the note waits this long for the buddy's new state to arrive.
-const NOTICE_AFTER_MS = 500;
-type Notice = {
-  key:
-    | `nextStage.${BuddyView['stage']}`
-    | `notice.${'jobChangeOpen' | 'jobChangeSoon' | 'jobChangeAt' | 'jobChangeFree' | 'newJob'}`;
-  level?: number;
-  job?: BuddyJob;
-};
-// After the job settled or changed: when it can be changed next, or that it can be any time.
-const nextJobChange = (now: BuddyView): Notice | null =>
-  now.jobChangeAt
-    ? { key: 'notice.jobChangeAt', level: now.jobChangeAt }
-    : now.canChangeJob
-      ? { key: 'notice.jobChangeFree' }
-      : null;
-const GLOW_MS = 450;
-// Where the burst's sparkles fly, from the buddy's middle.
-const BURST = [
-  [-1, -1],
-  [1, -1],
-  [-1, 0.3],
-  [1, 0.3],
-] as const;
-// The web has no native animation driver (it would warn and fall back anyway).
-const NATIVE_DRIVER = Platform.OS !== 'web';
 
 type Props = {
   buddy: BuddyView;
@@ -466,278 +221,6 @@ type Props = {
   // Where the goldfish lives, being compared (the preview); the bowl on its table otherwise.
   fishStyle?: FishStyle;
 };
-
-// The room's time: the device's, or the hour and day the art preview picks (MM-DD this year, or
-// YYYY-MM-DD for a moon).
-function roomTime(clock: Date, hour?: number, date?: string): Date {
-  if (hour === undefined && !date) return clock;
-  const parts = date ? date.split('-').map(Number) : [clock.getMonth() + 1, clock.getDate()];
-  const [year, month, day] = parts.length === 3 ? parts : [clock.getFullYear(), ...parts];
-  return new Date(
-    year,
-    month - 1,
-    day,
-    hour ?? clock.getHours(),
-    hour === undefined ? clock.getMinutes() : 10,
-  );
-}
-
-// Local night hours, checked once a minute. `at`: the hour to go by instead (the art preview).
-export function useSleeping(job: BuddyJob | null, at?: number): boolean {
-  const [now, setHour] = useState(() => new Date().getHours());
-  const hour = at ?? now;
-  useEffect(() => {
-    const timer = setInterval(() => setHour(new Date().getHours()), 60_000);
-    return () => clearInterval(timer);
-  }, []);
-  if (job === 'DJ') return hour >= DJ_SLEEP_FROM && hour < DJ_SLEEP_UNTIL;
-  return hour >= SLEEP_FROM || hour < SLEEP_UNTIL;
-}
-
-// The season by the device's date, checked once an hour.
-function useSeason(chosen: Season | null | undefined): Season | null {
-  const [season, setSeason] = useState(() => seasonOn(new Date()));
-  useEffect(() => {
-    const timer = setInterval(() => setSeason(seasonOn(new Date())), 3_600_000);
-    return () => clearInterval(timer);
-  }, []);
-  return chosen === undefined ? season : chosen;
-}
-
-// Something drawn with the buddy (a look behind it, an umbrella, a butterfly), placed by the cells
-// of its grid and mirrored with it when it turns.
-function LayerSprite({
-  layer,
-  gridWidth,
-  palette,
-  scale,
-  flipped,
-}: {
-  layer: Layer;
-  gridWidth: number;
-  palette: Palette;
-  scale: number;
-  flipped: boolean;
-}) {
-  const col = flipped ? gridWidth - layer.col - layer.frame[0].length : layer.col;
-  return (
-    <View style={[styles.layer, styles.passThrough, { left: col * scale, top: layer.row * scale }]}>
-      <PixelSprite
-        frame={layer.frame}
-        palette={palette}
-        scale={scale}
-        flipped={flipped}
-        smooth={palette === BUDDY_PALETTE}
-      />
-    </View>
-  );
-}
-
-// A counter that drives frame changes (steps, blinks, chewing) at a toy-like pace.
-function useTick(ms: number): number {
-  const [tick, setTick] = useState(0);
-  useEffect(() => {
-    const timer = setInterval(() => setTick((t) => t + 1), ms);
-    return () => clearInterval(timer);
-  }, [ms]);
-  return tick;
-}
-
-// The reaction playing now, and how far into it (in ticks of the phase that matters). A new event
-// replaces the one playing.
-function useActiveReaction(reaction: Reaction | null) {
-  const [active, setActive] = useState<{ kind: ReactionKind; phase: 'main' | 'after' } | null>(
-    null,
-  );
-  useEffect(() => {
-    if (!reaction) return;
-    const timers = [setTimeout(() => setActive({ kind: reaction.kind, phase: 'main' }), 0)];
-    const main =
-      reaction.kind === 'fed'
-        ? CHEW_MS
-        : reaction.kind === 'evolved' || reaction.kind === 'jobChanged'
-          ? EVOLVE_MS
-          : undefined;
-    if (main !== undefined) {
-      timers.push(setTimeout(() => setActive({ kind: reaction.kind, phase: 'after' }), main));
-    }
-    timers.push(setTimeout(() => setActive(null), REACTION_MS[reaction.kind]));
-    return () => timers.forEach(clearTimeout);
-  }, [reaction]);
-  return active;
-}
-
-// The reaction to play: the latest, but a new level waits for the care that earned it
-// (Reaction.follows, reactions.ts) to play to its end, and plays it first when it never came on its
-// own (two events arriving together reach the stage as one change). A care played already is not
-// played again.
-function useQueuedReaction(latest: Reaction | null): Reaction | null {
-  const [shown, setShown] = useState(latest);
-  const playing = useRef<{ id?: string; at: number }>({ id: latest?.id, at: 0 });
-  const played = useRef<string[]>([]);
-  useEffect(() => {
-    if (!latest || latest.id === playing.current.id) return;
-    const show = (reaction: Reaction) => {
-      playing.current = { id: reaction.id, at: Date.now() };
-      played.current = [...played.current.slice(-9), reaction.id];
-      setShown(reaction);
-    };
-    const care = latest.follows;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    if (care && care.id === playing.current.id) {
-      const left = REACTION_MS[care.kind] - (Date.now() - playing.current.at);
-      timers.push(setTimeout(() => show(latest), Math.max(0, left)));
-    } else if (care && !played.current.includes(care.id)) {
-      timers.push(
-        setTimeout(() => show(care), 0),
-        setTimeout(() => show(latest), REACTION_MS[care.kind]),
-      );
-    } else {
-      timers.push(setTimeout(() => show(latest), 0));
-    }
-    return () => timers.forEach(clearTimeout);
-  }, [latest]);
-  return shown;
-}
-
-// A new poop drops onto the floor with a little bounce.
-function DroppingIn({ children }: { children: React.ReactNode }) {
-  const [drop] = useState(() => new Animated.Value(0));
-  useEffect(() => {
-    const fall = Animated.spring(drop, {
-      toValue: 1,
-      friction: 5,
-      tension: 120,
-      useNativeDriver: NATIVE_DRIVER,
-    });
-    fall.start();
-    return () => fall.stop();
-  }, [drop]);
-  return (
-    <Animated.View
-      style={{
-        opacity: drop.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 1, 1] }),
-        transform: [
-          { translateY: drop.interpolate({ inputRange: [0, 1], outputRange: [-18, 0] }) },
-        ],
-      }}
-    >
-      {children}
-    </Animated.View>
-  );
-}
-
-// Something that comes and goes with the moment (the thought of food, the meal's table): it springs
-// in, and on the way out stays a beat to leave instead of blinking off. `value` runs 0 → 1 in, 1 → 0
-// out; `present` is false once it has left.
-function usePresence(on: boolean, leaveMs: number) {
-  const [value] = useState(() => new Animated.Value(on ? 1 : 0));
-  const [present, setPresent] = useState(on);
-  if (on && !present) setPresent(true);
-  useEffect(() => {
-    const change = on
-      ? Animated.spring(value, {
-          toValue: 1,
-          friction: 6,
-          tension: 170,
-          useNativeDriver: NATIVE_DRIVER,
-        })
-      : Animated.timing(value, {
-          toValue: 0,
-          duration: leaveMs,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: NATIVE_DRIVER,
-        });
-    // Gone once the leave ends, also when it is cut short: the thing's view making way for another
-    // (the thought of food for the level-up mark or a heart) stops the animation, and it would
-    // otherwise stay for good.
-    change.start(() => !on && setPresent(false));
-    return () => change.stop();
-  }, [on, value, leaveMs]);
-  return { present: on || present, value };
-}
-
-// The most seen motions in the room, so each is short and lands softly: the thought of food bursts
-// like a bubble when fed, the table drops into place for the meal and sinks away after, and a poop
-// tapped away squashes, then hops up and away.
-const THOUGHT_POP_MS = 220;
-// Where the thought of food floats over the head (styles.thought), and the extra room around it
-// that a tap on it still counts in.
-const THOUGHT_TOP = 40;
-const THOUGHT_SLOP = 10;
-const TABLE_AWAY_MS = 240;
-const POOP_AWAY_MS = 460;
-
-// A poop just cleaned up: squashed by the tap for a moment, then up and away, spinning and fading,
-// with a sparkle.
-function FlyingAway({
-  id,
-  onDone,
-  style,
-}: {
-  id: string;
-  onDone: (id: string) => void;
-  style: StyleProp<ViewStyle>;
-}) {
-  const [away] = useState(() => new Animated.Value(0));
-  useEffect(() => {
-    const fly = Animated.timing(away, {
-      toValue: 1,
-      duration: POOP_AWAY_MS,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: NATIVE_DRIVER,
-    });
-    fly.start(({ finished }) => finished && onDone(id));
-    return () => fly.stop();
-  }, [away, id, onDone]);
-  return (
-    <Animated.View
-      style={[
-        style,
-        styles.passThrough,
-        {
-          opacity: away.interpolate({ inputRange: [0, 0.45, 1], outputRange: [1, 1, 0] }),
-          transform: [
-            {
-              translateY: away.interpolate({
-                inputRange: [0, 0.12, 1],
-                outputRange: [0, 2, -30],
-              }),
-            },
-            {
-              rotate: away.interpolate({
-                inputRange: [0, 0.12, 1],
-                outputRange: ['0deg', '0deg', '35deg'],
-              }),
-            },
-            {
-              scaleX: away.interpolate({
-                inputRange: [0, 0.12, 0.3, 1],
-                outputRange: [1, 1.25, 0.95, 0.55],
-              }),
-            },
-            {
-              scaleY: away.interpolate({
-                inputRange: [0, 0.12, 0.3, 1],
-                outputRange: [1, 0.7, 1.08, 0.55],
-              }),
-            },
-          ],
-        },
-      ]}
-    >
-      <PixelSprite frame={POOP} palette={PROP_PALETTE} scale={PROP_SCALE} />
-      <View style={styles.cleanSparkle}>
-        <PixelSprite frame={SPARKLE} palette={PROP_PALETTE} scale={2} />
-      </View>
-    </Animated.View>
-  );
-}
-
-export function gridScale(height: number, gridHeight: number): number {
-  // Up to 5 points per pixel, smaller on short screens so the grown-up buddy still fits.
-  return Math.max(3, Math.min(5, Math.floor((height - 84) / gridHeight)));
-}
 
 export function BuddyStage({
   buddy,
@@ -2916,11 +2399,6 @@ const styles = StyleSheet.create({
   },
   passThrough: {
     pointerEvents: 'none',
-  },
-  cleanSparkle: {
-    position: 'absolute',
-    top: -8,
-    left: -8,
   },
   levelUp: {
     fontWeight: '700',

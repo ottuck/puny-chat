@@ -360,7 +360,7 @@ export function sideRoom(decor: Decor): number {
 const TOY_LEFT = 14;
 const TOY_WIDTH = TABLE[0].length * FLOOR_SCALE;
 const CLOCK_LEFT = 16;
-// The shelf, under the corner's buttons (CORNER_SIZE in buddy-stage.tsx, 4 from the top).
+// The shelf, under the corner's buttons (CORNER_SIZE in stage/constants.ts, 4 from the top).
 const SHELF_RIGHT = 12;
 // The music box is drawn a little smaller than the shelf's other things: it is the tallest, and in
 // the corner under the buttons it looked heavy.

@@ -109,7 +109,7 @@ Buddy의 볼거리(대화 반응, 사건, 직업, 직업 이벤트, 기간 한�
 | 금붕어 보기 | 6(어항, Lv.42부터) | 어항 쪽으로 걸어가 쪼그려 앉아(`seated`) 5초쯤 금붕어를 본다. 어항에서 거품이 보글보글, "뻐끔뻐끔\~" |
 | 책 읽기 | 6(책, Lv.27부터) | 선반 쪽으로 걸어가 빨간 책을 꺼내(선반의 그 자리가 빈다, `booksFrame`) 펼쳐 들고(`OPEN_BOOK`) 앉아서 5.5초 읽고 "이 책 재밌다\~", 다 읽으면 다시 꽂는다 |
 
-소품 쓰기 넷(`buddy-stage.tsx`의 `USES`)은 러그에 앉기처럼 꼬마·어른만, 그 소품이 방에 있을 때만 하고, 걸어가서(`JOB_WALK_MAX_MS` 안에) 한다.
+소품 쓰기 넷(`components/stage/acts.ts`의 `USES`)은 러그에 앉기처럼 꼬마·어른만, 그 소품이 방에 있을 때만 하고, 걸어가서(`JOB_WALK_MAX_MS` 안에) 한다.
 걸어갈 수 있는 곳은 밥그릇 왼쪽까지라 넓지 않은 무대에서는 선반·어항 바로 아래가 아니라 그쪽으로 가장 가까운 자리에서 쓴다. 가중치를 6으로 낮게 두어
 Lv.60 어른(직업, 낮의 창가 손님 여섯)에서 춤·노래가 혼자 하는 사건에서 차지하는 몫이 약 23%에서 21%로만 준다.
 실제 날씨와는 상관없다. 그림이 있는 사건은 아기부터 모두 한다. 비·눈·별똥별은 방 안이 아니라 창밖(`weather.tsx`의 `WindowWeatherView`, 유리 안에만 그리고 창살은 그 앞)이라 창문이 오는 Lv.3 전에는 나오지 않는다.
@@ -224,7 +224,7 @@ Lv.60 어른(직업, 낮의 창가 손님 여섯)에서 춤·노래가 혼자 �
 | 격자 → SVG | `pixel/pixel-sprite.tsx`, 사각형 묶기 `pixel/boxes.ts` |
 | 단계별 격자(`EGG`, `BABY`, `CHILD`, `ADULT`), 자세(`makePoses`, `ANATOMY`), 팔레트(`BUDDY_PALETTE`, `PROP_PALETTE`), 장치(`JOB_STATIONS`), 화분(`PLANTS`, 단계마다 종류 목록)·밥상(`mealTable`)·밥 생각 풍선(`THOUGHT_FOOD`, 잘 때는 꿈 구름 `DREAM_FOOD`) | `pixel/sprites.ts` |
 | 직업 모습(`JOB_LOOKS`), 기간 한정 모습(`seasonOn`, `FIT`, `seasonBehind`, `seasonFront`, `SEASON_CORNER`), 나비·우산·큰 하트, 얹기(`dressedFrame`) | `pixel/looks.ts` |
-| 무대(자세 고르기, 사건, 움직임, 말풍선) | `components/buddy-stage.tsx` |
+| 무대(자세 고르기, 사건, 움직임, 말풍선) / 행동 종류·혼자 고르는 사건·대사 표, 크기·시간, 작은 훅 | `components/buddy-stage.tsx` / `components/stage/` (`acts.ts`, `constants.ts`, `hooks.ts`, `motion.tsx`, `room-time.ts`) |
 | 방의 빛 / 최고 레벨 연출 / 우편함 | `components/room-light.tsx` / `components/top-level.tsx` / `features/mailbox` |
 | 직업 이벤트 목록 / 그림(만드는 스크립트 `app/scripts/gift-art.py`) / 채팅의 말 | `gifts.ts` / `pixel/gifts.ts` / `features/chat/components/buddy-gift-message.tsx` |
 | 무대 꾸미기(보상 목록과 자리) / 추억 앨범 | `components/stage-decor.tsx` / `components/album-gallery.tsx` |
