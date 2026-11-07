@@ -127,3 +127,32 @@ export function usePresence(on: boolean, leaveMs: number) {
   }, [on, value, leaveMs]);
   return { present: on || present, value };
 }
+
+// The egg rocks in small, stepped moves now and then.
+export function useEggRock(egg: boolean): Animated.Value {
+  const [tilt] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (!egg) return;
+    const step = (to: number) =>
+      Animated.timing(tilt, { toValue: to, duration: 1, useNativeDriver: NATIVE_DRIVER });
+    const rock = Animated.loop(
+      Animated.sequence([
+        Animated.delay(2200),
+        step(-1),
+        Animated.delay(220),
+        step(1),
+        Animated.delay(220),
+        step(-1),
+        Animated.delay(220),
+        step(0),
+      ]),
+    );
+    rock.start();
+    return () => {
+      rock.stop();
+      // stop() preserves the last angle; evolution must not inherit a tilted egg.
+      tilt.setValue(0);
+    };
+  }, [egg, tilt]);
+  return tilt;
+}

@@ -1,26 +1,16 @@
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Animated,
-  Easing,
-  type LayoutChangeEvent,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Animated, Easing, type LayoutChangeEvent, StyleSheet, View } from 'react-native';
 
-import { ProgressBar } from '@/components/progress-bar';
+import {} from '@/components/progress-bar';
 import { useColorMode, useColors } from '@/theme';
 
-import { type BuddyView, JOB_CHANGE_LEVELS, NEXT_STEP_AT } from '../api';
-import { JOB_ICON } from '../jobs';
+import { type BuddyView } from '../api';
+import {} from '../jobs';
 import { isFullMoon } from '../moon';
 import {
-  BUTTERFLY,
   butterflyAt,
   dressedFrame,
-  HEART_BIG,
   type Layer,
   SEASON_CORNER,
   type Season,
@@ -29,46 +19,23 @@ import {
   umbrellaFor,
 } from '../pixel/looks';
 import { PixelSprite } from '../pixel/pixel-sprite';
-import { BUNDLE, ROOM_PALETTE, skyAt } from '../pixel/room';
-import { type FishStyle, OPEN_BOOK, THINGS_PALETTE } from '../pixel/room-things';
+import { skyAt } from '../pixel/room';
+import { type FishStyle, OPEN_BOOK } from '../pixel/room-things';
 import {
-  bowl,
   BUDDY_PALETTE,
   buddyFrame,
-  DREAM_FOOD,
-  DREAM_PALETTE,
-  EXCLAIM,
-  HEART,
   JOB_STATIONS,
-  type Station,
-  LEVEL_UP,
-  mealTable,
-  NOTE,
-  POOP,
-  type Pose,
   PROP_PALETTE,
-  RICE,
   seated,
   SIT_ROWS,
-  SPARKLE,
   STAGE_ORDER,
-  THOUGHT_FOOD,
-  ZZZ,
 } from '../pixel/sprites';
-import type { Reaction, ReactionKind } from '../reactions';
+import type { Reaction } from '../reactions';
 import { JOB_LINES, type Line, NEW_JOB_LINE, pick, useBuddyTalk } from '../use-buddy-talk';
 import { RoomLight, roomHour } from './room-light';
 import { SpeechBubble } from './speech-bubble';
-import { Feathers, TOP_NOTE_MS, TopLevelLight, TopLevelNotes } from './top-level';
-import {
-  Arrive,
-  type Guest,
-  isFloorPasser,
-  RoomSparkle,
-  Tappable,
-  Passer,
-  useNow,
-} from './room-props';
+import { Feathers, TopLevelLight, TopLevelNotes } from './top-level';
+import { type Guest, isFloorPasser, RoomSparkle, Tappable, Passer, useNow } from './room-props';
 import {
   decorFor,
   glassOf,
@@ -89,11 +56,8 @@ import {
   isGuest,
   isHappening,
   isUse,
-  jobPose,
   MOOD_LINE,
   MOOD_MS,
-  nextJobChange,
-  type Notice,
   pickIdleAct,
   type StageMood,
   type Use,
@@ -102,15 +66,11 @@ import {
 } from './stage/acts';
 import {
   BOOK_ABOVE_FEET,
-  BURST,
   BUTTERFLY_FLY_MS,
   CO_PET_MS,
-  CORNER_SIZE,
   EGG_ROOM,
-  EVOLVE_MS,
   FAST_TICK_MS,
   FLOOR,
-  GLOW_MS,
   gridScale,
   IDLE_ACT_MAX_MS,
   IDLE_ACT_MIN_MS,
@@ -119,18 +79,12 @@ import {
   LEAVE_WALK_MS,
   LEAVE_WAVE_MS,
   NATIVE_DRIVER,
-  NOTICE_AFTER_MS,
-  NOTICE_GAP_MS,
-  NOTICE_MS,
   PET_MS,
   PROP_SCALE,
   SHAKE_TICK_MS,
   STATION_LEFT,
   TABLE_AWAY_MS,
-  TABLE_CELLS,
   THOUGHT_POP_MS,
-  THOUGHT_SLOP,
-  THOUGHT_TOP,
   TICK_MS,
   WALL_TOP,
   WINDOW_WALK_MAX_MS,
@@ -142,9 +96,26 @@ import {
   useSeason,
   useSleeping,
   useTick,
+  useEggRock,
 } from './stage/hooks';
-import { DroppingIn, FlyingAway, LayerSprite } from './stage/motion';
+import {} from './stage/motion';
 import { roomTime } from './stage/room-time';
+import { BuddyFigure, BuddyMarks } from './stage/buddy-parts';
+import { Bowl, MealTable, Poops, ThoughtTap } from './stage/care';
+import { StageNotice } from './stage/notice';
+import { buddyPose } from './stage/pose';
+import { StageHeader } from './stage/stage-header';
+import {
+  stationLight,
+  StationBehind,
+  StationFront,
+  StationHeld,
+  StationTap,
+} from './stage/station';
+import { useBob, usePoopSlots, useRice } from './stage/use-care';
+import { useStageNotices } from './stage/use-notices';
+import { useReactionMotion } from './stage/use-reaction-motion';
+import { useTopLevel } from './stage/use-top-level';
 
 export type { Cue } from './stage/acts';
 export { CORNER_SIZE, FLOOR, gridScale, LEAVE_WAVE_MS } from './stage/constants';
@@ -157,18 +128,6 @@ export { useSleeping } from './stage/hooks';
 // alone it dances or sings now and then, and once grown it talks (use-buddy-talk.ts). It keeps its
 // size while typing and reading back: a stage that folds and unfolds moved the chat under the
 // finger and broke scrolling.
-
-// Where a held tool goes in the buddy's box: smaller than its own size, its right edge (the handle)
-// stays at the hand and its middle at the same height.
-function heldAt(held: NonNullable<Station['held']>, scale: number) {
-  const width = held.frames[0][0].length;
-  const height = held.frames[0].length;
-  const own = scale * (held.size ?? 1);
-  return {
-    left: (held.col + width) * scale - width * own,
-    top: held.row * scale + (height * (scale - own)) / 2,
-  };
-}
 
 type Props = {
   buddy: BuddyView;
@@ -289,15 +248,6 @@ export function BuddyStage({
   const placed = useRef(false);
   const [x] = useState(() => new Animated.Value(0));
   const [hop] = useState(() => new Animated.Value(0));
-  // A reaction's hops, on top of the buddy's own (dancing, a hiccup), so that neither stops the
-  // other halfway.
-  const [leap] = useState(() => new Animated.Value(0));
-  const [rise] = useState(() => Animated.add(hop, leap));
-  const [tilt] = useState(() => new Animated.Value(0));
-  const [flash] = useState(() => new Animated.Value(0));
-  const [glow] = useState(() => new Animated.Value(0));
-  const [burst] = useState(() => new Animated.Value(0));
-  const [nudge] = useState(() => new Animated.Value(0));
   const [note] = useState(() => new Animated.Value(0));
   const [flutter] = useState(() => new Animated.Value(0));
   // How many showers have ended (the window shows a rainbow after one).
@@ -1008,7 +958,6 @@ export function BuddyStage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reaction?.id]);
 
-  // The bowl and the poops bob now and then while they need tapping.
   const wantsFood = buddy.hungry && !eating;
   // Hungry, it thinks of food over its head from the egg on (no words needed), and a tap on it
   // feeds it. Asleep, it dreams of it (DREAM_FOOD) with its zzz beside, so a sleeping buddy can be
@@ -1016,23 +965,7 @@ export function BuddyStage({
   const thinking = wantsFood;
   const thought = usePresence(thinking, THOUGHT_POP_MS);
   const hasPoop = buddy.poops > 0;
-  useEffect(() => {
-    if (!wantsFood && !hasPoop) return;
-    const bob = Animated.loop(
-      Animated.sequence([
-        Animated.timing(nudge, { toValue: -3, duration: 120, useNativeDriver: NATIVE_DRIVER }),
-        Animated.timing(nudge, { toValue: 0, duration: 120, useNativeDriver: NATIVE_DRIVER }),
-        Animated.timing(nudge, { toValue: -2, duration: 100, useNativeDriver: NATIVE_DRIVER }),
-        Animated.timing(nudge, { toValue: 0, duration: 100, useNativeDriver: NATIVE_DRIVER }),
-        Animated.delay(1600),
-      ]),
-    );
-    bob.start();
-    return () => {
-      bob.stop();
-      nudge.setValue(0);
-    };
-  }, [wantsFood, hasPoop, nudge]);
+  const nudge = useBob(wantsFood, hasPoop);
 
   // A word back for care, once grown.
   useEffect(() => {
@@ -1066,192 +999,17 @@ export function BuddyStage({
   }, [buddy.hungry, sleeping, say]);
 
   // The egg rocks in small, stepped moves now and then.
-  useEffect(() => {
-    if (!egg) return;
-    const step = (to: number) =>
-      Animated.timing(tilt, { toValue: to, duration: 1, useNativeDriver: NATIVE_DRIVER });
-    const rock = Animated.loop(
-      Animated.sequence([
-        Animated.delay(2200),
-        step(-1),
-        Animated.delay(220),
-        step(1),
-        Animated.delay(220),
-        step(-1),
-        Animated.delay(220),
-        step(0),
-      ]),
-    );
-    rock.start();
-    return () => {
-      rock.stop();
-      // stop() preserves the last angle; evolution must not inherit a tilted egg.
-      tilt.setValue(0);
-    };
-  }, [egg, tilt]);
+  const tilt = useEggRock(egg);
 
-  // Movement that goes with a reaction: hops for a message or a new level, a shudder while
-  // straining. Evolving: rings of light spread from the buddy while it changes, a quick flash as the
-  // new look settles, then a burst of sparkles.
-  useEffect(() => {
-    if (!reaction) return;
-    const jump = (h: number) =>
-      Animated.sequence([
-        Animated.timing(leap, { toValue: -h, duration: 140, useNativeDriver: NATIVE_DRIVER }),
-        Animated.timing(leap, { toValue: 0, duration: 140, useNativeDriver: NATIVE_DRIVER }),
-      ]);
-    const shake = Animated.loop(
-      Animated.sequence([
-        Animated.timing(leap, { toValue: 2, duration: 60, useNativeDriver: NATIVE_DRIVER }),
-        Animated.timing(leap, { toValue: 0, duration: 60, useNativeDriver: NATIVE_DRIVER }),
-      ]),
-      { iterations: 10 },
-    );
-    const transform = Animated.sequence([
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(glow, { toValue: 0, duration: 0, useNativeDriver: NATIVE_DRIVER }),
-          Animated.timing(glow, {
-            toValue: 1,
-            duration: GLOW_MS,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: NATIVE_DRIVER,
-          }),
-        ]),
-        { iterations: Math.floor(EVOLVE_MS / GLOW_MS) },
-      ),
-      Animated.timing(flash, { toValue: 0.6, duration: 60, useNativeDriver: NATIVE_DRIVER }),
-      Animated.parallel([
-        Animated.timing(flash, { toValue: 0, duration: 260, useNativeDriver: NATIVE_DRIVER }),
-        jump(12),
-        Animated.sequence([
-          Animated.timing(burst, { toValue: 0, duration: 0, useNativeDriver: NATIVE_DRIVER }),
-          Animated.timing(burst, {
-            toValue: 1,
-            duration: 700,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: NATIVE_DRIVER,
-          }),
-        ]),
-      ]),
-    ]);
-    const moves: Partial<Record<ReactionKind, Animated.CompositeAnimation>> = {
-      message: Animated.sequence([jump(14), jump(8)]),
-      cleaned: jump(10),
-      pooped: shake,
-      levelUp: Animated.sequence([jump(10), jump(6)]),
-      // The top level: three hops while the room sparkles.
-      maxLevel: Animated.sequence([jump(12), jump(8), jump(12)]),
-      evolved: transform,
-      jobChanged: transform,
-      // Both came today: two big happy jumps.
-      together: Animated.sequence([jump(16), jump(16)]),
-      // The partner is here: one happy hop.
-      here: Animated.sequence([jump(12), jump(6)]),
-      // A friend came in for the first time: three big hops.
-      joined: Animated.sequence([jump(16), jump(12), jump(16)]),
-    };
-    const move = moves[reaction.kind];
-    move?.start();
-    return () => {
-      move?.stop();
-      // Cut short by the next one, it lands softly; the next one's hops start from where it is.
-      Animated.timing(leap, { toValue: 0, duration: 100, useNativeDriver: NATIVE_DRIVER }).start();
-      glow.setValue(0);
-      burst.setValue(1);
-      flash.setValue(0);
-    };
-  }, [reaction, leap, flash, glow, burst]);
+  // Movement that goes with a reaction (use-reaction-motion.ts).
+  const { leap, flash, glow, burst } = useReactionMotion(reaction);
+  const [rise] = useState(() => Animated.add(hop, leap));
 
-  // Notes over the stage, so there is always something ahead to look forward to: grown into a new
-  // stage, the next one (a grown-up's is its job, until it has one); and now and then when the job
-  // can be changed: the level before a chance, the chance itself, and after a change, the next one.
-  // Worked out when shown, from the buddy as it is by then (its new state follows the event).
-  const [notice, setNotice] = useState<Notice | null>(null);
-  const noticeTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const latestBuddy = useRef(buddy);
-  useEffect(() => {
-    latestBuddy.current = buddy;
-  });
-  // `then`: another note right after this one.
-  const showNotice = useCallback(
-    (pick: (now: BuddyView) => Notice | null, after: number, then?: typeof pick) => {
-      noticeTimers.current.forEach(clearTimeout);
-      const show = (choose: typeof pick, rest?: typeof pick): void => {
-        const next = choose(latestBuddy.current);
-        if (!next) {
-          if (rest) show(rest);
-          return;
-        }
-        setNotice(next);
-        noticeTimers.current.push(
-          setTimeout(() => {
-            setNotice(null);
-            if (rest) noticeTimers.current.push(setTimeout(() => show(rest), NOTICE_GAP_MS));
-          }, NOTICE_MS),
-        );
-      };
-      noticeTimers.current = [setTimeout(() => show(pick, then), after)];
-    },
-    [],
-  );
-  useEffect(() => () => noticeTimers.current.forEach(clearTimeout), []);
-  useEffect(() => {
-    if (reaction?.kind === 'evolved') {
-      showNotice(
-        (now) =>
-          now.stage === 'ADULT' && now.job
-            ? null
-            : { key: `nextStage.${now.stage}`, level: NEXT_STEP_AT[now.stage] },
-        EVOLVE_MS,
-      );
-    } else if (reaction?.kind === 'jobChanged') {
-      // A cheer for the new job as it settles, then when it can be changed next.
-      showNotice(
-        (now) => (now.job ? { key: 'notice.newJob', job: now.job } : null),
-        EVOLVE_MS,
-        nextJobChange,
-      );
-    } else if (reaction?.kind === 'levelUp' || reaction?.kind === 'maxLevel') {
-      showNotice((now) => {
-        if (!now.job) return null;
-        // The top level's own notes say so (TopLevelNotes).
-        if (reaction.kind === 'maxLevel') return null;
-        if (now.canChangeJob && JOB_CHANGE_LEVELS.includes(now.level))
-          return { key: 'notice.jobChangeOpen' };
-        if (now.jobChangeAt === now.level + 1)
-          return { key: 'notice.jobChangeSoon', level: now.jobChangeAt };
-        return null;
-      }, NOTICE_AFTER_MS);
-    }
-  }, [reaction, showNotice]);
-  // The job settled while the stage is open: when it can be changed next. A change says so after its
-  // own transformation ('jobChanged').
-  const jobSeen = useRef(job);
-  useEffect(() => {
-    const before = jobSeen.current;
-    if (job === before) return;
-    jobSeen.current = job;
-    if (!job || before) return;
-    showNotice(nextJobChange, NOTICE_AFTER_MS + 1500);
-  }, [job, showNotice]);
+  // Notes over the stage: the next goal after growing, and when the job can be changed.
+  const notice = useStageNotices(reaction, buddy);
   const noticeShown = notice && !dream && !leaving ? notice : null;
   // Reaching the top level (top-level.tsx): once for each such reaction, over after the notes.
-  const [topId, setTopId] = useState<string | null>(null);
-  const [topDone, setTopDone] = useState<string | null>(null);
-  if (reaction?.kind === 'maxLevel' && reaction.id !== topId) setTopId(reaction.id);
-  const topOn = topId !== null && topDone !== topId;
-  const topNotes = [
-    { text: t('buddy.top.reached') },
-    { text: t('buddy.top.letter'), onPress: onOpenMail },
-    ...(job ? [{ text: t('buddy.notice.jobChangeFree') }] : []),
-  ];
-  const topMs = topNotes.length * TOP_NOTE_MS;
-  useEffect(() => {
-    if (!topOn) return;
-    const timer = setTimeout(() => setTopDone(topId), topMs);
-    return () => clearTimeout(timer);
-  }, [topOn, topId, topMs]);
+  const { topOn, topId, topNotes, topMs } = useTopLevel(reaction, job, onOpenMail);
 
   useEffect(
     () => () => {
@@ -1294,108 +1052,26 @@ export function BuddyStage({
     }, PET_MS);
   };
 
-  const basePose: Pose = leaving
-    ? walking
-      ? tick % 2 === 0
-        ? 'step'
-        : 'idle'
-      : 'happy'
-    : eating
-      ? active?.phase === 'main'
-        ? tick % 2 === 0
-          ? 'eat'
-          : 'idle'
-        : 'happy'
-      : active?.kind === 'pooped'
-        ? 'strain'
-        : act === 'dance'
-          ? tick % 2 === 0
-            ? 'happy'
-            : 'step'
-          : act === 'sing'
-            ? tick % 2 === 0
-              ? 'eat'
-              : 'happy'
-            : isUse(act)
-              ? !using
-                ? tick % 2 === 0
-                  ? 'step'
-                  : 'idle'
-                : act === 'musicBox'
-                  ? tick % 2 === 0
-                    ? 'happy'
-                    : 'step'
-                  : act === 'watchFish'
-                    ? 'happy'
-                    : tick % 7 === 0
-                      ? 'blink'
-                      : 'idle'
-              : act === 'sit'
-                ? sitting
-                  ? tick % 6 === 0
-                    ? 'blink'
-                    : 'happy'
-                  : tick % 2 === 0
-                    ? 'step'
-                    : 'idle'
-                : act === 'job' && job
-                  ? atWork
-                    ? jobPose(job, tick)
-                    : tick % 2 === 0
-                      ? 'step'
-                      : 'idle'
-                  : watching && walking
-                    ? tick % 2 === 0
-                      ? 'step'
-                      : 'idle'
-                    : act === 'yawn'
-                      ? 'yawn'
-                      : act === 'hiccup'
-                        ? 'hiccup'
-                        : act === 'startle' || act === 'shootingStar'
-                          ? 'surprised'
-                          : act === 'butterfly' || act === 'snow' || isGuest(act)
-                            ? tick % 2 === 0
-                              ? 'happy'
-                              : 'idle'
-                            : act === 'refuse' || act === 'lookAround'
-                              ? 'idle'
-                              : active?.kind === 'cleaned' ||
-                                  active?.kind === 'levelUp' ||
-                                  active?.kind === 'maxLevel' ||
-                                  active?.kind === 'together' ||
-                                  active?.kind === 'here' ||
-                                  active?.kind === 'joined' ||
-                                  ((active?.kind === 'evolved' || changingJob) && !evolving) ||
-                                  petted
-                                ? 'happy'
-                                : sleeping
-                                  ? 'sleep'
-                                  : buddy.hungry
-                                    ? 'hungry'
-                                    : walking
-                                      ? tick % 2 === 0
-                                        ? 'step'
-                                        : 'idle'
-                                      : tick % 11 === 0
-                                        ? 'blink'
-                                        : 'idle';
-
-  // A mood from the chat shows on the face unless something bigger (eating, straining) is going on.
-  const moodPose: Pose | null =
-    mood === 'laugh'
-      ? tick % 2 === 0
-        ? 'laugh'
-        : 'happy'
-      : mood === 'love' || mood === 'cheer' || mood === 'morning' || mood === 'coPet'
-        ? 'happy'
-        : mood === 'goodnight'
-          ? 'sleep'
-          : mood === 'comfort'
-            ? 'worried'
-            : null;
-  const pose: Pose =
-    moodPose && !eating && active?.kind !== 'pooped' && !acting ? moodPose : basePose;
+  const pose = buddyPose({
+    leaving,
+    walking,
+    tick,
+    eating,
+    active,
+    act,
+    acting,
+    using,
+    sitting,
+    job,
+    atWork,
+    watching,
+    changingJob,
+    evolving,
+    petted,
+    sleeping,
+    buddy,
+    mood,
+  });
 
   // While evolving, the old and new looks take turns quickly.
   const previousStage = STAGE_ORDER[Math.max(0, STAGE_ORDER.indexOf(buddy.stage) - 1)];
@@ -1435,77 +1111,15 @@ export function BuddyStage({
   const bursting = (active?.kind === 'evolved' || changingJob) && active.phase === 'after';
   const levelingUp = active?.kind === 'levelUp' || active?.kind === 'maxLevel';
 
-  // Rice in the bowl, but for when the buddy is hungry: then it is empty and asks to be filled.
   const bowlFull = !buddy.hungry || eating;
   const table = usePresence(atTable && eating, TABLE_AWAY_MS);
   // While the table sinks away it shows the empty bowl, as at the end of the meal.
   const [tableFull, setTableFull] = useState(active?.phase === 'main');
   if (eating && tableFull !== (active?.phase === 'main')) setTableFull(active?.phase === 'main');
-  const [rice] = useState(() => new Animated.Value(bowlFull ? 1 : 0));
-  const [riceSparkle, setRiceSparkle] = useState(false);
-  const [riceWasFull] = useState(bowlFull);
-  useEffect(() => {
-    const change = bowlFull
-      ? Animated.spring(rice, {
-          toValue: 1,
-          friction: 4,
-          tension: 140,
-          useNativeDriver: NATIVE_DRIVER,
-        })
-      : Animated.timing(rice, {
-          toValue: 0,
-          duration: 380,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: NATIVE_DRIVER,
-        });
-    change.start();
-    // A sparkle as the bowl fills again (not when the stage first shows a full one).
-    const timers =
-      bowlFull && !riceWasFull
-        ? [setTimeout(() => setRiceSparkle(true), 0), setTimeout(() => setRiceSparkle(false), 700)]
-        : [];
-    return () => {
-      change.stop();
-      timers.forEach(clearTimeout);
-    };
-  }, [bowlFull, rice, riceWasFull]);
+  const { rice, riceSparkle } = useRice(bowlFull);
 
-  // Each poop keeps its spot on the floor (a slot). The one tapped is the one that flies up and
-  // fades; the ones still there stay put. Cleaned some other way (the partner, "청소" in the chat),
-  // the last ones go. A new poop takes the first free spot.
-  const [slots, setSlots] = useState(() => Array.from({ length: buddy.poops }, (_, i) => i));
-  const [tapped, setTapped] = useState<number[]>([]);
-  const [poopRound, setPoopRound] = useState(0);
-  const [flyingOff, setFlyingOff] = useState<{ key: string; index: number }[]>([]);
-  if (buddy.poops !== slots.length) {
-    let next = slots;
-    let taps = tapped;
-    const gone: number[] = [];
-    while (next.length > buddy.poops) {
-      const slot = taps.find((s) => next.includes(s)) ?? next[next.length - 1];
-      taps = taps.filter((s) => s !== slot);
-      next = next.filter((s) => s !== slot);
-      gone.push(slot);
-    }
-    while (next.length < buddy.poops) {
-      let free = 0;
-      while (next.includes(free)) free++;
-      next = [...next, free];
-    }
-    if (gone.length) {
-      setFlyingOff((prev) => [
-        ...prev,
-        ...gone.map((slot) => ({ key: `${poopRound}-${slot}`, index: slot })),
-      ]);
-    }
-    setPoopRound(poopRound + 1);
-    setSlots(next);
-    setTapped([]);
-  }
-  const doneLeaving = useCallback(
-    (key: string) => setFlyingOff((prev) => prev.filter((poop) => poop.key !== key)),
-    [],
-  );
+  // Each poop keeps its spot on the floor (use-care.ts).
+  const { slots, flyingOff, tapSlot, doneLeaving } = usePoopSlots(buddy.poops);
   // At work the cook sways to the pot and the DJ nods.
   const workSway = atWork && job === 'CHEF' ? (tick % 2 === 0 ? -scale : 0) : 0;
   const workNod = atWork && job === 'DJ' && tick % 2 === 0 ? scale : 0;
@@ -1540,7 +1154,7 @@ export function BuddyStage({
   };
   const clean = (slot: number) => {
     if (!buddy.canClean || busy) return;
-    setTapped((prev) => [...prev, slot]);
+    tapSlot(slot);
     onClean();
   };
   // The room's toys: the ball bounces out and it dances; the music box plays and it sings along.
@@ -1589,55 +1203,14 @@ export function BuddyStage({
         { height, backgroundColor: colors.stage },
       ]}
     >
-      <View
-        style={[
-          styles.info,
-          cornerButton ? { right: 6 + corners * (CORNER_SIZE + 6) } : null,
-          dream ? styles.hidden : null,
-        ]}
-      >
-        {/* A tile like the corner buttons, with a chevron, so it reads as the way into the details. */}
-        <Pressable
-          onPress={onOpenDetail}
-          disabled={dream}
-          accessibilityRole="button"
-          accessibilityLabel={t('buddy.open', { buddy: buddy.name })}
-          hitSlop={4}
-          style={({ pressed }) => [
-            styles.pill,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-              opacity: pressed ? 0.7 : 1,
-            },
-          ]}
-        >
-          <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
-            {buddy.name}
-          </Text>
-          <Text
-            style={[
-              styles.level,
-              levelingUp ? styles.levelUp : null,
-              { color: levelingUp ? colors.accent : colors.textMuted },
-            ]}
-          >
-            {t('buddy.level', { level: buddy.level })}
-          </Text>
-          {/* Ready to go its own way (in the buddy's details). */}
-          {buddy.grown ? <Text style={styles.grown}>🎓</Text> : null}
-          {/* Both have talked today: the day's bonus is in. */}
-          {buddy.togetherToday ? (
-            <Text style={styles.grown} accessibilityLabel={t('buddy.together.badge')}>
-              🤝
-            </Text>
-          ) : null}
-          <View style={styles.bar}>
-            <ProgressBar progress={buddy.levelProgress} />
-          </View>
-          <Text style={[styles.chevron, { color: colors.textMuted }]}>›</Text>
-        </Pressable>
-      </View>
+      <StageHeader
+        buddy={buddy}
+        levelingUp={levelingUp}
+        dream={dream}
+        cornerButton={cornerButton}
+        corners={corners}
+        onOpenDetail={onOpenDetail}
+      />
 
       <View
         style={[
@@ -1671,21 +1244,8 @@ export function BuddyStage({
         lit={lampLit}
         onLamp={setLampOn}
       />
-      {/* What of the station stands behind the buddy (the gardener's lamp). */}
       {station?.behind ? (
-        <View
-          key={`behind${job}`}
-          style={[
-            styles.station,
-            styles.passThrough,
-            // Its last row below the floor line, like the station's own.
-            { left: STATION_LEFT + station.behind.col * cell, bottom: FLOOR - cell },
-          ]}
-        >
-          <Arrive fresh={job !== jobAtMount} width={station.behind.frame[0].length * cell}>
-            <PixelSprite frame={station.behind.frame} palette={PROP_PALETTE} scale={cell} />
-          </Arrive>
-        </View>
+        <StationBehind behind={station.behind} job={job} cell={cell} jobAtMount={jobAtMount} />
       ) : null}
       {corner ? (
         <View
@@ -1721,52 +1281,17 @@ export function BuddyStage({
         </View>
       ) : null}
 
-      {/* The bowl, for the egg and the baby; older ones eat at the table. */}
       {atTable ? null : (
-        <Animated.View
-          style={[
-            styles.bowl,
-            {
-              bottom: FLOOR - 3,
-              right: bowlRight,
-              transform: [{ translateY: wantsFood ? nudge : 0 }],
-            },
-          ]}
-        >
-          {/* Hungry, the buddy thinks of food instead of a mark over the bowl. */}
-          {riceSparkle ? (
-            <View style={styles.bowlAsk}>
-              <PixelSprite frame={SPARKLE} palette={PROP_PALETTE} scale={2} />
-            </View>
-          ) : null}
-          <Pressable
-            onPress={feed}
-            disabled={busy}
-            accessibilityRole="button"
-            accessibilityLabel={t('buddy.feed')}
-          >
-            {/* Full, but empty while the buddy is hungry: the rice pops in and shrinks away. */}
-            <PixelSprite
-              frame={bowl(false, decor.bowl)}
-              palette={PROP_PALETTE}
-              scale={PROP_SCALE}
-            />
-            <Animated.View
-              style={[
-                styles.rice,
-                {
-                  opacity: rice.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 1, 1] }),
-                  transform: [
-                    { translateY: rice.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }) },
-                    { scale: rice.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) },
-                  ],
-                },
-              ]}
-            >
-              <PixelSprite frame={RICE} palette={PROP_PALETTE} scale={PROP_SCALE} />
-            </Animated.View>
-          </Pressable>
-        </Animated.View>
+        <Bowl
+          bowlRight={bowlRight}
+          wantsFood={wantsFood}
+          nudge={nudge}
+          riceSparkle={riceSparkle}
+          feed={feed}
+          busy={busy}
+          kind={decor.bowl}
+          rice={rice}
+        />
       )}
 
       {companionEgg ? (
@@ -1800,221 +1325,49 @@ export function BuddyStage({
             ms={topMs}
           />
         ) : null}
-        {evolving ? (
-          <Animated.View
-            style={[
-              styles.glow,
-              {
-                width: glowSize,
-                height: glowSize,
-                borderRadius: glowSize / 2,
-                left: (spriteWidth - glowSize) / 2,
-                top: (spriteHeight - glowSize) / 2,
-                opacity: glow.interpolate({ inputRange: [0, 1], outputRange: [0.9, 0] }),
-                transform: [
-                  { scale: glow.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1.3] }) },
-                ],
-              },
-            ]}
-          />
-        ) : null}
-        {levelingUp ? (
-          <View style={styles.above}>
-            <PixelSprite frame={LEVEL_UP} palette={PROP_PALETTE} scale={3} />
-          </View>
-        ) : showHeart ? (
-          <View style={[styles.above, bigHeart ? styles.aboveBig : null]}>
-            <PixelSprite frame={bigHeart ? HEART_BIG : HEART} palette={PROP_PALETTE} scale={3} />
-          </View>
-        ) : thought.present ? (
-          // Away from the speech bubble, its trail of puffs toward the head. It swells up when it
-          // comes, and when fed it bursts like a bubble: a little bigger as it fades.
-          <Animated.View
-            style={[
-              styles.thought,
-              styles.passThrough,
-              onRightHalf ? styles.thoughtRight : styles.thoughtLeft,
-              {
-                opacity: thinking
-                  ? thought.value.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 1, 1] })
-                  : thought.value,
-                transform: [
-                  { translateY: nudge },
-                  {
-                    scale: thinking
-                      ? thought.value.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] })
-                      : thought.value.interpolate({ inputRange: [0, 1], outputRange: [1.35, 1] }),
-                  },
-                ],
-              },
-            ]}
-          >
-            <PixelSprite
-              frame={sleeping ? DREAM_FOOD : THOUGHT_FOOD}
-              palette={sleeping ? DREAM_PALETTE : PROP_PALETTE}
-              scale={2}
-              flipped={!onRightHalf}
-            />
-          </Animated.View>
-        ) : active?.kind === 'message' || act === 'startle' ? (
-          <View style={styles.above}>
-            <PixelSprite frame={EXCLAIM} palette={BUDDY_PALETTE} scale={3} />
-          </View>
-        ) : null}
-        {sleeping && tick % 4 < 2 && !levelingUp && !showHeart && act !== 'startle' ? (
-          // Over the head, on the side away from a dream of food.
-          <View style={[styles.above, thought.present && !onRightHalf ? styles.aboveRight : null]}>
-            <PixelSprite frame={ZZZ} palette={BUDDY_PALETTE} scale={3} />
-          </View>
-        ) : null}
-        {sparkling && tick % 2 === 0 ? (
-          <>
-            <View style={[styles.sparkle, { left: -14, top: 6 }]}>
-              <PixelSprite frame={SPARKLE} palette={PROP_PALETTE} scale={3} />
-            </View>
-            <View style={[styles.sparkle, { right: -14, top: 18 }]}>
-              <PixelSprite frame={SPARKLE} palette={PROP_PALETTE} scale={3} />
-            </View>
-          </>
-        ) : null}
-        {act === 'sing' ? (
-          <Animated.View
-            style={[
-              styles.sparkle,
-              styles.passThrough,
-              {
-                left: tick % 4 < 2 ? spriteWidth * 0.75 : spriteWidth * 0.1,
-                top: -6,
-                opacity: note.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 1, 0] }),
-                transform: [
-                  { translateY: note.interpolate({ inputRange: [0, 1], outputRange: [0, -28] }) },
-                ],
-              },
-            ]}
-          >
-            <PixelSprite frame={NOTE} palette={BUDDY_PALETTE} scale={4} />
-          </Animated.View>
-        ) : null}
-        {bursting
-          ? BURST.map(([dx, dy], i) => (
-              <Animated.View
-                key={i}
-                style={[
-                  styles.sparkle,
-                  styles.passThrough,
-                  {
-                    left: spriteWidth / 2 - 7,
-                    top: spriteHeight / 2 - 7,
-                    opacity: burst.interpolate({ inputRange: [0, 0.7, 1], outputRange: [1, 1, 0] }),
-                    transform: [
-                      {
-                        translateX: burst.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, dx * (spriteWidth / 2 + 18)],
-                        }),
-                      },
-                      {
-                        translateY: burst.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, dy * (spriteHeight / 2 + 12)],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
-              >
-                <PixelSprite frame={SPARKLE} palette={PROP_PALETTE} scale={3} />
-              </Animated.View>
-            ))
-          : null}
-        {leaving ? (
-          <LayerSprite
-            layer={{ frame: BUNDLE, row: 9, col: -3 }}
-            gridWidth={gridWidth}
-            palette={ROOM_PALETTE}
-            scale={scale}
-            flipped={flipped}
-          />
-        ) : null}
-        {behind && !evolving ? (
-          <LayerSprite
-            layer={behind}
-            gridWidth={gridWidth}
-            palette={BUDDY_PALETTE}
-            scale={scale}
-            flipped={flipped}
-          />
-        ) : null}
-        <Pressable
-          nativeID="buddy-sprite-button"
-          // Hungry at an age with hands, a tap brings the meal (there is no bowl to tap).
-          onPress={thinking ? feed : pet}
-          accessibilityRole="button"
-          accessibilityLabel={thinking ? t('buddy.feed') : t('buddy.pet', { buddy: buddy.name })}
-        >
-          <PixelSprite
-            frame={frame}
-            palette={BUDDY_PALETTE}
-            scale={scale}
-            flipped={flipped}
-            smooth
-          />
-        </Pressable>
-        {front ? (
-          <LayerSprite
-            layer={front}
-            gridWidth={gridWidth}
-            palette={BUDDY_PALETTE}
-            scale={scale}
-            flipped={flipped}
-          />
-        ) : null}
-        {umbrella ? (
-          <LayerSprite
-            layer={umbrella}
-            gridWidth={gridWidth}
-            palette={PROP_PALETTE}
-            scale={scale}
-            flipped={flipped}
-          />
-        ) : null}
-        {book ? (
-          <LayerSprite
-            layer={book}
-            gridWidth={gridWidth}
-            palette={THINGS_PALETTE}
-            scale={scale}
-            flipped={flipped}
-          />
-        ) : null}
-        {butterfly ? (
-          <Animated.View
-            style={[
-              styles.layer,
-              styles.passThrough,
-              {
-                left: butterfly[1] * scale,
-                top: butterfly[0] * scale,
-                transform: [
-                  {
-                    translateX: flutter.interpolate({
-                      inputRange: [0, 1, 2],
-                      outputRange: [spriteWidth, 0, -spriteWidth],
-                    }),
-                  },
-                  {
-                    translateY: flutter.interpolate({
-                      inputRange: [0, 1, 2],
-                      outputRange: [-spriteHeight * 0.6, 0, -spriteHeight * 0.7],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          >
-            <PixelSprite frame={BUTTERFLY[tick % 2]} palette={PROP_PALETTE} scale={scale} />
-          </Animated.View>
-        ) : null}
+        <BuddyMarks
+          evolving={evolving}
+          glowSize={glowSize}
+          spriteWidth={spriteWidth}
+          spriteHeight={spriteHeight}
+          glow={glow}
+          levelingUp={levelingUp}
+          showHeart={showHeart}
+          bigHeart={bigHeart}
+          thought={thought}
+          thinking={thinking}
+          onRightHalf={onRightHalf}
+          nudge={nudge}
+          sleeping={sleeping}
+          active={active}
+          act={act}
+          tick={tick}
+          sparkling={sparkling}
+          note={note}
+          bursting={bursting}
+          burst={burst}
+        />
+        <BuddyFigure
+          leaving={leaving}
+          gridWidth={gridWidth}
+          scale={scale}
+          flipped={flipped}
+          behind={behind}
+          evolving={evolving}
+          thinking={thinking}
+          feed={feed}
+          pet={pet}
+          buddyName={buddy.name}
+          frame={frame}
+          front={front}
+          umbrella={umbrella}
+          book={book}
+          butterfly={butterfly}
+          flutter={flutter}
+          spriteWidth={spriteWidth}
+          spriteHeight={spriteHeight}
+          tick={tick}
+        />
         {/* In front of everything with the buddy, the umbrella too. */}
         {line && !evolving ? (
           <SpeechBubble
@@ -2024,138 +1377,56 @@ export function BuddyStage({
           />
         ) : null}
       </Animated.View>
-      {/* The station stands in front of the buddy, whether it is working there or walking by. */}
       {station ? (
-        <View
-          key={job}
-          style={[
-            styles.station,
-            styles.passThrough,
-            { left: STATION_LEFT, bottom: FLOOR - station.sink * cell },
-          ]}
-        >
-          <Arrive fresh={job !== jobAtMount} width={station.frames[0][0].length * cell}>
-            <PixelSprite
-              frame={station.frames[atWork ? tick % 2 : 0]}
-              palette={PROP_PALETTE}
-              scale={cell}
-            />
-          </Arrive>
-        </View>
-      ) : null}
-      {/* What it holds at work goes in front of the station too (the can over the plant's pot). */}
-      {atWork && station?.held ? (
-        <Animated.View
-          style={[
-            styles.buddy,
-            styles.passThrough,
-            {
-              bottom: FLOOR - scale,
-              left: workSway,
-              width: spriteWidth,
-              height: spriteHeight,
-              transform: [{ translateX: x }, { translateY: rise }],
-            },
-          ]}
-        >
-          <View style={[styles.jobProp, heldAt(station.held, scale)]}>
-            <PixelSprite
-              frame={station.held.frames[tick % 2]}
-              palette={PROP_PALETTE}
-              scale={scale * (station.held.size ?? 1)}
-            />
-          </View>
-        </Animated.View>
-      ) : null}
-
-      {/* The thought of food can be tapped to feed, as people do. Drawn above the buddy's box it
-          sits outside it, where an iPhone does not pass touches on; this follows it on the stage
-          instead, a little larger than the cloud. */}
-      {thinking ? (
-        <Animated.View
-          style={[
-            styles.buddy,
-            {
-              bottom:
-                FLOOR -
-                scale -
-                workNod -
-                (sitting ? SIT_ROWS * scale : 0) +
-                frame.length * scale +
-                THOUGHT_TOP -
-                THOUGHT_FOOD.length * 2 -
-                THOUGHT_SLOP,
-              left:
-                workSway +
-                (onRightHalf ? frame[0].length * scale + 4 - THOUGHT_FOOD[0].length * 2 : -4) -
-                THOUGHT_SLOP,
-              transform: [{ translateX: x }],
-            },
-          ]}
-        >
-          <Pressable
-            onPress={feed}
-            accessibilityRole="button"
-            accessibilityLabel={t('buddy.feed')}
-            style={{
-              width: THOUGHT_FOOD[0].length * 2 + THOUGHT_SLOP * 2,
-              height: THOUGHT_FOOD.length * 2 + THOUGHT_SLOP * 2,
-            }}
-          />
-        </Animated.View>
-      ) : null}
-
-      {/* The table, out for the meal and in front of the buddy, which eats behind it. */}
-      {table.present ? (
-        <Animated.View
-          style={[
-            styles.buddy,
-            styles.passThrough,
-            {
-              bottom: FLOOR - 2,
-              left: workSway + (spriteWidth - TABLE_CELLS * PROP_SCALE) / 2,
-              opacity: table.value.interpolate({
-                inputRange: [0, 0.35, 1],
-                outputRange: [0, 1, 1],
-              }),
-              transform: [
-                { translateX: x },
-                // Set down from just above, landing with a little bounce; sinking a touch as it goes.
-                {
-                  translateY: table.value.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [eating ? -14 : 4, 0],
-                  }),
-                },
-              ],
-            },
-          ]}
-        >
-          <PixelSprite
-            frame={mealTable(eating ? active?.phase === 'main' : tableFull, decor.bowl)}
-            palette={PROP_PALETTE}
-            scale={PROP_SCALE}
-          />
-        </Animated.View>
-      ) : null}
-
-      {/* A tap on the station sends the buddy to work there. */}
-      {station ? (
-        <Pressable
-          onPress={work}
-          disabled={busy}
-          accessibilityRole="button"
-          accessibilityLabel={t('buddy.work', { buddy: buddy.name })}
-          style={[
-            styles.station,
-            {
-              left: STATION_LEFT,
-              bottom: FLOOR - station.sink * cell,
-              width: station.frames[0][0].length * cell,
-              height: station.frames[0].length * cell,
-            },
-          ]}
+        <StationFront
+          station={station}
+          job={job}
+          cell={cell}
+          jobAtMount={jobAtMount}
+          atWork={atWork}
+          tick={tick}
         />
+      ) : null}
+      {atWork && station?.held ? (
+        <StationHeld
+          held={station.held}
+          scale={scale}
+          workSway={workSway}
+          spriteWidth={spriteWidth}
+          spriteHeight={spriteHeight}
+          x={x}
+          rise={rise}
+          tick={tick}
+        />
+      ) : null}
+
+      {thinking ? (
+        <ThoughtTap
+          scale={scale}
+          workNod={workNod}
+          sitting={sitting}
+          frame={frame}
+          onRightHalf={onRightHalf}
+          workSway={workSway}
+          x={x}
+          feed={feed}
+        />
+      ) : null}
+
+      {table.present ? (
+        <MealTable
+          workSway={workSway}
+          spriteWidth={spriteWidth}
+          table={table}
+          eating={eating}
+          x={x}
+          full={eating ? active?.phase === 'main' : tableFull}
+          kind={decor.bowl}
+        />
+      ) : null}
+
+      {station ? (
+        <StationTap station={station} cell={cell} work={work} busy={busy} buddyName={buddy.name} />
       ) : null}
 
       {isGuest(act) && isFloorPasser(act) && width > 0 ? (
@@ -2166,38 +1437,15 @@ export function BuddyStage({
       ) : null}
 
       {/* In front of the buddy, so one by its feet can still be tapped away. */}
-      {slots.map((slot) => (
-        <Animated.View
-          key={slot}
-          style={[
-            styles.poop,
-            {
-              bottom: FLOOR - 2,
-              right: poopRight + slot * 30,
-              transform: [{ translateY: nudge }],
-            },
-          ]}
-        >
-          <Pressable
-            onPress={() => clean(slot)}
-            disabled={busy}
-            accessibilityRole="button"
-            accessibilityLabel={t('buddy.cleanUp')}
-          >
-            <DroppingIn>
-              <PixelSprite frame={POOP} palette={PROP_PALETTE} scale={PROP_SCALE} />
-            </DroppingIn>
-          </Pressable>
-        </Animated.View>
-      ))}
-      {flyingOff.map((poop) => (
-        <FlyingAway
-          key={poop.key}
-          id={poop.key}
-          onDone={doneLeaving}
-          style={[styles.poop, { bottom: FLOOR - 2, right: poopRight + poop.index * 30 }]}
-        />
-      ))}
+      <Poops
+        slots={slots}
+        poopRight={poopRight}
+        nudge={nudge}
+        clean={clean}
+        busy={busy}
+        flyingOff={flyingOff}
+        doneLeaving={doneLeaving}
+      />
 
       {/* The light of the hour over the room and the buddy (room-light.tsx). */}
       {!dream ? (
@@ -2209,57 +1457,13 @@ export function BuddyStage({
           glass={glass}
           lamp={decor.lamp && lampLit ? lampShadeAt(width, height, FLOOR, plantRoom) : null}
           fullMoon={isFullMoon(now)}
-          station={
-            station
-              ? station.light.onBehind && station.behind
-                ? {
-                    x: STATION_LEFT + (station.behind.col + station.light.col) * cell,
-                    y:
-                      height -
-                      (FLOOR - cell) -
-                      (station.behind.frame.length - station.light.row) * cell,
-                    color: station.light.color,
-                    aim: station.light.aim
-                      ? {
-                          x: STATION_LEFT + station.light.aim.col * cell,
-                          y:
-                            height -
-                            (FLOOR - station.sink * cell) -
-                            (station.frames[0].length - station.light.aim.row) * cell,
-                        }
-                      : undefined,
-                  }
-                : {
-                    x: STATION_LEFT + station.light.col * cell,
-                    y:
-                      height -
-                      (FLOOR - station.sink * cell) -
-                      (station.frames[0].length - station.light.row) * cell,
-                    color: station.light.color,
-                  }
-              : null
-          }
+          station={station ? stationLight(station, cell, height) : null}
           dark={colorMode === 'dark'}
         />
       ) : null}
       {topOn && width > 0 ? <Feathers key={`f${topId}`} width={width} height={height} /> : null}
       {topOn ? <TopLevelNotes key={`n${topId}`} notes={topNotes} /> : null}
-      {noticeShown ? (
-        <View style={[styles.notice, styles.passThrough]}>
-          <Text
-            style={[
-              styles.noticeText,
-              { color: colors.text, backgroundColor: colors.surface, borderColor: colors.accent },
-            ]}
-          >
-            {t(`buddy.${noticeShown.key}`, {
-              level: noticeShown.level,
-              icon: noticeShown.job ? JOB_ICON[noticeShown.job] : '',
-              job: noticeShown.job ? t(`buddy.job.${noticeShown.job}`) : '',
-            })}
-          </Text>
-        </View>
-      ) : null}
+      {noticeShown ? <StageNotice notice={noticeShown} /> : null}
 
       {/* The evolution's quick flash as the new look settles, over the whole stage. */}
       <Animated.View style={[StyleSheet.absoluteFill, styles.flash, { opacity: flash }]} />
@@ -2274,49 +1478,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     overflow: 'hidden',
   },
-  // The space left of the corner buttons; only the tile in it takes taps.
-  info: {
-    position: 'absolute',
-    top: 8,
-    left: 6,
-    right: 6,
-    alignItems: 'flex-start',
-    pointerEvents: 'box-none',
-    // Over the room's light (room-light.tsx).
-    zIndex: 2,
-  },
-  // Ends above WALL_TOP, so the wall's things stay clear of it.
-  pill: {
-    maxWidth: '100%',
-    height: 26,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingLeft: 10,
-    paddingRight: 8,
-    borderRadius: 13,
-    borderWidth: 1,
-  },
-  chevron: {
-    marginLeft: -2,
-    fontSize: 16,
-    lineHeight: 18,
-    fontWeight: '700',
-  },
-  name: {
-    fontSize: 14,
-    fontWeight: '700',
-    flexShrink: 1,
-  },
-  level: {
-    fontSize: 12,
-    fontVariant: ['tabular-nums'],
-  },
-  // Row containers: the bar stretches with flex, which in a column would collapse its height.
-  bar: {
-    width: 72,
-    flexDirection: 'row',
-  },
   floor: {
     position: 'absolute',
     left: 0,
@@ -2324,33 +1485,13 @@ const styles = StyleSheet.create({
     bottom: 0,
     borderTopWidth: 2,
   },
-  bowl: {
-    position: 'absolute',
-  },
   poop: {
     position: 'absolute',
-  },
-  rice: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-  },
-  grown: {
-    fontSize: 13,
-  },
-  bowlAsk: {
-    position: 'absolute',
-    top: -18,
-    left: 15,
   },
   buddy: {
     position: 'absolute',
     left: 0,
     alignItems: 'center',
-  },
-  above: {
-    position: 'absolute',
-    top: -24,
   },
   corner: {
     position: 'absolute',
@@ -2358,87 +1499,8 @@ const styles = StyleSheet.create({
     right: 6,
     zIndex: 2,
   },
-  jobProp: {
-    position: 'absolute',
-  },
-  station: {
-    position: 'absolute',
-  },
-  // Room for the big heart of a pet shared by both.
-  thought: {
-    position: 'absolute',
-    top: -THOUGHT_TOP,
-  },
-  thoughtRight: {
-    right: -4,
-  },
-  thoughtLeft: {
-    left: -4,
-  },
-  aboveRight: {
-    right: 0,
-  },
-  aboveBig: {
-    top: -44,
-  },
-  layer: {
-    position: 'absolute',
-  },
-  sparkle: {
-    position: 'absolute',
-  },
-  glow: {
-    position: 'absolute',
-    backgroundColor: 'rgba(255, 244, 196, 0.85)',
-    borderWidth: 4,
-    borderColor: '#FFD166',
-    pointerEvents: 'none',
-  },
-  hidden: {
-    opacity: 0,
-  },
-  passThrough: {
-    pointerEvents: 'none',
-  },
-  levelUp: {
-    fontWeight: '700',
-  },
-  notice: {
-    position: 'absolute',
-    top: 40,
-    left: 12,
-    right: 12,
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  noticeText: {
-    fontSize: 13,
-    fontWeight: '700',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 14,
-    borderWidth: 2,
-    overflow: 'hidden',
-  },
   flash: {
     backgroundColor: '#FFFFFF',
     pointerEvents: 'none',
-  },
-  folded: {
-    marginHorizontal: 12,
-    marginTop: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  foldedBar: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  status: {
-    fontSize: 14,
   },
 });
