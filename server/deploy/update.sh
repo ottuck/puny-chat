@@ -9,8 +9,12 @@ cd /opt/puny-chat
 mkdir -p public # Caddy mounts it; Docker would make a missing one root-owned
 mkdir -p photos && chown 1001:1001 photos # the server writes photos as its own user
 docker compose pull --quiet server || exit 0 # registry unreachable: try again next minute
+running() { docker inspect --format '{{.Image}}' "$(docker compose ps -q server)" 2> /dev/null || true; }
+before=$(running)
 docker compose up -d --remove-orphans
-docker image prune --force > /dev/null
+# The old image goes only when a new one started. A prune also deletes what other services on this
+# instance are pulling at that moment (containerd image store), and their updaters run in the same second.
+[ "$(running)" = "$before" ] || docker image prune --force > /dev/null
 # Which release is running, for CI to wait on (served by Caddy at /_revision).
 docker inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "$(docker compose ps -q server)" > public/revision.tmp
 mv public/revision.tmp public/revision
