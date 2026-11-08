@@ -12,9 +12,11 @@ docker compose pull --quiet server || exit 0 # registry unreachable: try again n
 running() { docker inspect --format '{{.Image}}' "$(docker compose ps -q server)" 2> /dev/null || true; }
 before=$(running)
 docker compose up -d --remove-orphans
-# The old image goes only when a new one started. A prune also deletes what other services on this
-# instance are pulling at that moment (containerd image store), and their updaters run in the same second.
-[ "$(running)" = "$before" ] || docker image prune --force > /dev/null
+# When a new image started, remove the one it replaced, and only that one. Other services on this
+# instance clean up their own images: a docker image prune here also deleted what their updaters were
+# pulling in the same second (containerd image store, 2026-11-06).
+after=$(running)
+[ -z "$before" ] || [ "$after" = "$before" ] || docker rmi "$before" > /dev/null 2>&1 || true
 # Which release is running, for CI to wait on (served by Caddy at /_revision).
 docker inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "$(docker compose ps -q server)" > public/revision.tmp
 mv public/revision.tmp public/revision
